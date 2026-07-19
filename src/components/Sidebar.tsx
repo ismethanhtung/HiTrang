@@ -1,18 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
     Flower,
-    BarChart3,
-    BookOpen,
-    Users,
+    LayoutDashboard,
+    ClipboardList,
+    Award,
+    GraduationCap,
     Settings,
     LogOut,
     Menu,
     X,
-    UserCheck,
     Calendar,
     Sparkles,
     Search,
+    Globe,
+    ChevronsUpDown,
 } from "lucide-react";
 import { User } from "../types";
 
@@ -33,17 +35,23 @@ export default function Sidebar({
     isOpen,
     setIsOpen,
 }: SidebarProps) {
+    const [showUserMenu, setShowUserMenu] = useState(false);
+
     // Menu items for Teacher vs Student
     const teacherMenuItems = [
-        { id: "overview", label: "Tổng quan", icon: BarChart3 },
-        { id: "quizzes", label: "Quản lý Đề thi", icon: BookOpen },
-        { id: "students", label: "Tiến độ Học sinh", icon: Users },
+        { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
+        { id: "quizzes", label: "Quản lý Đề thi", icon: ClipboardList },
+        { id: "students", label: "Tiến độ Học sinh", icon: GraduationCap },
     ];
 
     const studentMenuItems = [
-        { id: "student-dashboard", label: "Bảng điều khiển", icon: BarChart3 },
-        { id: "student-quizzes", label: "Làm bài thi", icon: BookOpen },
-        { id: "student-results", label: "Lịch sử học tập", icon: UserCheck },
+        {
+            id: "student-dashboard",
+            label: "Bảng điều khiển",
+            icon: LayoutDashboard,
+        },
+        { id: "student-quizzes", label: "Làm bài thi", icon: ClipboardList },
+        { id: "student-results", label: "Lịch sử học tập", icon: Award },
     ];
 
     const menuItems =
@@ -90,7 +98,9 @@ export default function Sidebar({
 
             {/* Section Header */}
             <div className="px-6 py-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase flex items-center justify-between select-none">
-                <span>{user.role === "teacher" ? "QUẢN TRỊ" : "CHUYÊN MỤC"}</span>
+                <span>
+                    {user.role === "teacher" ? "QUẢN TRỊ" : "CHUYÊN MỤC"}
+                </span>
             </div>
 
             {/* Menu Options */}
@@ -118,11 +128,89 @@ export default function Sidebar({
             </nav>
 
             {/* User Information and Actions */}
-            <div className="pt-6 border-t border-gray-100 mt-auto px-4 space-y-4">
-                {/* User Card */}
-                <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50/60 transition-all duration-150">
-                    <div className="w-8.5 h-8.5 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center font-bold text-xs border border-pink-100/30">
-                        {user.name.charAt(0)}
+            <div className="pt-4 border-t border-gray-100 mt-auto px-4 relative">
+                {/* Click outside backdrop */}
+                {showUserMenu && (
+                    <div
+                        className="fixed inset-0 z-30 cursor-default"
+                        onClick={() => setShowUserMenu(false)}
+                    />
+                )}
+
+                {/* Popover Menu overlay */}
+                <AnimatePresence>
+                    {showUserMenu && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.12, ease: "easeOut" }}
+                            className="absolute bottom-16 left-4 right-4 bg-white border border-slate-100/90 rounded-xl shadow-lg p-1.5 z-40 space-y-0.5 flex flex-col select-none"
+                        >
+                            {/* Language selection item */}
+                            <button
+                                type="button"
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                            >
+                                <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="flex-1">Ngôn ngữ</span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                    Tiếng Việt
+                                </span>
+                            </button>
+
+                            {/* Settings button */}
+                            <button
+                                type="button"
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                            >
+                                <Settings className="w-3.5 h-3.5 text-slate-400" />
+                                <span>Cài đặt</span>
+                            </button>
+
+                            <div className="border-t border-slate-100/60 my-1" />
+
+                            {/* Logout Action */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowUserMenu(false);
+                                    onLogout();
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-600 hover:bg-rose-50/50 transition-colors text-left"
+                            >
+                                <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                                <span>Đăng xuất</span>
+                            </button>
+
+                            <div className="border-t border-slate-100/60 my-1" />
+
+                            {/* Version details */}
+                            <div className="px-3 py-1.5 text-[9px] text-slate-300 font-semibold text-center">
+                                Hi_Trang + v1.0.0
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* User Trigger Button */}
+                <button
+                    type="button"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all duration-150 relative text-left outline-none cursor-pointer ${
+                        showUserMenu ? "bg-slate-50" : "hover:bg-slate-50/70"
+                    }`}
+                >
+                    <div className="w-8.5 h-8.5 rounded-full overflow-hidden flex-shrink-0 bg-pink-50 text-pink-500 flex items-center justify-center font-bold text-xs border border-pink-100/30">
+                        {user.avatarUrl ? (
+                            <img
+                                src={user.avatarUrl}
+                                alt={user.name}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            user.name.charAt(0)
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-slate-800 truncate leading-tight">
@@ -132,21 +220,8 @@ export default function Sidebar({
                             @{user.username}
                         </p>
                     </div>
-                </div>
-
-                {/* Logout Action */}
-                <button
-                    onClick={onLogout}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50/40 transition-all duration-150"
-                >
-                    <LogOut className="w-4 h-4 text-rose-500" />
-                    <span>Đăng xuất</span>
+                    <ChevronsUpDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                 </button>
-
-                {/* Version Info Footer */}
-                <div className="text-center text-[9px] text-slate-300 font-medium select-none pt-2">
-                    Hi_Trang + v1.0.0
-                </div>
             </div>
         </div>
     );

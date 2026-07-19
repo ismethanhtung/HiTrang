@@ -21,6 +21,7 @@ export interface User {
   name: string;
   username: string;
   role: 'teacher' | 'student';
+  avatarUrl?: string;
 }
 
 export interface Submission {

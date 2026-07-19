@@ -105,7 +105,8 @@ export async function signInUser(username: string, password: string): Promise<Us
       id: authData.user.id,
       name: meta.name || username,
       username: cleanUsername,
-      role: (meta.role as 'teacher' | 'student') || 'student'
+      role: (meta.role as 'teacher' | 'student') || 'student',
+      avatarUrl: meta.avatar_url || meta.picture
     };
   }
 
@@ -113,7 +114,8 @@ export async function signInUser(username: string, password: string): Promise<Us
     id: profileData.id,
     name: profileData.name,
     username: profileData.username,
-    role: profileData.role as 'teacher' | 'student'
+    role: profileData.role as 'teacher' | 'student',
+    avatarUrl: authData.user.user_metadata?.avatar_url || authData.user.user_metadata?.picture
   };
 }
 
@@ -137,6 +139,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const name = meta.full_name || meta.name || user.email?.split('@')[0] || 'Người dùng Google';
     const username = meta.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 5)}`;
     const role = (meta.role as 'teacher' | 'student') || 'student';
+    const avatarUrl = meta.avatar_url || meta.picture;
 
     // Tự động tạo hồ sơ người dùng trong bảng profiles nếu chưa tồn tại (ví dụ: đăng nhập qua Google lần đầu)
     try {
@@ -154,7 +157,8 @@ export async function getCurrentUser(): Promise<User | null> {
       id: user.id,
       name,
       username,
-      role
+      role,
+      avatarUrl
     };
   }
 
@@ -162,7 +166,8 @@ export async function getCurrentUser(): Promise<User | null> {
     id: profileData.id,
     name: profileData.name,
     username: profileData.username,
-    role: profileData.role as 'teacher' | 'student'
+    role: profileData.role as 'teacher' | 'student',
+    avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
   };
 }
 
