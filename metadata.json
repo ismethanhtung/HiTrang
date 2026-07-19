@@ -1,0 +1,6 @@
+{
+  "name": "Hệ thống Kiểm tra Học tập",
+  "description": "Giao diện quản lý và làm bài kiểm tra tinh tế, đơn giản dành cho giáo viên và học sinh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
