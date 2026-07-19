@@ -134,11 +134,27 @@ export async function getCurrentUser(): Promise<User | null> {
 
   if (profileError || !profileData) {
     const meta = user.user_metadata || {};
+    const name = meta.full_name || meta.name || user.email?.split('@')[0] || 'Người dùng Google';
+    const username = meta.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 5)}`;
+    const role = (meta.role as 'teacher' | 'student') || 'student';
+
+    // Tự động tạo hồ sơ người dùng trong bảng profiles nếu chưa tồn tại (ví dụ: đăng nhập qua Google lần đầu)
+    try {
+      await supabase.from('profiles').insert({
+        id: user.id,
+        name,
+        username,
+        role
+      });
+    } catch (err) {
+      console.error('Không thể tự động tạo profile cho người dùng mới:', err);
+    }
+
     return {
       id: user.id,
-      name: meta.name || user.email?.split('@')[0] || '',
-      username: meta.username || user.email?.split('@')[0] || '',
-      role: (meta.role as 'teacher' | 'student') || 'student'
+      name,
+      username,
+      role
     };
   }
 
@@ -148,6 +164,22 @@ export async function getCurrentUser(): Promise<User | null> {
     username: profileData.username,
     role: profileData.role as 'teacher' | 'student'
   };
+}
+
+/**
+ * Đăng nhập bằng Google OAuth
+ */
+export async function signInWithGoogle(): Promise<void> {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin
+    }
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
 
 /**
