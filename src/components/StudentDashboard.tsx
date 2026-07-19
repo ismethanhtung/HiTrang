@@ -1,536 +1,720 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  BookOpen, 
-  Clock, 
-  Sparkles, 
-  ArrowRight, 
-  CheckCircle2, 
-  AlertCircle,
-  HelpCircle,
-  Award,
-  BookMarked,
-  RefreshCw,
-  ChevronRight,
-  ChevronLeft
-} from 'lucide-react';
-import { Quiz, Question, Submission, User } from '../types';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+    BookOpen,
+    Clock,
+    Sparkles,
+    ArrowRight,
+    CheckCircle2,
+    AlertCircle,
+    HelpCircle,
+    Award,
+    BookMarked,
+    RefreshCw,
+    ChevronRight,
+    ChevronLeft,
+} from "lucide-react";
+import { Quiz, Question, Submission, User } from "../types";
 
 interface StudentDashboardProps {
-  user: User;
-  quizzes: Quiz[];
-  submissions: Submission[];
-  onAddSubmission: (newSub: Submission) => void;
-  activeTab: string;
+    user: User;
+    quizzes: Quiz[];
+    submissions: Submission[];
+    onAddSubmission: (newSub: Submission) => void;
+    activeTab: string;
 }
 
 export default function StudentDashboard({
-  user,
-  quizzes,
-  submissions,
-  onAddSubmission,
-  activeTab
+    user,
+    quizzes,
+    submissions,
+    onAddSubmission,
+    activeTab,
 }: StudentDashboardProps) {
-  
-  // Quiz Active State
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
-  const [timeLeft, setTimeLeft] = useState(0); // in seconds
-  const [quizTimerActive, setQuizTimerActive] = useState(false);
+    // Quiz Active State
+    const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+    const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+    const [selectedAnswers, setSelectedAnswers] = useState<
+        Record<string, number>
+    >({});
+    const [timeLeft, setTimeLeft] = useState(0); // in seconds
+    const [quizTimerActive, setQuizTimerActive] = useState(false);
 
-  // Result Overview State
-  const [showResultSummary, setShowResultSummary] = useState<Submission | null>(null);
+    // Result Overview State
+    const [showResultSummary, setShowResultSummary] =
+        useState<Submission | null>(null);
 
-  // Timer Effect
-  useEffect(() => {
-    let interval: any = null;
-    if (quizTimerActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(prev => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && quizTimerActive) {
-      // Auto submit when time runs out
-      handleQuizSubmit(true);
-    }
-    return () => clearInterval(interval);
-  }, [quizTimerActive, timeLeft]);
+    // Timer Effect
+    useEffect(() => {
+        let interval: any = null;
+        if (quizTimerActive && timeLeft > 0) {
+            interval = setInterval(() => {
+                setTimeLeft((prev) => prev - 1);
+            }, 1000);
+        } else if (timeLeft === 0 && quizTimerActive) {
+            // Auto submit when time runs out
+            handleQuizSubmit(true);
+        }
+        return () => clearInterval(interval);
+    }, [quizTimerActive, timeLeft]);
 
-  // Format seconds to MM:SS
-  const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainingSecs = secs % 60;
-    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
-  };
-
-  // Start taking a quiz
-  const handleStartQuiz = (quiz: Quiz) => {
-    setActiveQuiz(quiz);
-    setCurrentQuestionIdx(0);
-    setSelectedAnswers({});
-    setTimeLeft(quiz.duration * 60);
-    setQuizTimerActive(true);
-    setShowResultSummary(null);
-  };
-
-  // Submit current quiz
-  const handleQuizSubmit = (force = false) => {
-    if (!activeQuiz) return;
-    
-    if (!force && Object.keys(selectedAnswers).length < activeQuiz.questions.length) {
-      if (!confirm('Bạn chưa trả lời hết các câu hỏi. Bạn vẫn muốn nộp bài chứ?')) {
-        return;
-      }
-    } else if (!force) {
-      if (!confirm('Bạn có chắc chắn muốn nộp bài kiểm tra này?')) {
-        return;
-      }
-    }
-
-    setQuizTimerActive(false);
-
-    // Calculate score
-    let correctCount = 0;
-    activeQuiz.questions.forEach((q) => {
-      const chosen = selectedAnswers[q.id];
-      if (chosen !== undefined && chosen === q.correctAnswerIndex) {
-        correctCount++;
-      }
-    });
-
-    const totalQuestions = activeQuiz.questions.length;
-    // Scale score to scale of 10.0
-    const rawScore = (correctCount / totalQuestions) * 10;
-    const finalScore = Math.round(rawScore * 10) / 10; // round to 1 decimal place
-
-    const newSubmission: Submission = {
-      id: 'sub_' + Date.now(),
-      quizId: activeQuiz.id,
-      quizTitle: activeQuiz.title,
-      studentId: user.id,
-      studentName: user.name,
-      score: finalScore,
-      totalQuestions: totalQuestions,
-      submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      answers: { ...selectedAnswers }
+    // Format seconds to MM:SS
+    const formatTime = (secs: number) => {
+        const mins = Math.floor(secs / 60);
+        const remainingSecs = secs % 60;
+        return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
     };
 
-    onAddSubmission(newSubmission);
-    setShowResultSummary(newSubmission);
-    setActiveQuiz(null);
-  };
+    // Start taking a quiz
+    const handleStartQuiz = (quiz: Quiz) => {
+        setActiveQuiz(quiz);
+        setCurrentQuestionIdx(0);
+        setSelectedAnswers({});
+        setTimeLeft(quiz.duration * 60);
+        setQuizTimerActive(true);
+        setShowResultSummary(null);
+    };
 
-  // Student specific stats
-  const studentSubmissions = submissions.filter(sub => sub.studentId === user.id);
-  const completedCount = studentSubmissions.length;
-  const averageScore = completedCount > 0
-    ? (studentSubmissions.reduce((acc, curr) => acc + curr.score, 0) / completedCount).toFixed(1)
-    : '0.0';
+    // Submit current quiz
+    const handleQuizSubmit = (force = false) => {
+        if (!activeQuiz) return;
 
-  return (
-    <div className="flex-1 overflow-y-auto bg-[#fafafa] min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* ACTIVE QUIZ PLAYER VIEW */}
-        {activeQuiz ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.99 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-3xl mx-auto bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
-          >
-            {/* Quiz Player Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
-              <div>
-                <span className="text-[9px] font-bold tracking-wider uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-md">
-                  {activeQuiz.subject}
-                </span>
-                <h2 className="text-sm font-bold text-slate-900 mt-2">{activeQuiz.title}</h2>
-              </div>
+        if (
+            !force &&
+            Object.keys(selectedAnswers).length < activeQuiz.questions.length
+        ) {
+            if (
+                !confirm(
+                    "Bạn chưa trả lời hết các câu hỏi. Bạn vẫn muốn nộp bài chứ?",
+                )
+            ) {
+                return;
+            }
+        } else if (!force) {
+            if (!confirm("Bạn có chắc chắn muốn nộp bài kiểm tra này?")) {
+                return;
+            }
+        }
 
-              {/* Timer Pill */}
-              <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border ${
-                timeLeft < 60 
-                  ? 'bg-rose-50 border-rose-100 text-rose-600 animate-pulse' 
-                  : 'bg-amber-50 border-amber-100 text-amber-700'
-              } text-xs font-bold self-start sm:self-auto`}>
-                <Clock className="w-4.5 h-4.5" />
-                <span>Thời gian: {formatTime(timeLeft)}</span>
-              </div>
-            </div>
+        setQuizTimerActive(false);
 
-            {/* Questions tracker progress bar */}
-            <div>
-              <div className="flex justify-between text-[11px] font-semibold text-gray-400 mb-1.5">
-                <span>Câu hỏi {currentQuestionIdx + 1} trên {activeQuiz.questions.length}</span>
-                <span>Tiến độ: {Math.round(((currentQuestionIdx + 1) / activeQuiz.questions.length) * 100)}%</span>
-              </div>
-              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                  style={{ width: `${((currentQuestionIdx + 1) / activeQuiz.questions.length) * 100}%` }}
-                />
-              </div>
-            </div>
+        // Calculate score
+        let correctCount = 0;
+        activeQuiz.questions.forEach((q) => {
+            const chosen = selectedAnswers[q.id];
+            if (chosen !== undefined && chosen === q.correctAnswerIndex) {
+                correctCount++;
+            }
+        });
 
-            {/* Question Box Card */}
-            <div className="bg-[#fcfbfa] border border-gray-100 p-6 rounded-2xl space-y-5">
-              <h3 className="text-xs font-semibold text-slate-900 leading-relaxed">
-                <span className="text-emerald-600 font-bold mr-1">Câu {currentQuestionIdx + 1}:</span>
-                {activeQuiz.questions[currentQuestionIdx].text}
-              </h3>
+        const totalQuestions = activeQuiz.questions.length;
+        // Scale score to scale of 10.0
+        const rawScore = (correctCount / totalQuestions) * 10;
+        const finalScore = Math.round(rawScore * 10) / 10; // round to 1 decimal place
 
-              {/* Options mapping */}
-              <div className="space-y-3">
-                {activeQuiz.questions[currentQuestionIdx].options.map((option, idx) => {
-                  const qId = activeQuiz.questions[currentQuestionIdx].id;
-                  const isSelected = selectedAnswers[qId] === idx;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      id={`btn-option-${idx}`}
-                      onClick={() => setSelectedAnswers({ ...selectedAnswers, [qId]: idx })}
-                      className={`w-full flex items-center justify-between p-4 bg-white border rounded-xl text-left text-xs font-medium transition-all duration-150 ${
-                        isSelected
-                          ? 'border-emerald-500 bg-emerald-50/20 text-emerald-800 ring-1 ring-emerald-500/20'
-                          : 'border-gray-200 text-slate-700 hover:border-gray-300'
-                      }`}
+        const newSubmission: Submission = {
+            id: "sub_" + Date.now(),
+            quizId: activeQuiz.id,
+            quizTitle: activeQuiz.title,
+            studentId: user.id,
+            studentName: user.name,
+            score: finalScore,
+            totalQuestions: totalQuestions,
+            submittedAt: new Date()
+                .toISOString()
+                .replace("T", " ")
+                .substring(0, 16),
+            answers: { ...selectedAnswers },
+        };
+
+        onAddSubmission(newSubmission);
+        setShowResultSummary(newSubmission);
+        setActiveQuiz(null);
+    };
+
+    // Student specific stats
+    const studentSubmissions = submissions.filter(
+        (sub) => sub.studentId === user.id,
+    );
+    const completedCount = studentSubmissions.length;
+    const averageScore =
+        completedCount > 0
+            ? (
+                  studentSubmissions.reduce(
+                      (acc, curr) => acc + curr.score,
+                      0,
+                  ) / completedCount
+              ).toFixed(1)
+            : "0.0";
+
+    return (
+        <div className="flex-1 overflow-y-auto bg-bg-base dark:bg-bg-base text-text-primary min-h-screen transition-colors duration-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {/* ACTIVE QUIZ PLAYER VIEW */}
+                {activeQuiz ? (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.99 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="max-w-3xl mx-auto bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] ${
-                          isSelected ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500'
-                        }`}>
-                          {String.fromCharCode(65 + idx)}
-                        </span>
-                        <span>{option}</span>
-                      </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Quiz Navigation Buttons Row */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <button
-                type="button"
-                id="btn-prev-question"
-                onClick={() => setCurrentQuestionIdx(prev => Math.max(0, prev - 1))}
-                disabled={currentQuestionIdx === 0}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 border border-gray-100 hover:bg-slate-100 disabled:opacity-40 text-slate-600 text-xs font-semibold rounded-xl transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Quay lại</span>
-              </button>
-
-              {currentQuestionIdx < activeQuiz.questions.length - 1 ? (
-                <button
-                  type="button"
-                  id="btn-next-question"
-                  onClick={() => setCurrentQuestionIdx(prev => prev + 1)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-xl transition-all"
-                >
-                  <span>Tiếp theo</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  id="btn-submit-active-quiz"
-                  onClick={() => handleQuizSubmit()}
-                  className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all animate-pulse"
-                >
-                  <span>Nộp bài kiểm tra</span>
-                  <CheckCircle2 className="w-4.5 h-4.5" />
-                </button>
-              )}
-            </div>
-          </motion.div>
-        ) : showResultSummary ? (
-          /* DETAILED RESULTS SCREEN */
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-2xl mx-auto bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 text-center"
-          >
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full">
-              <Award className="w-8 h-8" />
-            </div>
-
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Chúc mừng bạn đã hoàn thành!</h2>
-              <p className="text-xs text-gray-500 mt-1">Kết quả bài thi đã được đồng bộ lên học bạ điện tử của giáo viên.</p>
-            </div>
-
-            {/* Score Showcase Panel */}
-            <div className="bg-[#fcfbfa] border border-gray-100 rounded-2xl p-6 max-w-sm mx-auto">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Điểm số đạt được</span>
-              <span className="text-4xl font-extrabold text-emerald-600 block mt-2">{showResultSummary.score} / 10</span>
-              <span className="text-[11px] text-gray-500 font-medium block mt-1.5">
-                Đúng {Math.round((showResultSummary.score / 10) * showResultSummary.totalQuestions)} câu trên {showResultSummary.totalQuestions} câu
-              </span>
-            </div>
-
-            <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                type="button"
-                id="btn-back-to-dashboard"
-                onClick={() => setShowResultSummary(null)}
-                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-bold rounded-xl transition-all"
-              >
-                Trở về Bảng điều khiển
-              </button>
-              <button
-                type="button"
-                id="btn-take-more-quiz"
-                onClick={() => {
-                  setShowResultSummary(null);
-                  // Directly navigate to available quizzes
-                  // (which triggers tab change externally or we just show list)
-                }}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all"
-              >
-                Làm thêm bài thi khác
-              </button>
-            </div>
-          </motion.div>
-        ) : (
-          /* STANDARD STUDENT DASHBOARD TABS */
-          <AnimatePresence mode="wait">
-            {activeTab === 'student-dashboard' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-8"
-              >
-                {/* Custom Welcome Block Banner */}
-                <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-sm">
-                  <div className="absolute right-0 top-0 w-44 h-44 bg-emerald-500/10 rounded-full blur-3xl" />
-                  <div className="relative z-10 max-w-md">
-                    <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-md tracking-wider uppercase">
-                      Học viên Xuất sắc
-                    </span>
-                    <h2 className="text-lg font-bold mt-3">Chào mừng quay trở lại, {user.name}!</h2>
-                    <p className="text-xs text-slate-300 leading-relaxed mt-2">
-                      Hôm nay là ngày tuyệt vời để nâng cao điểm số. Hãy kiểm tra các đề thi thử mới cập nhật trong tuần này nhé!
-                    </p>
-                  </div>
-                </div>
-
-                {/* Score Stats Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Đề thi Đang mở</span>
-                    <h3 className="text-xl font-bold text-slate-900 mt-1">{quizzes.length}</h3>
-                    <p className="text-[10px] text-emerald-600 mt-1.5 font-medium">Bấm "Làm bài thi" để tham gia</p>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Bài đã hoàn thành</span>
-                    <h3 className="text-xl font-bold text-slate-900 mt-1">{completedCount}</h3>
-                    <p className="text-[10px] text-gray-500 mt-1.5">Lưu trữ trong học bạ cá nhân</p>
-                  </div>
-
-                  <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Điểm trung bình</span>
-                    <h3 className="text-xl font-bold text-slate-900 mt-1">{averageScore} / 10</h3>
-                    <p className="text-[10px] text-emerald-600 mt-1.5 font-medium">Phong độ học tập xuất sắc</p>
-                  </div>
-                </div>
-
-                {/* Left: Next suggested exam. Right: Score Logs list */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Next Quiz Promoted Block */}
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight text-gray-400">Đề xuất ôn luyện</h4>
-                      {quizzes.length > 0 ? (
-                        <div className="mt-4 space-y-3">
-                          <span className="text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-md uppercase">
-                            HOT • CÓ SẴN
-                          </span>
-                          <h5 className="text-xs font-bold text-slate-800 line-clamp-2">{quizzes[0].title}</h5>
-                          <p className="text-[11px] text-gray-500 line-clamp-3">{quizzes[0].description}</p>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-gray-400 italic mt-4">Không có bài ôn tập khả dụng.</p>
-                      )}
-                    </div>
-
-                    {quizzes.length > 0 && (
-                      <button
-                        type="button"
-                        id="btn-promoted-start-quiz"
-                        onClick={() => handleStartQuiz(quizzes[0])}
-                        className="mt-6 w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
-                      >
-                        <span>Thi thử ngay</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Submission history list log */}
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs lg:col-span-2">
-                    <h4 className="text-xs font-bold text-slate-900 mb-4">Nhật ký điểm số cá nhân</h4>
-                    <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                      {studentSubmissions.length > 0 ? (
-                        studentSubmissions.slice().reverse().map((sub) => (
-                          <div 
-                            key={sub.id} 
-                            className="p-3 bg-[#fcfbfa] hover:bg-[#f6f5f4] border border-gray-100/50 rounded-xl flex items-center justify-between transition-colors"
-                          >
+                        {/* Quiz Player Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
                             <div>
-                              <p className="text-xs font-semibold text-slate-800 truncate max-w-[280px]">{sub.quizTitle}</p>
-                              <span className="text-[9px] text-gray-400 mt-1 block">Ngày nộp: {sub.submittedAt}</span>
+                                <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
+                                    {activeQuiz.subject}
+                                </span>
+                                <h2 className="text-sm font-bold text-slate-900 mt-2">
+                                    {activeQuiz.title}
+                                </h2>
                             </div>
-                            <span className="text-xs font-extrabold text-slate-900 bg-white border border-gray-100 px-2.5 py-1 rounded-lg">
-                              {sub.score}/10
-                            </span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-gray-400 italic text-center py-6">Bạn chưa tham gia bài kiểm tra nào.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
-            {/* TAB: AVAILABLE QUIZZES */}
-            {activeTab === 'student-quizzes' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Danh sách Đề thi thử</h2>
-                  <p className="text-xs text-gray-500 mt-1">Chọn một trong các đề dưới đây để bắt đầu thời gian tính giờ thi.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {quizzes.map((quiz) => {
-                    const hasDone = studentSubmissions.some(sub => sub.quizId === quiz.id);
-                    return (
-                      <div 
-                        key={quiz.id}
-                        className="bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-emerald-500/20 transition-all duration-200"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-2 mb-3">
-                            <span className="text-[9px] font-bold tracking-wider uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-md">
-                              {quiz.subject}
-                            </span>
-                            {hasDone ? (
-                              <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100/30">
-                                Đã làm
-                              </span>
-                            ) : (
-                              <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100/30">
-                                Chưa làm
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[40px]">
-                            {quiz.title}
-                          </h3>
-                          <p className="text-xs text-gray-500 line-clamp-3 mt-2 min-h-[48px]">
-                            {quiz.description}
-                          </p>
-
-                          <div className="flex items-center gap-4 border-t border-b border-gray-50 py-2.5 my-4 text-[11px] text-gray-500">
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span>{quiz.duration} phút</span>
+                            {/* Timer Pill */}
+                            <div
+                                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border ${
+                                    timeLeft < 60
+                                        ? "bg-rose-50 border-rose-100 text-rose-600 animate-pulse"
+                                        : "bg-brand-50 border-brand-200 text-brand-700"
+                                } text-xs font-bold self-start sm:self-auto`}
+                            >
+                                <Clock className="w-4.5 h-4.5" />
+                                <span>Thời gian: {formatTime(timeLeft)}</span>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                              <HelpCircle className="w-4 h-4 text-gray-400" />
-                              <span>{quiz.questions.length} câu hỏi</span>
-                            </div>
-                          </div>
                         </div>
 
-                        <button
-                          type="button"
-                          id={`btn-start-quiz-${quiz.id}`}
-                          onClick={() => handleStartQuiz(quiz)}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs active:scale-98"
-                        >
-                          <span>Bắt đầu làm bài</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-
-            {/* TAB: STUDY HISTORY / RESULTS */}
-            {activeTab === 'student-results' && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
-              >
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">Học bạ của tôi</h2>
-                  <p className="text-xs text-gray-500 mt-1">Lịch sử toàn bộ các đề trắc nghiệm bạn đã tham gia.</p>
-                </div>
-
-                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs">
-                  {studentSubmissions.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                            <th className="py-4 px-6">Tên đề thi</th>
-                            <th className="py-4 px-6">Thời gian nộp</th>
-                            <th className="py-4 px-6 text-center">Đúng / Tổng số câu</th>
-                            <th className="py-4 px-6 text-right">Điểm số</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 text-xs text-slate-700">
-                          {studentSubmissions.map((sub) => (
-                            <tr key={sub.id} className="hover:bg-slate-50/40 transition-colors">
-                              <td className="py-4 px-6 font-semibold text-slate-900">{sub.quizTitle}</td>
-                              <td className="py-4 px-6 text-gray-400 font-medium">{sub.submittedAt}</td>
-                              <td className="py-4 px-6 text-center text-slate-500 font-bold">
-                                {Math.round((sub.score / 10) * sub.totalQuestions)} / {sub.totalQuestions}
-                              </td>
-                              <td className="py-4 px-6 text-right">
-                                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100/50 rounded-lg font-bold text-[11px]">
-                                  {sub.score}/10
+                        {/* Questions tracker progress bar */}
+                        <div>
+                            <div className="flex justify-between text-[11px] font-semibold text-gray-400 mb-1.5">
+                                <span>
+                                    Câu hỏi {currentQuestionIdx + 1} trên{" "}
+                                    {activeQuiz.questions.length}
                                 </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="p-12 text-center text-gray-400 italic">
-                      Chưa ghi nhận thông tin học bạ. Hãy làm đề thi thử đầu tiên để ghi nhận kết quả nhé!
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
+                                <span>
+                                    Tiến độ:{" "}
+                                    {Math.round(
+                                        ((currentQuestionIdx + 1) /
+                                            activeQuiz.questions.length) *
+                                            100,
+                                    )}
+                                    %
+                                </span>
+                            </div>
+                            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-brand-300 rounded-full transition-all duration-300"
+                                    style={{
+                                        width: `${((currentQuestionIdx + 1) / activeQuiz.questions.length) * 100}%`,
+                                    }}
+                                />
+                            </div>
+                        </div>
 
-      </div>
-    </div>
-  );
+                        {/* Question Box Card */}
+                        <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-6 rounded-2xl space-y-5">
+                            <h3 className="text-xs font-semibold text-slate-900 leading-relaxed">
+                                <span className="text-brand-600 font-bold mr-1">
+                                    Câu {currentQuestionIdx + 1}:
+                                </span>
+                                {activeQuiz.questions[currentQuestionIdx].text}
+                            </h3>
+
+                            {/* Options mapping */}
+                            <div className="space-y-3">
+                                {activeQuiz.questions[
+                                    currentQuestionIdx
+                                ].options.map((option, idx) => {
+                                    const qId =
+                                        activeQuiz.questions[currentQuestionIdx]
+                                            .id;
+                                    const isSelected =
+                                        selectedAnswers[qId] === idx;
+                                    return (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            id={`btn-option-${idx}`}
+                                            onClick={() =>
+                                                setSelectedAnswers({
+                                                    ...selectedAnswers,
+                                                    [qId]: idx,
+                                                })
+                                            }
+                                            className={`w-full flex items-center justify-between p-4 bg-white border rounded-xl text-left text-xs font-medium transition-all duration-150 ${
+                                                isSelected
+                                                    ? "border-brand-300 bg-brand-50/20 text-emerald-800 ring-1 ring-emerald-500/20"
+                                                    : "border-gray-200 text-slate-700 hover:border-gray-300"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span
+                                                    className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] ${
+                                                        isSelected
+                                                            ? "bg-brand-300 text-white font-medium"
+                                                            : "bg-slate-100 text-slate-500"
+                                                    }`}
+                                                >
+                                                    {String.fromCharCode(
+                                                        65 + idx,
+                                                    )}
+                                                </span>
+                                                <span>{option}</span>
+                                            </div>
+                                            {isSelected && (
+                                                <div className="w-5 h-5 rounded-full bg-brand-300 text-white font-medium flex items-center justify-center">
+                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Quiz Navigation Buttons Row */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <button
+                                type="button"
+                                id="btn-prev-question"
+                                onClick={() =>
+                                    setCurrentQuestionIdx((prev) =>
+                                        Math.max(0, prev - 1),
+                                    )
+                                }
+                                disabled={currentQuestionIdx === 0}
+                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 border border-gray-100 hover:bg-slate-100 disabled:opacity-40 text-slate-600 text-xs font-semibold rounded-xl transition-all"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                <span>Quay lại</span>
+                            </button>
+
+                            {currentQuestionIdx <
+                            activeQuiz.questions.length - 1 ? (
+                                <button
+                                    type="button"
+                                    id="btn-next-question"
+                                    onClick={() =>
+                                        setCurrentQuestionIdx(
+                                            (prev) => prev + 1,
+                                        )
+                                    }
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-xl transition-all"
+                                >
+                                    <span>Tiếp theo</span>
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    id="btn-submit-active-quiz"
+                                    onClick={() => handleQuizSubmit()}
+                                    className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all text-xs font-bold rounded-xl shadow-xs transition-all animate-pulse"
+                                >
+                                    <span>Nộp bài kiểm tra</span>
+                                    <CheckCircle2 className="w-4.5 h-4.5" />
+                                </button>
+                            )}
+                        </div>
+                    </motion.div>
+                ) : showResultSummary ? (
+                    /* DETAILED RESULTS SCREEN */
+                    <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="max-w-2xl mx-auto bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 text-center"
+                    >
+                        <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-50 text-brand-600 border border-brand-200 rounded-full">
+                            <Award className="w-8 h-8" />
+                        </div>
+
+                        <div>
+                            <h2 className="text-base font-bold text-slate-900">
+                                Chúc mừng bạn đã hoàn thành!
+                            </h2>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Kết quả bài thi đã được đồng bộ lên học bạ điện
+                                tử của giáo viên.
+                            </p>
+                        </div>
+
+                        {/* Score Showcase Panel */}
+                        <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 rounded-2xl p-6 max-w-sm mx-auto">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                                Điểm số đạt được
+                            </span>
+                            <span className="text-4xl font-extrabold text-brand-600 block mt-2">
+                                {showResultSummary.score} / 10
+                            </span>
+                            <span className="text-[11px] text-gray-500 font-medium block mt-1.5">
+                                Đúng{" "}
+                                {Math.round(
+                                    (showResultSummary.score / 10) *
+                                        showResultSummary.totalQuestions,
+                                )}{" "}
+                                câu trên {showResultSummary.totalQuestions} câu
+                            </span>
+                        </div>
+
+                        <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                                type="button"
+                                id="btn-back-to-dashboard"
+                                onClick={() => setShowResultSummary(null)}
+                                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 text-xs font-bold rounded-xl transition-all"
+                            >
+                                Trở về Bảng điều khiển
+                            </button>
+                            <button
+                                type="button"
+                                id="btn-take-more-quiz"
+                                onClick={() => {
+                                    setShowResultSummary(null);
+                                    // Directly navigate to available quizzes
+                                    // (which triggers tab change externally or we just show list)
+                                }}
+                                className="px-5 py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all text-xs font-bold rounded-xl shadow-xs transition-all"
+                            >
+                                Làm thêm bài thi khác
+                            </button>
+                        </div>
+                    </motion.div>
+                ) : (
+                    /* STANDARD STUDENT DASHBOARD TABS */
+                    <AnimatePresence mode="wait">
+                        {activeTab === "student-dashboard" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-8"
+                            >
+                                {/* Custom Welcome Block Banner */}
+                                <div className="bg-gradient-to-r from-brand-50/70 to-brand-100/40 dark:from-brand-950/20 dark:to-brand-900/10 text-slate-800 dark:text-slate-150 rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-brand-100 dark:border-brand-900/40 shadow-xs transition-all duration-200">
+                                    <div className="absolute right-0 top-0 w-44 h-44 bg-brand-300/10 rounded-full blur-3xl" />
+                                    <div className="relative z-10 max-w-md">
+                                        <span className="text-[9px] font-bold bg-brand-100 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/40 dark:border-brand-500/20 px-2.5 py-1 rounded-md tracking-wider uppercase">
+                                            Học Bài Thôi Em
+                                        </span>
+                                        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-3">
+                                            Chào mừng quay trở lại, {user.name}!
+                                        </h2>
+                                        <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed mt-2">
+                                            Hôm nay là ngày tuyệt vời để nâng
+                                            cao điểm số. Hãy kiểm tra các đề thi
+                                            thử mới cập nhật trong tuần này nhé!
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Score Stats Row */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                            Đề thi Đang mở
+                                        </span>
+                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
+                                            {quizzes.length}
+                                        </h3>
+                                        <p className="text-[10px] text-brand-600 mt-1.5 font-medium">
+                                            Bấm "Làm bài thi" để tham gia
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                            Bài đã hoàn thành
+                                        </span>
+                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
+                                            {completedCount}
+                                        </h3>
+                                        <p className="text-[10px] text-gray-500 mt-1.5">
+                                            Lưu trữ trong học bạ cá nhân
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                            Điểm trung bình
+                                        </span>
+                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
+                                            {averageScore} / 10
+                                        </h3>
+                                        <p className="text-[10px] text-brand-600 mt-1.5 font-medium">
+                                            Phong độ học tập xuất sắc
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Left: Next suggested exam. Right: Score Logs list */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Next Quiz Promoted Block */}
+                                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                                        <div>
+                                            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight text-gray-400">
+                                                Đề xuất ôn luyện
+                                            </h4>
+                                            {quizzes.length > 0 ? (
+                                                <div className="mt-4 space-y-3">
+                                                    <span className="text-[9px] font-bold bg-brand-50 text-brand-700 border border-brand-200 px-2.5 py-1 rounded-md uppercase">
+                                                        HOT • CÓ SẴN
+                                                    </span>
+                                                    <h5 className="text-xs font-bold text-slate-800 line-clamp-2">
+                                                        {quizzes[0].title}
+                                                    </h5>
+                                                    <p className="text-[11px] text-gray-500 line-clamp-3">
+                                                        {quizzes[0].description}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-gray-400 italic mt-4">
+                                                    Không có bài ôn tập khả
+                                                    dụng.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {quizzes.length > 0 && (
+                                            <button
+                                                type="button"
+                                                id="btn-promoted-start-quiz"
+                                                onClick={() =>
+                                                    handleStartQuiz(quizzes[0])
+                                                }
+                                                className="mt-6 w-full py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                                            >
+                                                <span>Thi thử ngay</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Submission history list log */}
+                                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs lg:col-span-2">
+                                        <h4 className="text-xs font-bold text-slate-900 mb-4">
+                                            Nhật ký điểm số cá nhân
+                                        </h4>
+                                        <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                                            {studentSubmissions.length > 0 ? (
+                                                studentSubmissions
+                                                    .slice()
+                                                    .reverse()
+                                                    .map((sub) => (
+                                                        <div
+                                                            key={sub.id}
+                                                            className="p-3 bg-bg-base dark:bg-bg-card hover:bg-slate-50 dark:hover:bg-slate-800 border border-border-primary dark:border-slate-800/60 rounded-xl flex items-center justify-between transition-colors"
+                                                        >
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-slate-800 truncate max-w-[280px]">
+                                                                    {
+                                                                        sub.quizTitle
+                                                                    }
+                                                                </p>
+                                                                <span className="text-[9px] text-gray-400 mt-1 block">
+                                                                    Ngày nộp:{" "}
+                                                                    {
+                                                                        sub.submittedAt
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-xs font-extrabold text-slate-900 bg-white border border-gray-100 px-2.5 py-1 rounded-lg">
+                                                                {sub.score}/10
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                            ) : (
+                                                <p className="text-xs text-gray-400 italic text-center py-6">
+                                                    Bạn chưa tham gia bài kiểm
+                                                    tra nào.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* TAB: AVAILABLE QUIZZES */}
+                        {activeTab === "student-quizzes" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                                        Danh sách Đề thi thử
+                                    </h2>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Chọn một trong các đề dưới đây để bắt
+                                        đầu thời gian tính giờ thi.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                    {quizzes.map((quiz) => {
+                                        const hasDone = studentSubmissions.some(
+                                            (sub) => sub.quizId === quiz.id,
+                                        );
+                                        return (
+                                            <div
+                                                key={quiz.id}
+                                                className="bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-brand-300/20 transition-all duration-200"
+                                            >
+                                                <div>
+                                                    <div className="flex items-center justify-between gap-2 mb-3">
+                                                        <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
+                                                            {quiz.subject}
+                                                        </span>
+                                                        {hasDone ? (
+                                                            <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
+                                                                Đã làm
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
+                                                                Chưa làm
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[40px]">
+                                                        {quiz.title}
+                                                    </h3>
+                                                    <p className="text-xs text-gray-500 line-clamp-3 mt-2 min-h-[48px]">
+                                                        {quiz.description}
+                                                    </p>
+
+                                                    <div className="flex items-center gap-4 border-t border-b border-gray-50 py-2.5 my-4 text-[11px] text-gray-500">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <Clock className="w-4 h-4 text-gray-400" />
+                                                            <span>
+                                                                {quiz.duration}{" "}
+                                                                phút
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <HelpCircle className="w-4 h-4 text-gray-400" />
+                                                            <span>
+                                                                {
+                                                                    quiz
+                                                                        .questions
+                                                                        .length
+                                                                }{" "}
+                                                                câu hỏi
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    id={`btn-start-quiz-${quiz.id}`}
+                                                    onClick={() =>
+                                                        handleStartQuiz(quiz)
+                                                    }
+                                                    className="w-full py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs active:scale-98"
+                                                >
+                                                    <span>Bắt đầu làm bài</span>
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* TAB: STUDY HISTORY / RESULTS */}
+                        {activeTab === "student-results" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-6"
+                            >
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                                        Học bạ của tôi
+                                    </h2>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Lịch sử toàn bộ các đề trắc nghiệm bạn
+                                        đã tham gia.
+                                    </p>
+                                </div>
+
+                                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs">
+                                    {studentSubmissions.length > 0 ? (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="bg-slate-50/50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                        <th className="py-4 px-6">
+                                                            Tên đề thi
+                                                        </th>
+                                                        <th className="py-4 px-6">
+                                                            Thời gian nộp
+                                                        </th>
+                                                        <th className="py-4 px-6 text-center">
+                                                            Đúng / Tổng số câu
+                                                        </th>
+                                                        <th className="py-4 px-6 text-right">
+                                                            Điểm số
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-xs text-slate-700">
+                                                    {studentSubmissions.map(
+                                                        (sub) => (
+                                                            <tr
+                                                                key={sub.id}
+                                                                className="hover:bg-slate-50/40 transition-colors"
+                                                            >
+                                                                <td className="py-4 px-6 font-semibold text-slate-900">
+                                                                    {
+                                                                        sub.quizTitle
+                                                                    }
+                                                                </td>
+                                                                <td className="py-4 px-6 text-gray-400 font-medium">
+                                                                    {
+                                                                        sub.submittedAt
+                                                                    }
+                                                                </td>
+                                                                <td className="py-4 px-6 text-center text-slate-500 font-bold">
+                                                                    {Math.round(
+                                                                        (sub.score /
+                                                                            10) *
+                                                                            sub.totalQuestions,
+                                                                    )}{" "}
+                                                                    /{" "}
+                                                                    {
+                                                                        sub.totalQuestions
+                                                                    }
+                                                                </td>
+                                                                <td className="py-4 px-6 text-right">
+                                                                    <span className="px-2.5 py-1 bg-brand-50 text-brand-700 border border-brand-200/50 rounded-lg font-bold text-[11px]">
+                                                                        {
+                                                                            sub.score
+                                                                        }
+                                                                        /10
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        ),
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="p-12 text-center text-gray-400 italic">
+                                            Chưa ghi nhận thông tin học bạ. Hãy
+                                            làm đề thi thử đầu tiên để ghi nhận
+                                            kết quả nhé!
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                )}
+            </div>
+        </div>
+    );
 }

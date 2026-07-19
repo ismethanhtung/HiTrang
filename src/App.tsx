@@ -11,6 +11,23 @@ import SettingsView from "./components/SettingsView";
 import { getCurrentUser, signOutUser } from "./lib/supabaseService";
 
 export default function App() {
+    // Theme state (Dark/Light)
+    const [theme, setTheme] = useState<"light" | "dark">(() => {
+        const saved = localStorage.getItem("hitrang_theme");
+        if (saved === "dark" || saved === "light") return saved;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    });
+
+    useEffect(() => {
+        const root = window.document.documentElement;
+        if (theme === "dark") {
+            root.classList.add("dark");
+        } else {
+            root.classList.remove("dark");
+        }
+        localStorage.setItem("hitrang_theme", theme);
+    }, [theme]);
+
     // Sync router path state
     const [currentPath, setCurrentPath] = useState<"/" | "/trang">(() => {
         const pathname = window.location.pathname;
@@ -166,7 +183,7 @@ export default function App() {
     };
 
     return (
-        <div className="min-h-screen bg-[#fafafa] font-sans antialiased flex flex-col">
+        <div className="min-h-screen bg-bg-surface dark:bg-bg-base font-sans antialiased flex flex-col">
             {/* Dynamic Route Indicator / Path Swapper Panel */}
 
             {/* Main Core Layout Wrapper */}
@@ -180,7 +197,7 @@ export default function App() {
                 />
             ) : (
                 // Logged-in full layout view
-                <div className="flex-1 flex flex-col lg:flex-row">
+                <div className="flex-1 flex flex-col lg:flex-row bg-bg-base text-text-primary transition-colors duration-200">
                     {/* Universal Left Sidebar component */}
                     <Sidebar
                         user={user}
@@ -189,15 +206,18 @@ export default function App() {
                         onLogout={handleLogout}
                         isOpen={sidebarOpen}
                         setIsOpen={setSidebarOpen}
+                        theme={theme}
+                        setTheme={setTheme}
                     />
 
                     {/* Main Dashboard Panel */}
-                    <main className="flex-1 flex flex-col min-w-0">
+                    <main className="flex-1 flex flex-col min-w-0 bg-bg-surface dark:bg-bg-base text-text-primary transition-colors duration-200">
                         {activeTab === "settings" ? (
                             <SettingsView
                                 user={user}
                                 onUpdateUser={(updatedUser) => setUser(updatedUser)}
                                 onLogout={handleLogout}
+                                theme={theme}
                             />
                         ) : user.role === "teacher" ? (
                             <AdminDashboard

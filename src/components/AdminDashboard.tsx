@@ -121,7 +121,7 @@ export default function AdminDashboard({
 
   // Render components based on activeTab
   return (
-    <div className="flex-1 overflow-y-auto bg-[#fafafa] min-h-screen">
+    <div className="flex-1 overflow-y-auto bg-bg-base dark:bg-bg-base text-text-primary min-h-screen transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* TAB 1: OVERVIEW */}
@@ -154,11 +154,11 @@ export default function AdminDashboard({
                 <div>
                   <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Tổng số Đề thi</span>
                   <h3 className="text-2xl font-bold text-slate-900 mt-1">{totalQuizzes}</h3>
-                  <div className="text-[10px] text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                  <div className="text-[10px] text-brand-600 font-medium mt-1.5 flex items-center gap-1">
                     <span>Mới cập nhật tháng này</span>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
                   <BookOpen className="w-5 h-5" />
                 </div>
               </div>
@@ -167,7 +167,7 @@ export default function AdminDashboard({
                 <div>
                   <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Lượt nộp bài</span>
                   <h3 className="text-2xl font-bold text-slate-900 mt-1">{totalSubmissions}</h3>
-                  <div className="text-[10px] text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                  <div className="text-[10px] text-brand-600 font-medium mt-1.5 flex items-center gap-1">
                     <span>+15% so với tuần trước</span>
                   </div>
                 </div>
@@ -180,11 +180,11 @@ export default function AdminDashboard({
                 <div>
                   <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Điểm trung bình</span>
                   <h3 className="text-2xl font-bold text-slate-900 mt-1">{avgScore}/10</h3>
-                  <div className="text-[10px] text-amber-600 font-medium mt-1.5 flex items-center gap-1">
+                  <div className="text-[10px] text-brand-600 font-medium mt-1.5 flex items-center gap-1">
                     <span>Đạt ngưỡng giỏi (Khá)</span>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
                   <Sparkles className="w-5 h-5" />
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function AdminDashboard({
                 <div>
                   <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Tỷ lệ Hoàn thành</span>
                   <h3 className="text-2xl font-bold text-slate-900 mt-1">92.4%</h3>
-                  <div className="text-[10px] text-emerald-600 font-medium mt-1.5 flex items-center gap-1">
+                  <div className="text-[10px] text-brand-600 font-medium mt-1.5 flex items-center gap-1">
                     <span>95% học sinh tham gia đầy đủ</span>
                   </div>
                 </div>
@@ -258,12 +258,12 @@ export default function AdminDashboard({
                   {submissions.slice().reverse().map((sub) => (
                     <div 
                       key={sub.id} 
-                      className="p-3 bg-[#fcfbfa] hover:bg-[#f6f5f4] border border-gray-100/50 rounded-xl flex items-center justify-between transition-colors duration-150"
+                      className="p-3 bg-bg-base dark:bg-bg-card hover:bg-slate-50 dark:hover:bg-slate-800 border border-border-primary dark:border-slate-800/60 rounded-xl flex items-center justify-between transition-colors duration-150"
                     >
                       <div className="min-w-0 flex-1 mr-3">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[11px] font-semibold text-slate-800 truncate">{sub.studentName}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100/40 rounded-full font-medium shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.5 bg-brand-50 text-brand-700 border border-brand-200/40 rounded-full font-medium shrink-0">
                             {sub.score >= 8.0 ? 'Giỏi' : sub.score >= 5.0 ? 'Đạt' : 'Cần cố gắng'}
                           </span>
                         </div>
@@ -311,11 +311,11 @@ export default function AdminDashboard({
               {quizzes.map((quiz) => (
                 <div 
                   key={quiz.id}
-                  className="bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-emerald-500/30 transition-all duration-200"
+                  className="bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-brand-300/30 transition-all duration-200"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-[9px] font-bold tracking-wider uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-md">
+                      <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2.5 py-1 rounded-md">
                         {quiz.subject}
                       </span>
                       <span className="text-[10px] text-gray-400 font-medium">
@@ -388,7 +388,7 @@ export default function AdminDashboard({
                 placeholder="Tìm học sinh, lớp, mã số..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-gray-400 shadow-xs"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 transition-colors placeholder:text-gray-400 shadow-xs"
               />
             </div>
 
@@ -411,10 +411,10 @@ export default function AdminDashboard({
                       .filter(st => st.name.toLowerCase().includes(searchTerm.toLowerCase()) || st.group.toLowerCase().includes(searchTerm.toLowerCase()))
                       .map((student) => {
                         const scoreColor = student.avgScore >= 8.0 
-                          ? 'text-emerald-600 bg-emerald-50/50' 
+                          ? 'text-brand-600 bg-brand-50/50' 
                           : student.avgScore >= 5.0 
                             ? 'text-blue-600 bg-blue-50/50' 
-                            : 'text-amber-600 bg-amber-50/50';
+                            : 'text-brand-600 bg-brand-50/50';
                         return (
                           <tr key={student.id} className="hover:bg-slate-50/40 transition-colors">
                             <td className="py-4 px-6">
@@ -443,7 +443,7 @@ export default function AdminDashboard({
                                 </div>
                                 <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                                   <div 
-                                    className="h-full bg-emerald-500 rounded-full" 
+                                    className="h-full bg-brand-300 rounded-full" 
                                     style={{ width: `${(student.quizzesCount / totalQuizzes) * 100}%` }}
                                   />
                                 </div>
@@ -453,7 +453,7 @@ export default function AdminDashboard({
                               <button
                                 type="button"
                                 onClick={() => setSelectedStudent(student)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700"
                               >
                                 <span>Xem</span>
                                 <ChevronRight className="w-3.5 h-3.5" />
@@ -504,7 +504,7 @@ export default function AdminDashboard({
                         placeholder="Ví dụ: Kiểm tra Đọc hiểu Tập 2"
                         value={newQuizTitle}
                         onChange={(e) => setNewQuizTitle(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 transition-colors"
                         required
                       />
                     </div>
@@ -513,7 +513,7 @@ export default function AdminDashboard({
                       <select
                         value={newQuizSubject}
                         onChange={(e) => setNewQuizSubject(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 bg-white transition-colors"
+                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 bg-white transition-colors"
                       >
                         <option value="Toán học">Toán học</option>
                         <option value="Vật lý">Vật lý</option>
@@ -528,7 +528,7 @@ export default function AdminDashboard({
                         placeholder="Nội dung tóm tắt, mục đích hoặc lưu ý phòng thi..."
                         value={newQuizDesc}
                         onChange={(e) => setNewQuizDesc(e.target.value)}
-                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 h-20 resize-none transition-colors"
+                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 h-20 resize-none transition-colors"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -539,7 +539,7 @@ export default function AdminDashboard({
                         max="180"
                         value={newQuizDuration}
                         onChange={(e) => setNewQuizDuration(Number(e.target.value))}
-                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                        className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 transition-colors"
                         required
                       />
                     </div>
@@ -552,7 +552,7 @@ export default function AdminDashboard({
                       <span className="text-[10px] text-gray-400 font-normal">({questions.length} câu đã thêm)</span>
                     </h4>
 
-                    <div className="bg-[#fcfbfa] border border-gray-100 p-4 rounded-2xl space-y-4">
+                    <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-4 rounded-2xl space-y-4">
                       <div className="space-y-1.5">
                         <label className="text-[11px] font-semibold text-slate-700">Nội dung câu hỏi</label>
                         <input
@@ -560,7 +560,7 @@ export default function AdminDashboard({
                           placeholder="Nhập nội dung câu hỏi trắc nghiệm..."
                           value={qText}
                           onChange={(e) => setQText(e.target.value)}
-                          className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                          className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 transition-colors"
                         />
                       </div>
 
@@ -578,7 +578,7 @@ export default function AdminDashboard({
                                 newOpts[idx] = e.target.value;
                                 setQOptions(newOpts);
                               }}
-                              className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-emerald-500 transition-colors"
+                              className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-brand-300 transition-colors"
                             />
                           </div>
                         ))}
@@ -615,7 +615,7 @@ export default function AdminDashboard({
                         type="button"
                         id="btn-add-question-to-list"
                         onClick={handleAddQuestion}
-                        className="w-full py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100/70 border border-emerald-100/40 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        className="w-full py-2 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200/40 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Thêm câu hỏi này vào đề thi</span>
@@ -665,7 +665,7 @@ export default function AdminDashboard({
                       type="submit"
                       id="btn-submit-save-quiz"
                       disabled={questions.length === 0}
-                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-200 disabled:text-gray-400 text-white rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5"
+                      className="px-4 py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 disabled:from-gray-200 disabled:to-gray-200 disabled:text-gray-400 text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-bold transition-all duration-150 flex items-center gap-1.5"
                     >
                       <Check className="w-4 h-4" />
                       <span>Hoàn tất & Lưu Đề thi</span>
@@ -696,7 +696,7 @@ export default function AdminDashboard({
                 className="relative bg-white rounded-2xl w-full max-w-md border border-gray-100 shadow-2xl p-6 sm:p-8 z-10"
               >
                 <div className="text-center pb-4 border-b border-gray-100">
-                  <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl mx-auto border border-emerald-100">
+                  <div className="w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-xl mx-auto border border-brand-200">
                     {selectedStudent.name.charAt(0)}
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 mt-3">{selectedStudent.name}</h3>
@@ -714,7 +714,7 @@ export default function AdminDashboard({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500">Điểm trung bình hệ thống:</span>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-md">
+                    <span className="px-2 py-0.5 bg-brand-50 text-brand-700 font-bold rounded-md">
                       {selectedStudent.avgScore.toFixed(1)}/10
                     </span>
                   </div>
@@ -725,7 +725,7 @@ export default function AdminDashboard({
                       {submissions
                         .filter(sub => sub.studentId === selectedStudent.id)
                         .map(sub => (
-                          <div key={sub.id} className="p-2.5 bg-[#fcfbfa] border border-gray-100 rounded-xl flex justify-between items-center">
+                          <div key={sub.id} className="p-2.5 bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 rounded-xl flex justify-between items-center">
                             <span className="truncate font-medium text-slate-700 max-w-[200px]">{sub.quizTitle}</span>
                             <span className="font-bold text-slate-900">{sub.score}/10</span>
                           </div>

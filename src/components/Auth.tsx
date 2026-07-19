@@ -18,7 +18,6 @@ import {
     signInWithGoogle,
 } from "../lib/supabaseService";
 
-
 interface AuthProps {
     onLogin: (user: UserType) => void;
     initialRole?: "teacher" | "student";
@@ -120,7 +119,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
     return (
         <div
             id="auth-container"
-            className="min-h-screen flex items-center justify-center bg-[#fcfbfa] px-4 py-12"
+            className="min-h-screen flex items-center justify-center bg-bg-surface dark:bg-bg-base px-4 py-12"
         >
             <motion.div
                 initial={{ opacity: 0, y: 15 }}
@@ -130,11 +129,11 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
             >
                 {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <h1 className="font-calligraphy text-5xl text-pink-500 select-none tracking-wide drop-shadow-xs">
+                    <h1 className="font-calligraphy text-5xl text-brand-300 select-none tracking-wide drop-shadow-xs">
                         HiTrang
                     </h1>
                     <p className="text-xs text-slate-400 mt-2.5 italic font-medium">
-                        Học hành như cá kho tiêu 🌸
+                        🌸 Học hành như cá kho tiêu
                     </p>
                 </div>
 
@@ -158,7 +157,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                     placeholder="Nhập họ và tên đầy đủ"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 transition-colors placeholder:text-gray-400"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                                 />
                             </div>
                         </motion.div>
@@ -178,7 +177,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 placeholder="Nhập tên tài khoản"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 transition-colors placeholder:text-gray-400"
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                             />
                         </div>
                     </div>
@@ -197,7 +196,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 placeholder="Nhập mật khẩu"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 transition-colors placeholder:text-gray-400"
+                                className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                             />
                             <button
                                 type="button"
@@ -235,7 +234,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                     onChange={(e) =>
                                         setConfirmPassword(e.target.value)
                                     }
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 transition-colors placeholder:text-gray-400"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                                 />
                             </div>
                         </motion.div>
@@ -248,7 +247,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     )}
 
                     {success && (
-                        <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-600 font-medium animate-pulse">
+                        <div className="p-3 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-600 font-medium animate-pulse">
                             {success}
                         </div>
                     )}
@@ -259,8 +258,8 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                         disabled={loading}
                         className={`w-full py-3 px-4 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm mt-2 flex items-center justify-center gap-2 ${
                             loading
-                                ? "bg-emerald-400 cursor-not-allowed"
-                                : "bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] shadow-emerald-600/10 hover:shadow-emerald-600/20"
+                                ? "bg-brand-200 cursor-not-allowed text-slate-500"
+                                : "bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all active:scale-[0.98]"
                         }`}
                     >
                         {loading ? (
@@ -328,7 +327,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 setError("");
                                 setSuccess("");
                             }}
-                            className="ml-1.5 text-emerald-600 font-medium hover:underline focus:outline-none"
+                            className="ml-1.5 text-brand-600 font-medium hover:underline focus:outline-none"
                         >
                             {isRegister ? "Đăng nhập ngay" : "Đăng ký miễn phí"}
                         </button>
