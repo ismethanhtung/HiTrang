@@ -63,7 +63,7 @@ export default function Sidebar({
     };
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-white border-r border-slate-100/85 py-6">
+        <div className="flex flex-col h-full bg-white border-r border-slate-100/85 pt-6 pb-2.5">
             {/* Brand Logo */}
             <div className="flex items-center gap-3 px-6 mb-6">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-100/40 to-pink-50/20 text-pink-500 flex items-center justify-center">
@@ -128,7 +128,7 @@ export default function Sidebar({
             </nav>
 
             {/* User Information and Actions */}
-            <div className="pt-4 border-t border-gray-100 mt-auto px-4 relative">
+            <div className="pt-2 border-t border-gray-100 mt-auto px-2 relative">
                 {/* Click outside backdrop */}
                 {showUserMenu && (
                     <div
