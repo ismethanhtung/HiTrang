@@ -65,20 +65,15 @@ export default function Sidebar({
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-white border-r border-slate-100/85 pt-6 pb-2.5">
             {/* Brand Logo */}
-            <div className="flex items-center gap-3 px-6 mb-6">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-100/40 to-pink-50/20 text-pink-500 flex items-center justify-center">
-                    <Flower className="w-4.5 h-4.5 animate-pulse" />
-                </div>
-                <div>
-                    <h1 className="text-sm font-bold text-slate-800 tracking-tight leading-tight">
-                        Hi_Trang 🌸
-                    </h1>
-                    <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase mt-0.5 block">
-                        {user.role === "teacher"
-                            ? "Giáo viên Admin"
-                            : "Học viên"}
-                    </span>
-                </div>
+            <div className="px-6 mb-5 select-none">
+                <h1 className="font-calligraphy text-4xl text-pink-500 tracking-wide">
+                    HiTrang
+                </h1>
+                <span className="text-[9px] font-bold tracking-widest text-slate-400 uppercase mt-1 block">
+                    {user.role === "teacher"
+                        ? "Giáo viên Admin"
+                        : "Học viên"}
+                </span>
             </div>
 
             {/* Search Bar - styled exactly like reference */}
@@ -162,7 +157,11 @@ export default function Sidebar({
                             {/* Settings button */}
                             <button
                                 type="button"
-                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-50 transition-colors text-left"
+                                onClick={() => {
+                                    setShowUserMenu(false);
+                                    setActiveTab("settings");
+                                }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-50 transition-colors text-left cursor-pointer"
                             >
                                 <Settings className="w-3.5 h-3.5 text-slate-400" />
                                 <span>Cài đặt</span>
@@ -230,12 +229,9 @@ export default function Sidebar({
         <>
             {/* Mobile Header */}
             <header className="lg:hidden h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 sticky top-0 z-30">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center text-pink-500 border border-pink-100/40">
-                        <Flower className="w-4 h-4" />
-                    </div>
-                    <span className="text-xs font-semibold text-slate-900">
-                        Hi_Trang 🌸
+                <div className="flex items-center gap-2 select-none">
+                    <span className="font-calligraphy text-2xl text-pink-500 tracking-wide">
+                        HiTrang
                     </span>
                 </div>
 

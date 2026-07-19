@@ -319,3 +319,56 @@ export async function createSubmission(sub: Submission): Promise<void> {
     throw new Error(`Không thể nộp bài lên Supabase: ${error.message}`);
   }
 }
+
+/**
+ * ----------------------------------------------------
+ * 4. CẬP NHẬT THÔNG TIN TÀI KHOẢN (SETTINGS OPERATIONS)
+ * ----------------------------------------------------
+ */
+
+/**
+ * Cập nhật họ tên hiển thị của người dùng
+ */
+export async function updateProfileName(userId: string, newName: string): Promise<void> {
+  // 1. Cập nhật bảng profiles
+  const { error: dbError } = await supabase
+    .from('profiles')
+    .update({ name: newName })
+    .eq('id', userId);
+
+  if (dbError) {
+    throw new Error(`Lỗi cập nhật CSDL: ${dbError.message}`);
+  }
+
+  // 2. Cập nhật auth metadata
+  const { error: authError } = await supabase.auth.updateUser({
+    data: { name: newName }
+  });
+
+  if (authError) {
+    throw new Error(`Lỗi cập nhật metadata: ${authError.message}`);
+  }
+}
+
+/**
+ * Cập nhật mật khẩu mới
+ */
+export async function updatePassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({
+    password
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+/**
+ * Đăng xuất tài khoản trên mọi thiết bị
+ */
+export async function signOutAllDevices(): Promise<void> {
+  const { error } = await supabase.auth.signOut({ scope: 'global' });
+  if (error) {
+    throw new Error(error.message);
+  }
+}

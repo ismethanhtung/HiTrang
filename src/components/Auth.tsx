@@ -18,6 +18,7 @@ import {
     signInWithGoogle,
 } from "../lib/supabaseService";
 
+
 interface AuthProps {
     onLogin: (user: UserType) => void;
     initialRole?: "teacher" | "student";
@@ -129,14 +130,11 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
             >
                 {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-pink-50 text-pink-500 mb-4 border border-pink-100/50">
-                        <Flower className="w-6 h-6 animate-pulse" />
-                    </div>
-                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                        Hi_Trang 🌸
-                    </h2>
-                    <p className="text-xs text-gray-500 mt-1 italic font-medium">
-                        Học hành như cá kho tiêu
+                    <h1 className="font-calligraphy text-5xl text-pink-500 select-none tracking-wide drop-shadow-xs">
+                        HiTrang
+                    </h1>
+                    <p className="text-xs text-slate-400 mt-2.5 italic font-medium">
+                        Học hành như cá kho tiêu 🌸
                     </p>
                 </div>
 
@@ -336,8 +334,6 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                         </button>
                     </p>
                 </div>
-
-
             </motion.div>
         </div>
     );

@@ -7,17 +7,14 @@ import Auth from "./components/Auth";
 import Sidebar from "./components/Sidebar";
 import AdminDashboard from "./components/AdminDashboard";
 import StudentDashboard from "./components/StudentDashboard";
+import SettingsView from "./components/SettingsView";
 import { getCurrentUser, signOutUser } from "./lib/supabaseService";
 
 export default function App() {
     // Sync router path state
     const [currentPath, setCurrentPath] = useState<"/" | "/trang">(() => {
-        const hash = window.location.hash;
         const pathname = window.location.pathname;
-        if (hash === "#/trang" || pathname === "/trang") {
-            return "/trang";
-        }
-        return "/";
+        return pathname === "/trang" ? "/trang" : "/";
     });
 
     // Local Storage state hooks for state persistence
@@ -42,9 +39,8 @@ export default function App() {
 
     // Active Tab within selected dashboard
     const [activeTab, setActiveTab] = useState<string>(() => {
-        const hash = window.location.hash;
         const pathname = window.location.pathname;
-        const isTeacher = hash === "#/trang" || pathname === "/trang";
+        const isTeacher = pathname === "/trang";
         return isTeacher ? "overview" : "student-dashboard";
     });
 
@@ -88,9 +84,8 @@ export default function App() {
     // Sync URL path changes
     useEffect(() => {
         const handleUrlChange = () => {
-            const hash = window.location.hash;
             const pathname = window.location.pathname;
-            if (hash === "#/trang" || pathname === "/trang") {
+            if (pathname === "/trang") {
                 setCurrentPath("/trang");
                 setActiveTab("overview");
             } else {
@@ -99,10 +94,8 @@ export default function App() {
             }
         };
 
-        window.addEventListener("hashchange", handleUrlChange);
         window.addEventListener("popstate", handleUrlChange);
         return () => {
-            window.removeEventListener("hashchange", handleUrlChange);
             window.removeEventListener("popstate", handleUrlChange);
         };
     }, []);
@@ -110,7 +103,7 @@ export default function App() {
     // Update URL manually
     const navigateToPath = (path: "/" | "/trang") => {
         setCurrentPath(path);
-        window.location.hash = `#${path}`;
+        window.history.pushState(null, "", path);
 
         // Auto align active tab based on new path
         if (path === "/trang") {
@@ -200,7 +193,13 @@ export default function App() {
 
                     {/* Main Dashboard Panel */}
                     <main className="flex-1 flex flex-col min-w-0">
-                        {user.role === "teacher" ? (
+                        {activeTab === "settings" ? (
+                            <SettingsView
+                                user={user}
+                                onUpdateUser={(updatedUser) => setUser(updatedUser)}
+                                onLogout={handleLogout}
+                            />
+                        ) : user.role === "teacher" ? (
                             <AdminDashboard
                                 quizzes={quizzes}
                                 submissions={submissions}
