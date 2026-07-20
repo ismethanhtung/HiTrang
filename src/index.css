@@ -3,25 +3,45 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg-base: #F4F7F5;        /* Very light, clean sage-white backdrop (not too green, spacious) */
+  --bg-base: #F4F7F5;        /* Very light, clean sage-white backdrop */
   --bg-surface: #F4F7F5;     /* Surface background */
   --bg-card: #ffffff;        /* Pure white for dashboard cards & sidebar */
-  --text-primary: #1A2824;   /* Deep Forest Sage primary text (high contrast, warm-organic) */
+  --text-primary: #1A2824;   /* Deep Forest Sage primary text */
   --text-secondary: #455752; /* Medium sage-slate text */
   --text-tertiary: #7E938D;  /* Soft sage-gray text */
   --border-primary: #E1EAE5;  /* Subtle, thin sage-gray border outline for cards */
   --border-secondary: #C8D7CF;/* Refined divider border */
+
+  /* Light Mode Brand System (Soft Teal & Sage) */
+  --brand-50: #F0F6F3;
+  --brand-100: #E1ECE7;
+  --brand-200: #C8D9D2;
+  --brand-300: #88BDA4;      /* Sage Green */
+  --brand-400: #659287;      /* Deep Sage Teal */
+  --brand-500: #4B726B;
+  --brand-600: #395953;
+  --brand-700: #28403C;
 }
 
 .dark {
-  --bg-base: #0f1c18;        /* Deep organic forest base background */
-  --bg-surface: #152822;     /* Dark teal-slate surface background */
-  --bg-card: #1c342d;        /* Dark sage card background */
-  --text-primary: #e8f3f0;   /* Light sage white primary text */
-  --text-secondary: #a3c4bc; /* Soft teal secondary text */
-  --text-tertiary: #76968f;  /* Muted sage tertiary text */
-  --border-primary: #284c41;  /* Deep sage border */
-  --border-secondary: #356355;/* Darker teal border */
+  --bg-base: #1E2B3E;        /* Midnight navy base background (#1E2B3E) */
+  --bg-surface: #1E2B3E;     /* Midnight navy surface background */
+  --bg-card: #27374D;        /* Deep Steel Navy card background (#27374D) */
+  --text-primary: #DDE6ED;   /* Ice Blue primary text (#DDE6ED) */
+  --text-secondary: #9DB2BF; /* Soft Grayish Blue secondary text (#9DB2BF) */
+  --text-tertiary: #526D82;  /* Steel Blue tertiary text (#526D82) */
+  --border-primary: #34475E;  /* Steel Navy border outline */
+  --border-secondary: #526D82;/* Steel Blue divider border */
+
+  /* Dark Mode Brand System (Navy Steel & Ice Blue) */
+  --brand-50: #253347;
+  --brand-100: #2F4057;
+  --brand-200: #526D82;      /* Steel Blue */
+  --brand-300: #9DB2BF;      /* Soft Grayish Blue active accent */
+  --brand-400: #DDE6ED;      /* Ice Blue active text & highlight */
+  --brand-500: #e2eaf0;
+  --brand-600: #ffffff;
+  --brand-700: #ffffff;
 }
 
 @theme {
@@ -30,15 +50,15 @@
   --font-brand: "Pacifico", cursive;
   --font-calligraphy: "Pacifico", cursive;
 
-  /* Custom Color System - Soft Teal & Sage */
-  --color-brand-50: #F0F6F3;  /* Soft mint wash for active pills */
-  --color-brand-100: #E1ECE7; /* Light mint border */
-  --color-brand-200: #C8D9D2;
-  --color-brand-300: #88BDA4; /* Sage Green */
-  --color-brand-400: #659287; /* Deep Sage Teal */
-  --color-brand-500: #4B726B;
-  --color-brand-600: #395953;
-  --color-brand-700: #28403C;
+  /* Mapped Adaptive Brand Colors */
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
 
   /* Adaptive Theme Colors */
   --color-bg-base: var(--bg-base);

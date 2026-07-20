@@ -124,7 +124,7 @@ export default function Sidebar({
             </nav>
 
             {/* User Information and Actions */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto px-4 relative">
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 mt-auto px-2 relative">
                 {/* Click outside backdrop */}
                 {showUserMenu && (
                     <div
