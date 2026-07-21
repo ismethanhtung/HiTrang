@@ -4,6 +4,7 @@ create table if not exists public.profiles (
   name text not null,
   username text unique not null,
   role text not null check (role in ('student', 'teacher')),
+  plan text not null default 'nothing' check (plan in ('nothing', 'basic', 'vip')),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -19,6 +20,14 @@ create policy "Cho phép người dùng tạo profile của chính mình" on pub
 
 create policy "Cho phép người dùng cập nhật profile của chính mình" on public.profiles
   for update using (auth.uid() = id);
+
+create policy "Cho phép giáo viên / admin cập nhật plan của người dùng khác" on public.profiles
+  for update using (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'teacher'
+    )
+  );
 
 
 -- 2. Bảng quản lý đề thi (Quizzes)
@@ -40,29 +49,14 @@ alter table public.quizzes enable row level security;
 create policy "Cho phép mọi người đọc danh sách đề thi" on public.quizzes
   for select using (true);
 
-create policy "Cho phép giáo viên tạo đề thi" on public.quizzes
-  for insert with check (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'teacher'
-    )
-  );
+create policy "Cho phép mọi người tạo đề thi" on public.quizzes
+  for insert with check (true);
 
-create policy "Cho phép giáo viên xóa đề thi" on public.quizzes
-  for delete using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'teacher'
-    )
-  );
+create policy "Cho phép mọi người xóa đề thi" on public.quizzes
+  for delete using (true);
 
-create policy "Cho phép giáo viên sửa đề thi" on public.quizzes
-  for update using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'teacher'
-    )
-  );
+create policy "Cho phép mọi người sửa đề thi" on public.quizzes
+  for update using (true);
 
 
 -- 3. Bảng quản lý kết quả nộp bài (Submissions)

@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Link, ArrowLeftRight, Sparkles, GraduationCap } from "lucide-react";
 import { Quiz, Submission, User } from "./types";
 import { INITIAL_QUIZZES, INITIAL_SUBMISSIONS } from "./data";
+import Topbar from "./components/Topbar";
+import LandingPage from "./components/LandingPage";
 import Auth from "./components/Auth";
-import Sidebar from "./components/Sidebar";
-import AdminDashboard from "./components/AdminDashboard";
 import StudentDashboard from "./components/StudentDashboard";
+import AdminDashboard from "./components/AdminDashboard";
+import AdminPanel from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
-import { getCurrentUser, signOutUser } from "./lib/supabaseService";
+import { getCurrentUser, signOutUser, getQuizzes, getSubmissions } from "./lib/supabaseService";
 
 export default function App() {
-    // Theme state (Dark/Light)
+    // 1. Force Light Mode by Default
     const [theme, setTheme] = useState<"light" | "dark">(() => {
         const saved = localStorage.getItem("hitrang_theme");
-        if (saved === "dark" || saved === "light") return saved;
-        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        return saved === "dark" ? "dark" : "light";
     });
 
     useEffect(() => {
@@ -28,13 +27,21 @@ export default function App() {
         localStorage.setItem("hitrang_theme", theme);
     }, [theme]);
 
-    // Sync router path state
-    const [currentPath, setCurrentPath] = useState<"/" | "/trang">(() => {
+    // 2. Navigation & Route States
+    const [currentPath, setCurrentPath] = useState<"/" | "/admin" | "/trang">(() => {
         const pathname = window.location.pathname;
-        return pathname === "/trang" ? "/trang" : "/";
+        if (pathname === "/admin") return "/admin";
+        if (pathname === "/trang") return "/trang";
+        return "/";
     });
 
-    // Local Storage state hooks for state persistence
+    const [selectedGrade, setSelectedGrade] = useState<string | null>(null);
+
+    // Auth modal state
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [authMode, setAuthMode] = useState<"login" | "register">("login");
+
+    // Local Data States
     const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
         const saved = localStorage.getItem("hvt_quizzes");
         return saved ? JSON.parse(saved) : INITIAL_QUIZZES;
@@ -45,23 +52,15 @@ export default function App() {
         return saved ? JSON.parse(saved) : INITIAL_SUBMISSIONS;
     });
 
-    // User Authentication state
+    // User Session State
     const [user, setUser] = useState<User | null>(() => {
         const saved = localStorage.getItem("hvt_user");
         return saved ? JSON.parse(saved) : null;
     });
 
-    // Sidebar toggle state (mobile)
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<string>("student-dashboard");
 
-    // Active Tab within selected dashboard
-    const [activeTab, setActiveTab] = useState<string>(() => {
-        const pathname = window.location.pathname;
-        const isTeacher = pathname === "/trang";
-        return isTeacher ? "overview" : "student-dashboard";
-    });
-
-    // Sync to local storage
+    // Sync to localStorage
     useEffect(() => {
         localStorage.setItem("hvt_quizzes", JSON.stringify(quizzes));
     }, [quizzes]);
@@ -80,75 +79,43 @@ export default function App() {
 
     // Check Supabase session on mount
     useEffect(() => {
-        const fetchSession = async () => {
+        const fetchInitialData = async () => {
             try {
+                const dbQuizzes = await getQuizzes();
+                if (dbQuizzes.length > 0) {
+                    setQuizzes(dbQuizzes);
+                }
+
                 const currentUser = await getCurrentUser();
                 if (currentUser) {
                     setUser(currentUser);
-                    if (currentUser.role === "teacher") {
-                        navigateToPath("/trang");
-                    } else {
-                        navigateToPath("/");
-                    }
                 }
             } catch (err) {
-                console.error("Lỗi kiểm tra phiên đăng nhập:", err);
+                console.error("Lỗi khởi tạo dữ liệu:", err);
             }
         };
-        fetchSession();
+        fetchInitialData();
     }, []);
 
-    // Sync URL path changes
+    // Sync URL popstate events
     useEffect(() => {
         const handleUrlChange = () => {
             const pathname = window.location.pathname;
-            if (pathname === "/trang") {
-                setCurrentPath("/trang");
-                setActiveTab("overview");
-            } else {
-                setCurrentPath("/");
-                setActiveTab("student-dashboard");
-            }
+            if (pathname === "/admin") setCurrentPath("/admin");
+            else if (pathname === "/trang") setCurrentPath("/trang");
+            else setCurrentPath("/");
         };
 
         window.addEventListener("popstate", handleUrlChange);
-        return () => {
-            window.removeEventListener("popstate", handleUrlChange);
-        };
+        return () => window.removeEventListener("popstate", handleUrlChange);
     }, []);
 
-    // Update URL manually
-    const navigateToPath = (path: "/" | "/trang") => {
+    const navigateTo = (path: "/" | "/admin" | "/trang") => {
         setCurrentPath(path);
         window.history.pushState(null, "", path);
-
-        // Auto align active tab based on new path
-        if (path === "/trang") {
-            setActiveTab("overview");
-            // If user is student, we switch them to teacher role for easy previewing, or prompt login
-            if (user && user.role !== "teacher") {
-                // Log out or adapt role for ease of testing
-                setUser({
-                    id: "tch_test",
-                    name: "Cô Nguyễn Mai Hoa",
-                    username: "maihoa_teacher",
-                    role: "teacher",
-                });
-            }
-        } else {
-            setActiveTab("student-dashboard");
-            if (user && user.role !== "student") {
-                setUser({
-                    id: "std_test",
-                    name: "Nguyễn Văn An",
-                    username: "vanan",
-                    role: "student",
-                });
-            }
-        }
     };
 
-    // State mutation actions
+    // State Mutation Handlers
     const handleAddQuiz = (newQuiz: Quiz) => {
         setQuizzes([newQuiz, ...quizzes]);
     };
@@ -163,12 +130,11 @@ export default function App() {
 
     const handleLogin = (loggedInUser: User) => {
         setUser(loggedInUser);
-
-        // Force path redirection based on logged in role
+        setAuthModalOpen(false);
         if (loggedInUser.role === "teacher") {
-            navigateToPath("/trang");
+            navigateTo("/trang");
         } else {
-            navigateToPath("/");
+            navigateTo("/");
         }
     };
 
@@ -176,42 +142,82 @@ export default function App() {
         try {
             await signOutUser();
         } catch (err) {
-            console.error("Lỗi khi đăng xuất khỏi Supabase:", err);
+            console.error("Lỗi khi đăng xuất:", err);
         }
         setUser(null);
         localStorage.removeItem("hvt_user");
+        navigateTo("/");
     };
 
     return (
-        <div className="min-h-screen bg-bg-surface dark:bg-bg-base font-sans antialiased flex flex-col">
-            {/* Dynamic Route Indicator / Path Swapper Panel */}
+        <div className="min-h-screen bg-[#F9F8F6] text-[#222B38] font-sans antialiased flex flex-col selection:bg-brand-200">
+            
+            {/* TOPBAR NAVIGATION HEADER */}
+            <Topbar
+                user={user}
+                selectedGrade={selectedGrade}
+                onSelectGrade={setSelectedGrade}
+                onOpenAuth={(mode = "login") => {
+                    setAuthMode(mode);
+                    setAuthModalOpen(true);
+                }}
+                onLogout={handleLogout}
+                onNavigateAdmin={() => navigateTo("/admin")}
+                onNavigateHome={() => navigateTo("/")}
+                onNavigateSettings={() => {
+                    setActiveTab("settings");
+                    navigateTo("/");
+                }}
+                currentPath={currentPath}
+            />
 
-            {/* Main Core Layout Wrapper */}
-            {!user ? (
-                // Auth login/register view
-                <Auth
-                    onLogin={handleLogin}
-                    initialRole={
-                        currentPath === "/trang" ? "teacher" : "student"
-                    }
-                />
-            ) : (
-                // Logged-in full layout view
-                <div className="flex-1 flex flex-col lg:flex-row bg-bg-base text-text-primary transition-colors duration-200">
-                    {/* Universal Left Sidebar component */}
-                    <Sidebar
-                        user={user}
-                        activeTab={activeTab}
-                        setActiveTab={setActiveTab}
-                        onLogout={handleLogout}
-                        isOpen={sidebarOpen}
-                        setIsOpen={setSidebarOpen}
-                        theme={theme}
-                        setTheme={setTheme}
+            {/* AUTH MODAL OVERLAY */}
+            {authModalOpen && !user && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+                        <button
+                            onClick={() => setAuthModalOpen(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center z-10"
+                        >
+                            ✕
+                        </button>
+                        <Auth
+                            onLogin={handleLogin}
+                            initialRole={authMode === "register" ? "student" : "student"}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* MAIN CONTENT CANVAS */}
+            <main className="flex-1 flex flex-col min-w-0">
+                
+                {/* 1. ADMIN PANEL ROUTE */}
+                {currentPath === "/admin" ? (
+                    <AdminPanel
+                        quizzes={quizzes}
+                        submissions={submissions}
+                        onAddQuiz={handleAddQuiz}
+                        onDeleteQuiz={handleDeleteQuiz}
                     />
-
-                    {/* Main Dashboard Panel */}
-                    <main className="flex-1 flex flex-col min-w-0 bg-bg-surface dark:bg-bg-base text-text-primary transition-colors duration-200">
+                ) : !user ? (
+                    /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
+                    <LandingPage
+                        quizzes={quizzes}
+                        selectedGrade={selectedGrade}
+                        onSelectGrade={setSelectedGrade}
+                        onOpenAuth={(mode = "login") => {
+                            setAuthMode(mode);
+                            setAuthModalOpen(true);
+                        }}
+                        onSelectQuizToPreview={(quiz) => {
+                            setAuthMode("register");
+                            setAuthModalOpen(true);
+                        }}
+                    />
+                ) : (
+                    /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */
+                    <div className="flex-1 bg-white">
                         {activeTab === "settings" ? (
                             <SettingsView
                                 user={user}
@@ -219,7 +225,7 @@ export default function App() {
                                 onLogout={handleLogout}
                                 theme={theme}
                             />
-                        ) : user.role === "teacher" ? (
+                        ) : user.role === "teacher" || currentPath === "/trang" ? (
                             <AdminDashboard
                                 quizzes={quizzes}
                                 submissions={submissions}
@@ -236,9 +242,9 @@ export default function App() {
                                 activeTab={activeTab}
                             />
                         )}
-                    </main>
-                </div>
-            )}
+                    </div>
+                )}
+            </main>
         </div>
     );
 }

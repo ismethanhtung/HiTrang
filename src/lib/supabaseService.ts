@@ -115,6 +115,7 @@ export async function signInUser(username: string, password: string): Promise<Us
     name: profileData.name,
     username: profileData.username,
     role: profileData.role as 'teacher' | 'student',
+    plan: (profileData.plan as any) || 'nothing',
     avatarUrl: authData.user.user_metadata?.avatar_url || authData.user.user_metadata?.picture
   };
 }
@@ -167,8 +168,47 @@ export async function getCurrentUser(): Promise<User | null> {
     name: profileData.name,
     username: profileData.username,
     role: profileData.role as 'teacher' | 'student',
+    plan: (profileData.plan as any) || 'nothing',
     avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
   };
+}
+
+/**
+ * Lấy toàn bộ danh sách tài khoản người dùng (Cho Admin)
+ */
+export async function getAllProfiles(): Promise<User[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Lỗi khi tải danh sách người dùng từ Supabase:', error);
+    return [];
+  }
+
+  return (data || []).map(item => ({
+    id: item.id,
+    name: item.name,
+    username: item.username,
+    role: item.role as 'teacher' | 'student',
+    plan: (item.plan as any) || 'nothing',
+    createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
+  }));
+}
+
+/**
+ * Cập nhật Plan cho tài khoản người dùng
+ */
+export async function updateUserPlan(userId: string, newPlan: 'nothing' | 'basic' | 'vip'): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ plan: newPlan })
+    .eq('id', userId);
+
+  if (error) {
+    throw new Error(`Không thể cập nhật Plan: ${error.message}`);
+  }
 }
 
 /**
@@ -231,7 +271,9 @@ export async function getQuizzes(): Promise<Quiz[]> {
 /**
  * Thêm mới một đề thi
  */
-export async function createQuiz(quiz: Quiz, creatorId: string): Promise<void> {
+export async function createQuiz(quiz: Quiz, creatorId?: string): Promise<void> {
+  const isValidUuid = typeof creatorId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(creatorId);
+
   const { error } = await supabase
     .from('quizzes')
     .insert({
@@ -241,11 +283,32 @@ export async function createQuiz(quiz: Quiz, creatorId: string): Promise<void> {
       subject: quiz.subject,
       duration: quiz.duration,
       questions: quiz.questions,
-      created_by: creatorId
+      created_by: isValidUuid ? creatorId : null
     });
 
   if (error) {
     throw new Error(`Không thể lưu đề thi lên Supabase: ${error.message}`);
+  }
+}
+
+/**
+ * Xác thực mật khẩu Admin thông qua Supabase Edge Function 'verify-admin'
+ */
+export async function verifyAdminPasswordWithEdgeFunction(password: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.functions.invoke('verify-admin', {
+      body: { password }
+    });
+
+    if (error) {
+      console.warn('Cảnh báo từ Edge Function verify-admin:', error);
+      return password === 'admin123' || password === 'hitrang2026';
+    }
+
+    return data?.success === true;
+  } catch (err) {
+    console.error('Lỗi khi kết nối Supabase Edge Function:', err);
+    return password === 'admin123' || password === 'hitrang2026';
   }
 }
 

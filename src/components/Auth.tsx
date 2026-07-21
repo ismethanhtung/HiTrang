@@ -117,15 +117,12 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
     };
 
     return (
-        <div
-            id="auth-container"
-            className="min-h-screen flex items-center justify-center bg-bg-surface dark:bg-bg-base px-4 py-12"
-        >
+        <div id="auth-container" className="w-full bg-white p-6 sm:p-8">
             <motion.div
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm p-8"
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="w-full"
             >
                 {/* Brand Header */}
                 <div className="text-center mb-8">
