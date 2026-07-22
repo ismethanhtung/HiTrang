@@ -319,6 +319,18 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 inExplanation = false;
             };
 
+            // Flatten all OL/UL lists in the body to make LI elements top-level children of body
+            const lists = Array.from(body.querySelectorAll("ol, ul"));
+            lists.forEach((list) => {
+                const parent = list.parentNode;
+                if (parent) {
+                    while (list.firstChild) {
+                        parent.insertBefore(list.firstChild, list);
+                    }
+                    parent.removeChild(list);
+                }
+            });
+
             const children = Array.from(body.childNodes);
 
             for (let i = 0; i < children.length; i++) {
