@@ -97,7 +97,7 @@ export default function LandingPage({
                             {/* CIRCULAR AVATAR CONTAINER */}
                             <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10 bg-amber-50">
                                 <img
-                                    src="public/images/trang.jpg"
+                                    src="images/trang.jpg"
                                     alt="HiTrang Student Avatar"
                                     className="w-full h-full object-cover"
                                 />
