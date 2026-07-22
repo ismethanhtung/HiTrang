@@ -5,6 +5,7 @@ export interface Question {
   text: string;
   options: string[];
   correctAnswerIndex: number;
+  correctAnswers?: boolean[]; // For true_false statement questions (length 4)
   type?: QuestionType;
   sectionTitle?: string;
   shortAnswerKey?: string;
@@ -44,5 +45,6 @@ export interface Submission {
   score: number; // percentage or correct answers count
   totalQuestions: number;
   submittedAt: string;
-  answers: Record<string, number>; // questionId -> chosen index
+  answers: Record<string, any>; // questionId -> chosen index, boolean[], or short answer string
 }
+

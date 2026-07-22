@@ -29,11 +29,11 @@ Lời giải: Chọn A. Từ bảng xét dấu suy ra hàm số nghịch biến 
 
 Phần 2. Trắc nghiệm đúng/sai
 Bài 1: Xét tính đúng/sai của các khẳng định sau:
-A. Hàm số có 2 điểm cực trị.
-B. Giá trị lớn nhất trên đoạn [1; 3] bằng 5.
-C. Hàm số đồng biến trên (3; +∞).
-D. Đồ thị hàm số có 1 tiệm cận ngang.
-Lời giải: Chọn A, C đúng. B, D sai.
+a) Hàm số có 2 điểm cực trị.
+b) Giá trị lớn nhất trên đoạn [1; 3] bằng 5.
+c) Hàm số đồng biến trên (3; +∞).
+d) Đồ thị hàm số có 1 tiệm cận ngang.
+Lời giải: Chọn a) đúng, b) sai, c) đúng, d) sai.
 
 Phần 3: Trắc nghiệm điền đáp án
 Một tên lửa bay vào không trung. Hỏi vận tốc của tên lửa sau 3 giây là bao nhiêu?
@@ -52,20 +52,17 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         str = str.replace(/q v/g, "x");
 
         // 2. Format ranges
-        // Format negative infinity range: e.g. "-;x -1()" -> "(-∞; -1)"
         if (str.includes("-;x") || str.includes("-; x") || str.includes("-;") || str.includes(";-")) {
             const numMatch = str.match(/(-?\d+)/);
             const val = numMatch ? numMatch[1] : "-1";
             return `(-∞; ${val})`;
         }
-        // Format positive infinity range: e.g. "3;x ++()" -> "(3; +∞)"
         if (str.includes(";x +") || str.includes("; x +") || str.includes(";+")) {
             const numMatch = str.match(/(-?\d+)/);
             const val = numMatch ? numMatch[1] : "3";
             return `(${val}; +∞)`;
         }
 
-        // Format standard intervals: e.g. "1;3(x )" -> "(1; 3)"
         const rangeMatch = str.match(/^([-\+\d]+)\s*;\s*([-\+\d]+)/);
         if (rangeMatch) {
             return `(${rangeMatch[1]}; ${rangeMatch[2]})`;
@@ -137,265 +134,288 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
     };
 
     /**
-     * Robust Cross-Browser Regex XML Extractor for Word Paragraphs
+     * Escape XML special characters to avoid parsing errors
      */
-    const parseDocxWithXmlAndOle = async (arrayBuffer: ArrayBuffer): Promise<string> => {
-        try {
-            const zip = await JSZip.loadAsync(arrayBuffer);
-
-            const relsFile = zip.file("word/_rels/document.xml.rels");
-            const rIdToTarget: Record<string, string> = {};
-
-            if (relsFile) {
-                const relsXml = await relsFile.async("string");
-                const matches = relsXml.match(/<Relationship[^>]+>/g) || [];
-                matches.forEach((rel) => {
-                    const idMatch = rel.match(/Id="([^"]+)"/);
-                    const targetMatch = rel.match(/Target="([^"]+)"/);
-                    if (idMatch && targetMatch && targetMatch[1].includes("oleObject")) {
-                        rIdToTarget[idMatch[1]] = targetMatch[1].replace(/^word\//, "");
-                    }
-                });
+    const escapeXml = (unsafe: string): string => {
+        return unsafe.replace(/[<>&'"]/g, (c) => {
+            switch (c) {
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '&': return '&amp;';
+                case '\'': return '&apos;';
+                case '"': return '&quot;';
+                default: return c;
             }
-
-            const oleEquMap: Record<string, string> = {};
-            for (const [rId, targetPath] of Object.entries(rIdToTarget)) {
-                const oleFile = zip.file(`word/${targetPath}`) || zip.file(targetPath);
-                if (oleFile) {
-                    const uint8 = await oleFile.async("uint8array");
-                    const rawMtefText = parseMtefBuffer(uint8);
-                    const eqText = cleanMathExpression(rawMtefText);
-                    if (eqText) {
-                        oleEquMap[rId] = eqText;
-                    }
-                }
-            }
-
-            const docXmlFile = zip.file("word/document.xml");
-            if (!docXmlFile) {
-                return "";
-            }
-
-            let docXml = await docXmlFile.async("string");
-
-            // Substitute MathType OLE tags with clean formatted text
-            docXml = docXml.replace(/<o:OLEObject[^>]+r:id="([^"]+)"[^>]*\/>/g, (match, rId) => {
-                const eq = oleEquMap[rId];
-                if (eq) {
-                    return `<w:r><w:t xml:space="preserve"> ${eq} </w:t></w:r>`;
-                }
-                return match;
-            });
-
-            // Use robust regex scanning for 100% cross-browser paragraph extraction
-            const pMatches = docXml.match(/<w:p[^>]*>[\s\S]*?<\/w:p>/gi) || [];
-            const paragraphs: string[] = [];
-            const numIdCounters: Record<string, number> = {};
-
-            pMatches.forEach((pXml) => {
-                const numIdMatch = pXml.match(/<w:numId[^>]+w:val="([^"]+)"[^>]*\/>/) || pXml.match(/<w:numId[^>]+val="([^"]+)"[^>]*\/>/);
-                let prefix = "";
-
-                if (numIdMatch) {
-                    const numId = numIdMatch[1];
-                    if (!numIdCounters[numId]) {
-                        numIdCounters[numId] = 1;
-                    } else {
-                        numIdCounters[numId]++;
-                    }
-                    prefix = `Câu ${numIdCounters[numId]}. `;
-                }
-
-                let pText = "";
-                const tMatches = pXml.match(/<(?:w:t|m:t|w:instrText)[^>]*>(.*?)<\/(?:w:t|m:t|w:instrText)>/gi) || [];
-                tMatches.forEach((tTag) => {
-                    pText += tTag.replace(/<[^>]+>/g, "");
-                });
-                pText = pText.trim();
-                if (pText) {
-                    paragraphs.push(prefix + pText);
-                }
-            });
-
-            return paragraphs.join("\n");
-        } catch (err) {
-            console.warn("Lỗi trích xuất OLE XML:", err);
-            return "";
-        }
+        });
     };
 
     /**
-     * Mammoth HTML converter fallback
+     * Pre-process word/document.xml inside ZIP to preserve OLE formulas and standard OMML math tags
      */
-    const convertWordHtmlToCleanText = (htmlContent: string): string => {
-        try {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlContent, "text/html");
+    const preProcessDocxBuffer = async (arrayBuffer: ArrayBuffer): Promise<ArrayBuffer> => {
+        const zip = await JSZip.loadAsync(arrayBuffer);
 
-            doc.querySelectorAll("sup").forEach((el) => {
-                const txt = el.textContent?.trim();
-                if (txt) el.textContent = `^(${txt})`;
-            });
-            doc.querySelectorAll("sub").forEach((el) => {
-                const txt = el.textContent?.trim();
-                if (txt) el.textContent = `_(${txt})`;
-            });
+        // 1. Get OLE object relationship mappings
+        const relsFile = zip.file("word/_rels/document.xml.rels");
+        const rIdToTarget: Record<string, string> = {};
 
-            doc.querySelectorAll("table").forEach((table) => {
-                const rowTexts: string[] = [];
-                table.querySelectorAll("tr").forEach((tr) => {
-                    const cellTexts: string[] = [];
-                    tr.querySelectorAll("td, th").forEach((td) => {
-                        cellTexts.push(td.textContent?.trim() || "");
-                    });
-                    if (cellTexts.length > 0) {
-                        rowTexts.push("| " + cellTexts.join(" | ") + " |");
-                    }
-                });
-                if (rowTexts.length > 0) {
-                    const tableTextNode = doc.createTextNode("\n" + rowTexts.join("\n") + "\n");
-                    table.replaceWith(tableTextNode);
+        if (relsFile) {
+            const relsXml = await relsFile.async("string");
+            const matches = relsXml.match(/<Relationship[^>]+>/g) || [];
+            matches.forEach((rel) => {
+                const idMatch = rel.match(/Id="([^"]+)"/);
+                const targetMatch = rel.match(/Target="([^"]+)"/);
+                if (idMatch && targetMatch && targetMatch[1].includes("oleObject")) {
+                    rIdToTarget[idMatch[1]] = targetMatch[1].replace(/^word\//, "");
                 }
             });
-
-            doc.querySelectorAll("p, div, li").forEach((block) => {
-                block.appendChild(doc.createTextNode("\n"));
-            });
-
-            return doc.body.textContent || doc.body.innerText || "";
-        } catch (err) {
-            return htmlContent.replace(/<[^>]+>/g, "\n");
         }
+
+        // 2. Parse MTEF equations from OLE targets
+        const oleEquMap: Record<string, string> = {};
+        for (const [rId, targetPath] of Object.entries(rIdToTarget)) {
+            const oleFile = zip.file(`word/${targetPath}`) || zip.file(targetPath);
+            if (oleFile) {
+                const uint8 = await oleFile.async("uint8array");
+                const rawMtefText = parseMtefBuffer(uint8);
+                const eqText = cleanMathExpression(rawMtefText);
+                if (eqText) {
+                    oleEquMap[rId] = eqText;
+                }
+            }
+        }
+
+        // 3. Read and modify word/document.xml
+        const docXmlFile = zip.file("word/document.xml");
+        if (!docXmlFile) {
+            return arrayBuffer;
+        }
+
+        let docXml = await docXmlFile.async("string");
+
+        // Substitute OLE object tags with escaped plain text tags
+        docXml = docXml.replace(/<o:OLEObject[^>]+r:id="([^"]+)"[^>]*\/>/g, (match, rId) => {
+            const eq = oleEquMap[rId];
+            if (eq) {
+                const escaped = escapeXml(eq);
+                return `<w:r><w:t xml:space="preserve"> ${escaped} </w:t></w:r>`;
+            }
+            return match;
+        });
+
+        // Convert standard math tags <m:t> into word text tags <w:t> so Mammoth converts them
+        docXml = docXml.replace(/<m:t([^>]*)>/g, '<w:t$1>').replace(/<\/m:t>/g, '</w:t>');
+
+        zip.file("word/document.xml", docXml);
+        return await zip.generateAsync({ type: "arraybuffer" });
+    };
+
+    const cleanPrefix = (text: string): string => {
+        return text.replace(/^(câu|bài)\s*\d+[\.\:\)]\s*/i, "").trim();
     };
 
     /**
-     * 100% Precise 3-Part Exam Question Parser (Phần 1, Phần 2, Phần 3)
+     * DOM-based HTML Parser to extract questions for all 3 parts
      */
-    const parseFormattedText = (textToParse: string) => {
-        if (!textToParse || !textToParse.trim()) {
+    const parseQuestionsFromHtml = (htmlContent: string) => {
+        if (!htmlContent || !htmlContent.trim()) {
             setError("Vui lòng nhập hoặc dán nội dung từ file Word.");
             return;
         }
 
         try {
             setError(null);
-            const normalizedText = textToParse.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-            const lines = normalizedText.split("\n").map((l) => l.trim()).filter(Boolean);
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, "text/html");
+            const body = doc.body;
 
             const questions: Question[] = [];
-
-            let currentSection = "Phần 1: Trắc nghiệm 4 lựa chọn";
+            let currentSection = "Phần 1: Trắc nghiệm nhiều lựa chọn (A-B-C-D)";
             let currentType: QuestionType = "single_choice";
-            let currentTextLines: string[] = [];
-            let currentOptions: string[] = [];
-            let currentCorrectIndex = 0;
-            let currentShortAnswerKey = "";
-            let currentExplanationLines: string[] = [];
-            let inExplanation = false;
 
-            const pushQuestion = () => {
-                if (currentTextLines.length > 0 && (currentOptions.length >= 2 || currentType === "short_answer")) {
-                    questions.push({
-                        id: `q_word_${Date.now()}_${questions.length + 1}`,
-                        type: currentType,
-                        sectionTitle: currentSection,
-                        text: currentTextLines.join("\n").replace(/^(câu|bài)\s*\d+[\.\:\)]\s*/i, "").trim(),
-                        options: currentOptions.length > 0 ? currentOptions.map((o) => o.trim()) : ["Mệnh đề a", "Mệnh đề b", "Mệnh đề c", "Mệnh đề d"],
-                        correctAnswerIndex: currentCorrectIndex,
-                        shortAnswerKey: currentShortAnswerKey,
-                        explanation: currentExplanationLines.join("\n").trim(),
-                        points: 10,
-                    });
+            let currentQuestion: Partial<Question> | null = null;
+            let inExplanation = false;
+            let explanationHtmls: string[] = [];
+
+            const pushCurrentQuestion = () => {
+                if (currentQuestion && currentQuestion.text) {
+                    currentQuestion.explanation = explanationHtmls.join("").trim();
+                    currentQuestion.text = cleanPrefix(currentQuestion.text);
+
+                    if (currentQuestion.options && currentQuestion.options.length > 0) {
+                        currentQuestion.options = currentQuestion.options.map(opt => {
+                            return opt.replace(/^[A-D\(\)a-d][\.\:\)]\s*/i, "").trim();
+                        });
+                    } else {
+                        currentQuestion.options = [];
+                    }
+
+                    // 1. Determine Correct Answer Index for Part 1
+                    if (currentType === "single_choice" && currentQuestion.explanation) {
+                        const expText = currentQuestion.explanation.replace(/<[^>]+>/g, "");
+                        const match = expText.match(/(?:chọn|đáp án)\s*([A-D])/i);
+                        if (match) {
+                            currentQuestion.correctAnswerIndex = match[1].toUpperCase().charCodeAt(0) - 65;
+                        } else {
+                            // Fallback string matcher
+                            let matchedIdx = 0;
+                            for (let i = 0; i < currentQuestion.options.length; i++) {
+                                const optText = currentQuestion.options[i].replace(/<[^>]+>/g, "").trim();
+                                if (optText.length > 2 && expText.includes(optText)) {
+                                    matchedIdx = i;
+                                    break;
+                                }
+                            }
+                            currentQuestion.correctAnswerIndex = matchedIdx;
+                        }
+                    }
+
+                    // 2. Parse Correct Answers List for Part 2
+                    if (currentType === "true_false" && currentQuestion.explanation) {
+                        const expText = currentQuestion.explanation.replace(/<[^>]+>/g, "");
+                        const correctAnswers: boolean[] = [];
+                        ["a", "b", "c", "d"].forEach((letter) => {
+                            const reg = new RegExp(`${letter}\\)\\s*[^\\n\\|]+?\\s*(đúng|sai)`, "i");
+                            const match = expText.match(reg);
+                            if (match) {
+                                correctAnswers.push(match[1].toLowerCase() === "đúng");
+                            } else {
+                                const reg2 = new RegExp(`${letter}\\.\\s*[^\\n\\|]+?\\s*(đúng|sai)`, "i");
+                                const match2 = expText.match(reg2);
+                                if (match2) {
+                                    correctAnswers.push(match2[1].toLowerCase() === "đúng");
+                                } else {
+                                    const idx = expText.toLowerCase().indexOf(`${letter})`);
+                                    if (idx !== -1) {
+                                        const slice = expText.toLowerCase().slice(idx, idx + 100);
+                                        if (slice.includes("đúng")) correctAnswers.push(true);
+                                        else if (slice.includes("sai")) correctAnswers.push(false);
+                                        else correctAnswers.push(true);
+                                    } else {
+                                        correctAnswers.push(true);
+                                    }
+                                }
+                            }
+                        });
+                        currentQuestion.correctAnswers = correctAnswers;
+                    }
+
+                    // 3. Parse Short Answer Key for Part 3
+                    if (currentType === "short_answer" && currentQuestion.explanation) {
+                        const expText = currentQuestion.explanation.replace(/<[^>]+>/g, "");
+                        const match = expText.match(/(?:bằng|là|≈|=)\s*(-?\d+(?:[\.,]\d+)?)/i) || expText.match(/(\d+(?:[\.,]\d+)?)\s*(?:sản phẩm|nghìn đồng)/i);
+                        if (match) {
+                            currentQuestion.shortAnswerKey = match[1];
+                        } else {
+                            currentQuestion.shortAnswerKey = "";
+                        }
+                    }
+
+                    questions.push(currentQuestion as Question);
                 }
-                currentTextLines = [];
-                currentOptions = [];
-                currentCorrectIndex = 0;
-                currentShortAnswerKey = "";
-                currentExplanationLines = [];
+
+                currentQuestion = null;
+                explanationHtmls = [];
                 inExplanation = false;
             };
 
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
+            const children = Array.from(body.childNodes);
+
+            for (let i = 0; i < children.length; i++) {
+                const node = children[i] as HTMLElement;
+                if (node.nodeType !== 1) continue; // Skip raw text nodes
+
+                const text = node.textContent?.trim() || "";
+                const htmlContent = node.outerHTML;
 
                 // Detect Section Headers
-                if (/^phần\s*1\s*[\:\.]/i.test(line)) {
-                    pushQuestion();
-                    currentSection = "Phần 1: Trắc nghiệm 4 lựa chọn (A-B-C-D)";
+                if (/^Phần\s*1\s*[\:\.]/i.test(text)) {
+                    pushCurrentQuestion();
+                    currentSection = "Phần 1: Trắc nghiệm nhiều lựa chọn (A-B-C-D)";
                     currentType = "single_choice";
                     continue;
                 }
-                if (/^phần\s*2\s*[\:\.]/i.test(line)) {
-                    pushQuestion();
+                if (/^Phần\s*2\s*[\:\.]/i.test(text)) {
+                    pushCurrentQuestion();
                     currentSection = "Phần 2: Trắc nghiệm Đúng / Sai";
                     currentType = "true_false";
                     continue;
                 }
-                if (/^phần\s*3\s*[\:\.]/i.test(line)) {
-                    pushQuestion();
+                if (/^Phần\s*3\s*[\:\.]/i.test(text)) {
+                    pushCurrentQuestion();
                     currentSection = "Phần 3: Trắc nghiệm Điền đáp án ngắn";
                     currentType = "short_answer";
                     continue;
                 }
 
-                if (/^đề ôn tập/i.test(line)) {
+                // Detect question start boundary
+                const isQuestionStart = /^(Câu|Bài)\s*\d+/i.test(text) || node.tagName === "LI";
+
+                if (isQuestionStart) {
+                    pushCurrentQuestion();
+                    currentQuestion = {
+                        id: `q_word_${Date.now()}_${questions.length + 1}`,
+                        type: currentType,
+                        sectionTitle: currentSection,
+                        text: htmlContent,
+                        options: [],
+                        correctAnswerIndex: 0,
+                        points: 10
+                    };
                     continue;
                 }
 
-                // Check option line (A. B. C. D.)
-                const isOptionLine = /^[A-D][\.\:\)]\s+/i.test(line) || /(?:^|\s)A[\.\:\)]\s+.+?(?:^|\s)B[\.\:\)]\s+/i.test(line);
+                if (!currentQuestion) continue;
 
-                if (isOptionLine) {
-                    inExplanation = false;
-                    const optionMatches = line.split(/(?=[A-D][\.\:\)])/i).filter(Boolean);
-                    optionMatches.forEach((part) => {
-                        const cleanOpt = part.replace(/^[A-D][\.\:\)]\s*/i, "").trim();
-                        if (cleanOpt) {
-                            currentOptions.push(cleanOpt);
+                // Check option paragraph (A. B. C. D.)
+                const hasOptions = /^[A-D][\.\:\)]\s+/i.test(text) || /<strong>\s*[A-D][\.\:\)]\s*<\/strong>/i.test(htmlContent) || /A\.\s+.*B\.\s+.*C\.\s+.*D\./i.test(text);
+
+                if (hasOptions && currentType === "single_choice") {
+                    const optMatches = htmlContent.split(/(?=<p>)?(?=<strong>\s*[A-D][\.\:\)])|(?=\b[A-D][\.\:\)]\s+)/gi);
+                    const filteredOpts = optMatches
+                        .map(o => o.replace(/<\/p>|<p>/g, "").trim())
+                        .filter(o => /^[A-D][\.\:\)]/i.test(o.replace(/<[^>]+>/g, "").trim()));
+
+                    if (filteredOpts.length >= 2) {
+                        currentQuestion.options = filteredOpts;
+                    } else {
+                        currentQuestion.options?.push(htmlContent);
+                    }
+                    continue;
+                }
+
+                // Parse Part 2 statement tables
+                if (node.tagName === "TABLE" && currentType === "true_false") {
+                    const rows = Array.from(node.querySelectorAll("tr"));
+                    const options: string[] = [];
+                    rows.forEach((row, rIdx) => {
+                        if (rIdx === 0) return; // Skip header
+                        const firstCell = row.querySelector("td");
+                        if (firstCell) {
+                            options.push(firstCell.innerHTML.trim());
                         }
                     });
-                } 
-                // Explanation line
-                else if (/^lời giải|^hướng dẫn|^đáp án[\s\:]*|^chọn\s*[a-d]/i.test(line)) {
+                    currentQuestion.options = options;
+                    currentQuestion.text += htmlContent;
+                    continue;
+                }
+
+                // Detect explanation tag
+                const isExplanationStart = /^Lời giải/i.test(text) || /^Hướng dẫn/i.test(text);
+                if (isExplanationStart) {
                     inExplanation = true;
-                    const match = line.match(/(?:đáp án|chọn)\s*([A-D0-9\.\,]+)/i);
-                    if (match) {
-                        const val = match[1].toUpperCase();
-                        if (/[A-D]/.test(val)) {
-                            currentCorrectIndex = val.charCodeAt(0) - 65;
-                        } else {
-                            currentShortAnswerKey = val;
-                        }
-                    }
-                    currentExplanationLines.push(line);
-                } 
-                // Explicit question/problem boundary header (Câu X. or Bài X.)
-                else if (/^(câu|bài)\s*\d+[\.\:\)]/i.test(line)) {
-                    pushQuestion();
-                    inExplanation = false;
-                    currentTextLines = [line];
-                } 
-                // General line
-                else {
-                    if (inExplanation) {
-                        const isNewQuestionStart = /^(câu|bài)\s*\d+[\.\:\)]/i.test(line) || /^(cho|trung|đường|xét|gọi|ta|dựa|bài|khi|phương|tập|giả)/i.test(line) && !line.startsWith("Ta có") && !line.startsWith("Từ ");
-                        
-                        if (isNewQuestionStart && currentOptions.length > 0) {
-                            pushQuestion();
-                            currentTextLines = [line];
-                        } else {
-                            currentExplanationLines.push(line);
-                        }
-                    } else {
-                        if (currentOptions.length > 0 && currentType === "single_choice") {
-                            pushQuestion();
-                        }
-                        currentTextLines.push(line);
-                    }
+                    explanationHtmls.push(htmlContent);
+                    continue;
+                }
+
+                if (inExplanation) {
+                    explanationHtmls.push(htmlContent);
+                } else {
+                    currentQuestion.text += htmlContent;
                 }
             }
 
-            pushQuestion();
+            pushCurrentQuestion();
 
             if (questions.length === 0) {
                 setError("Không tìm thấy cấu trúc câu hỏi hợp lệ. Vui lòng kiểm tra lại file.");
@@ -421,21 +441,31 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             if (file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
                 const arrayBuffer = await file.arrayBuffer();
 
-                let extractedText = await parseDocxWithXmlAndOle(arrayBuffer);
+                // Preprocess docx buffer (OLE formulas and OMML math)
+                const preProcessed = await preProcessDocxBuffer(arrayBuffer);
 
-                const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
-                const htmlText = convertWordHtmlToCleanText(htmlResult.value);
+                const options = {
+                    convertImage: mammoth.images.imgElement(function(image: any) {
+                        if (image.contentType === 'image/png' || image.contentType === 'image/jpeg') {
+                            return image.read("base64").then(function(imageBuffer: string) {
+                                return {
+                                    src: "data:" + image.contentType + ";base64," + imageBuffer
+                                };
+                            });
+                        }
+                        return Promise.resolve({ src: '' });
+                    })
+                };
 
-                if (!extractedText || extractedText.length < 50) {
-                    extractedText = htmlText;
-                }
+                const htmlResult = await mammoth.convertToHtml({ arrayBuffer: preProcessed }, options);
+                let html = htmlResult.value.replace(/<img src=""\s*\/?>/g, '');
 
-                setRawText(extractedText);
-                parseFormattedText(extractedText);
+                setRawText(html);
+                parseQuestionsFromHtml(html);
             } else {
                 const textContent = await file.text();
                 setRawText(textContent);
-                parseFormattedText(textContent);
+                parseQuestionsFromHtml(textContent);
             }
         } catch (err: any) {
             setError(`Lỗi đọc file Word: ${err.message}. Vui lòng thử dán trực tiếp văn bản vào ô bên dưới.`);
@@ -484,10 +514,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 <div>
                     <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
                         <FileText className="w-5 h-5 text-brand-600" />
-                        Import Đề Thi 3 Phần & Giải Mã MathType 7.0 OLE
+                        Import Đề Thi 3 Phần & Đồ Họa + Math XML
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
-                        Phân tách 100% trọn vẹn 22 câu hỏi (Phần 1, Phần 2, Phần 3) & Lời giải chi tiết.
+                        Giải mã trọn vẹn 22 câu hỏi (Phần 1, Phần 2, Phần 3), hình ảnh, bảng biểu và lời giải chi tiết.
                     </p>
                 </div>
 
@@ -535,7 +565,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 <Upload className="w-8 h-8 text-brand-500" />
                             )}
                             <span className="text-xs font-bold text-slate-700">
-                                {loadingFile ? "Đang trích xuất 22 câu hỏi & Lời giải..." : "Tải lên file Word (.docx, .txt)"}
+                                {loadingFile ? "Đang trích xuất câu hỏi, hình ảnh & bảng biểu..." : "Tải lên file Word (.docx, .txt)"}
                             </span>
                             <span className="text-[11px] text-slate-400">hoặc dán nội dung văn bản bên dưới</span>
                         </label>
@@ -548,7 +578,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             <button
                                 onClick={() => {
                                     setRawText(sampleTemplate);
-                                    parseFormattedText(sampleTemplate);
+                                    parseQuestionsFromHtml(sampleTemplate);
                                 }}
                                 className="text-xs text-brand-600 font-semibold hover:underline"
                             >
@@ -572,10 +602,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     )}
 
                     <button
-                        onClick={() => parseFormattedText(rawText)}
+                        onClick={() => parseQuestionsFromHtml(rawText)}
                         className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
                     >
-                        Chuyển Thành Các Câu Hỏi Trắc Nệm 3 Phần
+                        Chuyển Thành Các Câu Hỏi Đề Thi
                     </button>
                 </div>
             )}
@@ -586,7 +616,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold">
                         <span className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                            Đã trích xuất thành công toàn bộ {parsedQuestions.length} câu hỏi kèm Lời giải chi tiết.
+                            Đã trích xuất thành công toàn bộ {parsedQuestions.length} câu hỏi kèm Lời giải & hình ảnh.
                         </span>
                         <button
                             onClick={handleConfirmImport}
@@ -642,6 +672,40 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                             </>
                                         )}
 
+                                        {q.type === "true_false" && (
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <label className="text-[11px] font-bold text-amber-800">Đáp án Đúng/Sai:</label>
+                                                <div className="flex gap-2">
+                                                    {["a", "b", "c", "d"].map((letter, optIdx) => {
+                                                        const val = q.correctAnswers ? q.correctAnswers[optIdx] : false;
+                                                        return (
+                                                            <div key={letter} className="flex items-center gap-0.5 bg-white border border-slate-200 px-1.5 py-0.5 rounded-md">
+                                                                <span className="text-[10px] font-bold text-slate-600 uppercase">{letter}:</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const updated = [...parsedQuestions];
+                                                                        if (!updated[qIndex].correctAnswers) {
+                                                                            updated[qIndex].correctAnswers = [false, false, false, false];
+                                                                        }
+                                                                        updated[qIndex].correctAnswers![optIdx] = !val;
+                                                                        setParsedQuestions(updated);
+                                                                    }}
+                                                                    className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
+                                                                        val 
+                                                                            ? "bg-emerald-500 text-white" 
+                                                                            : "bg-rose-500 text-white"
+                                                                    }`}
+                                                                >
+                                                                    {val ? "Đ" : "S"}
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {q.type === "short_answer" && (
                                             <div className="flex items-center gap-1.5">
                                                 <label className="text-[11px] font-bold text-purple-800">Đáp án điền:</label>
@@ -669,19 +733,44 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                     </div>
                                 </div>
 
-                                {/* EDIT QUESTION TEXT */}
+                                {/* RENDERED QUESTION PREVIEW */}
+                                <div 
+                                    className="p-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 overflow-x-auto shadow-2xs"
+                                    dangerouslySetInnerHTML={{ __html: q.text }}
+                                />
+
+                                {/* EDIT QUESTION TEXT (RAW HTML) */}
                                 <textarea
                                     value={q.text}
                                     onChange={(e) => handleUpdateQuestionText(qIndex, e.target.value)}
                                     rows={3}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-900 focus:outline-none focus:border-brand-400"
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-500 focus:outline-none focus:border-brand-400"
+                                    placeholder="HTML câu hỏi..."
                                 />
 
                                 {/* EDIT OPTIONS */}
                                 {q.type !== "short_answer" && (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         {q.options.map((opt, optIndex) => {
-                                            const isCorrect = q.correctAnswerIndex === optIndex;
+                                            let isCorrect = false;
+                                            let label = "";
+                                            let tfIndicator = null;
+
+                                            if (q.type === "single_choice") {
+                                                isCorrect = q.correctAnswerIndex === optIndex;
+                                                label = `${String.fromCharCode(65 + optIndex)}.`;
+                                            } else if (q.type === "true_false") {
+                                                const tfVal = q.correctAnswers ? q.correctAnswers[optIndex] : false;
+                                                label = `${String.fromCharCode(97 + optIndex)})`;
+                                                tfIndicator = (
+                                                    <span className={`ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
+                                                        tfVal ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                                                    }`}>
+                                                        {tfVal ? "ĐÚNG" : "SAI"}
+                                                    </span>
+                                                );
+                                            }
+
                                             return (
                                                 <div
                                                     key={optIndex}
@@ -692,7 +781,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                     }`}
                                                 >
                                                     <span className="text-xs font-bold w-5 text-center shrink-0">
-                                                        {q.type === "true_false" ? `${String.fromCharCode(97 + optIndex)})` : `${String.fromCharCode(65 + optIndex)}.`}
+                                                        {label}
                                                     </span>
                                                     <input
                                                         type="text"
@@ -700,6 +789,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                         onChange={(e) => handleUpdateOption(qIndex, optIndex, e.target.value)}
                                                         className="flex-1 bg-transparent text-xs focus:outline-none font-medium"
                                                     />
+                                                    {tfIndicator}
                                                 </div>
                                             );
                                         })}
@@ -707,11 +797,15 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 )}
 
                                 {/* LỜI GIẢI CHI TIẾT */}
-                                <div className="pt-2 border-t border-slate-200/80">
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700 mb-1">
+                                <div className="pt-2 border-t border-slate-200/80 space-y-2">
+                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
                                         <BookOpen className="w-3.5 h-3.5 text-amber-600" />
                                         <span>Lời giải chi tiết (Hướng dẫn):</span>
                                     </div>
+                                    <div 
+                                        className="p-3 bg-amber-50/10 border border-amber-200/40 rounded-xl text-xs text-amber-900 overflow-x-auto"
+                                        dangerouslySetInnerHTML={{ __html: q.explanation || "" }}
+                                    />
                                     <textarea
                                         value={q.explanation || ""}
                                         onChange={(e) => handleUpdateExplanation(qIndex, e.target.value)}

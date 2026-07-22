@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { User, UserPlan } from "../types";
-import { LogOut, User as UserIcon, Shield, Settings, ChevronDown, BookOpen, Crown, Zap } from "lucide-react";
+import {
+    LogOut,
+    User as UserIcon,
+    Shield,
+    Settings,
+    ChevronDown,
+    BookOpen,
+    Crown,
+    Zap,
+} from "lucide-react";
 
 interface TopbarProps {
     user: User | null;
@@ -61,7 +70,6 @@ export default function Topbar({
     return (
         <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs transition-colors">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                
                 {/* BRAND LOGO */}
                 <div className="flex items-center gap-8">
                     <button
@@ -70,9 +78,6 @@ export default function Topbar({
                     >
                         <span className="font-calligraphy text-2xl sm:text-3xl text-brand-600 font-bold tracking-tight group-hover:opacity-90 transition-opacity">
                             HiTrang
-                        </span>
-                        <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md uppercase border border-brand-200">
-                            Học Viện
                         </span>
                     </button>
 
@@ -96,7 +101,8 @@ export default function Topbar({
                                     if (currentPath !== "/") onNavigateHome();
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                                    selectedGrade === grade.id && currentPath === "/"
+                                    selectedGrade === grade.id &&
+                                    currentPath === "/"
                                         ? "bg-slate-900 text-white shadow-2xs"
                                         : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                                 }`}
@@ -109,19 +115,7 @@ export default function Topbar({
 
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center gap-3">
-                    
                     {/* ADMIN ROUTE BUTTON */}
-                    <button
-                        onClick={onNavigateAdmin}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
-                            currentPath === "/admin"
-                                ? "bg-brand-600 text-white shadow-2xs"
-                                : "text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200"
-                        }`}
-                    >
-                        <Shield className="w-3.5 h-3.5" />
-                        <span>Admin</span>
-                    </button>
 
                     {!user ? (
                         /* UNAUTHENTICATED ACTION BUTTONS */
@@ -143,7 +137,9 @@ export default function Topbar({
                         /* AUTHENTICATED USER DROPDOWN */
                         <div className="relative">
                             <button
-                                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                onClick={() =>
+                                    setUserDropdownOpen(!userDropdownOpen)
+                                }
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer"
                             >
                                 <div className="w-7 h-7 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
@@ -165,14 +161,22 @@ export default function Topbar({
                                 <>
                                     <div
                                         className="fixed inset-0 z-10"
-                                        onClick={() => setUserDropdownOpen(false)}
+                                        onClick={() =>
+                                            setUserDropdownOpen(false)
+                                        }
                                     />
                                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
                                         <div className="px-4 py-2 border-b border-slate-100 mb-1">
-                                            <p className="text-xs font-bold text-slate-900">{user.name}</p>
-                                            <p className="text-[11px] text-slate-500 truncate">@{user.username}</p>
+                                            <p className="text-xs font-bold text-slate-900">
+                                                {user.name}
+                                            </p>
+                                            <p className="text-[11px] text-slate-500 truncate">
+                                                @{user.username}
+                                            </p>
                                             <div className="mt-2 flex items-center justify-between">
-                                                <span className="text-[10px] uppercase font-semibold text-slate-400">Gói tài khoản</span>
+                                                <span className="text-[10px] uppercase font-semibold text-slate-400">
+                                                    Gói tài khoản
+                                                </span>
                                                 {getPlanBadge(user.plan)}
                                             </div>
                                         </div>

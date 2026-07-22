@@ -1,6 +1,13 @@
 import React from "react";
 import { Quiz } from "../types";
-import { Sparkles, ArrowRight, Zap, Clock, BookOpen, CheckCircle2 } from "lucide-react";
+import {
+    Sparkles,
+    ArrowRight,
+    Zap,
+    Clock,
+    BookOpen,
+    CheckCircle2,
+} from "lucide-react";
 
 interface LandingPageProps {
     quizzes: Quiz[];
@@ -17,29 +24,29 @@ export default function LandingPage({
     onOpenAuth,
     onSelectQuizToPreview,
 }: LandingPageProps) {
-
     // Filter quizzes by selected grade if any
     const filteredQuizzes = selectedGrade
-        ? quizzes.filter((q) => q.grade === selectedGrade || q.title.includes(`Lớp ${selectedGrade}`))
+        ? quizzes.filter(
+              (q) =>
+                  q.grade === selectedGrade ||
+                  q.title.includes(`Lớp ${selectedGrade}`),
+          )
         : quizzes;
 
     return (
         <div className="w-full min-h-screen bg-[#F9F8F6] text-[#222B38] font-sans antialiased overflow-x-hidden">
-            
             {/* HERO SECTION - 100% MATCH TO DESIGN SCREENSHOT */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 md:pt-20 md:pb-24">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                    
                     {/* LEFT HERO TEXT & BUTTONS */}
                     <div className="lg:col-span-7 space-y-8 text-left">
-                        
                         {/* MAIN EDITORIAL HEADLINE WITH RED OVAL CIRCLE HIGHLIGHT */}
                         <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-normal text-[#233142] leading-[1.1] tracking-tight">
                             Học Tập Cho <br />
                             <span className="relative inline-block my-1 font-serif italic font-normal text-[#1E3046]">
                                 {/* HAND-DRAWN RED OVAL RING SVG */}
                                 <svg
-                                    className="absolute -top-3 -left-4 w-[118%] h-[155%] pointer-events-none text-rose-500 overflow-visible"
+                                    className="absolute -top-3 -left-4 w-[118%] h-[175%] pointer-events-none text-rose-500 overflow-visible"
                                     viewBox="0 0 200 80"
                                     fill="none"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -69,8 +76,13 @@ export default function LandingPage({
                             </button>
                             <button
                                 onClick={() => {
-                                    const grid = document.getElementById("public-quiz-grid");
-                                    grid?.scrollIntoView({ behavior: "smooth" });
+                                    const grid =
+                                        document.getElementById(
+                                            "public-quiz-grid",
+                                        );
+                                    grid?.scrollIntoView({
+                                        behavior: "smooth",
+                                    });
                                 }}
                                 className="px-8 py-3.5 bg-[#4BA8CD] hover:bg-[#3d92b4] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-98"
                             >
@@ -82,27 +94,13 @@ export default function LandingPage({
                     {/* RIGHT HERO GRAPHIC (CIRCULAR PORTRAIT + BLUE LIGHTNING BOLT) */}
                     <div className="lg:col-span-5 flex justify-center relative">
                         <div className="relative w-72 h-72 sm:w-96 sm:h-96">
-                            
                             {/* CIRCULAR AVATAR CONTAINER */}
                             <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-2xl relative z-10 bg-amber-50">
                                 <img
-                                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80"
+                                    src="public/images/trang.jpg"
                                     alt="HiTrang Student Avatar"
                                     className="w-full h-full object-cover"
                                 />
-                            </div>
-
-                            {/* VIBRANT LIGHT BLUE LIGHTNING BOLT DECORATIVE GRAPHIC */}
-                            <div className="absolute -right-12 -top-6 sm:-right-16 sm:-top-8 w-36 h-48 sm:w-48 sm:h-64 z-20 pointer-events-none drop-shadow-xl animate-bounce duration-1000">
-                                <svg viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-                                    <path
-                                        d="M60 0 L10 80 L50 85 L30 150 L90 65 L50 60 L80 0 Z"
-                                        fill="#BBE9FF"
-                                        stroke="#8AD5FD"
-                                        strokeWidth="3"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
                             </div>
                         </div>
                     </div>
@@ -110,38 +108,43 @@ export default function LandingPage({
 
                 {/* SUB-HERO TAGLINE SECTION (BOTTOM LEFT + RIGHT RED LIGHTNING BOLT QUOTE) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pt-16 md:pt-24 border-t border-slate-200/80 items-start">
-                    
                     {/* BOTTOM LEFT TITLE */}
                     <div className="md:col-span-6 text-left">
                         <h2 className="text-2xl sm:text-4xl font-serif font-normal text-[#233142] leading-snug">
-                            Nơi Kiến Thức Nâng Tầm <br className="hidden sm:inline" /> Kết Quả Học Tập.
+                            Nơi Kiến Thức Nâng Tầm{" "}
+                            <br className="hidden sm:inline" /> Kết Quả Học Tập.
                         </h2>
                     </div>
 
                     {/* BOTTOM RIGHT RED LIGHTNING BOLT + PARAGRAPH */}
                     <div className="md:col-span-6 flex items-start gap-4 text-left">
-                        <div className="shrink-0 p-2 bg-rose-100 rounded-lg text-rose-600">
-                            <Zap className="w-6 h-6 fill-rose-600 text-rose-600" />
-                        </div>
-                        <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed">
-                            Học tập không chỉ là lý thuyết - mà là rèn luyện tư duy, giải nhanh đề thi, bứt phá điểm số và làm chủ kiến thức cùng đội ngũ giáo viên tâm huyết HiTrang.
+                        <p className="text-xs sm:text-base text-slate-600 font-normal leading-relaxed italic">
+                            🌸 Học tập không chỉ là lý thuyết - mà là rèn luyện
+                            tư duy, giải nhanh đề thi, bứt phá điểm số và làm
+                            chủ kiến thức cùng HiTrang.
                         </p>
                     </div>
                 </div>
             </section>
 
             {/* PUBLIC QUIZZES CATALOG & GRADE SELECTION GRID */}
-            <section id="public-quiz-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white border-t border-slate-200">
+            <section
+                id="public-quiz-grid"
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white border-t border-slate-200"
+            >
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
                     <div>
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#4BA8CD] bg-[#4BA8CD]/10 px-3 py-1 rounded-full">
+                        {/*<span className="text-xs font-bold uppercase tracking-wider text-[#4BA8CD] bg-[#4BA8CD]/10 px-3 py-1 rounded-full">
                             Kho Đề Thi Mới Nhất
-                        </span>
+                        </span>*/}
                         <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#233142] mt-3">
-                            {selectedGrade ? `Đề Thi Thử Lớp ${selectedGrade}` : "Toàn Bộ Đề Thi Thử Đầy Đủ Các Lớp"}
+                            {selectedGrade
+                                ? `Đề Thi Thử Lớp ${selectedGrade}`
+                                : "Toàn Bộ Đề Thi Thử Đầy Đủ Các Lớp"}
                         </h2>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                            Chọn môn học và làm bài ngay để đánh giá chính xác năng lực bản thân.
+                            Chọn môn học và làm bài ngay để đánh giá chính xác
+                            năng lực bản thân.
                         </p>
                     </div>
 
@@ -178,7 +181,9 @@ export default function LandingPage({
                     {filteredQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                             <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                            <p className="text-sm font-semibold">Chưa có đề thi nào cho danh mục này.</p>
+                            <p className="text-sm font-semibold">
+                                Chưa có đề thi nào cho danh mục này.
+                            </p>
                         </div>
                     ) : (
                         filteredQuizzes.map((quiz) => (
@@ -208,10 +213,13 @@ export default function LandingPage({
 
                                 <div className="pt-6 mt-4 border-t border-slate-200/60 flex items-center justify-between">
                                     <span className="text-xs text-slate-600 font-semibold">
-                                        {quiz.questions.length} câu hỏi trắc nghiệm
+                                        {quiz.questions.length} câu hỏi trắc
+                                        nghiệm
                                     </span>
                                     <button
-                                        onClick={() => onSelectQuizToPreview(quiz)}
+                                        onClick={() =>
+                                            onSelectQuizToPreview(quiz)
+                                        }
                                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2B5467] hover:bg-[#204252] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
                                     >
                                         <span>Thi thử ngay</span>
