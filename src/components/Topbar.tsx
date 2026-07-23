@@ -50,19 +50,19 @@ export default function Topbar({
             case "vip":
                 return (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-900 bg-amber-200 border border-amber-300 rounded-full uppercase shadow-2xs">
-                        <Crown className="w-3 h-3 text-amber-700" /> VIP
+                        VIP
                     </span>
                 );
             case "basic":
                 return (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider text-sky-900 bg-sky-200 border border-sky-300 rounded-full uppercase shadow-2xs">
-                        <Zap className="w-3 h-3 text-sky-700" /> BASIC
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold tracking-wider text-sky-900">
+                        Basic
                     </span>
                 );
             default:
                 return (
-                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium tracking-wider text-slate-600 bg-slate-100 border border-slate-200 rounded-full uppercase">
-                        FREE
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium tracking-wider ">
+                        Nothing
                     </span>
                 );
         }
@@ -191,7 +191,8 @@ export default function Topbar({
                                             </div>
                                         </div>
 
-                                        {(user.role === "teacher" || user.username === "admin") && (
+                                        {(user.role === "teacher" ||
+                                            user.username === "admin") && (
                                             <button
                                                 onClick={() => {
                                                     setUserDropdownOpen(false);

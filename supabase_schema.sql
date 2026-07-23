@@ -18,15 +18,15 @@ create policy "Cho phép mọi người đọc profile" on public.profiles
 create policy "Cho phép người dùng tạo profile của chính mình" on public.profiles
   for insert with check (auth.uid() = id);
 
-create policy "Cho phép người dùng cập nhật profile của chính mình" on public.profiles
-  for update using (auth.uid() = id);
-
-create policy "Cho phép giáo viên / admin cập nhật plan của người dùng khác" on public.profiles
+create policy "Cho phép cập nhật profile chính mình hoặc giáo viên cập nhật" on public.profiles
   for update using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid() and profiles.role = 'teacher'
-    )
+    (auth.uid() = id) or 
+    (((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'teacher')
+  );
+
+create policy "Cho phép giáo viên xóa profile" on public.profiles
+  for delete using (
+    (((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'teacher')
   );
 
 

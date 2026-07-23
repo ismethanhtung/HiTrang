@@ -14,6 +14,11 @@ import {
     ChevronRight,
     ChevronLeft,
     X,
+    TrendingUp,
+    Users,
+    Check,
+    Calendar,
+    Trophy,
 } from "lucide-react";
 import { Quiz, Question, Submission, User } from "../types";
 import { renderMathHtml } from "../lib/math";
@@ -1797,151 +1802,639 @@ export default function StudentDashboard({
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-8"
                             >
-                                {/* Custom Welcome Block Banner */}
-                                <div className="bg-gradient-to-r from-brand-50/70 to-brand-100/40 dark:from-brand-950/20 dark:to-brand-900/10 text-slate-800 dark:text-slate-150 rounded-3xl p-6 sm:p-8 relative overflow-hidden border border-brand-100 dark:border-brand-900/40 shadow-xs transition-all duration-200">
-                                    <div className="absolute right-0 top-0 w-44 h-44 bg-brand-300/10 rounded-full blur-3xl" />
-                                    <div className="relative z-10 max-w-md">
-                                        <span className="text-[9px] font-bold bg-brand-100 dark:bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-200/40 dark:border-brand-500/20 px-2.5 py-1 rounded-md tracking-wider uppercase">
-                                            Học Bài Thôi Em
-                                        </span>
-                                        <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-3">
-                                            Chào mừng quay trở lại, {user.name}!
-                                        </h2>
-                                        <p className="text-xs text-slate-600 dark:text-slate-355 leading-relaxed mt-2">
-                                            Hôm nay là ngày tuyệt vời để nâng
-                                            cao điểm số. Hãy kiểm tra các đề thi
-                                            thử mới cập nhật trong tuần này nhé!
-                                        </p>
-                                    </div>
-                                </div>
+                                {/* Header section (Welcome back, Alex style) */}
+                                {(() => {
+                                    const completedCount =
+                                        studentSubmissions.length;
+                                    const averageScore =
+                                        completedCount > 0
+                                            ? (
+                                                  studentSubmissions.reduce(
+                                                      (sum, sub) =>
+                                                          sum +
+                                                          Number(sub.score),
+                                                      0,
+                                                  ) / completedCount
+                                              ).toFixed(1)
+                                            : "0.0";
 
-                                {/* Score Stats Row */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                            Đề thi Đang mở
-                                        </span>
-                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
-                                            {quizzes.length}
-                                        </h3>
-                                        <p className="text-[10px] text-brand-600 mt-1.5 font-medium">
-                                            Bấm "Làm bài thi" để tham gia
-                                        </p>
-                                    </div>
+                                    const uniqueQuizzesDone = new Set(
+                                        studentSubmissions.map(
+                                            (sub) => sub.quizId,
+                                        ),
+                                    ).size;
+                                    const completionRate =
+                                        quizzes.length > 0
+                                            ? Math.round(
+                                                  (uniqueQuizzesDone /
+                                                      quizzes.length) *
+                                                      100,
+                                              )
+                                            : 0;
+                                    const totalStudyHours = Math.round(
+                                        (completedCount * 45) / 60,
+                                    );
+                                    const totalCerts =
+                                        studentSubmissions.filter(
+                                            (sub) => Number(sub.score) >= 8.0,
+                                        ).length;
 
-                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                            Bài đã hoàn thành
-                                        </span>
-                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
-                                            {completedCount}
-                                        </h3>
-                                        <p className="text-[10px] text-gray-500 mt-1.5">
-                                            Lưu trữ trong học bạ cá nhân
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-xs">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                            Điểm trung bình
-                                        </span>
-                                        <h3 className="text-xl font-bold text-slate-900 mt-1">
-                                            {averageScore} / 10
-                                        </h3>
-                                        <p className="text-[10px] text-brand-600 mt-1.5 font-medium">
-                                            Phong độ học tập xuất sắc
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Left: Next suggested exam. Right: Score Logs list */}
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                    {/* Next Quiz Promoted Block */}
-                                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-                                        <div>
-                                            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight text-gray-400">
-                                                Đề xuất ôn luyện
-                                            </h4>
-                                            {quizzes.length > 0 ? (
-                                                <div className="mt-4 space-y-3">
-                                                    <span className="text-[9px] font-bold bg-brand-50 text-brand-700 border border-brand-200 px-2.5 py-1 rounded-md uppercase">
-                                                        HOT • CÓ SẴN
-                                                    </span>
-                                                    <h5 className="text-xs font-bold text-slate-800 line-clamp-2">
-                                                        {quizzes[0].title}
-                                                    </h5>
-                                                    <p className="text-[11px] text-gray-500 line-clamp-3">
-                                                        {quizzes[0].description}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <p className="text-xs text-gray-400 italic mt-4">
-                                                    Không có bài ôn tập khả
-                                                    dụng.
+                                    return (
+                                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-slate-200">
+                                            <div>
+                                                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                                                    Chào mừng quay trở lại,{" "}
+                                                    {user.name} 👋
+                                                </h1>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                                    Học tập chăm chỉ, tương lai
+                                                    rạng ngời! Tiếp tục cố gắng
+                                                    nhé.
                                                 </p>
-                                            )}
-                                        </div>
+                                            </div>
 
-                                        {quizzes.length > 0 && (
+                                            {/* Stats Grid */}
+                                            <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 p-4 rounded-2xl">
+                                                <div className="text-center min-w-[50px]">
+                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                        Số đề thi
+                                                    </span>
+                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                        {quizzes.length}
+                                                    </span>
+                                                </div>
+                                                <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
+                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                        Hoàn thành
+                                                    </span>
+                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                        {completionRate}%
+                                                    </span>
+                                                </div>
+
+                                                <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
+                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                        Điểm TB
+                                                    </span>
+                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                        {averageScore}/10
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Row 1: Đề thi mới & Nhật ký timeline */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    {/* Left Column (2/3 width on desktop): Đề thi mới */}
+                                    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-xs space-y-4 flex flex-col justify-between">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
+                                                Đề thi mới
+                                            </h3>
                                             <button
                                                 type="button"
-                                                id="btn-promoted-start-quiz"
                                                 onClick={() =>
-                                                    handleStartQuiz(quizzes[0])
+                                                    onSelectGrade
+                                                        ? onSelectGrade(null)
+                                                        : undefined
                                                 }
-                                                className="mt-6 w-full py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                                                className="text-[10px] font-bold text-[#2B5467] hover:underline cursor-pointer"
                                             >
-                                                <span>Thi thử ngay</span>
-                                                <ArrowRight className="w-4 h-4" />
+                                                Xem tất cả
                                             </button>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    {/* Submission history list log */}
-                                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs lg:col-span-2">
-                                        <h4 className="text-xs font-bold text-slate-900 mb-4">
-                                            Nhật ký điểm số cá nhân
-                                        </h4>
-                                        <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                                            {studentSubmissions.length > 0 ? (
-                                                studentSubmissions
-                                                    .slice()
-                                                    .reverse()
-                                                    .map((sub) => (
-                                                        <div
-                                                            key={sub.id}
-                                                            onClick={() =>
-                                                                onNavigate(
-                                                                    "/result/" +
-                                                                        sub.id,
-                                                                )
-                                                            }
-                                                            className="p-3 bg-bg-base dark:bg-bg-card hover:bg-slate-50 dark:hover:bg-slate-800 border border-border-primary dark:border-slate-800/60 rounded-xl flex items-center justify-between transition-colors cursor-pointer"
-                                                        >
-                                                            <div>
-                                                                <p className="text-xs font-semibold text-slate-800 truncate max-w-[280px]">
+                                        {/* Horizontal scroll standard white cards (exactly identical layout & height) */}
+                                        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin scrollbar-thumb-slate-200">
+                                            {quizzes.slice(0, 3).map((quiz) => {
+                                                const hasDone =
+                                                    studentSubmissions.some(
+                                                        (sub) =>
+                                                            sub.quizId ===
+                                                            quiz.id,
+                                                    );
+                                                return (
+                                                    <div
+                                                        key={quiz.id}
+                                                        className="w-[280px] sm:w-[320px] flex-shrink-0 bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-[#2B5467]/30 hover:shadow-xs transition-all duration-200"
+                                                    >
+                                                        <div>
+                                                            <div className="flex items-center justify-between gap-2 mb-3">
+                                                                <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-[#2B5467] border border-brand-200/50 px-2 py-0.5 rounded-md">
                                                                     {
-                                                                        sub.quizTitle
-                                                                    }
-                                                                </p>
-                                                                <span className="text-[9px] text-gray-400 mt-1 block">
-                                                                    Ngày nộp:{" "}
-                                                                    {
-                                                                        sub.submittedAt
+                                                                        quiz.subject
                                                                     }
                                                                 </span>
+                                                                {hasDone ? (
+                                                                    <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/30">
+                                                                        Đã làm
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/30">
+                                                                        Chưa làm
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            <span className="text-xs font-extrabold text-slate-900 bg-white border border-gray-100 px-2.5 py-1 rounded-lg">
-                                                                {sub.score}/10
-                                                            </span>
+
+                                                            <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[40px]">
+                                                                {quiz.title}
+                                                            </h3>
+                                                            <p className="text-xs text-gray-500 line-clamp-3 mt-2 min-h-[48px] leading-relaxed">
+                                                                {quiz.description ||
+                                                                    "Hãy click để tham gia làm bài thi thử môn Toán lớp học cô Trang."}
+                                                            </p>
                                                         </div>
-                                                    ))
+
+                                                        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                                            <span className="text-[10px] text-slate-500 font-medium">
+                                                                {
+                                                                    quiz
+                                                                        .questions
+                                                                        .length
+                                                                }{" "}
+                                                                câu hỏi • 45
+                                                                phút
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleStartQuiz(
+                                                                        quiz,
+                                                                    )
+                                                                }
+                                                                className="px-4 py-1.5 bg-[#2B5467] hover:bg-[#1E3B4B] text-white text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                                            >
+                                                                Làm bài thi
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Column (1/3 width on desktop): Nhật ký timeline */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
+                                                {new Date().toLocaleDateString(
+                                                    "vi-VN",
+                                                    {
+                                                        month: "long",
+                                                        day: "numeric",
+                                                        year: "numeric",
+                                                    },
+                                                )}
+                                            </h3>
+                                            <span className="text-[10px] font-bold text-slate-400">
+                                                Hôm nay
+                                            </span>
+                                        </div>
+
+                                        {/* Timeline flow */}
+                                        <div className="space-y-4 max-h-[170px] overflow-y-auto pr-1">
+                                            {studentSubmissions.length > 0 ? (
+                                                studentSubmissions
+                                                    .slice(-2)
+                                                    .reverse()
+                                                    .map((sub, idx) => {
+                                                        const timelineColors = [
+                                                            "bg-emerald-50/65 border-emerald-100 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/30",
+                                                            "bg-blue-50/65 border-blue-100 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/30",
+                                                        ];
+                                                        const bulletColors = [
+                                                            "bg-emerald-500",
+                                                            "bg-blue-500",
+                                                        ];
+                                                        return (
+                                                            <div
+                                                                key={sub.id}
+                                                                className="flex gap-3 text-left"
+                                                            >
+                                                                <div className="flex flex-col items-center">
+                                                                    <div
+                                                                        className={`w-2 h-2 rounded-full mt-1.5 ${bulletColors[idx % 2]}`}
+                                                                    />
+                                                                    <div className="w-0.5 flex-1 bg-slate-150 my-1" />
+                                                                </div>
+                                                                <div
+                                                                    className={`flex-1 border rounded-xl p-3 space-y-1 ${timelineColors[idx % 2]}`}
+                                                                >
+                                                                    <span className="text-[9px] font-bold uppercase tracking-wider block opacity-75">
+                                                                        {sub.submittedAt.split(
+                                                                            " ",
+                                                                        )[1] ||
+                                                                            "15:30"}{" "}
+                                                                        - Hoàn
+                                                                        thành
+                                                                    </span>
+                                                                    <h4 className="text-xs font-bold truncate">
+                                                                        {
+                                                                            sub.quizTitle
+                                                                        }
+                                                                    </h4>
+                                                                    <p className="text-[10px] opacity-80 font-medium">
+                                                                        Kết quả:{" "}
+                                                                        {
+                                                                            sub.score
+                                                                        }
+                                                                        /10 điểm
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })
                                             ) : (
-                                                <p className="text-xs text-gray-400 italic text-center py-6">
-                                                    Bạn chưa tham gia bài kiểm
-                                                    tra nào.
-                                                </p>
+                                                <div className="text-center py-8 text-slate-400 text-xs italic">
+                                                    Chưa ghi nhận lịch sử thi
+                                                    thử hôm nay.
+                                                </div>
                                             )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Row 2: Biểu đồ điểm số & Nhiệm vụ & Bạn học */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {/* 1. Activities Block (Line Chart) */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
+                                        <div>
+                                            <div className="flex items-center justify-between">
+                                                <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
+                                                    Biểu đồ điểm số
+                                                </h3>
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    Điểm số thật
+                                                </span>
+                                            </div>
+
+                                            {/* SVG Dynamic Line Chart showing real scores */}
+                                            <div className="h-28 w-full mt-4 relative flex items-end">
+                                                {(() => {
+                                                    const chartData =
+                                                        studentSubmissions.slice(
+                                                            -7,
+                                                        );
+
+                                                    const width = 260;
+                                                    const height = 90;
+                                                    const padding = 10;
+
+                                                    if (
+                                                        chartData.length === 0
+                                                    ) {
+                                                        return (
+                                                            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs italic">
+                                                                Chưa có dữ liệu
+                                                                điểm số.
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    const points =
+                                                        chartData.map(
+                                                            (sub, index) => {
+                                                                const scoreVal =
+                                                                    Number(
+                                                                        sub.score,
+                                                                    );
+                                                                const x =
+                                                                    padding +
+                                                                    (index *
+                                                                        (width -
+                                                                            2 *
+                                                                                padding)) /
+                                                                        Math.max(
+                                                                            1,
+                                                                            chartData.length -
+                                                                                1,
+                                                                        );
+                                                                const y =
+                                                                    height -
+                                                                    padding -
+                                                                    (scoreVal /
+                                                                        10) *
+                                                                        (height -
+                                                                            2 *
+                                                                                padding);
+                                                                return {
+                                                                    x,
+                                                                    y,
+                                                                    score: scoreVal,
+                                                                };
+                                                            },
+                                                        );
+
+                                                    const pathD = points
+                                                        .map(
+                                                            (p, i) =>
+                                                                `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`,
+                                                        )
+                                                        .join(" ");
+                                                    const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+
+                                                    return (
+                                                        <svg
+                                                            viewBox={`0 0 ${width} ${height}`}
+                                                            className="w-full h-full"
+                                                        >
+                                                            <defs>
+                                                                <linearGradient
+                                                                    id="chart-grad"
+                                                                    x1="0"
+                                                                    y1="0"
+                                                                    x2="0"
+                                                                    y2="1"
+                                                                >
+                                                                    <stop
+                                                                        offset="0%"
+                                                                        stopColor="#2B5467"
+                                                                        stopOpacity="0.25"
+                                                                    />
+                                                                    <stop
+                                                                        offset="100%"
+                                                                        stopColor="#2B5467"
+                                                                        stopOpacity="0"
+                                                                    />
+                                                                </linearGradient>
+                                                            </defs>
+
+                                                            {/* Y-axis helper lines */}
+                                                            <line
+                                                                x1="0"
+                                                                y1={height / 2}
+                                                                x2={width}
+                                                                y2={height / 2}
+                                                                stroke="#f1f5f9"
+                                                                strokeWidth="1"
+                                                                strokeDasharray="4"
+                                                            />
+
+                                                            {/* Area fill */}
+                                                            <path
+                                                                d={areaD}
+                                                                fill="url(#chart-grad)"
+                                                            />
+
+                                                            {/* Line path */}
+                                                            <path
+                                                                d={pathD}
+                                                                fill="none"
+                                                                stroke="#2B5467"
+                                                                strokeWidth="2.5"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            />
+
+                                                            {/* Data dots */}
+                                                            {points.map(
+                                                                (p, i) => (
+                                                                    <g key={i}>
+                                                                        <circle
+                                                                            cx={
+                                                                                p.x
+                                                                            }
+                                                                            cy={
+                                                                                p.y
+                                                                            }
+                                                                            r="3"
+                                                                            fill="#ffffff"
+                                                                            stroke="#2B5467"
+                                                                            strokeWidth="1.5"
+                                                                        />
+                                                                        <text
+                                                                            x={
+                                                                                p.x
+                                                                            }
+                                                                            y={
+                                                                                p.y -
+                                                                                6
+                                                                            }
+                                                                            textAnchor="middle"
+                                                                            className="text-[7.5px] font-black fill-[#2B5467]"
+                                                                        >
+                                                                            {
+                                                                                p.score
+                                                                            }
+                                                                        </text>
+                                                                    </g>
+                                                                ),
+                                                            )}
+                                                        </svg>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 2. Tasks Block */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
+                                                Nhiệm vụ hôm nay
+                                            </h3>
+                                            <span className="text-[10px] font-bold text-slate-400">
+                                                Nhiệm vụ
+                                            </span>
+                                        </div>
+
+                                        {/* Tasks List */}
+                                        <div className="space-y-3">
+                                            {(() => {
+                                                const hasDoneQuizToday =
+                                                    studentSubmissions.length >
+                                                    0;
+                                                const hasHighScore =
+                                                    studentSubmissions.some(
+                                                        (sub) =>
+                                                            Number(sub.score) >=
+                                                            8.0,
+                                                    );
+
+                                                const tasksList = [
+                                                    {
+                                                        id: 1,
+                                                        desc: "Làm đề thi thử mới nhất",
+                                                        pts: "+500",
+                                                        done: hasDoneQuizToday,
+                                                        prog: hasDoneQuizToday
+                                                            ? 100
+                                                            : 0,
+                                                    },
+                                                    {
+                                                        id: 2,
+                                                        desc: "Đạt điểm Giỏi (> 8.0)",
+                                                        pts: "+1,500",
+                                                        done: hasHighScore,
+                                                        prog: hasHighScore
+                                                            ? 100
+                                                            : 0,
+                                                    },
+                                                    {
+                                                        id: 3,
+                                                        desc: "Xem lời giải chi tiết",
+                                                        pts: "+250",
+                                                        done: true,
+                                                        prog: 100,
+                                                    },
+                                                    {
+                                                        id: 4,
+                                                        desc: "Học liên tục 3 ngày",
+                                                        pts: "+500",
+                                                        done: false,
+                                                        prog: 66,
+                                                    },
+                                                ];
+
+                                                return tasksList.map((task) => (
+                                                    <div
+                                                        key={task.id}
+                                                        className="flex items-center justify-between gap-3 text-left"
+                                                    >
+                                                        <div className="flex-1 space-y-1">
+                                                            <div className="flex items-center justify-between">
+                                                                <span
+                                                                    className={`text-[10px] font-bold ${task.done ? "text-slate-400 line-through" : "text-slate-800"}`}
+                                                                >
+                                                                    {task.desc}
+                                                                </span>
+                                                                <span className="text-[9px] font-extrabold text-[#2B5467]">
+                                                                    {task.pts}{" "}
+                                                                    điểm
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className="bg-[#2B5467] h-full transition-all duration-300"
+                                                                    style={{
+                                                                        width: `${task.prog}%`,
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                alert(
+                                                                    `Đã nhận thành công ${task.pts} điểm tích lũy học tập! 🌟`,
+                                                                )
+                                                            }
+                                                            className={`px-2 py-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer active:scale-95 ${
+                                                                task.done
+                                                                    ? "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                                                                    : "bg-slate-50 text-slate-300 cursor-not-allowed"
+                                                            }`}
+                                                            disabled={
+                                                                !task.done
+                                                            }
+                                                        >
+                                                            Nhận
+                                                        </button>
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Leaderboard Block */}
+                                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
+                                                Bảng xếp hạng bạn học
+                                            </h3>
+                                            <span className="text-[10px] font-bold text-slate-400">
+                                                Xếp hạng
+                                            </span>
+                                        </div>
+
+                                        {/* Leaderboard list */}
+                                        <div className="space-y-2.5">
+                                            {[
+                                                {
+                                                    rank: 1,
+                                                    name: "Nguyễn Minh Anh",
+                                                    pts: 10568,
+                                                    isMe: false,
+                                                },
+                                                {
+                                                    rank: 2,
+                                                    name: "Trần Đức Huy",
+                                                    pts: 10112,
+                                                    isMe: false,
+                                                },
+                                                {
+                                                    rank: 3,
+                                                    name: "Phạm Thảo Vy",
+                                                    pts: 9052,
+                                                    isMe: false,
+                                                },
+                                                {
+                                                    rank: 4,
+                                                    name: user.name,
+                                                    pts:
+                                                        8000 +
+                                                        studentSubmissions.length *
+                                                            150,
+                                                    isMe: true,
+                                                },
+                                                {
+                                                    rank: 5,
+                                                    name: "Lê Nam Khánh",
+                                                    pts: 7520,
+                                                    isMe: false,
+                                                },
+                                            ].map((friend) => (
+                                                <div
+                                                    key={friend.rank}
+                                                    className={`flex items-center justify-between p-2 rounded-xl border ${
+                                                        friend.isMe
+                                                            ? "bg-brand-50/50 border-brand-200/50"
+                                                            : "bg-slate-50/40 border-slate-100/50"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="text-[10px] font-black text-slate-500 w-3 text-center">
+                                                            {friend.rank}
+                                                        </span>
+                                                        <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 bg-amber-50">
+                                                            <img
+                                                                src={
+                                                                    friend.isMe
+                                                                        ? "/images/trang.jpg"
+                                                                        : ""
+                                                                }
+                                                                alt={
+                                                                    friend.name
+                                                                }
+                                                                className="w-full h-full object-cover"
+                                                                onError={(
+                                                                    e,
+                                                                ) => {
+                                                                    (
+                                                                        e.target as HTMLImageElement
+                                                                    ).src =
+                                                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=random&size=40`;
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        <span
+                                                            className={`text-[10px] sm:text-[11px] font-bold truncate max-w-[80px] sm:max-w-[100px] ${
+                                                                friend.isMe
+                                                                    ? "text-brand-700"
+                                                                    : "text-slate-800"
+                                                            }`}
+                                                        >
+                                                            {friend.name}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[10px] font-black text-slate-900 bg-white border border-gray-150 px-2 py-0.5 rounded-lg">
+                                                        {friend.pts.toLocaleString()}{" "}
+                                                        pts
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>

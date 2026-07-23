@@ -278,7 +278,7 @@ export default function GradeView({
                                                 <span className="bg-slate-50/80 text-slate-600 px-1.5 py-0.5 rounded-md border border-slate-100">
                                                     Avg: {avgScore}
                                                 </span>
-                                                <span className="bg-blue-50/40 text-blue-700 px-1.5 py-0.5 rounded-md border border-slate-100">
+                                                <span className="bg-slate-50/80 text-slate-600 px-1.5 py-0.5 rounded-md border border-slate-100">
                                                     Mới: {newestScore}
                                                 </span>
                                             </div>

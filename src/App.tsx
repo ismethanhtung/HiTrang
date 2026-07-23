@@ -74,10 +74,11 @@ export default function App() {
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
-    // Local Data States
     const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
-        const saved = localStorage.getItem("hvt_quizzes");
-        return saved ? JSON.parse(saved) : INITIAL_QUIZZES;
+        try {
+            localStorage.removeItem("hvt_quizzes");
+        } catch (e) {}
+        return INITIAL_QUIZZES;
     });
 
     const [submissions, setSubmissions] = useState<Submission[]>(() => {
@@ -114,10 +115,7 @@ export default function App() {
         return true;
     };
 
-    // Sync to localStorage
-    useEffect(() => {
-        localStorage.setItem("hvt_quizzes", JSON.stringify(quizzes));
-    }, [quizzes]);
+
 
     useEffect(() => {
         localStorage.setItem("hvt_submissions", JSON.stringify(submissions));
