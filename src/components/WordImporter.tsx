@@ -54,6 +54,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         variation: number;
         lineCount: number;
         openedScript?: boolean;
+        nonEmptyLinesCount?: number;
+        startFence?: string;
+        closeFence?: string;
+        startFenceAppended?: boolean;
     }
 
     /**
@@ -266,6 +270,17 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             return idx;
         };
 
+        const FENCE_SYMBOLS: Record<number, [string, string]> = {
+            1: ["(", ")"],
+            2: ["\\{", "\\}"],
+            3: ["[", "]"],
+            4: ["|", "|"],
+            5: ["\\|", "\\|"],
+            6: ["\\lfloor ", "\\rfloor "],
+            7: ["\\lceil ", "\\rceil "],
+            8: ["\\langle ", "\\rangle "]
+        };
+
         let i = startIdx;
         let out = "";
         
@@ -274,6 +289,17 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         const containerStack: ("LINE" | "TMPL")[] = [];
         let indent = 0;
         let hasStarted = false;
+        let propertyCharsToSkip = 0;
+
+        const ensureStartFences = (): void => {
+            for (let k = 0; k < tmplStack.length; k++) {
+                const tmpl = tmplStack[k];
+                if (!tmpl.startFenceAppended && tmpl.startFence) {
+                    out += tmpl.startFence;
+                    tmpl.startFenceAppended = true;
+                }
+            }
+        };
 
         while (i < buf.length - 1) {
             const tag = buf[i];
@@ -288,11 +314,27 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         const tmpl = tmplStack.pop()!;
                         if (tmpl.openedScript) {
                             out += "}";
-                        } else if (tmpl.lineCount > 0) {
-                            if (tmpl.selector === 11 || tmpl.selector === 2) { // Fraction
+                        } else {
+                            if (tmpl.startFenceAppended && tmpl.closeFence) {
+                                out += tmpl.closeFence;
+                            }
+                            if (tmpl.selector >= 1 && tmpl.selector <= 8) {
+                                const isLeftOnly = tmpl.variation === 1;
+                                const isRightOnly = tmpl.variation === 2;
+                                if (isLeftOnly || isRightOnly) {
+                                    propertyCharsToSkip += 1;
+                                }
+                            }
+                        }
+                        if (tmpl.lineCount > 0 && !tmpl.openedScript) {
+                            if (tmpl.selector === 10) { // Radical nth root
+                                if (tmpl.variation === 1) {
+                                    out += "}";
+                                }
+                            } else if (tmpl.selector === 23) {
+                                // Limit layout, no closing symbols needed
+                            } else if (tmpl.selector === 11) { // Fraction
                                 out += "}";
-                            } else if (tmpl.selector === 1) { // Parentheses
-                                out += ")";
                             }
                         }
                     }
@@ -327,8 +369,33 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         tmpl.lineCount += 1;
                         
                         if (!isNull) {
+                            const hasPrefix = tmpl.selector === 10 || tmpl.selector === 23 || tmpl.selector === 27 || tmpl.selector === 28 || tmpl.selector === 29 || tmpl.selector === 11;
+                            if (hasPrefix) {
+                                ensureStartFences();
+                            }
+                            
                             // Formatting based on line index
-                            if (tmpl.selector === 27 || tmpl.selector === 29) { // Subscript / Sub-superscript
+                            if (tmpl.selector === 10) { // Radical nth root
+                                if (tmpl.variation === 1) {
+                                    if (tmpl.lineCount === 1) {
+                                        out += "\\sqrt[";
+                                    } else if (tmpl.lineCount === 2) {
+                                        out += "]{";
+                                    }
+                                }
+                            } else if (tmpl.selector === 23) { // Limit / Big Operator layout
+                                if (tmpl.lineCount === 2) {
+                                    out += "\\limits_{";
+                                    tmpl.openedScript = true;
+                                } else if (tmpl.lineCount === 3) {
+                                    if (tmpl.openedScript) {
+                                        out += "}";
+                                        tmpl.openedScript = false;
+                                    }
+                                    out += "^{";
+                                    tmpl.openedScript = true;
+                                }
+                            } else if (tmpl.selector === 27 || tmpl.selector === 29) { // Subscript / Sub-superscript
                                 if (!tmpl.openedScript) {
                                     out += "_{";
                                     tmpl.openedScript = true;
@@ -342,15 +409,21 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 } else {
                                     out += "}_{";
                                 }
-                            } else if (tmpl.selector === 11 || tmpl.selector === 2) { // Fraction
+                            } else if (tmpl.selector === 11) { // Fraction
                                 if (tmpl.lineCount === 1) {
                                     out += "\\frac{";
                                 } else if (tmpl.lineCount === 2) {
                                     out += "}{";
                                 }
-                            } else if (tmpl.selector === 1) { // Parentheses
-                                if (tmpl.lineCount === 1) {
-                                    out += "(";
+                            } else if (tmpl.selector >= 1 && tmpl.selector <= 8) { // Fence case layouts
+                                const isLeftOnly = tmpl.variation === 1;
+                                const isRightOnly = tmpl.variation === 2;
+                                if (isLeftOnly || isRightOnly) {
+                                    const nonEmpty = tmpl.nonEmptyLinesCount || 0;
+                                    if (nonEmpty > 0) {
+                                        out += " \\\\ ";
+                                    }
+                                    tmpl.nonEmptyLinesCount = nonEmpty + 1;
                                 }
                             }
                         }
@@ -396,51 +469,72 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         const charCode = mtcode > 0 ? mtcode : (char8 !== null ? char8 : (char16 !== null ? char16 : 0));
                         
                         const isInsideLine = containerStack.length > 0 && containerStack[containerStack.length - 1] === "LINE";
-                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 123 || charCode === 125;
+                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 123 || charCode === 125 || charCode === 60423 || charCode === 60424;
                         
                         if (charCode > 0) {
-                            if (isBracket && !isInsideLine) {
+                            if (isBracket && propertyCharsToSkip > 0) {
+                                propertyCharsToSkip -= 1;
+                            } else if (isBracket && !isInsideLine) {
                                 // Skip template property bracket characters
                             } else {
-                                // Map special characters to standard LaTeX equivalents
-                                if (charCode === 0x2212) {
-                                    out += "-";
+                                let charStr = "";
+                                if (charCode === 92) {
+                                    charStr = "\\setminus ";
+                                } else if (charCode === 0x2212) {
+                                    charStr = "-";
                                 } else if (charCode === 0x221e) {
-                                    out += "\\infty ";
+                                    charStr = "\\infty ";
                                 } else if (charCode === 0x2265) {
-                                    out += "\\ge ";
+                                    charStr = "\\ge ";
                                 } else if (charCode === 0x2264) {
-                                    out += "\\le ";
+                                    charStr = "\\le ";
                                 } else if (charCode === 0x2208) {
-                                    out += "\\in ";
+                                    charStr = "\\in ";
                                 } else if (charCode === 0x21d2) {
-                                    out += "\\Rightarrow ";
+                                    charStr = "\\Rightarrow ";
                                 } else if (charCode === 0x21d4) {
-                                    out += "\\Leftrightarrow ";
+                                    charStr = "\\Leftrightarrow ";
                                 } else if (charCode === 0x03c0) {
-                                    out += "\\pi ";
+                                    charStr = "\\pi ";
                                 } else if (charCode === 0x0394) {
-                                    out += "\\Delta ";
+                                    charStr = "\\Delta ";
                                 } else if (charCode === 0x2260) {
-                                    out += "\\neq ";
+                                    charStr = "\\neq ";
                                 } else if (charCode === 0x00b1) {
-                                    out += "\\pm ";
+                                    charStr = "\\pm ";
                                 } else if (charCode === 0x2205) {
-                                    out += "\\emptyset ";
+                                    charStr = "\\emptyset ";
                                 } else if (charCode === 0x2192) {
-                                    out += "\\rightarrow ";
+                                    charStr = "\\rightarrow ";
                                 } else if (charCode === 0x221a) {
-                                    out += "\\sqrt ";
+                                    charStr = "\\sqrt ";
                                 } else if (charCode === 0x211d) {
-                                    out += "\\mathbb{R}";
+                                    charStr = "\\mathbb{R}";
                                 } else if (charCode === 0x2216) {
-                                    out += "\\setminus ";
+                                    charStr = "\\setminus ";
+                                } else if (charCode === 8776 || charCode === 0x2248) {
+                                    charStr = "\\approx ";
+                                } else if (charCode === 8801 || charCode === 0x2261) {
+                                    charStr = "\\equiv ";
+                                } else if (charCode === 8764 || charCode === 0x223c) {
+                                    charStr = "\\sim ";
+                                } else if (charCode === 8736 || charCode === 0x2220) {
+                                    charStr = "\\angle ";
+                                } else if (charCode === 8869 || charCode === 0x22a5) {
+                                    charStr = "\\perp ";
+                                } else if (charCode === 8741 || charCode === 0x2225) {
+                                    charStr = "\\parallel ";
                                 } else if ((charCode & 0xFF) === 0x78 || (charCode >> 8) === 0x78) {
-                                    out += "x";
+                                    charStr = "x";
                                 } else if ((charCode & 0xFF) === 0x71 || (charCode >> 8) === 0x71) {
-                                    out += "x";
+                                    charStr = "x";
                                 } else if (charCode >= 32 && charCode < 127) {
-                                    out += String.fromCharCode(charCode);
+                                    charStr = String.fromCharCode(charCode);
+                                }
+                                
+                                if (charStr) {
+                                    ensureStartFences();
+                                    out += charStr;
                                 }
                             }
                         }
@@ -456,12 +550,39 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     const variation = buf[idx+1] + (buf[idx+2] << 8);
                     
                     if (hasStarted) {
-                        // Add square root prefix before entering sub-scope
-                        if (selector === 0) {
-                            out += "\\sqrt{";
+                        let startFence = "";
+                        let closeFence = "";
+                        if (selector === 10) { // Radical
+                            if (variation === 0) {
+                                startFence = "\\sqrt{";
+                                closeFence = "}";
+                            }
+                        } else if (selector >= 1 && selector <= 8) {
+                            const isLeftOnly = variation === 1;
+                            const isRightOnly = variation === 2;
+                            if (isLeftOnly) {
+                                startFence = `\\left${FENCE_SYMBOLS[selector][0]} \\begin{matrix} `;
+                                closeFence = " \\end{matrix} \\right.";
+                            } else if (isRightOnly) {
+                                startFence = "\\left. \\begin{matrix} ";
+                                const closeSym = FENCE_SYMBOLS[selector][1];
+                                closeFence = ` \\end{matrix} \\right${closeSym}`;
+                            } else {
+                                startFence = FENCE_SYMBOLS[selector][0];
+                                closeFence = FENCE_SYMBOLS[selector][1];
+                            }
                         }
                         
-                        tmplStack.push({ selector, variation, lineCount: 0, openedScript: false });
+                        tmplStack.push({
+                            selector,
+                            variation,
+                            lineCount: 0,
+                            openedScript: false,
+                            nonEmptyLinesCount: 0,
+                            startFence,
+                            closeFence,
+                            startFenceAppended: false
+                        });
                         containerStack.push("TMPL");
                         indent += 1;
                     }
@@ -536,23 +657,45 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         // Close any unclosed scopes to be safe
         while (tmplStack.length > 0) {
             const tmpl = tmplStack.pop()!;
-            if (tmpl.openedScript || tmpl.selector === 0) {
+            if (tmpl.openedScript) {
                 out += "}";
-            } else if (tmpl.lineCount > 0) {
-                if (tmpl.selector === 11 || tmpl.selector === 2) {
+            } else {
+                if (tmpl.startFenceAppended && tmpl.closeFence) {
+                    out += tmpl.closeFence;
+                }
+                if (tmpl.selector >= 1 && tmpl.selector <= 8) {
+                    const isLeftOnly = tmpl.variation === 1;
+                    const isRightOnly = tmpl.variation === 2;
+                    if (isLeftOnly || isRightOnly) {
+                        propertyCharsToSkip += 1;
+                    }
+                }
+            }
+            if (tmpl.lineCount > 0 && !tmpl.openedScript) {
+                if (tmpl.selector === 10) {
+                    if (tmpl.variation === 1) {
+                        out += "}";
+                    }
+                } else if (tmpl.selector === 23) {
+                    // Limit layout, handled by openedScript block
+                } else if (tmpl.selector === 11) {
                     out += "}";
-                } else if (tmpl.selector === 1) {
-                    out += ")";
                 }
             }
         }
         
         // Clean control characters like \x0c (Form Feed) in the output LaTeX
-        const cleanedOut = out.replace(/\u000c/g, "\\f");
+        let cleanedOut = out.replace(/\u000c/g, "\\f");
+
+        // Map common functions to LaTeX syntax (e.g., lim, sin, cos)
+        const funcs = ["lim", "sin", "cos", "tan", "log", "ln", "max", "min"];
+        for (const func of funcs) {
+            const regex = new RegExp(`\\b${func}\\b`, "g");
+            cleanedOut = cleanedOut.replace(regex, `\\${func}`);
+        }
         
         return cleanedOut ? `$${cleanedOut}$` : "";
     };
-
 
     /**
      * Escape XML special characters to avoid parsing errors
