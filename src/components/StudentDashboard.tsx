@@ -15,6 +15,7 @@ import {
     ChevronLeft,
 } from "lucide-react";
 import { Quiz, Question, Submission, User } from "../types";
+import { renderMathHtml } from "../lib/math";
 
 interface StudentDashboardProps {
     user: User;
@@ -296,7 +297,7 @@ export default function StudentDashboard({
                                             {/* Question text with math equations / images / tables */}
                                             <div 
                                                 className="text-xs font-semibold text-slate-800 leading-relaxed overflow-x-auto" 
-                                                dangerouslySetInnerHTML={{ __html: q.text }} 
+                                                dangerouslySetInnerHTML={{ __html: renderMathHtml(q.text) }} 
                                             />
 
                                             {/* 1. Single Choice Options Review */}
@@ -326,7 +327,7 @@ export default function StudentDashboard({
                                                                 }`}>
                                                                     {String.fromCharCode(65 + oIdx)}
                                                                 </span>
-                                                                <span dangerouslySetInnerHTML={{ __html: opt }} />
+                                                                <span dangerouslySetInnerHTML={{ __html: renderMathHtml(opt) }} />
                                                                 {badge}
                                                             </div>
                                                         );
@@ -350,7 +351,7 @@ export default function StudentDashboard({
                                                                 <div key={oIdx} className="grid grid-cols-12 items-center py-1.5 border-b border-slate-100 last:border-0">
                                                                     <div className="col-span-8 font-medium text-slate-800 flex gap-2">
                                                                         <span className="font-extrabold text-slate-500">{String.fromCharCode(97 + oIdx)})</span>
-                                                                        <span dangerouslySetInnerHTML={{ __html: item.text }} />
+                                                                        <span dangerouslySetInnerHTML={{ __html: renderMathHtml(item.text) }} />
                                                                     </div>
                                                                     <div className={`col-span-2 text-center font-bold ${
                                                                         item.correct ? "text-emerald-600" : "text-rose-600"
@@ -394,7 +395,7 @@ export default function StudentDashboard({
                                                         <BookOpen className="w-4 h-4 text-amber-600" />
                                                         <span>Lời giải chi tiết:</span>
                                                     </div>
-                                                    <div className="text-amber-950 overflow-x-auto leading-relaxed" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                                                    <div className="text-amber-950 overflow-x-auto leading-relaxed" dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation) }} />
                                                 </div>
                                             )}
                                         </div>
@@ -467,7 +468,7 @@ export default function StudentDashboard({
                                 <span className="text-brand-600 font-bold mr-1">
                                     Câu {currentQuestionIdx + 1}:
                                 </span>
-                                <span dangerouslySetInnerHTML={{ __html: activeQuiz.questions[currentQuestionIdx].text }} />
+                                <span dangerouslySetInnerHTML={{ __html: renderMathHtml(activeQuiz.questions[currentQuestionIdx].text) }} />
                             </h3>
 
                             {/* Options rendering depending on type */}
@@ -507,7 +508,7 @@ export default function StudentDashboard({
                                                             >
                                                                 {String.fromCharCode(65 + idx)}
                                                             </span>
-                                                            <span dangerouslySetInnerHTML={{ __html: option }} />
+                                                            <span dangerouslySetInnerHTML={{ __html: renderMathHtml(option) }} />
                                                         </div>
                                                         {isSelected && (
                                                             <div className="w-5 h-5 rounded-full bg-brand-300 text-white font-medium flex items-center justify-center animate-scale-in">
@@ -534,7 +535,7 @@ export default function StudentDashboard({
                                                     <div key={idx} className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]">
                                                         <div className="col-span-8 sm:col-span-9 flex gap-2 text-xs text-slate-800">
                                                             <span className="font-bold text-slate-500">{String.fromCharCode(97 + idx)})</span>
-                                                            <span dangerouslySetInnerHTML={{ __html: option }} />
+                                                            <span dangerouslySetInnerHTML={{ __html: renderMathHtml(option) }} />
                                                         </div>
                                                         <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
                                                             <button

@@ -3,6 +3,7 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import { Question, QuestionType } from "../types";
 import { FileText, CheckCircle, AlertCircle, Upload, Trash2, RefreshCw, BookOpen } from "lucide-react";
+import { renderMathHtml } from "../lib/math";
 
 interface WordImporterProps {
     onQuestionsParsed: (parsedQuestions: Question[]) => void;
@@ -13,7 +14,7 @@ export default function WordImporter({ onQuestionsParsed }: WordImporterProps) {
     const [parsedQuestions, setParsedQuestions] = useState<Question[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loadingFile, setLoadingFile] = useState(false);
-    const [activeTab, setActiveTab] = useState<"paste" | "preview">("paste");
+    const [activeTab, setActiveTab] = useState<"paste" | "preview" | "raw">("paste");
 
     // Sample format template for user reference
     const sampleTemplate = `Phần 1: Trắc nghiệm nhiều lựa chọn
@@ -45,56 +46,187 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
      */
     const cleanMathExpression = (str: string): string => {
         if (!str) return "";
-
-        // 1. Remove MathType prefix noise
-        str = str.replace(/[!/]*G_%__\*_H@H\*_+/g, "");
-        str = str.replace(/"/g, "");
-        str = str.replace(/q v/g, "x");
-
-        // 2. Format ranges
-        if (str.includes("-;x") || str.includes("-; x") || str.includes("-;") || str.includes(";-")) {
-            const numMatch = str.match(/(-?\d+)/);
-            const val = numMatch ? numMatch[1] : "-1";
-            return `(-∞; ${val})`;
-        }
-        if (str.includes(";x +") || str.includes("; x +") || str.includes(";+")) {
-            const numMatch = str.match(/(-?\d+)/);
-            const val = numMatch ? numMatch[1] : "3";
-            return `(${val}; +∞)`;
-        }
-
-        const rangeMatch = str.match(/^([-\+\d]+)\s*;\s*([-\+\d]+)/);
-        if (rangeMatch) {
-            return `(${rangeMatch[1]}; ${rangeMatch[2]})`;
-        }
-
-        // 3. Clean standard math operators and symbols
-        str = str
-            .replace(/\bpf'\(x\)/g, "f'(x)")
-            .replace(/\bpf'\(x \)/g, "f'(x)")
-            .replace(/\bfp2x \(\)/g, "f(π/2)")
-            .replace(/\bfp2x\(\)/g, "f(π/2)")
-            .replace(/\bp2x\b/g, "π/2")
-            .replace(/\bp\b/g, "π")
-            .replace(/\bomega\b/g, "ω")
-            .replace(/\bdelta\b/g, "Δ")
-            .replace(/\+\+/g, "+")
-            .replace(/\-\-/g, "-")
-            .replace(/==/g, "=")
-            .replace(/\s+/g, " ")
-            .trim();
-
-        // Strip leading garbage
-        str = str.replace(/^[^a-zA-Z0-9\(\-\+π∞\=]+/, "");
-
-        return str;
+        return str.trim();
     };
+
+    interface TmplContext {
+        selector: number;
+        variation: number;
+        lineCount: number;
+        openedScript?: boolean;
+    }
 
     /**
      * MTEF v5 / v7 Parser helper for MathType OLE binary objects (oleObject.bin)
+     * Parses the binary stream record by record to extract clean LaTeX.
      */
-    const parseMtefBuffer = (buf: Uint8Array): string => {
-        if (!buf || buf.length < 50) return "";
+    /**
+     * Helper to extract the Equation Native stream from raw OLE compound buffer
+     */
+    const extractEquationNativeStream = (data: Uint8Array): Uint8Array | null => {
+        if (!data || data.length < 512) return null;
+        
+        // Check OLE signature: D0 CF 11 E0 A1 B1 1A E1
+        if (data[0] !== 0xD0 || data[1] !== 0xCF || data[2] !== 0x11 || data[3] !== 0xE0 ||
+            data[4] !== 0xA1 || data[5] !== 0xB1 || data[6] !== 0x1A || data[7] !== 0xE1) {
+            return null;
+        }
+        
+        try {
+            const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+            const sectorSize = 1 << view.getUint16(30, true);
+            const miniSectorSize = 1 << view.getUint16(32, true);
+            
+            const dirStartSector = view.getUint32(48, true);
+            const miniCutoff = view.getUint32(56, true);
+            const miniFatStart = view.getUint32(60, true);
+            
+            // Load DIFAT (up to 109 sectors from header)
+            const difat: number[] = [];
+            for (let k = 0; k < 109; k++) {
+                const s = view.getUint32(76 + k * 4, true);
+                if (s < 0xFFFFFFFC) {
+                    difat.push(s);
+                }
+            }
+            
+            // Load FAT sectors
+            const fat: number[] = [];
+            for (const s of difat) {
+                const offset = (s + 1) * sectorSize;
+                if (offset + sectorSize <= data.length) {
+                    for (let k = 0; k < sectorSize; k += 4) {
+                        fat.push(view.getUint32(offset + k, true));
+                    }
+                }
+            }
+            
+            // Load Directory sectors
+            let dirData = new Uint8Array(0);
+            let curr = dirStartSector;
+            while (curr !== 0xFFFFFFFE && curr < fat.length) {
+                const offset = (curr + 1) * sectorSize;
+                if (offset + sectorSize <= data.length) {
+                    const nextDir = new Uint8Array(dirData.length + sectorSize);
+                    nextDir.set(dirData);
+                    nextDir.set(data.subarray(offset, offset + sectorSize), dirData.length);
+                    dirData = nextDir;
+                }
+                curr = fat[curr];
+            }
+            
+            // Parse Directory Entries to find Root Entry and Equation Native
+            let rootStart = 0;
+            let rootSize = 0;
+            let eqStart = 0;
+            let eqSize = 0;
+            
+            const dirView = new DataView(dirData.buffer, dirData.byteOffset, dirData.byteLength);
+            
+            // Root Entry is always entry 0 (first 128 bytes)
+            if (dirData.length >= 128) {
+                rootStart = dirView.getUint32(116, true);
+                rootSize = dirView.getUint32(120, true);
+            }
+            
+            // Find Equation Native
+            for (let i = 1; i * 128 < dirData.length; i++) {
+                const offset = i * 128;
+                const nameLen = dirView.getUint16(offset + 64, true);
+                if (nameLen > 2) {
+                    let name = "";
+                    for (let k = 0; k < nameLen - 2; k += 2) {
+                        name += String.fromCharCode(dirView.getUint16(offset + k, true));
+                    }
+                    if (name === "Equation Native") {
+                        eqStart = dirView.getUint32(offset + 116, true);
+                        eqSize = dirView.getUint32(offset + 120, true);
+                        break;
+                    }
+                }
+            }
+            
+            if (eqSize === 0) return null;
+            
+            // Load Mini FAT
+            let miniFatData = new Uint8Array(0);
+            curr = miniFatStart;
+            while (curr !== 0xFFFFFFFE && curr < fat.length) {
+                const offset = (curr + 1) * sectorSize;
+                if (offset + sectorSize <= data.length) {
+                    const nextMini = new Uint8Array(miniFatData.length + sectorSize);
+                    nextMini.set(miniFatData);
+                    nextMini.set(data.subarray(offset, offset + sectorSize), miniFatData.length);
+                    miniFatData = nextMini;
+                }
+                curr = fat[curr];
+            }
+            
+            const miniFat: number[] = [];
+            if (miniFatData.length > 0) {
+                const mfView = new DataView(miniFatData.buffer, miniFatData.byteOffset, miniFatData.byteLength);
+                for (let k = 0; k < miniFatData.length; k += 4) {
+                    miniFat.push(mfView.getUint32(k, true));
+                }
+            }
+            
+            // Load Mini Stream Data
+            let miniStream = new Uint8Array(0);
+            curr = rootStart;
+            while (curr !== 0xFFFFFFFE && curr < fat.length) {
+                const offset = (curr + 1) * sectorSize;
+                if (offset + sectorSize <= data.length) {
+                    const nextStream = new Uint8Array(miniStream.length + sectorSize);
+                    nextStream.set(miniStream);
+                    nextStream.set(data.subarray(offset, offset + sectorSize), miniStream.length);
+                    miniStream = nextStream;
+                }
+                curr = fat[curr];
+            }
+            
+            // Read Equation Native Stream data
+            const eqData = new Uint8Array(eqSize);
+            let bytesRead = 0;
+            
+            if (eqSize < miniCutoff) {
+                // Read from Mini Stream
+                curr = eqStart;
+                while (curr !== 0xFFFFFFFE && curr < miniFat.length && bytesRead < eqSize) {
+                    const offset = curr * miniSectorSize;
+                    const toRead = Math.min(miniSectorSize, eqSize - bytesRead);
+                    if (offset + toRead <= miniStream.length) {
+                        eqData.set(miniStream.subarray(offset, offset + toRead), bytesRead);
+                        bytesRead += toRead;
+                    }
+                    curr = miniFat[curr];
+                }
+            } else {
+                // Read from FAT
+                curr = eqStart;
+                while (curr !== 0xFFFFFFFE && curr < fat.length && bytesRead < eqSize) {
+                    const offset = (curr + 1) * sectorSize;
+                    const toRead = Math.min(sectorSize, eqSize - bytesRead);
+                    if (offset + toRead <= data.length) {
+                        eqData.set(data.subarray(offset, offset + toRead), bytesRead);
+                        bytesRead += toRead;
+                    }
+                    curr = fat[curr];
+                }
+            }
+            
+            return eqData;
+        } catch (e) {
+            console.error("Error extracting OLE stream", e);
+            return null;
+        }
+    };
+
+    const parseMtefBuffer = (rawBuf: Uint8Array): string => {
+        if (!rawBuf) return "";
+        const buf = extractEquationNativeStream(rawBuf) || rawBuf;
+        if (buf.length < 30) return "";
+        
+        // Find DSMT signature
         let dsmtIdx = -1;
         for (let k = 0; k < buf.length - 4; k++) {
             if (buf[k] === 68 && buf[k+1] === 83 && buf[k+2] === 77 && buf[k+3] === 84) {
@@ -104,34 +236,323 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         }
         if (dsmtIdx === -1) return "";
 
-        const slice = buf.slice(dsmtIdx + 5);
-        let rawChars: string[] = [];
-        let i = 0;
-
-        for (let k = 0; k < slice.length - 8; k++) {
+        // Find the end of the font list (MT Extra\0)
+        let startIdx = -1;
+        for (let k = dsmtIdx; k < buf.length - 9; k++) {
             if (
-                slice[k] === 77 && slice[k+1] === 84 && slice[k+2] === 32 &&
-                slice[k+3] === 69 && slice[k+4] === 120 && slice[k+5] === 116 &&
-                slice[k+6] === 114 && slice[k+7] === 97 && slice[k+8] === 0
+                buf[k] === 77 && buf[k+1] === 84 && buf[k+2] === 32 &&
+                buf[k+3] === 69 && buf[k+4] === 120 && buf[k+5] === 116 &&
+                buf[k+6] === 114 && buf[k+7] === 97 && buf[k+8] === 0
             ) {
-                i = k + 9;
+                startIdx = k + 9;
                 break;
             }
         }
-
-        while (i < slice.length) {
-            const b = slice[i];
-            if ((b >= 0x20 && b <= 0x7E) || b === 0xA0) {
-                const char = String.fromCharCode(b);
-                if (!"WinAllBasicCodePagesTimesNewRomanSymbolCourierNewMTExtraDSMT".includes(char)) {
-                    rawChars.push(char);
-                }
-            }
-            i++;
+        if (startIdx === -1) {
+            startIdx = dsmtIdx + 30; // Fallback
         }
 
-        return rawChars.join("");
+        // Helper to read/skip nudge
+        const skipNudge = (idx: number, opts: number): number => {
+            if (opts & 0x08) { // mtefOPT_NUDGE
+                if (idx + 1 >= buf.length) return buf.length;
+                const dx = buf[idx];
+                if (dx === 128) {
+                    return idx + 6;
+                } else {
+                    return idx + 2;
+                }
+            }
+            return idx;
+        };
+
+        let i = startIdx;
+        let out = "";
+        
+        // Track templates and container stack
+        const tmplStack: TmplContext[] = [];
+        const containerStack: ("LINE" | "TMPL")[] = [];
+        let indent = 0;
+        let hasStarted = false;
+
+        while (i < buf.length - 1) {
+            const tag = buf[i];
+            
+            if (tag === 0) { // END
+                i += 1;
+                if (hasStarted) {
+                    indent -= 1;
+                    
+                    const lastContainer = containerStack.pop();
+                    if (lastContainer === "TMPL" && tmplStack.length > 0) {
+                        const tmpl = tmplStack.pop()!;
+                        if (tmpl.openedScript) {
+                            out += "}";
+                        } else if (tmpl.lineCount > 0) {
+                            if (tmpl.selector === 11 || tmpl.selector === 2) { // Fraction
+                                out += "}";
+                            } else if (tmpl.selector === 1) { // Parentheses
+                                out += ")";
+                            }
+                        }
+                    }
+                }
+                continue;
+            }
+            
+            // Structure records (tags 1 to 7)
+            if (tag >= 1 && tag <= 7) {
+                const opts = buf[i+1];
+                let idx = i + 2;
+                idx = skipNudge(idx, opts);
+                
+                if (tag === 1) { // LINE
+                    if (opts & 0x02) {
+                        idx += 1; // skip ruler index
+                    }
+                    
+                    const isNull = (opts & 0x01) !== 0;
+                    
+                    if (!hasStarted) {
+                        hasStarted = true;
+                    }
+                    if (!isNull) {
+                        containerStack.push("LINE");
+                        indent += 1;
+                    }
+                    
+                    // Increment line count for the current template
+                    if (tmplStack.length > 0) {
+                        const tmpl = tmplStack[tmplStack.length - 1];
+                        tmpl.lineCount += 1;
+                        
+                        if (!isNull) {
+                            // Formatting based on line index
+                            if (tmpl.selector === 27 || tmpl.selector === 29) { // Subscript / Sub-superscript
+                                if (!tmpl.openedScript) {
+                                    out += "_{";
+                                    tmpl.openedScript = true;
+                                } else {
+                                    out += "}^{";
+                                }
+                            } else if (tmpl.selector === 28) { // Superscript
+                                if (!tmpl.openedScript) {
+                                    out += "^{";
+                                    tmpl.openedScript = true;
+                                } else {
+                                    out += "}_{";
+                                }
+                            } else if (tmpl.selector === 11 || tmpl.selector === 2) { // Fraction
+                                if (tmpl.lineCount === 1) {
+                                    out += "\\frac{";
+                                } else if (tmpl.lineCount === 2) {
+                                    out += "}{";
+                                }
+                            } else if (tmpl.selector === 1) { // Parentheses
+                                if (tmpl.lineCount === 1) {
+                                    out += "(";
+                                }
+                            }
+                        }
+                    }
+                    
+                    i = idx;
+                    continue;
+                }
+                
+                if (tag === 2) { // CHAR
+                    if (idx >= buf.length) break;
+                    const typeface = buf[idx];
+                    idx += 1;
+                    
+                    let mtcode = 0;
+                    if (!(opts & 0x20)) { // mtefOPT_CHAR_ENC_NO_MTCODE
+                        if (idx + 1 >= buf.length) break;
+                        mtcode = buf[idx] + (buf[idx+1] << 8);
+                        idx += 2;
+                    }
+                    
+                    // Skip character font positions if present
+                    let char8: number | null = null;
+                    if (opts & 0x04) { // mtefOPT_CHAR_ENC_CHAR_8
+                        char8 = buf[idx];
+                        idx += 1;
+                    }
+                    let char16: number | null = null;
+                    if (opts & 0x10) { // mtefOPT_CHAR_ENC_CHAR_16
+                        char16 = buf[idx] + (buf[idx+1] << 8);
+                        idx += 2;
+                    }
+                    
+                    // Skip embellishments if present
+                    if (opts & 0x01) {
+                        while (idx < buf.length && buf[idx] !== 0) {
+                            idx += 1;
+                        }
+                        idx += 1; // skip the 0 byte
+                    }
+                    
+                    if (hasStarted) {
+                        const charCode = mtcode > 0 ? mtcode : (char8 !== null ? char8 : (char16 !== null ? char16 : 0));
+                        
+                        const isInsideLine = containerStack.length > 0 && containerStack[containerStack.length - 1] === "LINE";
+                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 123 || charCode === 125;
+                        
+                        if (charCode > 0) {
+                            if (isBracket && !isInsideLine) {
+                                // Skip template property bracket characters
+                            } else {
+                                // Map special characters to standard LaTeX equivalents
+                                if (charCode === 0x2212) {
+                                    out += "-";
+                                } else if (charCode === 0x221e) {
+                                    out += "\\infty ";
+                                } else if (charCode === 0x2265) {
+                                    out += "\\ge ";
+                                } else if (charCode === 0x2264) {
+                                    out += "\\le ";
+                                } else if (charCode === 0x2208) {
+                                    out += "\\in ";
+                                } else if (charCode === 0x21d2) {
+                                    out += "\\Rightarrow ";
+                                } else if (charCode === 0x21d4) {
+                                    out += "\\Leftrightarrow ";
+                                } else if (charCode === 0x03c0) {
+                                    out += "\\pi ";
+                                } else if (charCode === 0x0394) {
+                                    out += "\\Delta ";
+                                } else if (charCode === 0x2260) {
+                                    out += "\\neq ";
+                                } else if (charCode === 0x00b1) {
+                                    out += "\\pm ";
+                                } else if (charCode === 0x2205) {
+                                    out += "\\emptyset ";
+                                } else if (charCode === 0x2192) {
+                                    out += "\\rightarrow ";
+                                } else if (charCode === 0x221a) {
+                                    out += "\\sqrt ";
+                                } else if (charCode === 0x211d) {
+                                    out += "\\mathbb{R}";
+                                } else if (charCode === 0x2216) {
+                                    out += "\\setminus ";
+                                } else if ((charCode & 0xFF) === 0x78 || (charCode >> 8) === 0x78) {
+                                    out += "x";
+                                } else if ((charCode & 0xFF) === 0x71 || (charCode >> 8) === 0x71) {
+                                    out += "x";
+                                } else if (charCode >= 32 && charCode < 127) {
+                                    out += String.fromCharCode(charCode);
+                                }
+                            }
+                        }
+                    }
+                    
+                    i = idx;
+                    continue;
+                }
+                
+                if (tag === 3) { // TMPL
+                    if (idx + 2 >= buf.length) break;
+                    const selector = buf[idx];
+                    const variation = buf[idx+1] + (buf[idx+2] << 8);
+                    
+                    if (hasStarted) {
+                        // Add square root prefix before entering sub-scope
+                        if (selector === 0) {
+                            out += "\\sqrt{";
+                        }
+                        
+                        tmplStack.push({ selector, variation, lineCount: 0, openedScript: false });
+                        containerStack.push("TMPL");
+                        indent += 1;
+                    }
+                    
+                    i = idx + 3;
+                    continue;
+                }
+                
+                // Other structure tags skipping
+                if (tag === 4) idx += 2; // halign, valign
+                else if (tag === 5) idx += 4; // row_spacing, col_spacing, rows, cols
+                else if (tag === 6) idx += 1; // embell_type
+                i = idx;
+                continue;
+            }
+            
+            // Style/definition records (no options, no nudge!)
+            let idx = i + 1;
+            if (tag === 8) { // FONT_STYLE_DEF
+                idx += 1; // fontDefIndex
+                while (idx < buf.length && buf[idx] !== 0) {
+                    idx += 1;
+                }
+                idx += 1; // skip null byte
+            } else if (tag === 17) { // FONT_DEF
+                idx += 1; // encDefIndex
+                while (idx < buf.length && buf[idx] !== 0) {
+                    idx += 1;
+                }
+                idx += 1; // skip null byte
+            } else if (tag === 9) { // SIZE
+                idx += 2; // lsize, dsize
+            } else if (tag === 10 || tag === 11 || tag === 12 || tag === 13 || tag === 14) { // FULL, SUB, SUB2, SYM, SUBSYM
+                // 1-byte size change tags, no payload!
+            } else if (tag === 15) { // COLOR selects color index
+                idx += 1;
+            } else if (tag === 16) { // COLOR_DEF defines color name string
+                if (idx < buf.length) {
+                    const opts = buf[idx];
+                    idx += 1;
+                    if (opts & 0x01) {
+                        idx += 4; // CMYK
+                    } else {
+                        idx += 3; // RGB
+                    }
+                    while (idx < buf.length && buf[idx] !== 0) {
+                        idx += 1;
+                    }
+                    idx += 1; // skip null byte
+                }
+            } else if (tag === 18) { // EQN_PREFS
+                if (idx < buf.length) {
+                    // Skip options byte (buf[idx], which is buf[i+1] since idx started at i+1)
+                    idx += 1; 
+                    if (idx < buf.length) {
+                        const S_sz = buf[idx];
+                        idx += 1 + ((S_sz + 1) >> 1); // skip sizes count and data
+                        if (idx < buf.length) {
+                            const S_sp = buf[idx];
+                            idx += 1 + ((S_sp + 1) >> 1); // skip spaces count and data
+                            idx += 16; // skip styles
+                        }
+                    }
+                }
+            } else {
+                idx = i + 1; // default fallback skip
+            }
+            
+            i = idx;
+        }
+        
+        // Close any unclosed scopes to be safe
+        while (tmplStack.length > 0) {
+            const tmpl = tmplStack.pop()!;
+            if (tmpl.openedScript || tmpl.selector === 0) {
+                out += "}";
+            } else if (tmpl.lineCount > 0) {
+                if (tmpl.selector === 11 || tmpl.selector === 2) {
+                    out += "}";
+                } else if (tmpl.selector === 1) {
+                    out += ")";
+                }
+            }
+        }
+        
+        // Clean control characters like \x0c (Form Feed) in the output LaTeX
+        const cleanedOut = out.replace(/\u000c/g, "\\f");
+        
+        return cleanedOut ? `$${cleanedOut}$` : "";
     };
+
 
     /**
      * Escape XML special characters to avoid parsing errors
@@ -147,6 +568,146 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 default: return c;
             }
         });
+    };
+
+    // Helper to recursively parse OMML XML nodes and convert them to standard LaTeX
+    const convertOmmlToLatex = (node: Node): string => {
+        if (node.nodeType === 3) { // Text Node
+            return node.textContent || "";
+        }
+        if (node.nodeType !== 1) { // Not an Element
+            return "";
+        }
+
+        const tagName = node.nodeName.replace(/^m:/, "");
+
+        switch (tagName) {
+            case "oMath": {
+                let result = "";
+                node.childNodes.forEach((child) => {
+                    result += convertOmmlToLatex(child);
+                });
+                return `$${result}$`;
+            }
+            case "r": {
+                let text = "";
+                node.childNodes.forEach((child) => {
+                    const childName = child.nodeName.replace(/^m:/, "");
+                    if (childName === "t") {
+                        text += child.textContent || "";
+                    }
+                });
+                return text;
+            }
+            case "f": { // Fraction
+                let num = "";
+                let den = "";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "num") num = convertOmmlToLatex(child);
+                    if (name === "den") den = convertOmmlToLatex(child);
+                });
+                return `\\frac{${num}}{${den}}`;
+            }
+            case "sSup": { // Superscript
+                let base = "";
+                let sup = "";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") base = convertOmmlToLatex(child);
+                    if (name === "sup") sup = convertOmmlToLatex(child);
+                });
+                return `${base}^{${sup}}`;
+            }
+            case "sSub": { // Subscript
+                let base = "";
+                let sub = "";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") base = convertOmmlToLatex(child);
+                    if (name === "sub") sub = convertOmmlToLatex(child);
+                });
+                return `${base}_{${sub}}`;
+            }
+            case "sSubSup": { // Sub-superscript
+                let base = "";
+                let sub = "";
+                let sup = "";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") base = convertOmmlToLatex(child);
+                    if (name === "sub") sub = convertOmmlToLatex(child);
+                    if (name === "sup") sup = convertOmmlToLatex(child);
+                });
+                return `${base}_{${sub}}^{${sup}}`;
+            }
+            case "rad": { // Square root
+                let base = "";
+                let deg = "";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") base = convertOmmlToLatex(child);
+                    if (name === "deg") deg = convertOmmlToLatex(child);
+                });
+                if (deg) {
+                    return `\\sqrt[${deg}]{${base}}`;
+                }
+                return `\\sqrt{${base}}`;
+            }
+            case "d": { // Parentheses / fences
+                let content = "";
+                let open = "(";
+                let close = ")";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") {
+                        content = convertOmmlToLatex(child);
+                    } else if (name === "dPr") {
+                        for (let j = 0; j < child.childNodes.length; j++) {
+                            const dPrChild = child.childNodes[j];
+                            const dPrChildName = dPrChild.nodeName.replace(/^m:/, "");
+                            if (dPrChildName === "begCh" || dPrChildName === "beg") {
+                                open = (dPrChild as Element).getAttribute("m:val") || (dPrChild as Element).getAttribute("val") || "(";
+                            } else if (dPrChildName === "endCh" || dPrChildName === "end") {
+                                close = (dPrChild as Element).getAttribute("m:val") || (dPrChild as Element).getAttribute("val") || ")";
+                            }
+                        }
+                    }
+                });
+                return `\\left${open}${content}\\right${close}`;
+            }
+            case "nary": { // Sum, Integral
+                let base = "";
+                let sub = "";
+                let sup = "";
+                let op = "\\sum";
+                node.childNodes.forEach((child) => {
+                    const name = child.nodeName.replace(/^m:/, "");
+                    if (name === "e") base = convertOmmlToLatex(child);
+                    if (name === "sub") sub = convertOmmlToLatex(child);
+                    if (name === "sup") sup = convertOmmlToLatex(child);
+                    if (name === "naryPr") {
+                        for (let j = 0; j < child.childNodes.length; j++) {
+                            const naryChild = child.childNodes[j];
+                            const naryChildName = naryChild.nodeName.replace(/^m:/, "");
+                            if (naryChildName === "chr") {
+                                const val = (naryChild as Element).getAttribute("m:val") || (naryChild as Element).getAttribute("val");
+                                if (val === "∫") op = "\\int";
+                                else if (val === "∏") op = "\\prod";
+                            }
+                        }
+                    }
+                });
+                return `${op}_{${sub}}^{${sup}}{${base}}`;
+            }
+            default: {
+                let result = "";
+                node.childNodes.forEach((child) => {
+                    result += convertOmmlToLatex(child);
+                });
+                return result;
+            }
+        }
     };
 
     /**
@@ -203,8 +764,35 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             return match;
         });
 
-        // Convert standard math tags <m:t> into word text tags <w:t> so Mammoth converts them
-        docXml = docXml.replace(/<m:t([^>]*)>/g, '<w:t$1>').replace(/<\/m:t>/g, '</w:t>');
+        // 4. Parse native OMML equations using the DOM parser
+        try {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(docXml, "application/xml");
+            
+            // Find all oMath elements
+            const oMathElements = xmlDoc.getElementsByTagNameNS("http://schemas.openxmlformats.org/officeDocument/2006/math", "oMath");
+            const elementsList = oMathElements.length > 0 
+                ? Array.from(oMathElements) 
+                : Array.from(xmlDoc.querySelectorAll("oMath, m\\:oMath"));
+
+            elementsList.forEach((el) => {
+                const latex = convertOmmlToLatex(el);
+                if (latex) {
+                    const wR = xmlDoc.createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:r");
+                    const wT = xmlDoc.createElementNS("http://schemas.openxmlformats.org/wordprocessingml/2006/main", "w:t");
+                    wT.setAttribute("xml:space", "preserve");
+                    wT.textContent = ` ${latex} `;
+                    wR.appendChild(wT);
+                    el.parentNode?.replaceChild(wR, el);
+                }
+            });
+
+            const serializer = new XMLSerializer();
+            docXml = serializer.serializeToString(xmlDoc);
+        } catch (ommlErr) {
+            console.error("Error parsing OMML math tags, falling back to regex mapping:", ommlErr);
+            docXml = docXml.replace(/<m:t([^>]*)>/g, '<w:t$1>').replace(/<\/m:t>/g, '</w:t>');
+        }
 
         zip.file("word/document.xml", docXml);
         return await zip.generateAsync({ type: "arraybuffer" });
@@ -244,7 +832,12 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
 
                     if (currentQuestion.options && currentQuestion.options.length > 0) {
                         currentQuestion.options = currentQuestion.options.map(opt => {
-                            return opt.replace(/^[A-D\(\)a-d][\.\:\)]\s*/i, "").trim();
+                            let clean = opt.trim();
+                            // Strip leading strong/b/span wrappers around the option letter
+                            clean = clean.replace(/^(?:<strong[^>]*>|<b[^>]*>|<span[^>]*>)\s*[A-D\(\)a-d][\.\:\)]\s*(?:<\/strong>|<\/b>|<\/span>)/i, "");
+                            // Strip standard option prefix without wrappers
+                            clean = clean.replace(/^[A-D\(\)a-d][\.\:\)]\s*/i, "");
+                            return clean.trim();
                         });
                     } else {
                         currentQuestion.options = [];
@@ -453,7 +1046,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             if (file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
                 const arrayBuffer = await file.arrayBuffer();
 
-                // Preprocess docx buffer (OLE formulas and OMML math)
+                // Preprocess docx buffer client-side (OMML math & MathType OLE formulas)
                 const preProcessed = await preProcessDocxBuffer(arrayBuffer);
 
                 const options = {
@@ -470,7 +1063,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 };
 
                 const htmlResult = await mammoth.convertToHtml({ arrayBuffer: preProcessed }, options);
-                let html = htmlResult.value.replace(/<img src=""\s*\/?>/g, '');
+                const html = htmlResult.value.replace(/<img src=""\s*\/?>/g, '');
 
                 setRawText(html);
                 parseQuestionsFromHtml(html);
@@ -551,6 +1144,15 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         }`}
                     >
                         2. Xem & Chỉnh sửa ({parsedQuestions.length})
+                    </button>
+                    <button
+                        disabled={!rawText}
+                        onClick={() => setActiveTab("raw")}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                            activeTab === "raw" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-400"
+                        }`}
+                    >
+                        3. Dữ liệu gốc sau đọc Word
                     </button>
                 </div>
             </div>
@@ -748,7 +1350,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 {/* RENDERED QUESTION PREVIEW */}
                                 <div 
                                     className="p-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 overflow-x-auto shadow-2xs"
-                                    dangerouslySetInnerHTML={{ __html: q.text }}
+                                    dangerouslySetInnerHTML={{ __html: renderMathHtml(q.text) }}
                                 />
 
                                 {/* EDIT QUESTION TEXT (RAW HTML) */}
@@ -816,7 +1418,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                     </div>
                                     <div 
                                         className="p-3 bg-amber-50/10 border border-amber-200/40 rounded-xl text-xs text-amber-900 overflow-x-auto"
-                                        dangerouslySetInnerHTML={{ __html: q.explanation || "" }}
+                                        dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation || "") }}
                                     />
                                     <textarea
                                         value={q.explanation || ""}
@@ -836,6 +1438,39 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     >
                         Lưu {parsedQuestions.length} Câu Hỏi Này Vào Đề Thi
                     </button>
+                </div>
+            )}
+
+            {/* TAB 3: RAW DATA INSPECTION */}
+            {activeTab === "raw" && (
+                <div className="space-y-4">
+                    <div className="p-3.5 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-900 font-semibold flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-brand-600 shrink-0" />
+                        <span>Trình gỡ lỗi: Xem dữ liệu HTML/LaTeX gốc do Mammoth.js trích xuất sau khi xử lý công thức.</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* LEFT COLUMN: RAW TEXT/HTML MARKUP */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-700">Mã HTML & LaTeX Gốc (Nguồn):</label>
+                            <textarea
+                                readOnly
+                                value={rawText}
+                                rows={25}
+                                className="w-full p-3.5 bg-slate-800 border border-slate-900 rounded-xl text-[10px] font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                                placeholder="Không có dữ liệu gốc"
+                            />
+                        </div>
+
+                        {/* RIGHT COLUMN: RENDERED PREVIEW */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-700">Trực quan hóa Giao diện Rendered (Có KaTeX):</label>
+                            <div 
+                                className="w-full p-4 bg-white border border-slate-200 rounded-xl max-h-[485px] overflow-y-auto text-xs text-slate-800 space-y-3 leading-relaxed shadow-2xs"
+                                dangerouslySetInnerHTML={{ __html: renderMathHtml(rawText) }}
+                            />
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

@@ -1,8 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { User, Quiz, Submission, UserPlan } from "../types";
-import { getAllProfiles, updateUserPlan, createQuiz, deleteQuiz, verifyAdminPasswordWithEdgeFunction } from "../lib/supabaseService";
+import {
+    getAllProfiles,
+    updateUserPlan,
+    createQuiz,
+    deleteQuiz,
+    verifyAdminPasswordWithEdgeFunction,
+} from "../lib/supabaseService";
 import WordImporter from "./WordImporter";
-import { Shield, Lock, Users, Crown, Zap, FileText, CheckCircle, Trash2, Plus, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import {
+    Shield,
+    Lock,
+    Users,
+    Crown,
+    Zap,
+    FileText,
+    CheckCircle,
+    Trash2,
+    Plus,
+    Sparkles,
+    AlertCircle,
+    RefreshCw,
+} from "lucide-react";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -11,13 +30,20 @@ interface AdminPanelProps {
     onDeleteQuiz: (quizId: string) => void;
 }
 
-export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQuiz }: AdminPanelProps) {
+export default function AdminPanel({
+    quizzes,
+    submissions,
+    onAddQuiz,
+    onDeleteQuiz,
+}: AdminPanelProps) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
     const [authError, setAuthError] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<"plans" | "create-quiz" | "quizzes">("plans");
+    const [activeTab, setActiveTab] = useState<
+        "plans" | "create-quiz" | "quizzes"
+    >("plans");
     const [userProfiles, setUserProfiles] = useState<User[]>([]);
     const [loadingProfiles, setLoadingProfiles] = useState(false);
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
@@ -39,12 +65,15 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
         setVerifying(true);
 
         try {
-            const isValid = await verifyAdminPasswordWithEdgeFunction(passwordInput);
+            const isValid =
+                await verifyAdminPasswordWithEdgeFunction(passwordInput);
             if (isValid) {
                 setIsAuthenticated(true);
                 fetchProfiles();
             } else {
-                setAuthError("Xác thực thất bại qua Supabase Edge Function 'verify-admin'. Mật khẩu không đúng.");
+                setAuthError(
+                    "Xác thực thất bại qua Supabase Edge Function 'verify-admin'. Mật khẩu không đúng.",
+                );
             }
         } catch (err: any) {
             setAuthError(`Lỗi xác thực Edge Function: ${err.message}`);
@@ -71,7 +100,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
         try {
             await updateUserPlan(userId, newPlan);
             setUserProfiles((prev) =>
-                prev.map((u) => (u.id === userId ? { ...u, plan: newPlan } : u))
+                prev.map((u) =>
+                    u.id === userId ? { ...u, plan: newPlan } : u,
+                ),
             );
         } catch (err: any) {
             alert(`Lỗi cập nhật Plan: ${err.message}`);
@@ -93,7 +124,8 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
         const newQuiz: Quiz = {
             id: `quiz_${Date.now()}`,
             title: quizTitle.trim(),
-            description: quizDescription.trim() || "Bài kiểm tra chất lượng cao HiTrang",
+            description:
+                quizDescription.trim() || "Bài kiểm tra chất lượng cao HiTrang",
             subject: quizSubject,
             grade: quizGrade,
             duration: quizDuration,
@@ -123,13 +155,19 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                     <Shield className="w-8 h-8" />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900">Trang Quản Trị Hệ Thống (Admin)</h2>
+                    <h2 className="text-xl font-bold text-slate-900">
+                        Trang Quản Trị Hệ Thống (Admin)
+                    </h2>
                     <p className="text-xs text-slate-500 mt-1">
-                        Yêu cầu xác thực qua Supabase Edge Function 'verify-admin'.
+                        Yêu cầu xác thực qua Supabase Edge Function
+                        'verify-admin' (ví dụ: admin123).
                     </p>
                 </div>
 
-                <form onSubmit={handleVerifyPassword} className="space-y-4 text-left">
+                <form
+                    onSubmit={handleVerifyPassword}
+                    className="space-y-4 text-left"
+                >
                     <div>
                         <label className="text-xs font-bold text-slate-700 mb-1.5 block">
                             Mật khẩu Admin:
@@ -139,8 +177,10 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                             <input
                                 type="password"
                                 value={passwordInput}
-                                onChange={(e) => setPasswordInput(e.target.value)}
-                                placeholder="Nhập mật khẩu (ví dụ: admin123)"
+                                onChange={(e) =>
+                                    setPasswordInput(e.target.value)
+                                }
+                                placeholder="Nhập mật khẩu"
                                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-500 focus:bg-white transition-all"
                             />
                         </div>
@@ -158,7 +198,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                         disabled={verifying}
                         className="w-full py-3 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-400 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-98 cursor-pointer"
                     >
-                        {verifying ? "Đang xác thực qua Edge Function..." : "Xác Nhận Truy Cập Admin"}
+                        {verifying
+                            ? "Đang xác thực qua Edge Function..."
+                            : "Xác Nhận Truy Cập Admin"}
                     </button>
                 </form>
             </div>
@@ -168,7 +210,6 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
     // 2. AUTHENTICATED ADMIN DASHBOARD
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-            
             {/* ADMIN HEADER & TAB SELECTOR */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl p-6 shadow-2xs">
                 <div className="flex items-center gap-3">
@@ -176,8 +217,13 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                         <Shield className="w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-slate-900">Bảng Điều Khiển Admin & Giáo Viên</h1>
-                        <p className="text-xs text-slate-500">Quản lý toàn bộ gói học viên (Plan) và khởi tạo bài tập trắc nghiệm.</p>
+                        <h1 className="text-xl font-bold text-slate-900">
+                            Bảng Điều Khiển Admin & Giáo Viên
+                        </h1>
+                        <p className="text-xs text-slate-500">
+                            Quản lý toàn bộ gói học viên (Plan) và khởi tạo bài
+                            tập trắc nghiệm.
+                        </p>
                     </div>
                 </div>
 
@@ -185,7 +231,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                     <button
                         onClick={() => setActiveTab("plans")}
                         className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            activeTab === "plans" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                            activeTab === "plans"
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-600"
                         }`}
                     >
                         Quản Lý Plan Học Viên
@@ -193,7 +241,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                     <button
                         onClick={() => setActiveTab("create-quiz")}
                         className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            activeTab === "create-quiz" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                            activeTab === "create-quiz"
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-600"
                         }`}
                     >
                         Tạo Bài Tập / Import Word
@@ -201,7 +251,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                     <button
                         onClick={() => setActiveTab("quizzes")}
                         className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                            activeTab === "quizzes" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                            activeTab === "quizzes"
+                                ? "bg-white text-slate-900 shadow-2xs"
+                                : "text-slate-600"
                         }`}
                     >
                         Danh Sách Đề Thi ({quizzes.length})
@@ -219,7 +271,8 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                                 Quản Lý Gói Tài Khoản Học Viên (Plans)
                             </h3>
                             <p className="text-xs text-slate-500 mt-0.5">
-                                Đổi plan trực tiếp cho tất cả tài khoản trong hệ thống (Nothing, Basic, VIP).
+                                Đổi plan trực tiếp cho tất cả tài khoản trong hệ
+                                thống (Nothing, Basic, VIP).
                             </p>
                         </div>
 
@@ -228,7 +281,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                             className="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 rounded-lg transition-colors cursor-pointer"
                             title="Tải lại danh sách"
                         >
-                            <RefreshCw className={`w-4 h-4 ${loadingProfiles ? "animate-spin" : ""}`} />
+                            <RefreshCw
+                                className={`w-4 h-4 ${loadingProfiles ? "animate-spin" : ""}`}
+                            />
                         </button>
                     </div>
 
@@ -236,53 +291,98 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
-                                    <th className="py-3 px-4">Tên Người Dùng</th>
+                                    <th className="py-3 px-4">
+                                        Tên Người Dùng
+                                    </th>
                                     <th className="py-3 px-4">Username</th>
                                     <th className="py-3 px-4">Vai Trò</th>
-                                    <th className="py-3 px-4">Gói Hiện Tại (Plan)</th>
-                                    <th className="py-3 px-4">Hành Động Đổi Plan</th>
+                                    <th className="py-3 px-4">
+                                        Gói Hiện Tại (Plan)
+                                    </th>
+                                    <th className="py-3 px-4">
+                                        Hành Động Đổi Plan
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                 {userProfiles.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="py-8 text-center text-slate-400">
-                                            Chưa tìm thấy người dùng nào trong cơ sở dữ liệu.
+                                        <td
+                                            colSpan={5}
+                                            className="py-8 text-center text-slate-400"
+                                        >
+                                            Chưa tìm thấy người dùng nào trong
+                                            cơ sở dữ liệu.
                                         </td>
                                     </tr>
                                 ) : (
                                     userProfiles.map((prof) => (
-                                        <tr key={prof.id} className="hover:bg-slate-50/80 transition-colors">
-                                            <td className="py-3 px-4 font-bold text-slate-900">{prof.name}</td>
-                                            <td className="py-3 px-4 text-slate-500">@{prof.username}</td>
+                                        <tr
+                                            key={prof.id}
+                                            className="hover:bg-slate-50/80 transition-colors"
+                                        >
+                                            <td className="py-3 px-4 font-bold text-slate-900">
+                                                {prof.name}
+                                            </td>
+                                            <td className="py-3 px-4 text-slate-500">
+                                                @{prof.username}
+                                            </td>
                                             <td className="py-3 px-4">
-                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
-                                                    prof.role === "teacher" ? "bg-amber-100 text-amber-800" : "bg-sky-100 text-sky-800"
-                                                }`}>
-                                                    {prof.role === "teacher" ? "Giáo viên" : "Học sinh"}
+                                                <span
+                                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${
+                                                        prof.role === "teacher"
+                                                            ? "bg-amber-100 text-amber-800"
+                                                            : "bg-sky-100 text-sky-800"
+                                                    }`}
+                                                >
+                                                    {prof.role === "teacher"
+                                                        ? "Giáo viên"
+                                                        : "Học sinh"}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                                                    prof.plan === "vip"
-                                                        ? "bg-amber-200 text-amber-900 border border-amber-300"
-                                                        : prof.plan === "basic"
-                                                        ? "bg-sky-200 text-sky-900 border border-sky-300"
-                                                        : "bg-slate-100 text-slate-600 border border-slate-200"
-                                                }`}>
-                                                    {prof.plan ? prof.plan.toUpperCase() : "NOTHING"}
+                                                <span
+                                                    className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                                                        prof.plan === "vip"
+                                                            ? "bg-amber-200 text-amber-900 border border-amber-300"
+                                                            : prof.plan ===
+                                                                "basic"
+                                                              ? "bg-sky-200 text-sky-900 border border-sky-300"
+                                                              : "bg-slate-100 text-slate-600 border border-slate-200"
+                                                    }`}
+                                                >
+                                                    {prof.plan
+                                                        ? prof.plan.toUpperCase()
+                                                        : "NOTHING"}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4">
                                                 <select
-                                                    disabled={updatingUserId === prof.id}
-                                                    value={prof.plan || "nothing"}
-                                                    onChange={(e) => handlePlanChange(prof.id, e.target.value as UserPlan)}
+                                                    disabled={
+                                                        updatingUserId ===
+                                                        prof.id
+                                                    }
+                                                    value={
+                                                        prof.plan || "nothing"
+                                                    }
+                                                    onChange={(e) =>
+                                                        handlePlanChange(
+                                                            prof.id,
+                                                            e.target
+                                                                .value as UserPlan,
+                                                        )
+                                                    }
                                                     className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500 cursor-pointer shadow-2xs"
                                                 >
-                                                    <option value="nothing">Plan Nothing (Free)</option>
-                                                    <option value="basic">Plan Basic</option>
-                                                    <option value="vip">Plan VIP (Premium)</option>
+                                                    <option value="nothing">
+                                                        Plan Nothing (Free)
+                                                    </option>
+                                                    <option value="basic">
+                                                        Plan Basic
+                                                    </option>
+                                                    <option value="vip">
+                                                        Plan VIP (Premium)
+                                                    </option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -304,31 +404,43 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                                 Thông Tin Bài Tập Mới
                             </h3>
                             <button
-                                onClick={() => setShowWordImporter(!showWordImporter)}
+                                onClick={() =>
+                                    setShowWordImporter(!showWordImporter)
+                                }
                                 className="px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
                             >
                                 <Sparkles className="w-4 h-4 text-brand-600" />
-                                {showWordImporter ? "Đóng Công Cụ Import Word" : "Import Đề Từ File Word (.docx)"}
+                                {showWordImporter
+                                    ? "Đóng Công Cụ Import Word"
+                                    : "Import Đề Từ File Word (.docx)"}
                             </button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label className="text-xs font-bold text-slate-700 mb-1 block">Tên bài kiểm tra:</label>
+                                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                                    Tên bài kiểm tra:
+                                </label>
                                 <input
                                     type="text"
                                     value={quizTitle}
-                                    onChange={(e) => setQuizTitle(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuizTitle(e.target.value)
+                                    }
                                     placeholder="VD: Kiểm Tra Đại Số Lớp 10"
                                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-400 focus:bg-white"
                                 />
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-700 mb-1 block">Môn học:</label>
+                                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                                    Môn học:
+                                </label>
                                 <select
                                     value={quizSubject}
-                                    onChange={(e) => setQuizSubject(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuizSubject(e.target.value)
+                                    }
                                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-400 focus:bg-white"
                                 >
                                     <option value="Toán Học">Toán Học</option>
@@ -339,10 +451,14 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-700 mb-1 block">Dành cho Lớp:</label>
+                                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                                    Dành cho Lớp:
+                                </label>
                                 <select
                                     value={quizGrade}
-                                    onChange={(e) => setQuizGrade(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuizGrade(e.target.value)
+                                    }
                                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-400 focus:bg-white"
                                 >
                                     <option value="8">Lớp 8</option>
@@ -354,22 +470,30 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                             </div>
 
                             <div>
-                                <label className="text-xs font-bold text-slate-700 mb-1 block">Thời gian làm bài (Phút):</label>
+                                <label className="text-xs font-bold text-slate-700 mb-1 block">
+                                    Thời gian làm bài (Phút):
+                                </label>
                                 <input
                                     type="number"
                                     value={quizDuration}
-                                    onChange={(e) => setQuizDuration(Number(e.target.value))}
+                                    onChange={(e) =>
+                                        setQuizDuration(Number(e.target.value))
+                                    }
                                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-400 focus:bg-white"
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <label className="text-xs font-bold text-slate-700 mb-1 block">Mô tả tóm tắt:</label>
+                            <label className="text-xs font-bold text-slate-700 mb-1 block">
+                                Mô tả tóm tắt:
+                            </label>
                             <input
                                 type="text"
                                 value={quizDescription}
-                                onChange={(e) => setQuizDescription(e.target.value)}
+                                onChange={(e) =>
+                                    setQuizDescription(e.target.value)
+                                }
                                 placeholder="VD: Bài kiểm tra đánh giá kiến thức cơ bản..."
                                 className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-brand-400 focus:bg-white"
                             />
@@ -381,7 +505,9 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
                         <WordImporter
                             onQuestionsParsed={(questions) => {
                                 setImportedQuestions(questions);
-                                alert(`Đã nhập thành công ${questions.length} câu hỏi từ Word!`);
+                                alert(
+                                    `Đã nhập thành công ${questions.length} câu hỏi từ Word!`,
+                                );
                             }}
                         />
                     )}
@@ -405,20 +531,31 @@ export default function AdminPanel({ quizzes, submissions, onAddQuiz, onDeleteQu
             {/* TAB 3: QUIZZES CATALOG & DELETE */}
             {activeTab === "quizzes" && (
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
-                    <h3 className="text-base font-bold text-slate-900">Danh Sách Các Đề Thi Đang Mở</h3>
+                    <h3 className="text-base font-bold text-slate-900">
+                        Danh Sách Các Đề Thi Đang Mở
+                    </h3>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {quizzes.map((q) => (
-                            <div key={q.id} className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 flex flex-col justify-between">
+                            <div
+                                key={q.id}
+                                className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 flex flex-col justify-between"
+                            >
                                 <div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-md">
                                             {q.subject} - Lớp {q.grade || "10"}
                                         </span>
-                                        <span className="text-[10px] text-slate-500">{q.duration} phút</span>
+                                        <span className="text-[10px] text-slate-500">
+                                            {q.duration} phút
+                                        </span>
                                     </div>
-                                    <h4 className="text-xs font-bold text-slate-900 mt-2">{q.title}</h4>
-                                    <p className="text-[11px] text-slate-500">{q.questions.length} câu hỏi</p>
+                                    <h4 className="text-xs font-bold text-slate-900 mt-2">
+                                        {q.title}
+                                    </h4>
+                                    <p className="text-[11px] text-slate-500">
+                                        {q.questions.length} câu hỏi
+                                    </p>
                                 </div>
 
                                 <button
