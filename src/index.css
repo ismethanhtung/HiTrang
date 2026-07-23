@@ -183,3 +183,39 @@ input:focus, select:focus, textarea:focus {
     color: var(--text-primary) !important;
   }
 }
+
+/* Premium table styling for parsed Mammoth tables inside questions and reviews */
+h3 table,
+.leading-relaxed table,
+.prose table,
+.explanation-text table {
+  width: auto;
+  max-width: 100%;
+  margin: 1rem auto;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  border: 1px solid var(--border-secondary) !important;
+}
+
+h3 table th,
+h3 table td,
+.leading-relaxed table th,
+.leading-relaxed table td,
+.prose table th,
+.prose table td,
+.explanation-text table th,
+.explanation-text table td {
+  border: 1px solid var(--border-secondary) !important;
+  padding: 8px 14px;
+  text-align: center;
+}
+
+h3 table th,
+.leading-relaxed table th,
+.prose table th,
+.explanation-text table th {
+  background-color: var(--bg-base);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+

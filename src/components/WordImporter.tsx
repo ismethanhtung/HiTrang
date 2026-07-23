@@ -46,7 +46,20 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
      */
     const cleanMathExpression = (str: string): string => {
         if (!str) return "";
-        return str.trim();
+        let clean = str.trim();
+        
+        // Post-process custom interval brackets from MathType (e.g. "4;5[)" -> "[4;5)")
+        // Semicolon separator
+        clean = clean.replace(/([^\[\]()$]+)\s*;\s*([^\[\]()$]+)\s*\[\s*\)/g, "[$1; $2)");
+        clean = clean.replace(/([^\[\]()$]+)\s*;\s*([^\[\]()$]+)\s*\(\s*\]/g, "($1; $2]");
+        clean = clean.replace(/([^\[\]()$]+)\s*;\s*([^\[\]()$]+)\s*\[\s*\]/g, "[$1; $2]");
+        clean = clean.replace(/([^\[\]()$]+)\s*;\s*([^\[\]()$]+)\s*\(\s*\)/g, "($1; $2)");
+        
+        // Comma separator
+        clean = clean.replace(/([^\[\]()$]+)\s*,\s*([^\[\]()$]+)\s*\[\s*\)/g, "[$1, $2)");
+        clean = clean.replace(/([^\[\]()$]+)\s*,\s*([^\[\]()$]+)\s*\(\s*\]/g, "($1, $2]");
+        
+        return clean;
     };
 
     interface TmplContext {
@@ -281,6 +294,86 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             8: ["\\langle ", "\\rangle "]
         };
 
+        const mathTypeSymbolMap: Record<number, string> = {
+            // Basic symbols
+            92: "\\setminus ",
+            0x2212: "-",
+            0x221e: "\\infty ",
+            0x2265: "\\ge ",
+            0x2264: "\\le ",
+            0x2208: "\\in ",
+            0x21d2: "\\Rightarrow ",
+            0x21d4: "\\Leftrightarrow ",
+            0x2260: "\\neq ",
+            0x00b1: "\\pm ",
+            0x2205: "\\emptyset ",
+            0x2192: "\\rightarrow ",
+            0x221a: "\\sqrt ",
+            0x2248: "\\approx ",
+            0x2261: "\\equiv ",
+            0x223c: "\\sim ",
+            0x2220: "\\angle ",
+            0x22a5: "\\perp ",
+            0x2225: "\\parallel ",
+            
+            // Greek Lowercase
+            0x03c0: "\\pi ",
+            0x03b1: "\\alpha ",
+            0x03b2: "\\beta ",
+            0x03b3: "\\gamma ",
+            0x03b4: "\\delta ",
+            0x03b5: "\\epsilon ",
+            0x03b6: "\\zeta ",
+            0x03b7: "\\eta ",
+            0x03b8: "\\theta ",
+            0x03b9: "\\iota ",
+            0x03ba: "\\kappa ",
+            0x03bb: "\\lambda ",
+            0x03bc: "\\mu ",
+            0x03bd: "\\nu ",
+            0x03be: "\\xi ",
+            0x03c1: "\\rho ",
+            0x03c2: "\\varsigma ",
+            0x03c3: "\\sigma ",
+            0x03c4: "\\tau ",
+            0x03c5: "\\upsilon ",
+            0x03c6: "\\phi ",
+            0x03c7: "\\chi ",
+            0x03c8: "\\psi ",
+            0x03c9: "\\omega ",
+            
+            // Greek Uppercase
+            0x0393: "\\Gamma ",
+            0x0394: "\\Delta ",
+            0x0398: "\\Theta ",
+            0x039b: "\\Lambda ",
+            0x039e: "\\Xi ",
+            0x03a0: "\\Pi ",
+            0x03a3: "\\Sigma ",
+            0x03a5: "\\Upsilon ",
+            0x03a6: "\\Phi ",
+            0x03a8: "\\Psi ",
+            0x03a9: "\\Omega ",
+            
+            // Double-struck / Sets
+            0x211d: "\\mathbb{R}",
+            0x2124: "\\mathbb{Z}",
+            0x2115: "\\mathbb{N}",
+            0x211a: "\\mathbb{Q}",
+            0x2102: "\\mathbb{C}",
+            
+            // Relations / Set operations
+            0x2209: "\\notin ",
+            0x2282: "\\subset ",
+            0x2283: "\\supset ",
+            0x222a: "\\cup ",
+            0x2229: "\\cap ",
+            0x2200: "\\forall ",
+            0x2203: "\\exists ",
+            0x2194: "\\leftrightarrow ",
+            0x21d0: "\\Leftarrow "
+        };
+
         let i = startIdx;
         let out = "";
         
@@ -478,52 +571,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 // Skip template property bracket characters
                             } else {
                                 let charStr = "";
-                                if (charCode === 92) {
-                                    charStr = "\\setminus ";
-                                } else if (charCode === 0x2212) {
-                                    charStr = "-";
-                                } else if (charCode === 0x221e) {
-                                    charStr = "\\infty ";
-                                } else if (charCode === 0x2265) {
-                                    charStr = "\\ge ";
-                                } else if (charCode === 0x2264) {
-                                    charStr = "\\le ";
-                                } else if (charCode === 0x2208) {
-                                    charStr = "\\in ";
-                                } else if (charCode === 0x21d2) {
-                                    charStr = "\\Rightarrow ";
-                                } else if (charCode === 0x21d4) {
-                                    charStr = "\\Leftrightarrow ";
-                                } else if (charCode === 0x03c0) {
-                                    charStr = "\\pi ";
-                                } else if (charCode === 0x0394) {
-                                    charStr = "\\Delta ";
-                                } else if (charCode === 0x2260) {
-                                    charStr = "\\neq ";
-                                } else if (charCode === 0x00b1) {
-                                    charStr = "\\pm ";
-                                } else if (charCode === 0x2205) {
-                                    charStr = "\\emptyset ";
-                                } else if (charCode === 0x2192) {
-                                    charStr = "\\rightarrow ";
-                                } else if (charCode === 0x221a) {
-                                    charStr = "\\sqrt ";
-                                } else if (charCode === 0x211d) {
-                                    charStr = "\\mathbb{R}";
-                                } else if (charCode === 0x2216) {
-                                    charStr = "\\setminus ";
-                                } else if (charCode === 8776 || charCode === 0x2248) {
-                                    charStr = "\\approx ";
-                                } else if (charCode === 8801 || charCode === 0x2261) {
-                                    charStr = "\\equiv ";
-                                } else if (charCode === 8764 || charCode === 0x223c) {
-                                    charStr = "\\sim ";
-                                } else if (charCode === 8736 || charCode === 0x2220) {
-                                    charStr = "\\angle ";
-                                } else if (charCode === 8869 || charCode === 0x22a5) {
-                                    charStr = "\\perp ";
-                                } else if (charCode === 8741 || charCode === 0x2225) {
-                                    charStr = "\\parallel ";
+                                if (mathTypeSymbolMap[charCode] !== undefined) {
+                                    charStr = mathTypeSymbolMap[charCode];
+                                } else if (charCode >= 57344 && charCode <= 63743) {
+                                    charStr = " ";
                                 } else if ((charCode & 0xFF) === 0x78 || (charCode >> 8) === 0x78) {
                                     charStr = "x";
                                 } else if ((charCode & 0xFF) === 0x71 || (charCode >> 8) === 0x71) {
@@ -976,10 +1027,30 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     if (currentQuestion.options && currentQuestion.options.length > 0) {
                         currentQuestion.options = currentQuestion.options.map(opt => {
                             let clean = opt.trim();
-                            // Strip leading strong/b/span wrappers around the option letter
-                            clean = clean.replace(/^(?:<strong[^>]*>|<b[^>]*>|<span[^>]*>)\s*[A-D\(\)a-d][\.\:\)]\s*(?:<\/strong>|<\/b>|<\/span>)/i, "");
-                            // Strip standard option prefix without wrappers
-                            clean = clean.replace(/^[A-D\(\)a-d][\.\:\)]\s*/i, "");
+                            // If it starts with <p> and ends with </p>, strip them
+                            if (clean.startsWith("<p>") && clean.endsWith("</p>")) {
+                                clean = clean.substring(3, clean.length - 4).trim();
+                            }
+                            
+                            // Strip leading strong/b/span wrappers around the option letter,
+                            // allowing unmatched opening tags
+                            clean = clean.replace(/^(?:<(?:strong|b|span|p|em|i|u)[^>]*>)*\s*[A-D\(\)a-d][\.\:\)]\s*(?:<\/(?:strong|b|span|p|em|i|u)>)*\s*/i, "");
+                            
+                            // Clean up unbalanced inline tags left over from splits
+                            const tags = ["strong", "b", "span", "em", "i", "u"];
+                            tags.forEach(tag => {
+                                const openReg = new RegExp(`<${tag}[^>]*>`, "gi");
+                                const closeReg = new RegExp(`</${tag}>`, "gi");
+                                const openCount = (clean.match(openReg) || []).length;
+                                const closeCount = (clean.match(closeReg) || []).length;
+                                
+                                if (closeCount > openCount) {
+                                    clean = clean.replace(new RegExp(`</${tag}>\\s*$`, "i"), "");
+                                } else if (openCount > closeCount) {
+                                    clean = clean.replace(new RegExp(`^\\s*<${tag}[^>]*>`, "i"), "");
+                                }
+                            });
+                            
                             return clean.trim();
                         });
                     } else {
@@ -1077,27 +1148,26 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 const htmlContent = node.outerHTML;
 
                 // Detect Section Headers
-                if (/^Phần\s*1\s*[\:\.]/i.test(text)) {
+                const partMatch = text.match(/^Phần\s*(\d+)/i);
+                if (partMatch) {
+                    const partNum = partMatch[1];
                     pushCurrentQuestion();
-                    currentSection = "Phần 1: Trắc nghiệm nhiều lựa chọn (A-B-C-D)";
-                    currentType = "single_choice";
-                    continue;
-                }
-                if (/^Phần\s*2\s*[\:\.]/i.test(text)) {
-                    pushCurrentQuestion();
-                    currentSection = "Phần 2: Trắc nghiệm Đúng / Sai";
-                    currentType = "true_false";
-                    continue;
-                }
-                if (/^Phần\s*3\s*[\:\.]/i.test(text)) {
-                    pushCurrentQuestion();
-                    currentSection = "Phần 3: Trắc nghiệm Điền đáp án ngắn";
-                    currentType = "short_answer";
+                    currentSection = text; // Keep exact wording from the document
+                    if (partNum === "1") {
+                        currentType = "single_choice";
+                    } else if (partNum === "2") {
+                        currentType = "true_false";
+                    } else {
+                        currentType = "short_answer";
+                    }
                     continue;
                 }
 
                 // Detect question start boundary
-                const isQuestionStart = /^(Câu|Bài)\s*\d+/i.test(text) || node.tagName === "LI";
+                const isQuestionStart = 
+                    /^(Câu|Bài)\s*\d+/i.test(text) || 
+                    /^(Câu|Bài)\s*[\:\.]/i.test(text) || 
+                    node.tagName === "LI";
 
                 if (isQuestionStart) {
                     pushCurrentQuestion();
@@ -1115,6 +1185,23 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
 
                 if (!currentQuestion) continue;
 
+                // Detect explanation tag
+                const isExplanationStart = 
+                    /^(Lời giải|Bài giải|Lời giải chi tiết)/i.test(text) || 
+                    /^Hướng dẫn/i.test(text) || 
+                    /^Chọn[\s\.\:\-]*(?:đáp\s+án\s+)?[A-D]/i.test(text) ||
+                    /^Đáp án/i.test(text);
+                if (isExplanationStart) {
+                    inExplanation = true;
+                    explanationHtmls.push(htmlContent);
+                    continue;
+                }
+
+                if (inExplanation) {
+                    explanationHtmls.push(htmlContent);
+                    continue;
+                }
+
                 // Check option paragraph (A. B. C. D.)
                 const hasOptions = /^[A-D][\.\:\)]\s+/i.test(text) || /<strong>\s*[A-D][\.\:\)]\s*<\/strong>/i.test(htmlContent) || /A\.\s+.*B\.\s+.*C\.\s+.*D\./i.test(text);
 
@@ -1125,7 +1212,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         .filter(o => /^[A-D][\.\:\)]/i.test(o.replace(/<[^>]+>/g, "").trim()));
 
                     if (filteredOpts.length >= 2) {
-                        currentQuestion.options = filteredOpts;
+                        currentQuestion.options = [...(currentQuestion.options || []), ...filteredOpts];
                     } else {
                         currentQuestion.options?.push(htmlContent);
                     }
@@ -1148,19 +1235,8 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     continue;
                 }
 
-                // Detect explanation tag
-                const isExplanationStart = /^Lời giải/i.test(text) || /^Hướng dẫn/i.test(text);
-                if (isExplanationStart) {
-                    inExplanation = true;
-                    explanationHtmls.push(htmlContent);
-                    continue;
-                }
-
-                if (inExplanation) {
-                    explanationHtmls.push(htmlContent);
-                } else {
-                    currentQuestion.text += htmlContent;
-                }
+                // Otherwise, append to question text
+                currentQuestion.text += htmlContent;
             }
 
             pushCurrentQuestion();

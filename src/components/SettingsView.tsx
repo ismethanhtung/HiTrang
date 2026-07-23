@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { User, LogOut, Key, Globe, Shield, UserCheck, Loader2 } from 'lucide-react';
-import { User as UserType } from '../types';
+import { 
+  User, LogOut, Key, Globe, Shield, UserCheck, Loader2, 
+  Clock, BookOpen, ChevronLeft, CheckCircle2, History, Award, BookOpenCheck 
+} from 'lucide-react';
+import { User as UserType, Quiz, Submission } from '../types';
 import { updateProfileName, updatePassword, signOutAllDevices } from '../lib/supabaseService';
+import { renderMathHtml } from '../lib/math';
 
 interface SettingsViewProps {
   user: UserType;
   onUpdateUser: (updatedUser: UserType) => void;
   onLogout: () => void;
   theme: 'light' | 'dark';
+  submissions: Submission[];
+  quizzes: Quiz[];
+  initialTab?: 'profile' | 'history';
+  onTabChange?: (tab: 'profile' | 'history') => void;
+  onNavigate?: (path: string) => void;
 }
 
-export default function SettingsView({ user, onUpdateUser, onLogout, theme }: SettingsViewProps) {
+export default function SettingsView({ user, onUpdateUser, onLogout, theme, submissions, quizzes, initialTab, onTabChange, onNavigate }: SettingsViewProps) {
   // Helper to split full name into first name and last name
   const parseName = (fullName: string) => {
     const parts = fullName.trim().split(/\s+/);
@@ -33,6 +42,55 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme }: Se
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'profile' | 'history'>(initialTab || 'profile');
+  const [reviewSubmission, setReviewSubmission] = useState<Submission | null>(null);
+
+  React.useEffect(() => {
+    if (initialTab) {
+      setActiveSettingsTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const handleTabClick = (tab: 'profile' | 'history') => {
+    setActiveSettingsTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
+  // Helper functions
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+  };
+
+  const cleanTrueFalseQuestionText = (html: string) => {
+    if (!html) return "";
+    let clean = html.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
+        if (
+            match.includes("Khẳng định") ||
+            match.includes("Đúng") ||
+            match.includes("Sai")
+        ) {
+            return "";
+        }
+        return match;
+    });
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = clean;
+
+    const items = Array.from(tempDiv.querySelectorAll("p, li, div"));
+    items.forEach((item) => {
+        const text = item.textContent?.trim() || "";
+        if (/^[a-f][\)\.\:\-]/i.test(text)) {
+            item.remove();
+        }
+    });
+
+    return tempDiv.innerHTML;
+  };
   
   // Feedback alerts
   const [nameError, setNameError] = useState('');
@@ -114,18 +172,320 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme }: Se
     }
   };
 
+  if (reviewSubmission) {
+    const quiz = quizzes.find(q => q.id === reviewSubmission.quizId);
+    
+    // Determine number of correct questions
+    const correctAnswersCount = quiz ? quiz.questions.filter((q) => {
+        const chosen = reviewSubmission.answers[q.id];
+        if (!q.type || q.type === 'single_choice') {
+            return chosen !== undefined && chosen === q.correctAnswerIndex;
+        } else if (q.type === 'true_false') {
+            const correctTf = q.correctAnswers || [false, false, false, false];
+            const studentTf = (chosen as (boolean | null)[]) || [null, null, null, null];
+            return q.options.every((_, oIdx) => studentTf[oIdx] === correctTf[oIdx]);
+        } else if (q.type === 'short_answer') {
+            return String(chosen || "").trim().toLowerCase() === String(q.shortAnswerKey || "").trim().toLowerCase();
+        }
+        return false;
+    }).length : 0;
+
+    return (
+      <div className="flex-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          {quiz ? (
+            <>
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded uppercase tracking-wider">
+                      Chi tiết bài thi
+                    </span>
+                    <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-350 px-2 py-0.5 rounded uppercase">
+                      {quiz.subject}
+                    </span>
+                  </div>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2">
+                    {reviewSubmission.quizTitle}
+                  </h2>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-455 mt-1 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    Nộp bài lúc: {reviewSubmission.submittedAt}
+                  </p>
+                </div>
+                <div className="flex items-center gap-6 self-stretch md:self-auto justify-between border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-4 md:pt-0">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center justify-center bg-brand-50 dark:bg-brand-500/10 text-[#2B5467] dark:text-brand-400 w-14 h-14 rounded-full border border-brand-200 dark:border-brand-500/30 shadow-2xs">
+                      <span className="text-base font-extrabold leading-none">
+                        {reviewSubmission.score}
+                      </span>
+                      <span className="text-[7px] font-bold text-slate-400 mt-0.5">ĐIỂM</span>
+                    </div>
+                    <div className="text-xs">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">Kết quả bài làm</div>
+                      <div className="text-slate-500 dark:text-slate-455 text-[11px] mt-0.5">
+                        {correctAnswersCount} / {quiz.questions.length} câu đúng
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setReviewSubmission(null)}
+                    className="px-3.5 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1 flex-shrink-0"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Quay lại</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Questions */}
+              <div className="space-y-6">
+                {quiz.questions.map((q, qIndex) => {
+                  const chosen = reviewSubmission.answers[q.id];
+                  
+                  // Determine grading accuracy
+                  let isQCorrect = false;
+                  let isQPartial = false;
+                  let tfStatusList: { text: string; correct: boolean; studentVal: boolean | null; correctVal: boolean }[] = [];
+                  
+                  if (!q.type || q.type === 'single_choice') {
+                    isQCorrect = chosen !== undefined && chosen === q.correctAnswerIndex;
+                  } else if (q.type === 'true_false') {
+                    const correctTf = q.correctAnswers || [false, false, false, false];
+                    const studentTf = (chosen as (boolean | null)[]) || [null, null, null, null];
+                    
+                    let matchCount = 0;
+                    tfStatusList = q.options.map((opt, oIdx) => {
+                      const sVal = studentTf[oIdx];
+                      const cVal = correctTf[oIdx];
+                      const match = sVal === cVal;
+                      if (match) matchCount++;
+                      return {
+                        text: opt,
+                        correct: match,
+                        studentVal: sVal,
+                        correctVal: cVal
+                      };
+                    });
+                    
+                    isQCorrect = matchCount === 4;
+                    isQPartial = matchCount > 0 && matchCount < 4;
+                  } else if (q.type === 'short_answer') {
+                    const cKey = (q.shortAnswerKey || "").trim().toLowerCase();
+                    const sKey = String(chosen || "").trim().toLowerCase();
+                    isQCorrect = cKey && sKey === cKey;
+                  }
+
+                  // Determine card border accent style
+                  let cardAccentClass = "border-l-4 border-l-rose-500";
+                  let statusBadgeClass = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50";
+                  let statusText = "Sai";
+                  
+                  if (isQCorrect) {
+                    cardAccentClass = "border-l-4 border-l-emerald-500";
+                    statusBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50";
+                    statusText = "Đúng";
+                  } else if (isQPartial) {
+                    cardAccentClass = "border-l-4 border-l-amber-500";
+                    statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50";
+                    statusText = "Đúng một phần";
+                  }
+
+                  const displayQuestionText = q.type === 'true_false' 
+                    ? cleanTrueFalseQuestionText(q.text) 
+                    : q.text;
+
+                  return (
+                    <div key={q.id} className={`bg-white dark:bg-slate-800/50 border-y border-r border-slate-200 dark:border-slate-700/80 ${cardAccentClass} rounded-xl p-5 space-y-4 shadow-3xs`}>
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-extrabold text-brand-700 bg-brand-100 dark:bg-brand-500/20 dark:text-brand-400 px-2 py-0.5 rounded">
+                            Câu {qIndex + 1}
+                          </span>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase ${
+                            q.type === "true_false"
+                              ? "bg-amber-50 text-amber-800 border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50"
+                              : q.type === "short_answer"
+                              ? "bg-purple-50 text-purple-800 border-purple-250 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-900/50"
+                              : "bg-sky-50 text-sky-800 border-sky-250 dark:bg-sky-950/20 dark:text-sky-400 dark:border-sky-900/50"
+                          }`}>
+                            {q.type === "true_false"
+                              ? "Đúng / Sai"
+                              : q.type === "short_answer"
+                              ? "Điền đáp án"
+                              : "Trắc nghiệm"}
+                          </span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${statusBadgeClass}`}>
+                          {statusText}
+                        </span>
+                      </div>
+
+                      {/* Question text */}
+                      <div 
+                        className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 leading-relaxed overflow-x-auto [&_img]:mx-auto [&_img]:block [&_img]:my-4" 
+                        dangerouslySetInnerHTML={{ __html: renderMathHtml(displayQuestionText) }} 
+                      />
+
+                      {/* 1. Single Choice Options Review */}
+                      {(!q.type || q.type === 'single_choice') && (
+                        <div className="space-y-2.5">
+                          {q.options.map((opt, oIdx) => {
+                            const isChosen = chosen === oIdx;
+                            const isCorrectOpt = q.correctAnswerIndex === oIdx;
+                            const cleanedOpt = opt.replace(/^\s*[a-f][\)\.\:\-]\s*/i, "");
+                            
+                            let cardStyle = "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300";
+                            let badge = null;
+                            
+                            if (isCorrectOpt) {
+                              cardStyle = "border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/20 dark:bg-emerald-950/15 text-emerald-800 dark:text-emerald-400";
+                              badge = <span className="text-[9px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded ml-auto">Đáp án đúng</span>;
+                            } else if (isChosen && !isCorrectOpt) {
+                              cardStyle = "border-rose-300 dark:border-rose-800/80 bg-rose-50/20 dark:bg-rose-950/15 text-rose-800 dark:text-rose-400";
+                              badge = <span className="text-[9px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded ml-auto">Lựa chọn của bạn</span>;
+                            } else if (isChosen) {
+                              badge = <span className="text-[9px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded ml-auto">Lựa chọn của bạn</span>;
+                            }
+
+                            return (
+                              <div key={oIdx} className={`flex items-center gap-3 p-3 border rounded-lg text-xs font-medium ${cardStyle}`}>
+                                <span className={`w-5 h-5 rounded-lg flex items-center justify-center font-bold text-[10px] ${
+                                  isCorrectOpt ? "bg-emerald-500 text-white" : isChosen ? "bg-rose-50 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                                }`}>
+                                  {String.fromCharCode(65 + oIdx)}
+                                </span>
+                                <span className="[&_img]:mx-auto [&_img]:block [&_img]:my-2" dangerouslySetInnerHTML={{ __html: renderMathHtml(cleanedOpt) }} />
+                                {badge}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 2. True/False Statement Grid Review */}
+                      {q.type === 'true_false' && (
+                        <div className="space-y-2.5">
+                          {tfStatusList.map((item, oIdx) => {
+                            const sText = item.studentVal === null ? "Chưa chọn" : item.studentVal ? "Đúng" : "Sai";
+                            const cText = item.correctVal ? "Đúng" : "Sai";
+                            const cleanedOpt = item.text.replace(/^\s*[a-f][\)\.\:\-]\s*/i, "");
+
+                            return (
+                              <div key={oIdx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700/80 rounded-lg text-xs">
+                                <div className="font-medium text-slate-800 dark:text-slate-200 flex gap-2 [&_img]:mx-auto [&_img]:block [&_img]:my-2">
+                                  <span className="font-extrabold text-slate-500">{String.fromCharCode(97 + oIdx)})</span>
+                                  <span dangerouslySetInnerHTML={{ __html: renderMathHtml(cleanedOpt) }} />
+                                </div>
+                                <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                                  <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+                                    item.studentVal === null
+                                      ? "bg-slate-200 text-slate-600 border border-slate-300"
+                                      : item.correct
+                                      ? "bg-emerald-100 text-emerald-800 border border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400"
+                                      : "bg-rose-100 text-rose-800 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-400"
+                                  }`}>
+                                    Bạn chọn: {sText}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded font-bold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-950/10 dark:text-emerald-400">
+                                    Đáp án: {cText}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* 3. Short Answer Review */}
+                      {q.type === 'short_answer' && (
+                        <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700 rounded-lg flex flex-wrap gap-4 text-xs font-semibold">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Đáp án của bạn:</span>
+                            <span className={`px-2.5 py-0.5 rounded font-extrabold ${
+                              isQCorrect ? "bg-emerald-100 text-emerald-800 border border-emerald-250 dark:bg-emerald-950/20 dark:text-emerald-400" : "bg-rose-100 text-rose-800 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-400"
+                            }`}>
+                              {chosen !== undefined && chosen !== "" ? String(chosen) : "(Để trống)"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-4">
+                            <span className="text-slate-500">Đáp án đúng:</span>
+                            <span className="bg-emerald-50 text-emerald-800 border border-emerald-250 dark:bg-emerald-950/10 dark:text-emerald-400 px-2.5 py-0.5 rounded font-extrabold">
+                              {q.shortAnswerKey}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Rich HTML Explanation */}
+                      {q.explanation && (
+                        <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/60 rounded-lg p-4 text-xs space-y-2 mt-4">
+                          <div className="flex items-center gap-1.5 text-[#2B5467] dark:text-brand-400 font-extrabold">
+                            <BookOpen className="w-4 h-4 text-[#2B5467] dark:text-brand-400" />
+                            <span>Lời giải chi tiết:</span>
+                          </div>
+                          <div className="text-slate-700 dark:text-slate-300 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#2B5467]/30 dark:border-brand-500/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4" dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation) }} />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="p-8 bg-white border border-slate-200 rounded-xl text-center text-gray-400 italic">
+              Không tìm thấy dữ liệu đề thi tương ứng.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const userSubmissions = submissions
+    .filter((sub) => sub.studentId === user.id)
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
   return (
     <div className="flex-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
-      {/* Title Header */}
+      {/* Title Header with Tabs */}
       <div className="max-w-4xl mx-auto pt-8 pb-6 px-6 border-b border-slate-100 dark:border-slate-800/80">
-        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">My Profile</h1>
+        <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">Cài đặt cá nhân</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-          Update your personal details and account information.
+          Cập nhật thông tin tài khoản và xem lại các đề thi đã hoàn thành.
         </p>
+
+        {/* Tabs navigation */}
+        <div className="flex gap-6 mt-6 border-b border-slate-100 dark:border-slate-800/50">
+          <button
+            onClick={() => handleTabClick('profile')}
+            className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer ${
+              activeSettingsTab === 'profile'
+                ? 'text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white'
+                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            }`}
+          >
+            Hồ sơ cá nhân
+          </button>
+          <button
+            onClick={() => handleTabClick('history')}
+            className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+              activeSettingsTab === 'history'
+                ? 'text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white'
+                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            }`}
+          >
+            <History className="w-3.5 h-3.5" />
+            <span>Lịch sử làm bài</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Settings Grid */}
-      <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
+      {activeSettingsTab === 'profile' ? (
+        /* Main Settings Grid */
+        <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
         
         {/* Profile Photo Row */}
         <div className="grid grid-cols-12 gap-6 py-6 items-center">
@@ -450,8 +810,64 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme }: Se
             </div>
           </div>
         </div>
-
       </div>
+      ) : (
+        /* History tab content */
+        <div className="max-w-4xl mx-auto px-6 py-6 pb-20">
+          {userSubmissions.length === 0 ? (
+            <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-805/40 rounded-xl space-y-3">
+              <BookOpenCheck className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic">Bạn chưa thực hiện bài thi nào.</p>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {userSubmissions.map((sub) => {
+                // Determine pill color depending on score
+                let scoreColor = "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50";
+                if (sub.score >= 8) {
+                  scoreColor = "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50";
+                } else if (sub.score >= 5) {
+                  scoreColor = "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50";
+                }
+
+                return (
+                  <div key={sub.id} className="bg-white dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-slate-350 dark:hover:border-slate-700 shadow-3xs">
+                    <div className="space-y-1.5">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                        {sub.quizTitle}
+                      </h4>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-450">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-450" />
+                          Nộp: {sub.submittedAt}
+                        </span>
+                        {sub.timeSpent !== undefined && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-450" />
+                            Thời gian: {formatTime(sub.timeSpent)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 self-stretch sm:self-auto justify-between border-t sm:border-t-0 border-slate-100 dark:border-slate-700 pt-3 sm:pt-0">
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-extrabold ${scoreColor}`}>
+                        {sub.score} / 10
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { if (onNavigate) onNavigate("/result/" + sub.id); }}
+                        className="px-3.5 py-1.5 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
+                      >
+                        Xem chi tiết
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

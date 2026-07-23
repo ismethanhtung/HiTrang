@@ -22,6 +22,7 @@ export interface Quiz {
   duration: number; // in minutes
   questions: Question[];
   createdAt: string;
+  isPublic?: boolean; // true = công khai, false = riêng tư
 }
 
 export type UserPlan = 'nothing' | 'basic' | 'vip';
@@ -42,9 +43,11 @@ export interface Submission {
   quizTitle: string;
   studentId: string;
   studentName: string;
+  studentUsername?: string;
   score: number; // percentage or correct answers count
   totalQuestions: number;
   submittedAt: string;
   answers: Record<string, any>; // questionId -> chosen index, boolean[], or short answer string
+  timeSpent?: number; // time spent in seconds
 }
 

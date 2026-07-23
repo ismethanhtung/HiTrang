@@ -9,6 +9,7 @@ import {
     BookOpen,
     Crown,
     Zap,
+    History,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -19,7 +20,7 @@ interface TopbarProps {
     onLogout: () => void;
     onNavigateAdmin: () => void;
     onNavigateHome: () => void;
-    onNavigateSettings: () => void;
+    onNavigateSettings: (tab?: "profile" | "history") => void;
     currentPath: string;
 }
 
@@ -98,7 +99,6 @@ export default function Topbar({
                                 key={grade.id}
                                 onClick={() => {
                                     onSelectGrade(grade.id);
-                                    if (currentPath !== "/") onNavigateHome();
                                 }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                                     selectedGrade === grade.id &&
@@ -116,6 +116,17 @@ export default function Topbar({
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center gap-3">
                     {/* ADMIN ROUTE BUTTON */}
+                    <button
+                        onClick={onNavigateAdmin}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            currentPath === "/admin"
+                                ? "bg-slate-900 text-white shadow-2xs"
+                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                        }`}
+                    >
+                        <Shield className="w-3.5 h-3.5 text-slate-500" />
+                        Admin
+                    </button>
 
                     {!user ? (
                         /* UNAUTHENTICATED ACTION BUTTONS */
@@ -140,12 +151,9 @@ export default function Topbar({
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer"
+                                className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl transition-all cursor-pointer"
                             >
-                                <div className="w-7 h-7 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-xs">
-                                    {user.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="hidden sm:flex flex-col text-left">
+                                <div className="hidden sm:flex flex-col text-right">
                                     <span className="text-xs font-bold text-slate-900 leading-tight">
                                         {user.name}
                                     </span>
@@ -153,8 +161,10 @@ export default function Topbar({
                                         @{user.username}
                                     </span>
                                 </div>
-                                {getPlanBadge(user.plan)}
-                                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                                <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-2xs">
+                                    {user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                             </button>
 
                             {userDropdownOpen && (
@@ -181,15 +191,39 @@ export default function Topbar({
                                             </div>
                                         </div>
 
+                                        {(user.role === "teacher" || user.username === "admin") && (
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onNavigateAdmin();
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-semibold border-b border-slate-100 pb-2 mb-1"
+                                            >
+                                                <Shield className="w-4 h-4 text-brand-600" />
+                                                Quản lý đề thi (Admin)
+                                            </button>
+                                        )}
+
                                         <button
                                             onClick={() => {
                                                 setUserDropdownOpen(false);
-                                                onNavigateSettings();
+                                                onNavigateSettings("profile");
                                             }}
                                             className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
                                         >
                                             <Settings className="w-4 h-4 text-slate-400" />
                                             Cài đặt cá nhân
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setUserDropdownOpen(false);
+                                                onNavigateSettings("history");
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-medium"
+                                        >
+                                            <History className="w-4 h-4 text-slate-400" />
+                                            Lịch sử làm bài
                                         </button>
 
                                         <button
@@ -227,7 +261,6 @@ export default function Topbar({
                         key={grade.id}
                         onClick={() => {
                             onSelectGrade(grade.id);
-                            if (currentPath !== "/") onNavigateHome();
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                             selectedGrade === grade.id && currentPath === "/"

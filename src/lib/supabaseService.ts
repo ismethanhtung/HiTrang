@@ -212,6 +212,39 @@ export async function updateUserPlan(userId: string, newPlan: 'nothing' | 'basic
 }
 
 /**
+ * Cập nhật thông tin chi tiết tài khoản (Cho Admin)
+ */
+export async function updateUserProfile(userId: string, updatedData: { name: string; username: string; role: 'teacher' | 'student'; plan: 'nothing' | 'basic' | 'vip' }): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      name: updatedData.name,
+      username: updatedData.username,
+      role: updatedData.role,
+      plan: updatedData.plan
+    })
+    .eq('id', userId);
+
+  if (error) {
+    throw new Error(`Không thể cập nhật tài khoản: ${error.message}`);
+  }
+}
+
+/**
+ * Xóa tài khoản người dùng khỏi bảng profiles (Cho Admin)
+ */
+export async function deleteUserProfile(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+
+  if (error) {
+    throw new Error(`Không thể xóa tài khoản: ${error.message}`);
+  }
+}
+
+/**
  * Đăng nhập bằng Google OAuth
  */
 export async function signInWithGoogle(): Promise<void> {
@@ -256,38 +289,94 @@ export async function getQuizzes(): Promise<Quiz[]> {
     console.error('Lỗi khi tải đề thi từ Supabase:', error);
     return [];
   }
+  return (data || []).map(item => {
+    // 1. Get grade from the first question's metadata if present
+    let grade = item.questions?.[0]?.quizGrade;
 
-  return (data || []).map(item => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    subject: item.subject,
-    duration: item.duration,
-    questions: item.questions,
-    createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
-  }));
+    // 2. Fallback to parsing the text if not found in metadata
+    if (!grade) {
+      const textToSearch = `${item.title} ${item.subject || ''} ${item.description || ''}`.toLowerCase();
+      const match = textToSearch.match(/(?:lớp|khối|lop|khoi|khôi|lơp|toán|vật lý|hóa học|ngữ văn|vật lí|lý|hóa|văn|sinh|sử|địa|anh|tin)\s*([89]|1[012])\b/) 
+                 || textToSearch.match(/\b([89]|1[012])\b/);
+      // Default to "10" for quizzes with completely missing grade information
+      grade = match ? match[1] : "10";
+    }
+
+    return {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      subject: item.subject,
+      duration: item.duration,
+      questions: item.questions,
+      grade: grade,
+      createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
+    };
+  });
 }
 
 /**
  * Thêm mới một đề thi
  */
 export async function createQuiz(quiz: Quiz, creatorId?: string): Promise<void> {
-  const isValidUuid = typeof creatorId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(creatorId);
+  const isValidUuid = typeof creatorId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(creatorId);
+
+  let finalTitle = quiz.title;
+  if (quiz.grade && !quiz.title.toLowerCase().includes(`lớp ${quiz.grade}`) && !quiz.title.toLowerCase().includes(`khối ${quiz.grade}`)) {
+    finalTitle = `${quiz.title} (Lớp ${quiz.grade})`;
+  }
+
+  // Inject grade into the first question's metadata so it is stored in the jsonb column
+  const updatedQuestions = [...quiz.questions];
+  if (updatedQuestions.length > 0 && quiz.grade) {
+    updatedQuestions[0] = {
+      ...updatedQuestions[0],
+      quizGrade: quiz.grade
+    } as any;
+  }
 
   const { error } = await supabase
     .from('quizzes')
     .insert({
       id: quiz.id,
-      title: quiz.title,
+      title: finalTitle,
       description: quiz.description,
       subject: quiz.subject,
       duration: quiz.duration,
-      questions: quiz.questions,
-      created_by: isValidUuid ? creatorId : null
+      questions: updatedQuestions,
+      created_by: isValidUuid ? creatorId : null,
+      is_public: quiz.isPublic !== undefined ? quiz.isPublic : true,
     });
 
   if (error) {
     throw new Error(`Không thể lưu đề thi lên Supabase: ${error.message}`);
+  }
+}
+
+// Update existing quiz (including isPublic flag)
+export async function updateQuiz(quizId: string, updatedData: Partial<Quiz>): Promise<void> {
+  const payload: any = { ...updatedData };
+  if (payload.isPublic !== undefined) {
+    payload.is_public = payload.isPublic;
+    delete payload.isPublic;
+  }
+
+  // Inject grade into the first question's metadata if questions and grade are present
+  if (payload.questions && payload.grade) {
+    const qs = [...payload.questions];
+    if (qs.length > 0) {
+      qs[0] = { ...qs[0], quizGrade: payload.grade };
+      payload.questions = qs;
+    }
+  }
+
+  const { error } = await supabase
+    .from('quizzes')
+    .update(payload)
+    .eq('id', quizId);
+
+  if (error) {
+    throw new Error(`Không thể cập nhật đề thi trên Supabase: ${error.message}`);
   }
 }
 
