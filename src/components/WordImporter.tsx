@@ -96,6 +96,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         clean = clean.replace(/s\\text\{đ\}/g, "\\text{sđ}");
         clean = clean.replace(/S\\text\{đ\}/g, "\\text{Sđ}");
         
+        // Fix MathType C_n^k notation: C_{nk} -> C_n^k (e.g. C_{42} → C_{4}^{2})
+        // MTEF subscript template emits both the subscript index and superscript digits sequentially
+        clean = clean.replace(/C_\{(\d+?)(\d)\}/g, "C_{$1}^{$2}");
+        
         return clean;
     };
 
@@ -108,6 +112,8 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         startFence?: string;
         closeFence?: string;
         startFenceAppended?: boolean;
+        startOutLen?: number;
+        buffers?: string[];
     }
 
     /**
@@ -364,6 +370,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             176: "^{\\circ}",
             272: "\\text{Đ}",
             273: "\\text{đ}",
+            8747: "\\int ",
+            8748: "\\iint ",
+            8749: "\\iiint ",
+            8750: "\\oint ",
             92: "\\setminus ",
             0x2212: "-",
             0x221e: "\\infty ",
@@ -439,7 +449,20 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             0x2200: "\\forall ",
             0x2203: "\\exists ",
             0x2194: "\\leftrightarrow ",
-            0x21d0: "\\Leftarrow "
+            0x21d0: "\\Leftarrow ",
+
+            // Set difference / exclusion
+            0x2216: "\\setminus ",   // ∖ set difference (used in "R \ { ... }")
+            0x2223: "|",              // ∣ vertical divider / divides
+
+            // Curly braces as content characters (in set notation)
+            0x7b: "\\{",
+            0x7d: "\\}",
+
+            // Trig functions (text-mode fallback)
+            0x74: "t",
+            0x61: "a",
+            0x6e: "n",
         };
 
         let i = startIdx;
@@ -472,6 +495,18 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     if (lastContainer !== "EMBELL") {
                         indent -= 1;
                     }
+                    if (lastContainer === "LINE") {
+                        if (tmplStack.length > 0) {
+                            const tmpl = tmplStack[tmplStack.length - 1];
+                            if (tmpl.selector === 15) {
+                                const startLen = tmpl.startOutLen ?? 0;
+                                const lineContent = out.substring(startLen);
+                                out = out.substring(0, startLen);
+                                tmpl.buffers = tmpl.buffers || [];
+                                tmpl.buffers.push(lineContent);
+                            }
+                        }
+                    }
                     if (lastContainer === "TMPL" && tmplStack.length > 0) {
                         const tmpl = tmplStack.pop()!;
                         if (tmpl.openedScript) {
@@ -500,6 +535,17 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             } else if (tmpl.selector === 31 || tmpl.selector === 33) { // Arrow & Hat templates
                                 out += "}";
                             }
+                        }
+                        if (tmpl.selector === 15) { // Integral template assembly
+                            const integrand = tmpl.buffers?.[0] || "";
+                            const lower = tmpl.buffers?.[1] || "";
+                            const upper = tmpl.buffers?.[2] || "";
+                            let integralLatex = "\\int";
+                            if (lower || upper) {
+                                integralLatex += `_{${lower}}^{${upper}}`;
+                            }
+                            integralLatex += `{${integrand}}`;
+                            out += integralLatex;
                         }
                     }
                 }
@@ -531,6 +577,12 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     if (tmplStack.length > 0) {
                         const tmpl = tmplStack[tmplStack.length - 1];
                         tmpl.lineCount += 1;
+                        if (tmpl.selector === 15) {
+                            tmpl.startOutLen = out.length;
+                            if (!tmpl.buffers) {
+                                tmpl.buffers = [];
+                            }
+                        }
                         
                         if (!isNull) {
                             const hasPrefix = tmpl.selector === 10 || tmpl.selector === 23 || tmpl.selector === 27 || tmpl.selector === 28 || tmpl.selector === 29 || tmpl.selector === 11;
@@ -560,20 +612,20 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                     tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 27) { // Sub-superscript
-                                if (tmpl.lineCount === 2) {
+                                if (tmpl.lineCount === 1) {
                                     out += "_{";
                                     tmpl.openedScript = true;
-                                } else if (tmpl.lineCount === 3) {
+                                } else if (tmpl.lineCount === 2) {
                                     out += "}^{";
                                     tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 29) { // Subscript
-                                if (tmpl.lineCount === 2) {
+                                if (tmpl.lineCount === 1) {
                                     out += "_{";
                                     tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 28) { // Superscript
-                                if (tmpl.lineCount === 2) {
+                                if (tmpl.lineCount === 1) {
                                     out += "^{";
                                     tmpl.openedScript = true;
                                 }
@@ -648,7 +700,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         const charCode = mtcode > 0 ? mtcode : (char8 !== null ? char8 : (char16 !== null ? char16 : 0));
                         
                         const isInsideLine = containerStack.length > 0 && containerStack[containerStack.length - 1] === "LINE";
-                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 123 || charCode === 125 || charCode === 60423 || charCode === 60424;
+                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 60423 || charCode === 60424;
                         
                         if (charCode > 0) {
                             if (isBracket && propertyCharsToSkip > 0) {
@@ -657,7 +709,11 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 // Skip template property bracket characters
                             } else {
                                 let charStr = "";
-                                if (mathTypeSymbolMap[charCode] !== undefined) {
+                                const isIntegChar = charCode === 8747 || charCode === 8748 || charCode === 8749 || charCode === 8750;
+                                const isInsideIntegral = tmplStack.some(t => t.selector === 15);
+                                if (isIntegChar && isInsideIntegral) {
+                                    // skip duplicate integral symbol character
+                                } else if (mathTypeSymbolMap[charCode] !== undefined) {
                                     charStr = mathTypeSymbolMap[charCode];
                                 } else if (charCode >= 57344 && charCode <= 63743) {
                                     charStr = " ";
@@ -707,6 +763,23 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             } else {
                                 startFence = FENCE_SYMBOLS[selector][0];
                                 closeFence = FENCE_SYMBOLS[selector][1];
+                            }
+                        } else if (selector === 9) { // Interval template
+                            if (variation === 16) {
+                                startFence = "[";
+                                closeFence = "]";
+                            } else if (variation === 32) {
+                                startFence = "[";
+                                closeFence = ")";
+                            } else if (variation === 48) {
+                                startFence = "(";
+                                closeFence = "]";
+                            } else if (variation === 64) {
+                                startFence = "(";
+                                closeFence = ")";
+                            } else {
+                                startFence = "(";
+                                closeFence = ")";
                             }
                         }
                         
