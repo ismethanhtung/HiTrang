@@ -24,7 +24,7 @@ import {
 import { Quiz, Question, Submission, User } from "../types";
 import { renderMathHtml } from "../lib/math";
 import GradeView from "./GradeView";
-import { getOrCreateAttempt, updateAttemptAnswers, finalizeAndSubmitAttempt } from "../lib/supabaseService";
+import { getOrCreateAttempt, updateAttemptAnswers, finalizeAndSubmitAttempt, getStudentQuestions, getReviewQuestions } from "../lib/supabaseService";
 
 function cleanTrueFalseQuestionText(html: string): string {
     if (!html) return html;
@@ -99,6 +99,8 @@ export default function StudentDashboard({
     const [quizTimerActive, setQuizTimerActive] = useState(false);
     const [currentAttempt, setCurrentAttempt] = useState<any>(null);
     const [loadingAttempt, setLoadingAttempt] = useState(false);
+    const [reviewQuiz, setReviewQuiz] = useState<Quiz | null>(null);
+    const [loadingReview, setLoadingReview] = useState(false);
 
     // Prevent leaving page/tab changes & detect tab switching
     const [currentPage, setCurrentPage] = useState(1);
@@ -179,7 +181,7 @@ export default function StudentDashboard({
                     );
                 }
             } else if (reviewSubmission) {
-                const quiz = quizzes.find(
+                const quiz = reviewQuiz || quizzes.find(
                     (q) => q.id === reviewSubmission.quizId,
                 );
                 if (quiz) {
@@ -212,8 +214,12 @@ export default function StudentDashboard({
                     setLoadingAttempt(true);
                     try {
                         const attempt = await getOrCreateAttempt(quiz.id, quiz.duration);
+                        const questions = await getStudentQuestions(quiz.id);
                         setCurrentAttempt(attempt);
-                        setActiveQuiz(quiz);
+                        setActiveQuiz({
+                            ...quiz,
+                            questions
+                        });
                         setCurrentQuestionIdx(0);
                         setSelectedAnswers(attempt.answers || {});
                         setTimeLeft(attempt.remaining_seconds);
@@ -256,13 +262,37 @@ export default function StudentDashboard({
         if (reviewSubmissionId) {
             const sub = submissions.find((s) => s.id === reviewSubmissionId);
             if (sub) {
-                setReviewSubmission(sub);
-                setReviewQuestionIdx(0);
+                const initReview = async () => {
+                    setLoadingReview(true);
+                    try {
+                        const questions = await getReviewQuestions(sub.id);
+                        const quiz = quizzes.find((q) => q.id === sub.quizId);
+                        if (quiz) {
+                            setReviewQuiz({
+                                ...quiz,
+                                questions
+                            });
+                            setReviewSubmission(sub);
+                            setReviewQuestionIdx(0);
+                        } else {
+                            alert("Không tìm thấy đề thi tương ứng.");
+                            onNavigate("/", true);
+                        }
+                    } catch (err) {
+                        console.error("Lỗi khi tải câu hỏi xem lại:", err);
+                        alert("Không thể tải câu hỏi xem lại bài thi.");
+                        onNavigate("/", true);
+                    } finally {
+                        setLoadingReview(false);
+                    }
+                };
+                initReview();
             }
         } else {
             setReviewSubmission(null);
+            setReviewQuiz(null);
         }
-    }, [reviewSubmissionId, submissions]);
+    }, [reviewSubmissionId, submissions, quizzes]);
 
     const closeUpgradeModal = () => {
         setShowUpgradeModal(false);
@@ -318,67 +348,11 @@ export default function StudentDashboard({
 
         setQuizTimerActive(false);
 
-        // Calculate score based on question type
-        let correctCount = 0;
-        activeQuiz.questions.forEach((q) => {
-            const chosen = selectedAnswers[q.id];
-            if (chosen === undefined) return;
-
-            if (!q.type || q.type === "single_choice") {
-                if (chosen === q.correctAnswerIndex) {
-                    correctCount++;
-                }
-            } else if (q.type === "true_false") {
-                const correctTf = q.correctAnswers || [
-                    false,
-                    false,
-                    false,
-                    false,
-                ];
-                const studentTf = chosen as (boolean | null)[];
-
-                let matchCount = 0;
-                for (let i = 0; i < 4; i++) {
-                    if (
-                        studentTf[i] !== undefined &&
-                        studentTf[i] === correctTf[i]
-                    ) {
-                        matchCount++;
-                    }
-                }
-
-                // Award points based on official Vietnamese high school grading rule for Part II
-                if (matchCount === 4) {
-                    correctCount += 1.0;
-                } else if (matchCount === 3) {
-                    correctCount += 0.5;
-                } else if (matchCount === 2) {
-                    correctCount += 0.25;
-                } else if (matchCount === 1) {
-                    correctCount += 0.1;
-                }
-            } else if (q.type === "short_answer") {
-                const correctKey = (q.shortAnswerKey || "")
-                    .trim()
-                    .toLowerCase();
-                const studentKey = String(chosen).trim().toLowerCase();
-                if (correctKey && studentKey === correctKey) {
-                    correctCount++;
-                }
-            }
-        });
-
-        const totalQuestions = activeQuiz.questions.length;
-        // Scale score to a scale of 10.0
-        const rawScore = (correctCount / totalQuestions) * 10;
-        const finalScore = Math.round(rawScore * 10) / 10; // round to 1 decimal place
-
         try {
-            await finalizeAndSubmitAttempt(
+            // Server trigger will calculate exact score and total questions automatically
+            const { score, totalQuestions } = await finalizeAndSubmitAttempt(
                 currentAttempt.attempt_id,
-                selectedAnswers,
-                finalScore,
-                totalQuestions
+                selectedAnswers
             );
 
             const newSubmission: Submission = {
@@ -387,7 +361,7 @@ export default function StudentDashboard({
                 quizTitle: activeQuiz.title,
                 studentId: user.id,
                 studentName: user.name,
-                score: finalScore,
+                score: score,
                 totalQuestions: totalQuestions,
                 submittedAt: new Date()
                     .toISOString()
@@ -433,9 +407,15 @@ export default function StudentDashboard({
                           : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
                 }
             >
-                {reviewSubmission ? (
+                {loadingReview ? (
+                    <div className="flex-1 flex flex-col items-center justify-center bg-white p-8 xl:p-12 text-center">
+                        <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
+                        <h3 className="text-sm font-semibold text-slate-800">Đang tải đáp án và giải chi tiết...</h3>
+                        <p className="text-xs text-slate-400 mt-1">Đồng bộ an toàn với máy chủ để lấy đáp án chính thức.</p>
+                    </div>
+                ) : reviewSubmission ? (
                     (() => {
-                        const quiz = quizzes.find(
+                        const quiz = reviewQuiz || quizzes.find(
                             (q) => q.id === reviewSubmission.quizId,
                         );
                         if (!quiz) {

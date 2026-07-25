@@ -23,6 +23,11 @@ export interface Quiz {
   questions: Question[];
   createdAt: string;
   isPublic?: boolean; // true = công khai, false = riêng tư
+  scoringConfig?: {
+    type: 'EQUAL_WEIGHT' | 'SECTION_BASED' | 'THPT_QG';
+    sections?: { section_id: string; total_points: number }[];
+    true_false_rules?: Record<string, number>;
+  };
 }
 
 export type UserPlan = 'nothing' | 'basic' | 'vip';

@@ -280,13 +280,10 @@ export async function signOutUser(): Promise<void> {
  * Lấy toàn bộ danh sách đề thi
  */
 export async function getQuizzes(): Promise<Quiz[]> {
-  const { data, error } = await supabase
-    .from('quizzes')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const { data, error } = await supabase.rpc('get_quizzes_for_client');
 
   if (error) {
-    console.error('Lỗi khi tải đề thi từ Supabase:', error);
+    console.error('Lỗi khi tải đề thi từ Supabase RPC:', error);
     return [];
   }
   return (data || []).map(item => {
@@ -310,7 +307,8 @@ export async function getQuizzes(): Promise<Quiz[]> {
       duration: item.duration,
       questions: item.questions,
       grade: grade,
-      createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
+      createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '',
+      scoringConfig: item.scoring_config
     };
   });
 }
@@ -346,6 +344,7 @@ export async function createQuiz(quiz: Quiz, creatorId?: string): Promise<void> 
       questions: updatedQuestions,
       created_by: isValidUuid ? creatorId : null,
       is_public: quiz.isPublic !== undefined ? quiz.isPublic : true,
+      scoring_config: quiz.scoringConfig
     });
 
   if (error) {
@@ -359,6 +358,10 @@ export async function updateQuiz(quizId: string, updatedData: Partial<Quiz>): Pr
   if (payload.isPublic !== undefined) {
     payload.is_public = payload.isPublic;
     delete payload.isPublic;
+  }
+  if (payload.scoringConfig !== undefined) {
+    payload.scoring_config = payload.scoringConfig;
+    delete payload.scoringConfig;
   }
 
   // Inject grade into the first question's metadata if questions and grade are present
@@ -596,26 +599,60 @@ export async function updateAttemptAnswers(attemptId: string, answers: Record<st
 }
 
 /**
- * Khóa lượt thi và nộp bài chính thức
+ * Khóa lượt thi và nộp bài chính thức (trả về điểm số do server chấm)
  */
 export async function finalizeAndSubmitAttempt(
   attemptId: string,
-  answers: Record<string, any>,
-  score: number,
-  totalQuestions: number
-): Promise<void> {
-  const { error } = await supabase
+  answers: Record<string, any>
+): Promise<{ score: number; totalQuestions: number }> {
+  // Không cần gửi score/totalQuestions từ client nữa vì Server Trigger sẽ tự động tính điểm
+  const { data, error } = await supabase
     .from('exam_attempts')
     .update({
       status: 'submitted',
       answers,
-      score,
-      total_questions: totalQuestions,
       submitted_at: new Date().toISOString()
     })
-    .eq('id', attemptId);
+    .eq('id', attemptId)
+    .select('score, total_questions')
+    .single();
 
   if (error) {
     throw new Error(`Nộp bài thất bại: ${error.message}`);
   }
+
+  return {
+    score: Number(data.score),
+    totalQuestions: Number(data.total_questions)
+  };
+}
+
+/**
+ * Lấy danh sách câu hỏi an toàn cho học sinh (không chứa đáp án đúng)
+ */
+export async function getStudentQuestions(quizId: string): Promise<Question[]> {
+  const { data, error } = await supabase.rpc('get_student_questions', {
+    p_quiz_id: quizId
+  });
+
+  if (error) {
+    throw new Error(`Không thể tải câu hỏi đề thi: ${error.message}`);
+  }
+
+  return (data || []) as Question[];
+}
+
+/**
+ * Lấy danh sách câu hỏi xem lại bài làm (có chứa đáp án đúng)
+ */
+export async function getReviewQuestions(submissionId: string): Promise<Question[]> {
+  const { data, error } = await supabase.rpc('get_review_questions', {
+    p_submission_id: submissionId
+  });
+
+  if (error) {
+    throw new Error(`Không thể tải câu hỏi xem lại: ${error.message}`);
+  }
+
+  return (data || []) as Question[];
 }
