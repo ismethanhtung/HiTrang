@@ -623,12 +623,12 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                     tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 29) { // Subscript
-                                if (tmpl.lineCount === 1) {
+                                if (!tmpl.openedScript) {
                                     out += "_{";
                                     tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 28) { // Superscript
-                                if (tmpl.lineCount === 1) {
+                                if (!tmpl.openedScript) {
                                     out += "^{";
                                     tmpl.openedScript = true;
                                 }
