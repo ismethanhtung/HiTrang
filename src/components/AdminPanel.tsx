@@ -1197,7 +1197,7 @@ export default function AdminPanel({
                 <div className="py-4 border-t border-gray-100 bg-white">
                     <div className="px-6 text-center">
                         <span className="text-[9px] text-slate-400 font-medium leading-none">
-                            HiTrang v1.0.2 - Settings
+                            HiTrang v1.0.3 - Settings
                         </span>
                     </div>
                 </div>

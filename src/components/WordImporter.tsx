@@ -98,7 +98,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         
         // Fix MathType C_n^k notation: C_{nk} -> C_n^k (e.g. C_{42} → C_{4}^{2})
         // MTEF subscript template emits both the subscript index and superscript digits sequentially
-        clean = clean.replace(/C_\{(\d+?)(\d)\}/g, "C_{$1}^{$2}");
+        clean = clean.replace(/C_\{(\d+?)(\d)\}(?=\D|$)/g, "C_{$1}^{$2}");
         
         return clean;
     };
@@ -393,8 +393,11 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             0x2220: "\\angle ",
             0x22a5: "\\perp ",
             0x2225: "\\parallel ",
+            0x22c5: "\\cdot ",      // ⋅ dot operator (multiplication in combinatorics)
+            0x00b7: "\\cdot ",      // · middle dot (alt multiplication)
+            0x00d7: "\\times ",     // × times sign
+            0x2217: "\\ast ",       // ∗ asterisk operator
             
-            // Greek Lowercase
             0x03c0: "\\pi ",
             0x03b1: "\\alpha ",
             0x03b2: "\\beta ",

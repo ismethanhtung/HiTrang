@@ -208,7 +208,7 @@ export default function Sidebar({
 
                             {/* Version details */}
                             <div className="px-3 py-1.5 text-[9px] text-slate-300 dark:text-slate-500 font-semibold text-center">
-                                HiTrang + v1.0.2
+                                HiTrang + v1.0.3
                             </div>
                         </motion.div>
                     )}
