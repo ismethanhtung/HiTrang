@@ -96,9 +96,12 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         clean = clean.replace(/s\\text\{đ\}/g, "\\text{sđ}");
         clean = clean.replace(/S\\text\{đ\}/g, "\\text{Sđ}");
         
-        // Fix MathType C_n^k notation: C_{nk} -> C_n^k (e.g. C_{42} → C_{4}^{2})
+        // Fix MathType C_n^k and A_n^k notation: C_{nk} -> C_n^k, A_{nk} -> A_n^k
         // MTEF subscript template emits both the subscript index and superscript digits sequentially
-        clean = clean.replace(/C_\{(\d+?)(\d)\}(?=\D|$)/g, "C_{$1}^{$2}");
+        clean = clean.replace(/([CA])_\{(\d+?)(\d)\}(?=\D|$)/g, "$1_{$2}^{$3}");
+        
+        // Escape raw percentage characters in LaTeX math expressions
+        clean = clean.replace(/(?<!\\)%/g, "\\%");
         
         return clean;
     };
@@ -703,7 +706,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         const charCode = mtcode > 0 ? mtcode : (char8 !== null ? char8 : (char16 !== null ? char16 : 0));
                         
                         const isInsideLine = containerStack.length > 0 && containerStack[containerStack.length - 1] === "LINE";
-                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 60423 || charCode === 60424;
+                        const isBracket = charCode === 40 || charCode === 41 || charCode === 91 || charCode === 93 || charCode === 123 || charCode === 125 || charCode === 60423 || charCode === 60424;
                         
                         if (charCode > 0) {
                             if (isBracket && propertyCharsToSkip > 0) {
