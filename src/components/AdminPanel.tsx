@@ -600,11 +600,18 @@ export default function AdminPanel({
     // Auto-update short description based on category, grade, and duration
     React.useEffect(() => {
         if (isSaveQuizModalOpen) {
-            const isDefault = !quizDescription || 
-                /^(Giải Tích|Đại Số|Hình Học|Thi Thử)\s*-\s*Lớp\s*\d+\s*-\s*Thời gian:\s*\d+\s*phút$/i.test(quizDescription) ||
-                /^Đề\s+(Giải Tích|Đại Số|Hình Học|Thi Thử)\s+Lớp\s+\d+\s+\d+\s+Phút$/i.test(quizDescription);
+            const isDefault =
+                !quizDescription ||
+                /^(Giải Tích|Đại Số|Hình Học|Thi Thử)\s*-\s*Lớp\s*\d+\s*-\s*Thời gian:\s*\d+\s*phút$/i.test(
+                    quizDescription,
+                ) ||
+                /^Đề\s+(Giải Tích|Đại Số|Hình Học|Thi Thử)\s+Lớp\s+\d+\s+\d+\s+Phút$/i.test(
+                    quizDescription,
+                );
             if (isDefault) {
-                setQuizDescription(`Đề ${quizSubject} Lớp ${quizGrade} ${quizDuration} Phút`);
+                setQuizDescription(
+                    `Đề ${quizSubject} Lớp ${quizGrade} ${quizDuration} Phút`,
+                );
             }
         }
     }, [quizSubject, quizGrade, quizDuration, isSaveQuizModalOpen]);
@@ -626,15 +633,18 @@ export default function AdminPanel({
         window.dispatchEvent(new PopStateEvent("popstate"));
     };
 
-    const handleQuestionsParsed = useCallback((questions: any[], suggestedTitle?: string) => {
-        setImportedQuestions(questions);
-        if (suggestedTitle) {
-            setQuizTitle(suggestedTitle);
-        } else {
-            setQuizTitle("");
-        }
-        setIsSaveQuizModalOpen(true);
-    }, []);
+    const handleQuestionsParsed = useCallback(
+        (questions: any[], suggestedTitle?: string) => {
+            setImportedQuestions(questions);
+            if (suggestedTitle) {
+                setQuizTitle(suggestedTitle);
+            } else {
+                setQuizTitle("");
+            }
+            setIsSaveQuizModalOpen(true);
+        },
+        [],
+    );
 
     // Editing quiz state
     const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
@@ -855,15 +865,14 @@ export default function AdminPanel({
     if (!isAuthenticated) {
         return (
             <div className="max-w-md mx-auto my-16 p-8 bg-white border border-slate-200 rounded-3xl shadow-xl space-y-6 text-center">
-                <div className="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mx-auto border border-brand-200">
+                <div className="w-16 h-16   text-brand-600 rounded-2xl flex items-center justify-center mx-auto  ">
                     <Shield className="w-8 h-8" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-900">
                     Trang Quản Trị Hệ Thống (Admin)
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                    Yêu cầu xác thực qua Supabase Edge Function 'verify-admin'
-                    (ví dụ: admin123).
+                    Yêu cầu xác thực (ví dụ: admin123).
                 </p>
                 <form
                     onSubmit={handleVerifyPassword}
@@ -1727,7 +1736,10 @@ export default function AdminPanel({
                                             Import Đề Thi
                                         </h2>
                                         <p className="text-xs text-slate-400 mt-0.5">
-                                            Trích xuất câu hỏi trắc nghiệm 3 Phần, hình vẽ đồ thị và công thức MathType/Math XML từ file Word (.docx).
+                                            Trích xuất câu hỏi trắc nghiệm 3
+                                            Phần, hình vẽ đồ thị và công thức
+                                            MathType/Math XML từ file Word
+                                            (.docx).
                                         </p>
                                     </div>
                                 </div>
@@ -3619,11 +3631,15 @@ export default function AdminPanel({
                                         <span>Thiết Lập Đề Thi Mới</span>
                                     </h3>
                                     <p className="text-[11px] text-slate-400 mt-0.5">
-                                        Đã nhận {importedQuestions.length} câu hỏi. Vui lòng cấu hình các thông số dưới đây.
+                                        Đã nhận {importedQuestions.length} câu
+                                        hỏi. Vui lòng cấu hình các thông số dưới
+                                        đây.
                                     </p>
                                 </div>
                                 <button
-                                    onClick={() => setIsSaveQuizModalOpen(false)}
+                                    onClick={() =>
+                                        setIsSaveQuizModalOpen(false)
+                                    }
                                     className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
                                 >
                                     ✕
@@ -3635,12 +3651,15 @@ export default function AdminPanel({
                                 {/* Title */}
                                 <div>
                                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                        Tên bài kiểm tra / Đề thi: <span className="text-rose-500">*</span>
+                                        Tên bài kiểm tra / Đề thi:{" "}
+                                        <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={quizTitle}
-                                        onChange={(e) => setQuizTitle(e.target.value)}
+                                        onChange={(e) =>
+                                            setQuizTitle(e.target.value)
+                                        }
                                         placeholder="VD: Kiểm tra cuối kì I Giải Tích lớp 11"
                                         className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:text-slate-400"
                                     />
@@ -3654,7 +3673,9 @@ export default function AdminPanel({
                                     <textarea
                                         rows={2}
                                         value={quizDescription}
-                                        onChange={(e) => setQuizDescription(e.target.value)}
+                                        onChange={(e) =>
+                                            setQuizDescription(e.target.value)
+                                        }
                                         placeholder="VD: Đề thi thử tự luyện tập giúp củng cố kiến thức nâng cao..."
                                         className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 resize-none"
                                     />
@@ -3668,13 +3689,23 @@ export default function AdminPanel({
                                         </label>
                                         <select
                                             value={quizSubject}
-                                            onChange={(e) => setQuizSubject(e.target.value)}
+                                            onChange={(e) =>
+                                                setQuizSubject(e.target.value)
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
                                         >
-                                            <option value="Giải Tích">Giải Tích</option>
-                                            <option value="Đại Số">Đại Số</option>
-                                            <option value="Hình Học">Hình Học</option>
-                                            <option value="Thi Thử">Thi Thử</option>
+                                            <option value="Giải Tích">
+                                                Giải Tích
+                                            </option>
+                                            <option value="Đại Số">
+                                                Đại Số
+                                            </option>
+                                            <option value="Hình Học">
+                                                Hình Học
+                                            </option>
+                                            <option value="Thi Thử">
+                                                Thi Thử
+                                            </option>
                                         </select>
                                     </div>
 
@@ -3684,7 +3715,9 @@ export default function AdminPanel({
                                         </label>
                                         <select
                                             value={quizGrade}
-                                            onChange={(e) => setQuizGrade(e.target.value)}
+                                            onChange={(e) =>
+                                                setQuizGrade(e.target.value)
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
                                         >
                                             <option value="8">Lớp 8</option>
@@ -3702,26 +3735,32 @@ export default function AdminPanel({
                                         Thời gian làm bài (Phút):
                                     </label>
                                     <div className="flex flex-wrap gap-2 mb-2">
-                                        {["15", "30", "45", "60", "90"].map((time) => (
-                                            <button
-                                                key={time}
-                                                type="button"
-                                                onClick={() => {
-                                                    setDurationOption(time);
-                                                    setQuizDuration(Number(time));
-                                                }}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                                    durationOption === time
-                                                        ? "bg-[#EBF3FF] border border-[#1B72E8] text-[#1B72E8]"
-                                                        : "bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100"
-                                                }`}
-                                            >
-                                                {time} phút
-                                            </button>
-                                        ))}
+                                        {["15", "30", "45", "60", "90"].map(
+                                            (time) => (
+                                                <button
+                                                    key={time}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setDurationOption(time);
+                                                        setQuizDuration(
+                                                            Number(time),
+                                                        );
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                        durationOption === time
+                                                            ? "bg-[#EBF3FF] border border-[#1B72E8] text-[#1B72E8]"
+                                                            : "bg-slate-50 border border-slate-200 text-slate-650 hover:bg-slate-100"
+                                                    }`}
+                                                >
+                                                    {time} phút
+                                                </button>
+                                            ),
+                                        )}
                                         <button
                                             type="button"
-                                            onClick={() => setDurationOption("other")}
+                                            onClick={() =>
+                                                setDurationOption("other")
+                                            }
                                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                                 durationOption === "other"
                                                     ? "bg-[#EBF3FF] border border-[#1B72E8] text-[#1B72E8]"
@@ -3731,18 +3770,24 @@ export default function AdminPanel({
                                             Khác...
                                         </button>
                                     </div>
-                                    
+
                                     {durationOption === "other" && (
                                         <div className="flex items-center gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-150">
                                             <input
                                                 type="number"
                                                 value={quizDuration}
-                                                onChange={(e) => setQuizDuration(Number(e.target.value))}
+                                                onChange={(e) =>
+                                                    setQuizDuration(
+                                                        Number(e.target.value),
+                                                    )
+                                                }
                                                 placeholder="Nhập số phút..."
                                                 min={5}
                                                 className="w-32 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:bg-white"
                                             />
-                                            <span className="text-xs text-slate-500 font-semibold">phút</span>
+                                            <span className="text-xs text-slate-500 font-semibold">
+                                                phút
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -3753,14 +3798,17 @@ export default function AdminPanel({
                                         type="checkbox"
                                         id="modal-checkbox-is-public"
                                         checked={quizIsPublic}
-                                        onChange={(e) => setQuizIsPublic(e.target.checked)}
+                                        onChange={(e) =>
+                                            setQuizIsPublic(e.target.checked)
+                                        }
                                         className="h-4 w-4 text-[#1B72E8] border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                                     />
                                     <label
                                         htmlFor="modal-checkbox-is-public"
                                         className="text-xs font-semibold text-slate-700 cursor-pointer"
                                     >
-                                        Công khai đề thi này (Học sinh có thể thi ngay)
+                                        Công khai đề thi này (Học sinh có thể
+                                        thi ngay)
                                     </label>
                                 </div>
                             </div>
@@ -3768,7 +3816,9 @@ export default function AdminPanel({
                             {/* Modal Footer */}
                             <div className="px-6 py-4 border-t border-gray-100 bg-slate-50/50 flex items-center justify-end gap-3">
                                 <button
-                                    onClick={() => setIsSaveQuizModalOpen(false)}
+                                    onClick={() =>
+                                        setIsSaveQuizModalOpen(false)
+                                    }
                                     className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 transition-all cursor-pointer"
                                 >
                                     Quay lại chỉnh sửa
@@ -3776,7 +3826,9 @@ export default function AdminPanel({
                                 <button
                                     onClick={async () => {
                                         if (!quizTitle.trim()) {
-                                            alert("Vui lòng nhập tên bài kiểm tra.");
+                                            alert(
+                                                "Vui lòng nhập tên bài kiểm tra.",
+                                            );
                                             return;
                                         }
                                         await handleSaveNewQuiz();

@@ -297,15 +297,15 @@ BEGIN
   END IF;
 
   -- Tìm lượt thi 'inprogress' mới nhất chưa hết giờ
-  SELECT id, started_at, expires_at, exam_attempts.status, exam_attempts.answers, 
-         EXTRACT(EPOCH FROM (expires_at - now()))::int
+  SELECT ea.id, ea.started_at, ea.expires_at, ea.status, ea.answers, 
+         EXTRACT(EPOCH FROM (ea.expires_at - now()))::int
   INTO v_attempt_id, v_started_at, v_expires_at, v_status, v_answers, v_remaining_seconds
-  FROM public.exam_attempts
-  WHERE exam_attempts.quiz_id = p_quiz_id
-    AND exam_attempts.user_id = v_user_id
-    AND exam_attempts.status = 'inprogress'
-    AND expires_at > now()
-  ORDER BY started_at DESC
+  FROM public.exam_attempts AS ea
+  WHERE ea.quiz_id = p_quiz_id
+    AND ea.user_id = v_user_id
+    AND ea.status = 'inprogress'
+    AND ea.expires_at > now()
+  ORDER BY ea.started_at DESC
   LIMIT 1;
 
   -- Nếu tìm thấy lượt thi đang dang dở, khôi phục lại
@@ -315,10 +315,10 @@ BEGIN
   END IF;
 
   -- Nếu không có lượt nào chưa hết giờ, tự động tạo lượt mới hoàn toàn
-  INSERT INTO public.exam_attempts (quiz_id, user_id, duration_minutes)
+  INSERT INTO public.exam_attempts AS ea (quiz_id, user_id, duration_minutes)
   VALUES (p_quiz_id, v_user_id, p_duration_minutes)
-  RETURNING id, started_at, expires_at, exam_attempts.status, exam_attempts.answers, 
-            EXTRACT(EPOCH FROM (expires_at - now()))::int
+  RETURNING ea.id, ea.started_at, ea.expires_at, ea.status, ea.answers, 
+            EXTRACT(EPOCH FROM (ea.expires_at - now()))::int
   INTO v_attempt_id, v_started_at, v_expires_at, v_status, v_answers, v_remaining_seconds;
 
   RETURN QUERY SELECT v_attempt_id, p_quiz_id, v_user_id, v_started_at, p_duration_minutes, v_expires_at, v_status, v_answers, v_remaining_seconds;

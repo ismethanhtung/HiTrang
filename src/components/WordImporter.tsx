@@ -92,6 +92,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         clean = clean.replace(/([^\[\]()$]+)\s*,\s*([^\[\]()$]+)\s*\[\s*\)/g, "[$1, $2)");
         clean = clean.replace(/([^\[\]()$]+)\s*,\s*([^\[\]()$]+)\s*\(\s*\]/g, "($1, $2]");
         
+        // Wrap sđ / Sđ in unified text tags
+        clean = clean.replace(/s\\text\{đ\}/g, "\\text{sđ}");
+        clean = clean.replace(/S\\text\{đ\}/g, "\\text{Sđ}");
+        
         return clean;
     };
 
@@ -285,6 +289,16 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             }
         }
         if (dsmtIdx === -1) return "";
+        let mtefVer = 3;
+        if (dsmtIdx >= 5) {
+            const v5 = buf[dsmtIdx - 5];
+            const v4 = buf[dsmtIdx - 4];
+            if (v5 === 3 || v5 === 5) {
+                mtefVer = v5;
+            } else if (v4 === 3 || v4 === 5) {
+                mtefVer = v4;
+            }
+        }
 
         // Find the end of the font list (MT Extra\0)
         let startIdx = -1;
@@ -305,13 +319,29 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         // Helper to read/skip nudge
         const skipNudge = (idx: number, opts: number): number => {
             if (opts & 0x08) { // mtefOPT_NUDGE
-                if (idx + 1 >= buf.length) return buf.length;
-                const dx = buf[idx];
-                if (dx === 128) {
-                    return idx + 6;
-                } else {
-                    return idx + 2;
+                let cur = idx;
+                if (cur >= buf.length) return buf.length;
+                
+                // MTEF v3 nudges are always 2 bytes (8-bit signed)
+                if (mtefVer === 3) {
+                    return cur + 2;
                 }
+                
+                // MTEF v5 can have 16-bit nudges starting with 128
+                const dxVal = buf[cur];
+                if (dxVal === 128) {
+                    cur += 3;
+                } else {
+                    cur += 1;
+                }
+                if (cur >= buf.length) return buf.length;
+                const dyVal = buf[cur];
+                if (dyVal === 128) {
+                    cur += 3;
+                } else {
+                    cur += 1;
+                }
+                return cur;
             }
             return idx;
         };
@@ -329,6 +359,11 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
 
         const mathTypeSymbolMap: Record<number, string> = {
             // Basic symbols
+            0x2032: "'",
+            162: "'",
+            176: "^{\\circ}",
+            272: "\\text{Đ}",
+            273: "\\text{đ}",
             92: "\\setminus ",
             0x2212: "-",
             0x221e: "\\infty ",
@@ -433,9 +468,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             if (tag === 0) { // END
                 i += 1;
                 if (hasStarted) {
-                    indent -= 1;
-                    
                     const lastContainer = containerStack.pop();
+                    if (lastContainer !== "EMBELL") {
+                        indent -= 1;
+                    }
                     if (lastContainer === "TMPL" && tmplStack.length > 0) {
                         const tmpl = tmplStack.pop()!;
                         if (tmpl.openedScript) {
@@ -460,6 +496,8 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             } else if (tmpl.selector === 23) {
                                 // Limit layout, no closing symbols needed
                             } else if (tmpl.selector === 11) { // Fraction
+                                out += "}";
+                            } else if (tmpl.selector === 31 || tmpl.selector === 33) { // Arrow & Hat templates
                                 out += "}";
                             }
                         }
@@ -521,25 +559,43 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                     out += "^{";
                                     tmpl.openedScript = true;
                                 }
-                            } else if (tmpl.selector === 27 || tmpl.selector === 29) { // Subscript / Sub-superscript
-                                if (!tmpl.openedScript) {
+                            } else if (tmpl.selector === 27) { // Sub-superscript
+                                if (tmpl.lineCount === 2) {
                                     out += "_{";
                                     tmpl.openedScript = true;
-                                } else {
+                                } else if (tmpl.lineCount === 3) {
                                     out += "}^{";
+                                    tmpl.openedScript = true;
+                                }
+                            } else if (tmpl.selector === 29) { // Subscript
+                                if (tmpl.lineCount === 2) {
+                                    out += "_{";
+                                    tmpl.openedScript = true;
                                 }
                             } else if (tmpl.selector === 28) { // Superscript
-                                if (!tmpl.openedScript) {
+                                if (tmpl.lineCount === 2) {
                                     out += "^{";
                                     tmpl.openedScript = true;
-                                } else {
-                                    out += "}_{";
                                 }
                             } else if (tmpl.selector === 11) { // Fraction
                                 if (tmpl.lineCount === 1) {
                                     out += "\\frac{";
                                 } else if (tmpl.lineCount === 2) {
                                     out += "}{";
+                                }
+                            } else if (tmpl.selector === 31) { // Arrow template
+                                if (tmpl.lineCount === 1) {
+                                    if (tmpl.variation === 1) {
+                                        out += "\\overleftarrow{";
+                                    } else if (tmpl.variation === 3) {
+                                        out += "\\overleftrightarrow{";
+                                    } else {
+                                        out += "\\overrightarrow{";
+                                    }
+                                }
+                            } else if (tmpl.selector === 33) { // Hat/Arc/Angle template
+                                if (tmpl.lineCount === 1) {
+                                    out += "\\widehat{";
                                 }
                             } else if (tmpl.selector >= 1 && tmpl.selector <= 8) { // Fence case layouts
                                 const isLeftOnly = tmpl.variation === 1;
@@ -583,12 +639,9 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                         idx += 2;
                     }
                     
-                    // Skip embellishments if present
+                    // Track embellishments list to let main loop parse them
                     if (opts & 0x01) {
-                        while (idx < buf.length && buf[idx] !== 0) {
-                            idx += 1;
-                        }
-                        idx += 1; // skip the 0 byte
+                        containerStack.push("EMBELL");
                     }
                     
                     if (hasStarted) {
@@ -682,19 +735,21 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     
                     if (hasStarted) {
                         const EMBELL_MAP: Record<number, [string, string]> = {
-                            1: ["", "'"],          // prime
-                            2: ["", "''"],         // double prime
-                            3: ["", "'''"],        // triple prime
-                            4: ["\\dot{", "}"],    // dot
-                            5: ["\\ddot{", "}"],   // double dot
-                            7: ["\\bar{", "}"],    // bar
-                            8: ["\\overline{", "}"], // overbar
-                            9: ["\\tilde{", "}"],  // tilde
-                            11: ["\\hat{", "}"],   // hat
-                            12: ["\\underline{", "}"], // underbar
-                            13: ["\\vec{", "}"],   // vector (right arrow)
-                            14: ["\\overleftarrow{", "}"], // left arrow
-                            16: ["\\overleftrightarrow{", "}"] // double-headed arrow
+                            1: ["\\dot{", "}"],          // emb1DOT
+                            2: ["\\ddot{", "}"],         // emb2DOT
+                            3: ["\\dddot{", "}"],        // emb3DOT
+                            4: ["\\ddddot{", "}"],       // emb4DOT
+                            5: ["", "'"],                // emb1PRIME (single prime)
+                            6: ["", "''"],               // emb2PRIME (double prime)
+                            7: ["", "'''"],              // emb3PRIME (triple prime)
+                            8: ["\\tilde{", "}"],        // embTILDE
+                            9: ["\\hat{", "}"],          // embHAT
+                            11: ["\\vec{", "}"],         // embRARROW (vector)
+                            12: ["\\overleftarrow{", "}"], // embLARROW
+                            13: ["\\overleftrightarrow{", "}"], // embDARROW
+                            14: ["\\overline{", "}"],    // embOBAR
+                            15: ["\\underline{", "}"],   // embUBAR
+                            17: ["\\overline{", "}"]     // embOBAR (alternative)
                         };
                         
                         if (EMBELL_MAP[embellType] !== undefined) {
@@ -742,6 +797,21 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 idx += 2; // lsize, dsize
             } else if (tag === 10 || tag === 11 || tag === 12 || tag === 13 || tag === 14) { // FULL, SUB, SUB2, SYM, SUBSYM
                 // 1-byte size change tags, no payload!
+                if (tag === 10) {
+                    if (tmplStack.length > 0) {
+                        const tmpl = tmplStack[tmplStack.length - 1];
+                        if (tmpl.selector === 27 || tmpl.selector === 28 || tmpl.selector === 29) {
+                            if (tmpl.openedScript) {
+                                out += "}";
+                            }
+                            tmplStack.pop();
+                            const tmplIdx = containerStack.lastIndexOf("TMPL");
+                            if (tmplIdx !== -1) {
+                                containerStack.splice(tmplIdx, 1);
+                            }
+                        }
+                    }
+                }
             } else if (tag === 15) { // COLOR selects color index
                 idx += 1;
             } else if (tag === 16) { // COLOR_DEF defines color name string
@@ -804,6 +874,8 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 } else if (tmpl.selector === 23) {
                     // Limit layout, handled by openedScript block
                 } else if (tmpl.selector === 11) {
+                    out += "}";
+                } else if (tmpl.selector === 31 || tmpl.selector === 33) {
                     out += "}";
                 }
             }
@@ -994,13 +1066,16 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             matches.forEach((rel) => {
                 const idMatch = rel.match(/Id="([^"]+)"/);
                 const targetMatch = rel.match(/Target="([^"]+)"/);
-                if (idMatch && targetMatch && targetMatch[1].includes("oleObject")) {
-                    rIdToTarget[idMatch[1]] = targetMatch[1].replace(/^word\//, "");
+                if (idMatch && targetMatch) {
+                    const target = targetMatch[1];
+                    if (target.includes("oleObject") || target.endsWith(".wmf")) {
+                        rIdToTarget[idMatch[1]] = target.replace(/^word\//, "");
+                    }
                 }
             });
         }
 
-        // 2. Parse MTEF equations from OLE targets
+        // 2. Parse MTEF equations from OLE & WMF targets
         const oleEquMap: Record<string, string> = {};
         for (const [rId, targetPath] of Object.entries(rIdToTarget)) {
             const oleFile = zip.file(`word/${targetPath}`) || zip.file(targetPath);
@@ -1024,6 +1099,16 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
 
         // Substitute OLE object tags with escaped plain text tags
         docXml = docXml.replace(/<o:OLEObject[^>]+r:id="([^"]+)"[^>]*\/>/g, (match, rId) => {
+            const eq = oleEquMap[rId];
+            if (eq) {
+                const escaped = escapeXml(eq);
+                return `<w:r><w:t xml:space="preserve"> ${escaped} </w:t></w:r>`;
+            }
+            return match;
+        });
+
+        // Substitute wmf drawing tags with escaped plain text tags
+        docXml = docXml.replace(/<w:drawing>[\s\S]*?<a:blip[^>]+r:(?:embed|link)="([^"]+)"[\s\S]*?<\/w:drawing>/g, (match, rId) => {
             const eq = oleEquMap[rId];
             if (eq) {
                 const escaped = escapeXml(eq);
