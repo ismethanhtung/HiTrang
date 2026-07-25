@@ -1,20 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import mammoth from "mammoth";
 import JSZip from "jszip";
 import { Question, QuestionType } from "../types";
-import { FileText, CheckCircle, AlertCircle, Upload, Trash2, RefreshCw, BookOpen } from "lucide-react";
+import { FileText, CheckCircle, AlertCircle, Upload, Trash2, RefreshCw, BookOpen, Edit, CheckCircle2, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { renderMathHtml } from "../lib/math";
 
 interface WordImporterProps {
-    onQuestionsParsed: (parsedQuestions: Question[]) => void;
+    onQuestionsParsed: (parsedQuestions: Question[], suggestedTitle?: string) => void;
 }
 
-export default function WordImporter({ onQuestionsParsed }: WordImporterProps) {
+function WordImporter({ onQuestionsParsed }: WordImporterProps) {
     const [rawText, setRawText] = useState("");
     const [parsedQuestions, setParsedQuestions] = useState<Question[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loadingFile, setLoadingFile] = useState(false);
     const [activeTab, setActiveTab] = useState<"paste" | "preview" | "raw">("paste");
+    const [expandedHtmlQuestions, setExpandedHtmlQuestions] = useState<Record<string, boolean>>({});
+    const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+    const [fontSize, setFontSize] = useState(14);
+    const [fileName, setFileName] = useState("");
+
+    // Keyboard Arrow Keys navigation for questions preview
+    useEffect(() => {
+        if (activeTab !== "preview" || parsedQuestions.length === 0) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement;
+            if (
+                target.tagName === "INPUT" ||
+                target.tagName === "TEXTAREA" ||
+                target.isContentEditable
+            ) {
+                return;
+            }
+
+            if (e.key === "ArrowLeft") {
+                setCurrentQuestionIdx(prev => Math.max(0, prev - 1));
+                e.preventDefault();
+            } else if (e.key === "ArrowRight") {
+                setCurrentQuestionIdx(prev => Math.min(parsedQuestions.length - 1, prev + 1));
+                e.preventDefault();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [activeTab, parsedQuestions.length]);
 
     // Sample format template for user reference
     const sampleTemplate = `Phần 1: Trắc nghiệm nhiều lựa chọn
@@ -642,10 +675,51 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                     continue;
                 }
                 
+                if (tag === 6) { // EMBELL
+                    if (idx >= buf.length) break;
+                    const embellType = buf[idx];
+                    idx += 1;
+                    
+                    if (hasStarted) {
+                        const EMBELL_MAP: Record<number, [string, string]> = {
+                            1: ["", "'"],          // prime
+                            2: ["", "''"],         // double prime
+                            3: ["", "'''"],        // triple prime
+                            4: ["\\dot{", "}"],    // dot
+                            5: ["\\ddot{", "}"],   // double dot
+                            7: ["\\bar{", "}"],    // bar
+                            8: ["\\overline{", "}"], // overbar
+                            9: ["\\tilde{", "}"],  // tilde
+                            11: ["\\hat{", "}"],   // hat
+                            12: ["\\underline{", "}"], // underbar
+                            13: ["\\vec{", "}"],   // vector (right arrow)
+                            14: ["\\overleftarrow{", "}"], // left arrow
+                            16: ["\\overleftrightarrow{", "}"] // double-headed arrow
+                        };
+                        
+                        if (EMBELL_MAP[embellType] !== undefined) {
+                            const [prefix, suffix] = EMBELL_MAP[embellType];
+                            const lastTokenRegex = /(\\[a-zA-Z]+(?:\s*\{[^}]*\})*|\\[a-zA-Z]+\s*|[\s\S])$/;
+                            const match = out.match(lastTokenRegex);
+                            if (match) {
+                                const lastToken = match[1];
+                                const startIdx = match.index ?? 0;
+                                let wrapped = `${prefix}${lastToken.trim()}${suffix}`;
+                                if (lastToken.endsWith(" ")) {
+                                    wrapped += " ";
+                                }
+                                out = out.substring(0, startIdx) + wrapped;
+                            }
+                        }
+                    }
+                    
+                    i = idx;
+                    continue;
+                }
+                
                 // Other structure tags skipping
                 if (tag === 4) idx += 2; // halign, valign
                 else if (tag === 5) idx += 4; // row_spacing, col_spacing, rows, cols
-                else if (tag === 6) idx += 1; // embell_type
                 i = idx;
                 continue;
             }
@@ -1033,8 +1107,9 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             }
                             
                             // Strip leading strong/b/span wrappers around the option letter,
-                            // allowing unmatched opening tags
-                            clean = clean.replace(/^(?:<(?:strong|b|span|p|em|i|u)[^>]*>)*\s*[A-D\(\)a-d][\.\:\)]\s*(?:<\/(?:strong|b|span|p|em|i|u)>)*\s*/i, "");
+                            // allowing unmatched opening tags (A, B, C, D followed by dot, colon, bracket, dash)
+                            // Note: Avoid stripping plain space options like 'A ' that match words starting with option letters.
+                            clean = clean.replace(/^(?:<(?:strong|b|span|p|em|i|u)[^>]*>)*\s*[A-D\(\)a-d][\.\:\-\)]\s*(?:<\/(?:strong|b|span|p|em|i|u)>)*\s*/i, "");
                             
                             // Clean up unbalanced inline tags left over from splits
                             const tags = ["strong", "b", "span", "em", "i", "u"];
@@ -1203,13 +1278,13 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                 }
 
                 // Check option paragraph (A. B. C. D.)
-                const hasOptions = /^[A-D][\.\:\)]\s+/i.test(text) || /<strong>\s*[A-D][\.\:\)]\s*<\/strong>/i.test(htmlContent) || /A\.\s+.*B\.\s+.*C\.\s+.*D\./i.test(text);
+                const hasOptions = /^[A-D][\.\:\-\)]\s*/i.test(text) || /<strong>\s*[A-D][\.\:\-\)]\s*<\/strong>/i.test(htmlContent) || /A[\.\:\-\)]\s*.*B[\.\:\-\)]\s*.*C[\.\:\-\)]\s*.*D/i.test(text);
 
                 if (hasOptions && currentType === "single_choice") {
-                    const optMatches = htmlContent.split(/(?=<p>)?(?=<strong>\s*[A-D][\.\:\)])|(?=\b[A-D][\.\:\)]\s+)/gi);
+                    const optMatches = htmlContent.split(/(?=<p>)?(?=<strong>\s*[A-D][\.\:\-\)])|(?<=\s|^|>)(?=[A-D][\.\:\-\)]\s*)/gi);
                     const filteredOpts = optMatches
                         .map(o => o.replace(/<\/p>|<p>/g, "").trim())
-                        .filter(o => /^[A-D][\.\:\)]/i.test(o.replace(/<[^>]+>/g, "").trim()));
+                        .filter(o => /^[A-D][\.\:\-\)]/i.test(o.replace(/<[^>]+>/g, "").trim()));
 
                     if (filteredOpts.length >= 2) {
                         currentQuestion.options = [...(currentQuestion.options || []), ...filteredOpts];
@@ -1257,6 +1332,10 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Extract filename without extension as suggestion
+        const nameWithoutExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        setFileName(nameWithoutExt);
 
         setLoadingFile(true);
         setError(null);
@@ -1327,7 +1406,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
     };
 
     const handleConfirmImport = () => {
-        onQuestionsParsed(parsedQuestions);
+        onQuestionsParsed(parsedQuestions, fileName);
     };
 
     return (
@@ -1444,219 +1523,486 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
             )}
 
             {/* TAB 2: PREVIEW AND EDIT */}
-            {activeTab === "preview" && (
-                <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 font-semibold">
-                        <span className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                            Đã trích xuất thành công toàn bộ {parsedQuestions.length} câu hỏi kèm Lời giải & hình ảnh.
-                        </span>
-                        <button
-                            onClick={handleConfirmImport}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs cursor-pointer self-start sm:self-auto"
-                        >
-                            Chấp Nhận Import Toàn Bộ Đề Thi Này
-                        </button>
-                    </div>
+            {activeTab === "preview" && parsedQuestions.length > 0 && (
+                <div className="w-full relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start gap-6 text-left">
+                    {/* CENTER COLUMN: Question Box Card & Options */}
+                    <div className="w-full xl:flex-1 xl:max-w-4xl flex flex-col">
+                        <div className="bg-white border border-gray-100 rounded-xl p-6 sm:p-8 shadow-sm space-y-6 flex flex-col justify-between">
+                            {/* Quiz Player Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
+                                <div>
+                                    <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
+                                        Duyệt đề thi
+                                    </span>
+                                    <h2 className="text-sm font-bold text-slate-900 mt-2">
+                                        Xem trước giao diện & câu hỏi đề thi
+                                    </h2>
+                                </div>
 
-                    {/* PARSED QUESTIONS LIST */}
-                    <div className="space-y-4 max-h-[550px] overflow-y-auto pr-2">
-                        {parsedQuestions.map((q, qIndex) => (
-                            <div
-                                key={q.id}
-                                className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative group"
-                            >
-                                <div className="flex items-center justify-between gap-2 flex-wrap">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-extrabold text-brand-700 bg-brand-100 px-2.5 py-0.5 rounded-md">
-                                            Câu {qIndex + 1}
-                                        </span>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase ${
-                                            q.type === "true_false"
-                                                ? "bg-amber-50 text-amber-800 border-amber-200"
-                                                : q.type === "short_answer"
-                                                ? "bg-purple-50 text-purple-800 border-purple-200"
-                                                : "bg-sky-50 text-sky-800 border-sky-200"
-                                        }`}>
-                                            {q.type === "true_false"
-                                                ? "Phần 2: Đúng / Sai"
-                                                : q.type === "short_answer"
-                                                ? "Phần 3: Điền đáp án"
-                                                : "Phần 1: 4 Lựa chọn"}
-                                        </span>
+                                {/* Timer Pill Emulation */}
+                                <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg border bg-brand-50 border-brand-200 text-brand-700 text-xs font-bold self-start sm:self-auto">
+                                    <BookOpen className="w-4.5 h-4.5" />
+                                    <span>Tổng số: {parsedQuestions.length} câu</span>
+                                </div>
+                            </div>
+
+                            {/* Progress tracker */}
+                            {(() => {
+                                const progressPercent = Math.round(((currentQuestionIdx + 1) / parsedQuestions.length) * 100);
+                                return (
+                                    <div>
+                                        <div className="flex justify-between text-[11px] font-semibold text-gray-400 mb-1.5">
+                                            <span>
+                                                Câu hỏi {currentQuestionIdx + 1} trên {parsedQuestions.length}
+                                            </span>
+                                            <span>
+                                                Tiến độ: {progressPercent}%
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-brand-300 rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${progressPercent}%`,
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-                                    
-                                    {/* ANSWER CONTROLS */}
-                                    <div className="flex items-center gap-2">
-                                        {q.type === "single_choice" && (
-                                            <>
-                                                <label className="text-[11px] font-bold text-slate-600">Đáp án đúng:</label>
-                                                <select
-                                                    value={q.correctAnswerIndex}
-                                                    onChange={(e) => handleUpdateCorrectAnswer(qIndex, Number(e.target.value))}
-                                                    className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:border-brand-500"
-                                                >
-                                                    {q.options.map((_, optIdx) => (
-                                                        <option key={optIdx} value={optIdx}>
-                                                            Đáp án {String.fromCharCode(65 + optIdx)}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </>
-                                        )}
+                                );
+                            })()}
 
-                                        {q.type === "true_false" && (
-                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                <label className="text-[11px] font-bold text-amber-800">Đáp án Đúng/Sai:</label>
-                                                <div className="flex gap-2">
-                                                    {["a", "b", "c", "d"].map((letter, optIdx) => {
-                                                        const val = q.correctAnswers ? q.correctAnswers[optIdx] : false;
-                                                        return (
-                                                            <div key={letter} className="flex items-center gap-0.5 bg-white border border-slate-200 px-1.5 py-0.5 rounded-md">
-                                                                <span className="text-[10px] font-bold text-slate-600 uppercase">{letter}:</span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const updated = [...parsedQuestions];
-                                                                        if (!updated[qIndex].correctAnswers) {
-                                                                            updated[qIndex].correctAnswers = [false, false, false, false];
-                                                                        }
-                                                                        updated[qIndex].correctAnswers![optIdx] = !val;
-                                                                        setParsedQuestions(updated);
-                                                                    }}
-                                                                    className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold transition-all cursor-pointer ${
-                                                                        val 
-                                                                            ? "bg-emerald-500 text-white" 
-                                                                            : "bg-rose-500 text-white"
-                                                                    }`}
-                                                                >
-                                                                    {val ? "Đ" : "S"}
-                                                                </button>
-                                                            </div>
-                                                        );
-                                                    })}
+                            {/* Question Box Card content */}
+                            {(() => {
+                                const q = parsedQuestions[currentQuestionIdx];
+                                if (!q) return null;
+                                return (
+                                    <div className="space-y-5" style={{ fontSize: `${fontSize}px` }}>
+                                        <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-6 rounded-xl space-y-4">
+                                            <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 flex-wrap">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs font-black text-brand-700 bg-brand-50 border border-brand-100 px-3 py-1 rounded-lg">
+                                                        Câu {currentQuestionIdx + 1}
+                                                    </span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase ${
+                                                        q.type === "true_false"
+                                                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                                                            : q.type === "short_answer"
+                                                            ? "bg-purple-50 text-purple-800 border-purple-200"
+                                                            : "bg-sky-50 text-sky-800 border-sky-200"
+                                                    }`}>
+                                                        {q.type === "true_false"
+                                                            ? "Phần 2: Đúng / Sai"
+                                                            : q.type === "short_answer"
+                                                            ? "Phần 3: Điền đáp án"
+                                                            : "Phần 1: 4 Lựa chọn"}
+                                                    </span>
+                                                </div>
+
+                                                {/* Header Toolbar Actions */}
+                                                <div className="flex items-center gap-2.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setExpandedHtmlQuestions(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                                                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border flex items-center gap-1 cursor-pointer transition-all ${
+                                                            expandedHtmlQuestions[q.id]
+                                                                ? "bg-slate-200 border-slate-300 text-slate-700"
+                                                                : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+                                                        }`}
+                                                    >
+                                                        <Edit className="w-3 h-3" />
+                                                        <span>Sửa mã HTML</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            const nextIdx = currentQuestionIdx > 0 ? currentQuestionIdx - 1 : 0;
+                                                            setParsedQuestions(parsedQuestions.filter((_, idx) => idx !== currentQuestionIdx));
+                                                            setCurrentQuestionIdx(nextIdx);
+                                                        }}
+                                                        className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                        title="Xóa câu hỏi này"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
                                             </div>
-                                        )}
 
-                                        {q.type === "short_answer" && (
-                                            <div className="flex items-center gap-1.5">
-                                                <label className="text-[11px] font-bold text-purple-800">Đáp án điền:</label>
-                                                <input
-                                                    type="text"
-                                                    value={q.shortAnswerKey || ""}
-                                                    onChange={(e) => {
-                                                        const updated = [...parsedQuestions];
-                                                        updated[qIndex].shortAnswerKey = e.target.value;
-                                                        setParsedQuestions(updated);
-                                                    }}
-                                                    placeholder="VD: 24"
-                                                    className="w-20 px-2 py-0.5 bg-white border border-purple-300 rounded-lg text-xs font-bold text-purple-900 focus:outline-none"
+                                            {/* RENDERED QUESTION TEXT */}
+                                            <h3
+                                                className="font-semibold text-slate-900 leading-relaxed overflow-x-auto text-left [&_img]:mx-auto [&_img]:block [&_img]:my-4"
+                                                style={{ fontSize: `${fontSize + 1}px` }}
+                                                dangerouslySetInnerHTML={{ __html: renderMathHtml(q.text) }}
+                                            />
+
+                                            {/* COLLAPSIBLE HTML TEXTAREA */}
+                                            {expandedHtmlQuestions[q.id] && (
+                                                <div className="space-y-1.5 animate-in fade-in duration-150 text-left">
+                                                    <label className="text-[10px] font-bold text-slate-550 uppercase tracking-wider block">Mã HTML câu hỏi:</label>
+                                                    <textarea
+                                                        value={q.text}
+                                                        onChange={(e) => handleUpdateQuestionText(currentQuestionIdx, e.target.value)}
+                                                        rows={4}
+                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-650 focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* OPTIONS RENDER */}
+                                        {(() => {
+                                            if (!q.type || q.type === "single_choice") {
+                                                return (
+                                                    <div className="space-y-3 text-left">
+                                                        {q.options.map((option, idx) => {
+                                                            const isSelected = q.correctAnswerIndex === idx;
+                                                            const letter = String.fromCharCode(65 + idx);
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    onClick={() => {
+                                                                        if (!expandedHtmlQuestions[q.id]) {
+                                                                            handleUpdateCorrectAnswer(currentQuestionIdx, idx);
+                                                                        }
+                                                                    }}
+                                                                    className={`w-full flex items-center justify-between p-4 border rounded-lg text-left font-medium transition-all duration-150 cursor-pointer ${
+                                                                        isSelected
+                                                                            ? "border-emerald-500 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-500/20"
+                                                                            : "bg-white border-gray-200 text-slate-700 hover:border-gray-300"
+                                                                    }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3 flex-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleUpdateCorrectAnswer(currentQuestionIdx, idx);
+                                                                            }}
+                                                                            className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] cursor-pointer transition-all ${
+                                                                                isSelected
+                                                                                    ? "bg-emerald-500 text-white font-medium"
+                                                                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                                                            }`}
+                                                                        >
+                                                                            {letter}
+                                                                        </button>
+                                                                        {expandedHtmlQuestions[q.id] ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={option}
+                                                                                onChange={(e) => handleUpdateOption(currentQuestionIdx, idx, e.target.value)}
+                                                                                className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs font-mono text-slate-850 focus:outline-none focus:bg-white"
+                                                                                placeholder={`Phương án ${letter}`}
+                                                                            />
+                                                                        ) : (
+                                                                            <span
+                                                                                className="flex-1 text-slate-800 text-xs font-semibold leading-relaxed overflow-x-auto"
+                                                                                dangerouslySetInnerHTML={{ __html: renderMathHtml(option) }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                    {isSelected && (
+                                                                        <div className="w-5 h-5 rounded-full bg-brand-300 text-white font-medium flex items-center justify-center animate-scale-in">
+                                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            } else if (q.type === "true_false") {
+                                                return (
+                                                    <div className="bg-slate-50 border border-slate-300 p-4 rounded-xl space-y-3 overflow-x-auto text-left">
+                                                        <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase pb-2 border-b border-slate-200 min-w-[320px]">
+                                                            <div className="col-span-8 sm:col-span-9">
+                                                                Khẳng định / Nhận định (Nhập nội dung)
+                                                            </div>
+                                                            <div className="col-span-4 sm:col-span-3 text-center">
+                                                                Đáp án Đúng/Sai
+                                                            </div>
+                                                        </div>
+                                                        {q.options.map((option, idx) => {
+                                                            const tfAnswers = q.correctAnswers || [false, false, false, false];
+                                                            const currentVal = tfAnswers[idx];
+                                                            const letter = String.fromCharCode(97 + idx);
+
+                                                            const handleToggleTF = (newVal: boolean) => {
+                                                                const updated = [...parsedQuestions];
+                                                                if (!updated[currentQuestionIdx].correctAnswers) {
+                                                                    updated[currentQuestionIdx].correctAnswers = [false, false, false, false];
+                                                                }
+                                                                updated[currentQuestionIdx].correctAnswers![idx] = newVal;
+                                                                setParsedQuestions(updated);
+                                                            };
+
+                                                            return (
+                                                                <div
+                                                                    key={idx}
+                                                                    className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]"
+                                                                >
+                                                                    <div className="col-span-8 sm:col-span-9 flex gap-2 text-slate-800">
+                                                                        <span className="font-bold text-slate-500 uppercase">
+                                                                            {letter})
+                                                                        </span>
+                                                                        {expandedHtmlQuestions[q.id] ? (
+                                                                            <input
+                                                                                type="text"
+                                                                                value={option}
+                                                                                onChange={(e) => handleUpdateOption(currentQuestionIdx, idx, e.target.value)}
+                                                                                className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs font-mono text-slate-800 focus:outline-none focus:bg-white"
+                                                                                placeholder={`Khẳng định ${letter}`}
+                                                                            />
+                                                                        ) : (
+                                                                            <span
+                                                                                className="flex-1 text-slate-800 text-xs font-semibold leading-relaxed overflow-x-auto"
+                                                                                dangerouslySetInnerHTML={{ __html: renderMathHtml(option) }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleToggleTF(true)}
+                                                                            className={`px-3 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                currentVal === true
+                                                                                    ? "bg-emerald-500 text-white shadow-sm"
+                                                                                    : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                            }`}
+                                                                        >
+                                                                            Đúng
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleToggleTF(false)}
+                                                                            className={`px-3 py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                currentVal === false
+                                                                                    ? "bg-rose-500 text-white shadow-sm"
+                                                                                    : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                            }`}
+                                                                        >
+                                                                            Sai
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            } else if (q.type === "short_answer") {
+                                                return (
+                                                    <div className="space-y-2 text-left">
+                                                        <label className="text-[11px] font-bold text-purple-800 uppercase tracking-wider block">
+                                                            Đáp án điền khuyết của câu hỏi (Đáp số):
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={q.shortAnswerKey || ""}
+                                                            onChange={(e) => {
+                                                                const updated = [...parsedQuestions];
+                                                                updated[currentQuestionIdx].shortAnswerKey = e.target.value;
+                                                                setParsedQuestions(updated);
+                                                            }}
+                                                            placeholder="Ví dụ: 150, 24, 2.05, -3..."
+                                                            className="w-full px-4 py-3 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900 rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
+
+                                        {/* LỜI GIẢI CHI TIẾT */}
+                                        {q.explanation && (
+                                            <div className="pt-4 border-t border-slate-200/60 space-y-2 text-left">
+                                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
+                                                    <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                                                    <span>Lời giải chi tiết:</span>
+                                                </div>
+                                                <div 
+                                                    className="p-4 bg-amber-50/15 border border-amber-200/35 rounded-xl text-xs text-slate-700 overflow-x-auto shadow-3xs leading-relaxed font-semibold [&_img]:mx-auto [&_img]:block [&_img]:my-3"
+                                                    dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation || "") }}
                                                 />
                                             </div>
                                         )}
 
-                                        <button
-                                            onClick={() => handleDeleteQuestion(qIndex)}
-                                            className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                                            title="Xóa câu hỏi này"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        {/* EDIT EXPLANATION (HTML COLLAPSIBLE) */}
+                                        {expandedHtmlQuestions[q.id] && (
+                                            <div className="space-y-1.5 pt-3 border-t border-slate-200/60 animate-in fade-in duration-150 text-left">
+                                                <label className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">Lời giải gốc (HTML):</label>
+                                                <textarea
+                                                    value={q.explanation || ""}
+                                                    onChange={(e) => handleUpdateExplanation(currentQuestionIdx, e.target.value)}
+                                                    rows={2}
+                                                    placeholder="Nhập lời giải..."
+                                                    className="w-full px-3 py-2 bg-amber-50/20 border border-amber-200/40 rounded-xl text-xs font-mono text-amber-900 focus:outline-none focus:border-amber-400"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                );
+                            })()}
 
-                                {/* RENDERED QUESTION PREVIEW */}
-                                <div 
-                                    className="p-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 overflow-x-auto shadow-2xs"
-                                    dangerouslySetInnerHTML={{ __html: renderMathHtml(q.text) }}
-                                />
+                            {/* Navigation buttons row */}
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentQuestionIdx((prev) => Math.max(0, prev - 1))}
+                                    disabled={currentQuestionIdx === 0}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 border border-gray-100 hover:bg-slate-100 disabled:opacity-40 text-slate-600 text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    <span>Quay lại</span>
+                                </button>
 
-                                {/* EDIT QUESTION TEXT (RAW HTML) */}
-                                <textarea
-                                    value={q.text}
-                                    onChange={(e) => handleUpdateQuestionText(qIndex, e.target.value)}
-                                    rows={3}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono text-slate-500 focus:outline-none focus:border-brand-400"
-                                    placeholder="HTML câu hỏi..."
-                                />
-
-                                {/* EDIT OPTIONS */}
-                                {q.type !== "short_answer" && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        {q.options.map((opt, optIndex) => {
-                                            let isCorrect = false;
-                                            let label = "";
-                                            let tfIndicator = null;
-
-                                            if (q.type === "single_choice") {
-                                                isCorrect = q.correctAnswerIndex === optIndex;
-                                                label = `${String.fromCharCode(65 + optIndex)}.`;
-                                            } else if (q.type === "true_false") {
-                                                const tfVal = q.correctAnswers ? q.correctAnswers[optIndex] : false;
-                                                label = `${String.fromCharCode(97 + optIndex)})`;
-                                                tfIndicator = (
-                                                    <span className={`ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
-                                                        tfVal ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
-                                                    }`}>
-                                                        {tfVal ? "ĐÚNG" : "SAI"}
-                                                    </span>
-                                                );
-                                            }
-
-                                            return (
-                                                <div
-                                                    key={optIndex}
-                                                    className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
-                                                        isCorrect && q.type === "single_choice"
-                                                            ? "bg-emerald-50/60 border-emerald-300 text-emerald-900 font-semibold"
-                                                            : "bg-white border-slate-200 text-slate-700"
-                                                    }`}
-                                                >
-                                                    <span className="text-xs font-bold w-5 text-center shrink-0">
-                                                        {label}
-                                                    </span>
-                                                    <input
-                                                        type="text"
-                                                        value={opt}
-                                                        onChange={(e) => handleUpdateOption(qIndex, optIndex, e.target.value)}
-                                                        className="flex-1 bg-transparent text-xs focus:outline-none font-medium"
-                                                    />
-                                                    {tfIndicator}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                {currentQuestionIdx < parsedQuestions.length - 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentQuestionIdx((prev) => prev + 1)}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                                    >
+                                        <span>Tiếp theo</span>
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
                                 )}
-
-                                {/* LỜI GIẢI CHI TIẾT */}
-                                <div className="pt-2 border-t border-slate-200/80 space-y-2">
-                                    <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
-                                        <BookOpen className="w-3.5 h-3.5 text-amber-600" />
-                                        <span>Lời giải chi tiết (Hướng dẫn):</span>
-                                    </div>
-                                    <div 
-                                        className="p-3 bg-amber-50/10 border border-amber-200/40 rounded-xl text-xs text-amber-900 overflow-x-auto"
-                                        dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation || "") }}
-                                    />
-                                    <textarea
-                                        value={q.explanation || ""}
-                                        onChange={(e) => handleUpdateExplanation(qIndex, e.target.value)}
-                                        rows={2}
-                                        placeholder="Nhập lời giải hoặc hướng dẫn chi tiết cho câu hỏi này..."
-                                        className="w-full px-3 py-2 bg-amber-50/50 border border-amber-200/80 rounded-lg text-xs font-mono text-amber-900 focus:outline-none focus:border-amber-400"
-                                    />
-                                </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
 
-                    <button
-                        onClick={handleConfirmImport}
-                        className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
-                    >
-                        Lưu {parsedQuestions.length} Câu Hỏi Này Vào Đề Thi
-                    </button>
+                    {/* RIGHT COLUMN: Questions Tracker & Quick Select Panel */}
+                    <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 flex flex-col justify-between shrink-0">
+                        <div>
+                            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
+                                Bảng câu hỏi
+                            </h3>
+                            <p className="text-[10px] text-gray-500 mt-1">
+                                Click vào số câu để chuyển nhanh. Câu chưa có đáp án có nền vàng nhạt, câu đã cấu hình đáp án có nền xanh lá.
+                            </p>
+                        </div>
+
+                        {/* Progress counter */}
+                        {(() => {
+                            const configuredAnswersCount = parsedQuestions.filter(q => {
+                                if (q.type === "single_choice") {
+                                    return q.correctAnswerIndex !== undefined && q.correctAnswerIndex !== -1;
+                                }
+                                if (q.type === "true_false") {
+                                    return q.correctAnswers && q.correctAnswers.some(x => x !== undefined && x !== null);
+                                }
+                                if (q.type === "short_answer") {
+                                    return q.shortAnswerKey && q.shortAnswerKey.trim() !== "";
+                                }
+                                return false;
+                            }).length;
+
+                            return (
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                                        <span>Tiến độ đáp án:</span>
+                                        <span>{configuredAnswersCount} / {parsedQuestions.length} câu</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                        <div 
+                                            className="bg-emerald-500 h-1.5 transition-all duration-300"
+                                            style={{ width: `${(configuredAnswersCount / parsedQuestions.length) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Render sections grouped by Section */}
+                        <div className="space-y-4 flex-1 overflow-y-auto pr-1 min-h-0">
+                            {(() => {
+                                const sections: Record<string, { qIndex: number; q: Question }[]> = {};
+                                parsedQuestions.forEach((q, idx) => {
+                                    let secTitle = "Phần 1: Trắc nghiệm";
+                                    if (q.type === "true_false") {
+                                        secTitle = "Phần 2: Đúng / Sai";
+                                    } else if (q.type === "short_answer") {
+                                        secTitle = "Phần 3: Điền đáp án";
+                                    }
+                                    if (!sections[secTitle]) {
+                                        sections[secTitle] = [];
+                                    }
+                                    sections[secTitle].push({ qIndex: idx, q });
+                                });
+
+                                return Object.entries(sections).map(([secTitle, items]) => (
+                                    <div key={secTitle} className="space-y-2">
+                                        <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40">
+                                            {secTitle}
+                                        </h4>
+                                        <div className="grid grid-cols-5 gap-2 p-1">
+                                            {items.map(({ qIndex, q }) => {
+                                                const isCurrent = qIndex === currentQuestionIdx;
+                                                
+                                                let isConfigured = false;
+                                                if (q.type === "single_choice") {
+                                                    isConfigured = q.correctAnswerIndex !== undefined && q.correctAnswerIndex !== -1;
+                                                } else if (q.type === "true_false") {
+                                                    isConfigured = q.correctAnswers && q.correctAnswers.some(x => x !== undefined && x !== null);
+                                                } else if (q.type === "short_answer") {
+                                                    isConfigured = q.shortAnswerKey && q.shortAnswerKey.trim() !== "";
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={q.id}
+                                                        type="button"
+                                                        onClick={() => setCurrentQuestionIdx(qIndex)}
+                                                        className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${
+                                                            isCurrent
+                                                                ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                                                                : isConfigured
+                                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                                : "bg-amber-50 text-amber-750 border-amber-200"
+                                                        }`}
+                                                    >
+                                                        {qIndex + 1}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
+
+                        {/* Font Size Adjuster Emulation */}
+                        <div className="flex items-center justify-between px-1 py-2 border-t border-gray-100 text-xs text-slate-600 font-medium">
+                            <span>Cỡ chữ hiển thị:</span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setFontSize((prev) => Math.max(11, prev - 1))}
+                                    className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer active:scale-95 transition-all"
+                                >
+                                    -
+                                </button>
+                                <span className="font-bold text-slate-800 w-8 text-center">
+                                    {fontSize}px
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setFontSize((prev) => Math.min(20, prev + 1))}
+                                    className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer active:scale-95 transition-all"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Complete Quiz Save Button */}
+                        <div className="pt-4 border-t border-gray-200">
+                            <button
+                                type="button"
+                                onClick={handleConfirmImport}
+                                className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-97"
+                            >
+                                <span>Hoàn thành & Lưu đề thi</span>
+                                <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -1695,3 +2041,5 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         </div>
     );
 }
+
+export default React.memo(WordImporter);

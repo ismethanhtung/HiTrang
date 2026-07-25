@@ -19,10 +19,12 @@ import {
     Check,
     Calendar,
     Trophy,
+    Loader2,
 } from "lucide-react";
 import { Quiz, Question, Submission, User } from "../types";
 import { renderMathHtml } from "../lib/math";
 import GradeView from "./GradeView";
+import { getOrCreateAttempt, updateAttemptAnswers, finalizeAndSubmitAttempt } from "../lib/supabaseService";
 
 function cleanTrueFalseQuestionText(html: string): string {
     if (!html) return html;
@@ -69,6 +71,7 @@ interface StudentDashboardProps {
     activeQuizId?: string | null;
     reviewSubmissionId?: string | null;
     onNavigate: (path: string, bypassConfirm?: boolean) => void;
+    loading?: boolean;
 }
 
 export default function StudentDashboard({
@@ -83,6 +86,7 @@ export default function StudentDashboard({
     activeQuizId,
     reviewSubmissionId,
     onNavigate,
+    loading,
 }: StudentDashboardProps) {
     // Quiz Active State
     const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -93,6 +97,23 @@ export default function StudentDashboard({
     );
     const [timeLeft, setTimeLeft] = useState(0); // in seconds
     const [quizTimerActive, setQuizTimerActive] = useState(false);
+    const [currentAttempt, setCurrentAttempt] = useState<any>(null);
+    const [loadingAttempt, setLoadingAttempt] = useState(false);
+
+    // Prevent leaving page/tab changes & detect tab switching
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 12;
+
+    // Reset page when activeTab changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
+
+    const totalPages = Math.ceil(quizzes.length / pageSize);
+    const paginatedQuizzes = quizzes.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+    );
 
     // Prevent leaving page/tab changes & detect tab switching
     useEffect(() => {
@@ -187,18 +208,49 @@ export default function StudentDashboard({
         if (activeQuizId) {
             const quiz = quizzes.find((q) => q.id === activeQuizId);
             if (quiz) {
-                setActiveQuiz(quiz);
-                // Reset quiz progress
-                setCurrentQuestionIdx(0);
-                setSelectedAnswers({});
-                setTimeLeft(quiz.duration * 60);
-                setQuizTimerActive(true);
+                const initAttempt = async () => {
+                    setLoadingAttempt(true);
+                    try {
+                        const attempt = await getOrCreateAttempt(quiz.id, quiz.duration);
+                        setCurrentAttempt(attempt);
+                        setActiveQuiz(quiz);
+                        setCurrentQuestionIdx(0);
+                        setSelectedAnswers(attempt.answers || {});
+                        setTimeLeft(attempt.remaining_seconds);
+                        setQuizTimerActive(true);
+                    } catch (err: any) {
+                        console.error("Lỗi khi khởi tạo lượt thi:", err);
+                        alert("Không thể khởi tạo hoặc tiếp tục bài thi. Vui lòng thử lại!");
+                        onNavigate("/", true);
+                    } finally {
+                        setLoadingAttempt(false);
+                    }
+                };
+                initAttempt();
             }
         } else {
             setActiveQuiz(null);
+            setCurrentAttempt(null);
             setQuizTimerActive(false);
         }
     }, [activeQuizId, quizzes]);
+
+    // Auto-save effect
+    useEffect(() => {
+        if (!currentAttempt || !quizTimerActive) return;
+
+        // Debounce saving answers to Supabase
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                await updateAttemptAnswers(currentAttempt.attempt_id, selectedAnswers);
+                console.log("Đã tự động lưu đáp án nháp.");
+            } catch (err) {
+                console.warn("Không thể lưu nháp đáp án (học sinh có thể đang rớt mạng):", err);
+            }
+        }, 1500); // 1.5s debounce
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [selectedAnswers, currentAttempt, quizTimerActive]);
 
     useEffect(() => {
         if (reviewSubmissionId) {
@@ -248,8 +300,8 @@ export default function StudentDashboard({
     };
 
     // Submit current quiz
-    const handleQuizSubmit = (force = false) => {
-        if (!activeQuiz) return;
+    const handleQuizSubmit = async (force = false) => {
+        if (!activeQuiz || !currentAttempt) return;
 
         if (
             !force &&
@@ -321,24 +373,36 @@ export default function StudentDashboard({
         const rawScore = (correctCount / totalQuestions) * 10;
         const finalScore = Math.round(rawScore * 10) / 10; // round to 1 decimal place
 
-        const newSubmission: Submission = {
-            id: "sub_" + Date.now(),
-            quizId: activeQuiz.id,
-            quizTitle: activeQuiz.title,
-            studentId: user.id,
-            studentName: user.name,
-            score: finalScore,
-            totalQuestions: totalQuestions,
-            submittedAt: new Date()
-                .toISOString()
-                .replace("T", " ")
-                .substring(0, 16),
-            answers: { ...selectedAnswers },
-            timeSpent: activeQuiz.duration * 60 - timeLeft,
-        };
+        try {
+            await finalizeAndSubmitAttempt(
+                currentAttempt.attempt_id,
+                selectedAnswers,
+                finalScore,
+                totalQuestions
+            );
 
-        onAddSubmission(newSubmission);
-        onNavigate("/result/" + newSubmission.id, true);
+            const newSubmission: Submission = {
+                id: currentAttempt.attempt_id, // use the attempt ID so it matches!
+                quizId: activeQuiz.id,
+                quizTitle: activeQuiz.title,
+                studentId: user.id,
+                studentName: user.name,
+                score: finalScore,
+                totalQuestions: totalQuestions,
+                submittedAt: new Date()
+                    .toISOString()
+                    .replace("T", " ")
+                    .substring(0, 16),
+                answers: { ...selectedAnswers },
+                timeSpent: activeQuiz.duration * 60 - timeLeft,
+            };
+
+            onAddSubmission(newSubmission);
+            onNavigate("/result/" + newSubmission.id, true);
+        } catch (err: any) {
+            console.error("Lỗi khi nộp bài:", err);
+            alert(`Lỗi khi nộp bài: ${err.message || 'Vui lòng kiểm tra lại kết nối mạng và thử lại!'}`);
+        }
     };
 
     // Student specific stats
@@ -509,9 +573,9 @@ export default function StudentDashboard({
                                     : "Sai";
 
                         return (
-                            <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:h-full xl:min-h-0 gap-6">
+                            <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start xl:h-full xl:min-h-0 gap-6">
                                 {/* CENTER COLUMN: Question Box Card & Options */}
-                                <div className="w-full xl:max-w-4xl xl:mx-auto xl:h-full xl:min-h-0 flex flex-col">
+                                <div className="w-full xl:flex-1 xl:max-w-4xl xl:h-full xl:min-h-0 flex flex-col">
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.99 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -991,7 +1055,7 @@ export default function StudentDashboard({
                                 </div>
 
                                 {/* RIGHT COLUMN: Questions Tracker & Quick Select Panel */}
-                                <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 xl:absolute xl:right-8 xl:top-0 xl:h-full xl:overflow-y-auto flex flex-col justify-between">
+                                <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex flex-col justify-between">
                                     <div>
                                         <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
                                             Bảng câu hỏi
@@ -999,6 +1063,10 @@ export default function StudentDashboard({
                                         <p className="text-[10px] text-gray-500 mt-1 flex items-center flex-wrap gap-1">
                                             <span className="inline-block w-2.5 h-2.5 bg-emerald-200 border border-emerald-350 rounded-sm"></span>{" "}
                                             <span className="mr-1">Đúng</span>
+                                            <span className="inline-block w-2.5 h-2.5 bg-amber-200 border border-amber-300 rounded-sm"></span>{" "}
+                                            <span className="mr-1">
+                                                Đúng một phần
+                                            </span>
                                             <span className="inline-block w-2.5 h-2.5 bg-rose-200 border border-rose-350 rounded-sm"></span>{" "}
                                             <span className="mr-1">Sai</span>
                                             <span className="inline-block w-2.5 h-2.5 bg-slate-100 border border-slate-250 rounded-sm"></span>{" "}
@@ -1158,10 +1226,16 @@ export default function StudentDashboard({
                             </div>
                         );
                     })()
+                ) : loadingAttempt ? (
+                    <div className="flex-1 flex flex-col items-center justify-center bg-white p-8 xl:p-12 text-center">
+                        <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
+                        <h3 className="text-sm font-semibold text-slate-800">Đang chuẩn bị lượt làm bài...</h3>
+                        <p className="text-xs text-slate-400 mt-1">Đồng bộ dữ liệu thời gian thực với máy chủ.</p>
+                    </div>
                 ) : activeQuiz ? (
-                    <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:h-full xl:min-h-0 gap-6">
+                    <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start xl:h-full xl:min-h-0 gap-6">
                         {/* CENTER COLUMN: Question Box Card & Options */}
-                        <div className="w-full xl:max-w-4xl xl:mx-auto xl:h-full xl:min-h-0 flex flex-col">
+                        <div className="w-full xl:flex-1 xl:max-w-4xl xl:h-full xl:min-h-0 flex flex-col">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.99 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -1569,7 +1643,7 @@ export default function StudentDashboard({
                         </div>
 
                         {/* RIGHT COLUMN: Questions Tracker & Quick Select Panel */}
-                        <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 xl:absolute xl:right-8 xl:top-0 xl:h-full xl:overflow-y-auto flex flex-col justify-between">
+                        <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex flex-col justify-between">
                             <div>
                                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
                                     Bảng câu hỏi
@@ -1791,6 +1865,7 @@ export default function StudentDashboard({
                         quizzes={quizzes}
                         submissions={submissions}
                         onStartQuiz={handleStartQuiz}
+                        loading={loading}
                     />
                 ) : (
                     /* STANDARD STUDENT DASHBOARD TABS */
@@ -2460,17 +2535,29 @@ export default function StudentDashboard({
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                    {quizzes.map((quiz) => {
+                                    {loading ? (
+                                        <div className="col-span-full py-16 flex items-center justify-center">
+                                            <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+                                        </div>
+                                    ) : quizzes.length === 0 ? (
+                                        <div className="col-span-full py-16 text-center text-slate-400 bg-slate-50/55 rounded-2xl border border-dashed border-slate-200">
+                                            <BookMarked className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                                            <p className="text-sm font-semibold">
+                                                Không có đề thi nào khả dụng.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        paginatedQuizzes.map((quiz) => {
                                         const hasDone = studentSubmissions.some(
                                             (sub) => sub.quizId === quiz.id,
                                         );
                                         return (
                                             <div
                                                 key={quiz.id}
-                                                className="bg-white border border-gray-100/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:border-brand-300/20 transition-all duration-200"
+                                                className="bg-white border border-gray-100/80 rounded-2xl p-4.5 flex flex-col justify-between shadow-xs hover:border-brand-300/20 transition-all duration-200"
                                             >
                                                 <div>
-                                                    <div className="flex items-center justify-between gap-2 mb-3">
+                                                    <div className="flex items-center justify-between gap-2 mb-2.5">
                                                         <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
                                                             {quiz.subject}
                                                         </span>
@@ -2485,32 +2572,48 @@ export default function StudentDashboard({
                                                         )}
                                                     </div>
 
-                                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[40px]">
+                                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[38px]">
                                                         {quiz.title}
                                                     </h3>
-                                                    <p className="text-xs text-gray-500 line-clamp-3 mt-2 min-h-[48px]">
+                                                    <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 min-h-[32px]">
                                                         {quiz.description}
                                                     </p>
 
-                                                    <div className="flex items-center gap-4 border-t border-b border-gray-50 py-2.5 my-4 text-[11px] text-gray-500">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <Clock className="w-4 h-4 text-gray-400" />
-                                                            <span>
-                                                                {quiz.duration}{" "}
-                                                                phút
-                                                            </span>
+                                                    <div className="flex items-center justify-between border-t border-b border-gray-50 py-2 my-3 text-[11px] text-gray-500">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Clock className="w-4 h-4 text-gray-400" />
+                                                                <span>
+                                                                    {quiz.duration}{" "}
+                                                                    phút
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <HelpCircle className="w-4 h-4 text-gray-400" />
+                                                                <span>
+                                                                    {
+                                                                        quiz
+                                                                            .questions
+                                                                            .length
+                                                                    }{" "}
+                                                                    câu hỏi
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <HelpCircle className="w-4 h-4 text-gray-400" />
-                                                            <span>
-                                                                {
-                                                                    quiz
-                                                                        .questions
-                                                                        .length
-                                                                }{" "}
-                                                                câu hỏi
-                                                            </span>
-                                                        </div>
+                                                        {quiz.createdAt && (
+                                                            <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                                                <span>
+                                                                    Đăng: {(() => {
+                                                                        const dateParts = quiz.createdAt.split("-");
+                                                                        if (dateParts.length === 3) {
+                                                                            return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                                                                        }
+                                                                        return quiz.createdAt;
+                                                                    })()}
+                                                                </span>
+                                                                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -2527,8 +2630,39 @@ export default function StudentDashboard({
                                                 </button>
                                             </div>
                                         );
-                                    })}
+                                    }) )}
                                 </div>
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
+                                        <span className="text-[11px] text-slate-400 font-semibold">
+                                            Trang {currentPage} / {totalPages} (Tổng số {quizzes.length} đề thi)
+                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                disabled={currentPage === 1}
+                                                onClick={() => {
+                                                    setCurrentPage((prev) => prev - 1);
+                                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                                }}
+                                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                                            >
+                                                <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
+                                            </button>
+                                            <button
+                                                disabled={currentPage === totalPages}
+                                                onClick={() => {
+                                                    setCurrentPage((prev) => prev + 1);
+                                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                                }}
+                                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                                            >
+                                                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </motion.div>
                         )}
 

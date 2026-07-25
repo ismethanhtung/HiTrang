@@ -7,6 +7,10 @@ import {
     Award,
     CheckCircle2,
     Search,
+    Calendar,
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -15,6 +19,7 @@ interface GradeViewProps {
     quizzes: Quiz[];
     submissions: Submission[];
     onStartQuiz: (quiz: Quiz) => void;
+    loading?: boolean;
 }
 
 export default function GradeView({
@@ -23,10 +28,18 @@ export default function GradeView({
     quizzes,
     submissions,
     onStartQuiz,
+    loading,
 }: GradeViewProps) {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("Tất cả");
     const [sortBy, setSortBy] = useState("newest");
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 12;
+
+    // Reset pagination when grade, search, or filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [grade, searchQuery, selectedSubject, sortBy]);
 
     // Get raw quizzes belonging to this grade
     const rawGradeQuizzes = quizzes.filter(
@@ -79,6 +92,12 @@ export default function GradeView({
         }
         return 0;
     });
+
+    const totalPages = Math.ceil(processedQuizzes.length / pageSize);
+    const paginatedQuizzes = processedQuizzes.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+    );
 
     // Filter student submissions
     const studentSubmissions = submissions.filter(
@@ -161,8 +180,12 @@ export default function GradeView({
 
                 {/* Quizzes List - 3 Columns Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-250">
+                    {loading ? (
+                        <div className="col-span-full py-16 flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 text-[#2B5467] animate-spin" />
+                        </div>
+                    ) : processedQuizzes.length === 0 ? (
+                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-250">
                             <p className="text-xs font-medium">
                                 {rawGradeQuizzes.length === 0
                                     ? `Chưa có đề thi nào cho khối lớp ${grade} ở thời điểm hiện tại.`
@@ -170,7 +193,7 @@ export default function GradeView({
                             </p>
                         </div>
                     ) : (
-                        processedQuizzes.map((quiz) => {
+                        paginatedQuizzes.map((quiz) => {
                             // Check if student has done this quiz
                             const bestSubmission = studentSubmissions
                                 .filter((s) => s.quizId === quiz.id)
@@ -223,21 +246,42 @@ export default function GradeView({
                             return (
                                 <div
                                     key={quiz.id}
-                                    className="bg-bg-base border border-border-primary rounded-xl p-4 flex flex-col justify-between shadow-2xs hover:shadow-xs hover:border-border-secondary hover:bg-brand-50/30 transition-all duration-200"
+                                    className="bg-bg-base border border-border-primary rounded-xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-xs hover:border-border-secondary hover:bg-brand-50/30 transition-all duration-200"
                                 >
-                                    <div className="space-y-2.5">
+                                    <div className="space-y-2">
                                         {/* Header line */}
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-start justify-between gap-2">
                                             <span className="text-[9px] font-bold uppercase tracking-wider bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded">
                                                 {getCleanSubjectName(
                                                     quiz.subject,
                                                 )}
                                             </span>
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                <span>
-                                                    {quiz.duration} phút
-                                                </span>
+                                            <div className="flex flex-col items-end gap-1 text-[10px] text-slate-500 leading-tight">
+                                                <div className="flex items-center gap-1">
+                                                    <span>
+                                                        {quiz.duration} phút
+                                                    </span>
+                                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                </div>
+                                                {quiz.createdAt && (
+                                                    <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                                                        <span>
+                                                            {(() => {
+                                                                const dateParts =
+                                                                    quiz.createdAt.split(
+                                                                        "-",
+                                                                    );
+                                                                if (
+                                                                    dateParts.length ===
+                                                                    3
+                                                                ) {
+                                                                    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                                                                }
+                                                                return quiz.createdAt;
+                                                            })()}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
@@ -269,7 +313,7 @@ export default function GradeView({
                                     </div>
 
                                     {/* Actions */}
-                                    <div className="pt-3 mt-3 border-t border-border-primary flex items-center justify-between gap-2">
+                                    <div className="pt-2 mt-2 border-t border-border-primary flex items-center justify-between gap-2">
                                         {studentQuizSubmissions.length > 0 ? (
                                             <div className="flex flex-wrap items-center gap-1 text-[9px] font-medium text-slate-500">
                                                 <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-md border border-emerald-100/40">
@@ -303,6 +347,37 @@ export default function GradeView({
                         })
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
+                        <span className="text-[11px] text-slate-400 font-semibold">
+                            Trang {currentPage} / {totalPages} (Tổng số {processedQuizzes.length} đề thi)
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => {
+                                    setCurrentPage((prev) => prev - 1);
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                }}
+                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5 text-slate-655" />
+                            </button>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => {
+                                    setCurrentPage((prev) => prev + 1);
+                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                }}
+                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-655" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

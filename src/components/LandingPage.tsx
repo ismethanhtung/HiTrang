@@ -7,6 +7,9 @@ import {
     Clock,
     BookOpen,
     CheckCircle2,
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -15,6 +18,7 @@ interface LandingPageProps {
     onSelectGrade: (grade: string | null) => void;
     onOpenAuth: (mode?: "login" | "register") => void;
     onSelectQuizToPreview: (quiz: Quiz) => void;
+    loading?: boolean;
 }
 
 export default function LandingPage({
@@ -23,7 +27,16 @@ export default function LandingPage({
     onSelectGrade,
     onOpenAuth,
     onSelectQuizToPreview,
+    loading,
 }: LandingPageProps) {
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const pageSize = 12;
+
+    // Reset current page when selectedGrade changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [selectedGrade]);
+
     // Filter quizzes by selected grade if any
     const filteredQuizzes = selectedGrade
         ? quizzes.filter(
@@ -33,6 +46,12 @@ export default function LandingPage({
                   q.subject.includes(`Lớp ${selectedGrade}`),
           )
         : quizzes;
+
+    const totalPages = Math.ceil(filteredQuizzes.length / pageSize);
+    const paginatedQuizzes = filteredQuizzes.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+    );
 
     return (
         <div className="w-full min-h-screen bg-[#F9F8F6] text-[#222B38] font-sans antialiased overflow-x-hidden">
@@ -179,7 +198,11 @@ export default function LandingPage({
 
                 {/* QUIZZES CARD GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredQuizzes.length === 0 ? (
+                    {loading ? (
+                        <div className="col-span-full py-16 flex items-center justify-center">
+                            <Loader2 className="w-8 h-8 text-[#2B5467] animate-spin" />
+                        </div>
+                    ) : filteredQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                             <BookOpen className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                             <p className="text-sm font-semibold">
@@ -187,12 +210,12 @@ export default function LandingPage({
                             </p>
                         </div>
                     ) : (
-                        filteredQuizzes.map((quiz) => (
+                        paginatedQuizzes.map((quiz) => (
                             <div
                                 key={quiz.id}
-                                className="bg-[#F9F8F6] border border-slate-200 hover:border-[#4BA8CD]/60 rounded-2xl p-6 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group"
+                                className="bg-[#F9F8F6] border border-slate-200 hover:border-[#4BA8CD]/60 rounded-2xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group"
                             >
-                                <div className="space-y-3">
+                                <div className="space-y-2.5">
                                     <div className="flex items-center justify-between">
                                         <span className="text-[10px] font-extrabold uppercase tracking-wider bg-[#2B5467]/10 text-[#2B5467] px-2.5 py-1 rounded-md">
                                             {quiz.subject}
@@ -203,16 +226,16 @@ export default function LandingPage({
                                         </span>
                                     </div>
 
-                                    <h3 className="text-base font-bold text-[#233142] group-hover:text-[#4BA8CD] transition-colors line-clamp-2">
+                                    <h3 className="text-sm font-bold text-[#233142] group-hover:text-[#4BA8CD] transition-colors line-clamp-2">
                                         {quiz.title}
                                     </h3>
 
-                                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                                    <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                                         {quiz.description}
                                     </p>
                                 </div>
 
-                                <div className="pt-6 mt-4 border-t border-slate-200/60 flex items-center justify-between">
+                                <div className="pt-4 mt-3 border-t border-slate-200/60 flex items-center justify-between">
                                     <span className="text-xs text-slate-600 font-semibold">
                                         {quiz.questions.length} câu hỏi trắc
                                         nghiệm
@@ -231,6 +254,37 @@ export default function LandingPage({
                         ))
                     )}
                 </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
+                        <span className="text-[11px] text-slate-450 font-bold">
+                            Trang {currentPage} / {totalPages} (Tổng số {filteredQuizzes.length} đề thi)
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => {
+                                    setCurrentPage((prev) => prev - 1);
+                                    document.getElementById("public-quiz-grid")?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 cursor-pointer transition-colors"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
+                            </button>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => {
+                                    setCurrentPage((prev) => prev + 1);
+                                    document.getElementById("public-quiz-grid")?.scrollIntoView({ behavior: "smooth" });
+                                }}
+                                className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 cursor-pointer transition-colors"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </section>
         </div>
     );

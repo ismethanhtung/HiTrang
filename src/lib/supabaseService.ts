@@ -425,6 +425,13 @@ export async function deleteQuiz(quizId: string): Promise<void> {
  * Lấy danh sách bài nộp dựa trên vai trò của người dùng
  */
 export async function getSubmissions(role: 'teacher' | 'student', studentId?: string): Promise<Submission[]> {
+  // Tự động dọn dẹp các lượt thi quá hạn chưa nộp trước khi tải danh sách
+  try {
+    await supabase.rpc('auto_submit_expired_attempts');
+  } catch (rpcErr) {
+    console.warn('Lỗi khi tự động dọn dẹp bài thi quá hạn:', rpcErr);
+  }
+
   let query = supabase.from('submissions').select('*');
 
   if (role === 'student' && studentId) {
@@ -522,5 +529,93 @@ export async function signOutAllDevices(): Promise<void> {
   const { error } = await supabase.auth.signOut({ scope: 'global' });
   if (error) {
     throw new Error(error.message);
+  }
+}
+
+/**
+ * ----------------------------------------------------
+ * 5. QUẢN LÝ LƯỢT LÀM BÀI VÀ THỜI GIAN THỰC (EXAM ATTEMPTS)
+ * ----------------------------------------------------
+ */
+
+export interface ExamAttempt {
+  attempt_id: string;
+  quiz_id: string;
+  user_id: string;
+  started_at: string;
+  duration_minutes: number;
+  expires_at: string;
+  status: 'inprogress' | 'submitted';
+  answers: Record<string, any>;
+  remaining_seconds: number;
+}
+
+/**
+ * Lấy hoặc tạo lượt thi mới trực tiếp từ server
+ */
+export async function getOrCreateAttempt(quizId: string, durationMinutes: number): Promise<ExamAttempt> {
+  const { data, error } = await supabase.rpc('get_or_create_attempt', {
+    p_quiz_id: quizId,
+    p_duration_minutes: durationMinutes
+  });
+
+  if (error) {
+    throw new Error(`Không thể khởi tạo lượt làm bài: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    throw new Error('Không nhận được thông tin lượt làm bài từ hệ thống.');
+  }
+
+  const item = data[0];
+  return {
+    attempt_id: item.attempt_id,
+    quiz_id: item.quiz_id,
+    user_id: item.user_id,
+    started_at: item.started_at,
+    duration_minutes: item.duration_minutes,
+    expires_at: item.expires_at,
+    status: item.status,
+    answers: item.answers || {},
+    remaining_seconds: item.remaining_seconds
+  };
+}
+
+/**
+ * Cập nhật đáp án nháp lên database (Autosave)
+ */
+export async function updateAttemptAnswers(attemptId: string, answers: Record<string, any>): Promise<void> {
+  const { error } = await supabase
+    .from('exam_attempts')
+    .update({ answers })
+    .eq('id', attemptId);
+
+  if (error) {
+    throw new Error(`Lỗi tự động lưu nháp: ${error.message}`);
+  }
+}
+
+/**
+ * Khóa lượt thi và nộp bài chính thức
+ */
+export async function finalizeAndSubmitAttempt(
+  attemptId: string,
+  answers: Record<string, any>,
+  score: number,
+  totalQuestions: number
+): Promise<void> {
+  const { error } = await supabase
+    .from('exam_attempts')
+    .update({
+      status: 'submitted',
+      answers,
+      score,
+      total_questions: totalQuestions,
+      submitted_at: new Date().toISOString()
+    })
+    .eq('id', attemptId);
+
+  if (error) {
+    throw new Error(`Nộp bài thất bại: ${error.message}`);
   }
 }

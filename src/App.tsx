@@ -74,17 +74,9 @@ export default function App() {
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
-    const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
-        try {
-            localStorage.removeItem("hvt_quizzes");
-        } catch (e) {}
-        return INITIAL_QUIZZES;
-    });
-
-    const [submissions, setSubmissions] = useState<Submission[]>(() => {
-        const saved = localStorage.getItem("hvt_submissions");
-        return saved ? JSON.parse(saved) : INITIAL_SUBMISSIONS;
-    });
+    const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // User Session State
     const [user, setUser] = useState<User | null>(() => {
@@ -134,13 +126,18 @@ export default function App() {
     // Check Supabase session on mount
     useEffect(() => {
         const fetchInitialData = async () => {
+            setLoading(true);
             try {
-                const dbQuizzes = await getQuizzes();
-                if (dbQuizzes.length > 0) {
+                // Fetch quizzes and current user in parallel to eliminate network latency bottlenecks
+                const [dbQuizzes, currentUser] = await Promise.all([
+                    getQuizzes(),
+                    getCurrentUser(),
+                ]);
+
+                if (dbQuizzes && dbQuizzes.length > 0) {
                     setQuizzes(dbQuizzes);
                 }
 
-                const currentUser = await getCurrentUser();
                 if (currentUser) {
                     setUser(currentUser);
                     if (currentUser.role === "teacher") {
@@ -148,20 +145,28 @@ export default function App() {
                     } else {
                         setActiveTab("student-dashboard");
                     }
+
+                    // Turn off loading indicator immediately so visual elements render in ~200ms
+                    setLoading(false);
+
+                    // Load user's previous submissions asynchronously in the background
                     try {
                         const dbSubmissions = await getSubmissions(
                             currentUser.role,
                             currentUser.id,
                         );
-                        if (dbSubmissions.length > 0) {
+                        if (dbSubmissions && dbSubmissions.length > 0) {
                             setSubmissions(dbSubmissions);
                         }
                     } catch (subErr) {
                         console.error("Lỗi tải bài nộp ban đầu:", subErr);
                     }
+                } else {
+                    setLoading(false);
                 }
             } catch (err) {
                 console.error("Lỗi khởi tạo dữ liệu:", err);
+                setLoading(false);
             }
         };
         fetchInitialData();
@@ -198,14 +203,9 @@ export default function App() {
         }
     };
 
-    const handleAddSubmission = async (newSub: Submission) => {
-        try {
-            await createSubmission(newSub);
-            setSubmissions([...submissions, newSub]);
-        } catch (err: any) {
-            console.error("Lỗi khi nộp bài lên Supabase:", err);
-            setSubmissions([...submissions, newSub]);
-        }
+    const handleAddSubmission = (newSub: Submission) => {
+        // Tránh gọi API createSubmission trùng lặp vì Trigger DB đã tự động đồng bộ từ exam_attempts sang submissions
+        setSubmissions([newSub, ...submissions]);
     };
 
     const handleLogin = async (loggedInUser: User) => {
@@ -329,6 +329,7 @@ export default function App() {
                             setAuthMode("register");
                             setAuthModalOpen(true);
                         }}
+                        loading={loading}
                     />
                 ) : (
                     /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */
@@ -389,6 +390,7 @@ export default function App() {
                                                 "Tài khoản giáo viên chỉ có quyền xem trước đề thi.",
                                             )
                                         }
+                                        loading={loading}
                                     />
                                 );
                             }
@@ -428,6 +430,7 @@ export default function App() {
                                     activeQuizId={activeQuizId}
                                     reviewSubmissionId={reviewSubmissionId}
                                     onNavigate={navigateTo}
+                                    loading={loading}
                                 />
                             );
                         })()}
