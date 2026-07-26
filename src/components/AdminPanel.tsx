@@ -597,13 +597,19 @@ export default function AdminPanel({
     const [isSaveQuizModalOpen, setIsSaveQuizModalOpen] = useState(false);
     const [durationOption, setDurationOption] = useState<string>("45");
     const [scoringMode, setScoringMode] = useState<string>("EQUAL_WEIGHT");
-    const [sectionPoints, setSectionPoints] = useState<Record<string, number>>({});
+    const [sectionPoints, setSectionPoints] = useState<Record<string, number>>(
+        {},
+    );
 
     // Khởi tạo bareme điểm mặc định cho từng phần khi mở modal
     React.useEffect(() => {
         if (isSaveQuizModalOpen && importedQuestions.length > 0) {
             const uniqueSections = Array.from(
-                new Set(importedQuestions.map((q) => q.sectionTitle).filter(Boolean))
+                new Set(
+                    importedQuestions
+                        .map((q) => q.sectionTitle)
+                        .filter(Boolean),
+                ),
             ) as string[];
 
             const defaults: Record<string, number> = {};
@@ -611,12 +617,19 @@ export default function AdminPanel({
                 const secStr = sec.toLowerCase();
                 if (secStr.includes("phần i") || secStr.includes("phần 1")) {
                     defaults[sec] = 3.0;
-                } else if (secStr.includes("phần ii") || secStr.includes("phần 2")) {
+                } else if (
+                    secStr.includes("phần ii") ||
+                    secStr.includes("phần 2")
+                ) {
                     defaults[sec] = 4.0;
-                } else if (secStr.includes("phần iii") || secStr.includes("phần 3")) {
+                } else if (
+                    secStr.includes("phần iii") ||
+                    secStr.includes("phần 3")
+                ) {
                     defaults[sec] = 3.0;
                 } else {
-                    defaults[sec] = Math.round((10.0 / uniqueSections.length) * 10) / 10;
+                    defaults[sec] =
+                        Math.round((10.0 / uniqueSections.length) * 10) / 10;
                 }
             });
             setSectionPoints(defaults);
@@ -835,21 +848,23 @@ export default function AdminPanel({
 
         let scoringConfigObj: any = { type: scoringMode };
         if (scoringMode === "SECTION_BASED") {
-            scoringConfigObj.sections = Object.keys(sectionPoints).map((sec) => ({
-                section_id: sec,
-                total_points: sectionPoints[sec] || 0
-            }));
+            scoringConfigObj.sections = Object.keys(sectionPoints).map(
+                (sec) => ({
+                    section_id: sec,
+                    total_points: sectionPoints[sec] || 0,
+                }),
+            );
         } else if (scoringMode === "THPT_QG") {
             scoringConfigObj.sections = [
                 { section_id: "Phần I", total_points: 3.0 },
                 { section_id: "Phần II", total_points: 4.0 },
-                { section_id: "Phần III", total_points: 3.0 }
+                { section_id: "Phần III", total_points: 3.0 },
             ];
             scoringConfigObj.true_false_rules = {
                 "1_correct": 0.1,
                 "2_correct": 0.25,
                 "3_correct": 0.5,
-                "4_correct": 1.0
+                "4_correct": 1.0,
             };
         }
 
@@ -1247,7 +1262,7 @@ export default function AdminPanel({
                 <div className="py-4 border-t border-gray-100 bg-white">
                     <div className="px-6 text-center">
                         <span className="text-[9px] text-slate-400 font-medium leading-none">
-                            HiTrang v1.1.4 - Settings
+                            HiTrang v1.1.7 - Settings
                         </span>
                     </div>
                 </div>
@@ -3850,12 +3865,23 @@ export default function AdminPanel({
                                         </label>
                                         <select
                                             value={scoringMode}
-                                            onChange={(e) => setScoringMode(e.target.value)}
+                                            onChange={(e) =>
+                                                setScoringMode(e.target.value)
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
                                         >
-                                            <option value="EQUAL_WEIGHT">Mode 1: Chia đều điểm (Tổng 10đ cho tất cả câu)</option>
-                                            <option value="SECTION_BASED">Mode 2: Chia điểm theo Phần (Tự cấu hình điểm mỗi phần)</option>
-                                            <option value="THPT_QG">Mode 3: Thang điểm chuẩn thi THPT Quốc Gia (3 - 4 - 3)</option>
+                                            <option value="EQUAL_WEIGHT">
+                                                Mode 1: Chia đều điểm (Tổng 10đ
+                                                cho tất cả câu)
+                                            </option>
+                                            <option value="SECTION_BASED">
+                                                Mode 2: Chia điểm theo Phần (Tự
+                                                cấu hình điểm mỗi phần)
+                                            </option>
+                                            <option value="THPT_QG">
+                                                Mode 3: Thang điểm chuẩn thi
+                                                THPT Quốc Gia (3 - 4 - 3)
+                                            </option>
                                         </select>
                                     </div>
 
@@ -3865,14 +3891,23 @@ export default function AdminPanel({
                                             <div className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
                                                 Cấu hình điểm số cho từng phần:
                                             </div>
-                                            {Object.keys(sectionPoints).length === 0 ? (
+                                            {Object.keys(sectionPoints)
+                                                .length === 0 ? (
                                                 <p className="text-slate-450 italic text-[11px]">
-                                                    Không tìm thấy phân chia phần trong câu hỏi đã tải lên (Cần có trường sectionTitle).
+                                                    Không tìm thấy phân chia
+                                                    phần trong câu hỏi đã tải
+                                                    lên (Cần có trường
+                                                    sectionTitle).
                                                 </p>
                                             ) : (
                                                 <div className="space-y-2">
-                                                    {Object.keys(sectionPoints).map((sec) => (
-                                                        <div key={sec} className="flex items-center justify-between gap-3">
+                                                    {Object.keys(
+                                                        sectionPoints,
+                                                    ).map((sec) => (
+                                                        <div
+                                                            key={sec}
+                                                            className="flex items-center justify-between gap-3"
+                                                        >
                                                             <span className="font-semibold text-slate-600 truncate max-w-[200px]">
                                                                 {sec}:
                                                             </span>
@@ -3882,26 +3917,85 @@ export default function AdminPanel({
                                                                     step="0.1"
                                                                     min="0"
                                                                     max="10"
-                                                                    value={sectionPoints[sec] || ""}
-                                                                    onChange={(e) => {
-                                                                        const val = Number(e.target.value);
-                                                                        setSectionPoints(prev => ({ ...prev, [sec]: val }));
+                                                                    value={
+                                                                        sectionPoints[
+                                                                            sec
+                                                                        ] || ""
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) => {
+                                                                        const val =
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            );
+                                                                        setSectionPoints(
+                                                                            (
+                                                                                prev,
+                                                                            ) => ({
+                                                                                ...prev,
+                                                                                [sec]: val,
+                                                                            }),
+                                                                        );
                                                                     }}
                                                                     className="w-20 px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-blue-500 text-center bg-white"
                                                                 />
-                                                                <span className="text-slate-400 font-medium">điểm</span>
+                                                                <span className="text-slate-400 font-medium">
+                                                                    điểm
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     ))}
                                                     <div className="pt-1.5 border-t border-slate-200 flex justify-between font-bold text-slate-700 text-[11px]">
                                                         <span>TỔNG ĐIỂM:</span>
-                                                        <span className={Math.abs(Object.values(sectionPoints).reduce((a, b) => a + b, 0) - 10) < 0.01 ? "text-emerald-600" : "text-rose-500"}>
-                                                            {Object.values(sectionPoints).reduce((a, b) => a + b, 0).toFixed(1)} / 10.0đ
+                                                        <span
+                                                            className={
+                                                                Math.abs(
+                                                                    Object.values(
+                                                                        sectionPoints,
+                                                                    ).reduce(
+                                                                        (
+                                                                            a,
+                                                                            b,
+                                                                        ) =>
+                                                                            a +
+                                                                            b,
+                                                                        0,
+                                                                    ) - 10,
+                                                                ) < 0.01
+                                                                    ? "text-emerald-600"
+                                                                    : "text-rose-500"
+                                                            }
+                                                        >
+                                                            {Object.values(
+                                                                sectionPoints,
+                                                            )
+                                                                .reduce(
+                                                                    (a, b) =>
+                                                                        a + b,
+                                                                    0,
+                                                                )
+                                                                .toFixed(
+                                                                    1,
+                                                                )}{" "}
+                                                            / 10.0đ
                                                         </span>
                                                     </div>
-                                                    {Math.abs(Object.values(sectionPoints).reduce((a, b) => a + b, 0) - 10) > 0.01 && (
+                                                    {Math.abs(
+                                                        Object.values(
+                                                            sectionPoints,
+                                                        ).reduce(
+                                                            (a, b) => a + b,
+                                                            0,
+                                                        ) - 10,
+                                                    ) > 0.01 && (
                                                         <p className="text-rose-550 text-[10px] italic leading-normal">
-                                                            * Lưu ý: Tổng điểm các phần nên bằng 10.0 để khớp thang điểm chuẩn.
+                                                            * Lưu ý: Tổng điểm
+                                                            các phần nên bằng
+                                                            10.0 để khớp thang
+                                                            điểm chuẩn.
                                                         </p>
                                                     )}
                                                 </div>
@@ -3913,15 +4007,43 @@ export default function AdminPanel({
                                     {scoringMode === "THPT_QG" && (
                                         <div className="bg-blue-50/50 rounded-2xl p-3 border border-blue-100 text-[11px] text-slate-600 leading-normal space-y-1.5 animate-in fade-in duration-150">
                                             <div className="font-bold text-slate-700 uppercase tracking-wide text-[10px]">
-                                                Cấu hình chuẩn THPT Quốc Gia (Bộ Giáo Dục):
+                                                Cấu hình chuẩn THPT Quốc Gia (Bộ
+                                                Giáo Dục):
                                             </div>
                                             <ul className="list-disc pl-4 space-y-0.5 font-medium">
-                                                <li><strong className="text-slate-800">Phần I (Trắc nghiệm nhiều lựa chọn):</strong> 3.0 điểm (12 câu, mỗi câu 0.25đ)</li>
-                                                <li><strong className="text-slate-800">Phần II (Trắc nghiệm Đúng/Sai):</strong> 4.0 điểm (4 câu. Đúng 1 ý được 0.1đ, 2 ý 0.25đ, 3 ý 0.5đ, 4 ý 1.0đ)</li>
-                                                <li><strong className="text-slate-850">Phần III (Trắc nghiệm trả lời ngắn):</strong> 3.0 điểm (6 câu, mỗi câu 0.5đ)</li>
+                                                <li>
+                                                    <strong className="text-slate-800">
+                                                        Phần I (Trắc nghiệm
+                                                        nhiều lựa chọn):
+                                                    </strong>{" "}
+                                                    3.0 điểm (12 câu, mỗi câu
+                                                    0.25đ)
+                                                </li>
+                                                <li>
+                                                    <strong className="text-slate-800">
+                                                        Phần II (Trắc nghiệm
+                                                        Đúng/Sai):
+                                                    </strong>{" "}
+                                                    4.0 điểm (4 câu. Đúng 1 ý
+                                                    được 0.1đ, 2 ý 0.25đ, 3 ý
+                                                    0.5đ, 4 ý 1.0đ)
+                                                </li>
+                                                <li>
+                                                    <strong className="text-slate-850">
+                                                        Phần III (Trắc nghiệm
+                                                        trả lời ngắn):
+                                                    </strong>{" "}
+                                                    3.0 điểm (6 câu, mỗi câu
+                                                    0.5đ)
+                                                </li>
                                             </ul>
                                             <p className="text-[10px] text-slate-400 italic font-medium pt-1">
-                                                * Hệ thống tự nhận diện các câu hỏi dựa theo trường <code className="bg-slate-100 px-1 rounded">sectionTitle</code> (Phần I, II, III).
+                                                * Hệ thống tự nhận diện các câu
+                                                hỏi dựa theo trường{" "}
+                                                <code className="bg-slate-100 px-1 rounded">
+                                                    sectionTitle
+                                                </code>{" "}
+                                                (Phần I, II, III).
                                             </p>
                                         </div>
                                     )}

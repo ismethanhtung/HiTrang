@@ -11,6 +11,7 @@ import {
     Loader2,
     ChevronLeft,
     ChevronRight,
+    RefreshCw,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -19,6 +20,7 @@ interface GradeViewProps {
     quizzes: Quiz[];
     submissions: Submission[];
     onStartQuiz: (quiz: Quiz) => void;
+    ongoingAttempt?: any | null;
     loading?: boolean;
 }
 
@@ -28,6 +30,7 @@ export default function GradeView({
     quizzes,
     submissions,
     onStartQuiz,
+    ongoingAttempt,
     loading,
 }: GradeViewProps) {
     const [searchQuery, setSearchQuery] = useState("");
@@ -243,10 +246,19 @@ export default function GradeView({
                                       ].score
                                     : 0;
 
+                            const isOngoing = !!(
+                                ongoingAttempt &&
+                                ongoingAttempt.quiz_id === quiz.id
+                            );
+
                             return (
                                 <div
                                     key={quiz.id}
-                                    className="bg-bg-base border border-border-primary rounded-xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-xs hover:border-border-secondary hover:bg-brand-50/30 transition-all duration-200"
+                                    className={`bg-bg-base border ${
+                                        isOngoing
+                                            ? "border-blue-300 bg-blue-50/30 shadow-sm"
+                                            : "border-border-primary shadow-2xs"
+                                    } rounded-xl p-3.5 flex flex-col justify-between hover:shadow-xs hover:border-border-secondary hover:bg-brand-50/30 transition-all duration-200`}
                                 >
                                     <div className="space-y-2">
                                         {/* Header line */}
@@ -332,12 +344,18 @@ export default function GradeView({
 
                                         <button
                                             onClick={() => onStartQuiz(quiz)}
-                                            className="px-4 py-2 bg-[#2B5467] hover:bg-[#204252] text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shadow-3xs cursor-pointer active:scale-98 flex-shrink-0"
+                                            className={`px-4 py-2 ${
+                                                isOngoing
+                                                    ? "bg-[#18323E] hover:bg-[#10222B] shadow-md shadow-blue-500/10"
+                                                    : "bg-[#2B5467] hover:bg-[#204252]"
+                                            } text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shadow-3xs cursor-pointer active:scale-98 flex-shrink-0`}
                                         >
                                             <span>
-                                                {bestSubmission
-                                                    ? "Vào thi lại"
-                                                    : "Vào thi thử"}
+                                                {isOngoing
+                                                    ? "Tiếp tục làm"
+                                                    : bestSubmission
+                                                      ? "Vào thi lại"
+                                                      : "Vào thi thử"}
                                             </span>
                                             <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
@@ -352,14 +370,18 @@ export default function GradeView({
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
                         <span className="text-[11px] text-slate-400 font-semibold">
-                            Trang {currentPage} / {totalPages} (Tổng số {processedQuizzes.length} đề thi)
+                            Trang {currentPage} / {totalPages} (Tổng số{" "}
+                            {processedQuizzes.length} đề thi)
                         </span>
                         <div className="flex items-center gap-1">
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => {
                                     setCurrentPage((prev) => prev - 1);
-                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                    window.scrollTo({
+                                        top: 0,
+                                        behavior: "smooth",
+                                    });
                                 }}
                                 className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                             >
@@ -369,7 +391,10 @@ export default function GradeView({
                                 disabled={currentPage === totalPages}
                                 onClick={() => {
                                     setCurrentPage((prev) => prev + 1);
-                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                    window.scrollTo({
+                                        top: 0,
+                                        behavior: "smooth",
+                                    });
                                 }}
                                 className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                             >

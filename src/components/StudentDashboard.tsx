@@ -24,7 +24,14 @@ import {
 import { Quiz, Question, Submission, User } from "../types";
 import { renderMathHtml } from "../lib/math";
 import GradeView from "./GradeView";
-import { getOrCreateAttempt, updateAttemptAnswers, finalizeAndSubmitAttempt, getStudentQuestions, getReviewQuestions } from "../lib/supabaseService";
+import {
+    getOrCreateAttempt,
+    updateAttemptAnswers,
+    finalizeAndSubmitAttempt,
+    getStudentQuestions,
+    getReviewQuestions,
+    getActiveAttempt,
+} from "../lib/supabaseService";
 
 function cleanTrueFalseQuestionText(html: string): string {
     if (!html) return html;
@@ -71,6 +78,8 @@ interface StudentDashboardProps {
     activeQuizId?: string | null;
     reviewSubmissionId?: string | null;
     onNavigate: (path: string, bypassConfirm?: boolean) => void;
+    navigateReplace?: (path: string) => void;
+    ongoingAttempt?: any | null;
     loading?: boolean;
 }
 
@@ -86,10 +95,15 @@ export default function StudentDashboard({
     activeQuizId,
     reviewSubmissionId,
     onNavigate,
+    navigateReplace,
+    ongoingAttempt,
     loading,
 }: StudentDashboardProps) {
     // Quiz Active State
     const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+    const [quizEntryPhase, setQuizEntryPhase] = useState<
+        "none" | "entry" | "taking"
+    >("none");
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [fontSize, setFontSize] = useState<number>(13); // Default font size in px
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>(
@@ -101,6 +115,10 @@ export default function StudentDashboard({
     const [loadingAttempt, setLoadingAttempt] = useState(false);
     const [reviewQuiz, setReviewQuiz] = useState<Quiz | null>(null);
     const [loadingReview, setLoadingReview] = useState(false);
+    const [activeAttemptInProgress, setActiveAttemptInProgress] = useState<
+        any | null
+    >(null);
+    const [loadingCheckAttempt, setLoadingCheckAttempt] = useState(false);
 
     // Prevent leaving page/tab changes & detect tab switching
     const [currentPage, setCurrentPage] = useState(1);
@@ -120,11 +138,13 @@ export default function StudentDashboard({
     // Prevent leaving page/tab changes & detect tab switching
     useEffect(() => {
         if (onQuizStateChange) {
-            onQuizStateChange(activeQuiz !== null);
+            onQuizStateChange(
+                activeQuiz !== null && quizEntryPhase === "taking",
+            );
         }
 
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (activeQuiz) {
+            if (activeQuiz && quizEntryPhase === "taking") {
                 e.preventDefault();
                 e.returnValue = "ê bé, đang làm mà chuyển đi đâu thế.";
                 return "ê bé, đang làm mà chuyển đi đâu thế.";
@@ -132,7 +152,7 @@ export default function StudentDashboard({
         };
 
         const handleVisibilityChange = () => {
-            if (activeQuiz && document.hidden) {
+            if (activeQuiz && quizEntryPhase === "taking" && document.hidden) {
                 alert(
                     "ê bé, đang kiểm tra mà chuyển tab đi đâu thế! Hãy tập trung làm bài nhé.",
                 );
@@ -148,7 +168,7 @@ export default function StudentDashboard({
                 handleVisibilityChange,
             );
         };
-    }, [activeQuiz, onQuizStateChange]);
+    }, [activeQuiz, quizEntryPhase, onQuizStateChange]);
 
     // Result Overview State
     const [showResultSummary, setShowResultSummary] =
@@ -181,9 +201,9 @@ export default function StudentDashboard({
                     );
                 }
             } else if (reviewSubmission) {
-                const quiz = reviewQuiz || quizzes.find(
-                    (q) => q.id === reviewSubmission.quizId,
-                );
+                const quiz =
+                    reviewQuiz ||
+                    quizzes.find((q) => q.id === reviewSubmission.quizId);
                 if (quiz) {
                     if (e.key === "ArrowLeft") {
                         setReviewQuestionIdx((prev) => Math.max(0, prev - 1));
@@ -206,38 +226,66 @@ export default function StudentDashboard({
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showContactOptions, setShowContactOptions] = useState(false);
 
+    // Start the quiz attempt when student confirms on Entry Screen
+    const startQuizAttempt = async () => {
+        if (!activeQuiz) return;
+        setLoadingAttempt(true);
+        try {
+            const attempt = await getOrCreateAttempt(
+                activeQuiz.id,
+                activeQuiz.duration,
+            );
+            const questions = await getStudentQuestions(activeQuiz.id);
+            setCurrentAttempt(attempt);
+            setActiveQuiz({
+                ...activeQuiz,
+                questions,
+            });
+            setCurrentQuestionIdx(0);
+            setSelectedAnswers(attempt.answers || {});
+            setTimeLeft(attempt.remaining_seconds);
+            setQuizTimerActive(true);
+            setQuizEntryPhase("taking");
+        } catch (err: any) {
+            console.error("Lỗi khi khởi tạo lượt thi:", err);
+            alert(
+                "Không thể khởi tạo hoặc tiếp tục bài thi. Vui lòng thử lại!",
+            );
+            onNavigate("/", true);
+        } finally {
+            setLoadingAttempt(false);
+        }
+    };
+
     useEffect(() => {
         if (activeQuizId) {
             const quiz = quizzes.find((q) => q.id === activeQuizId);
             if (quiz) {
-                const initAttempt = async () => {
-                    setLoadingAttempt(true);
+                setActiveQuiz(quiz);
+                setQuizEntryPhase("entry");
+
+                const checkAttempt = async () => {
+                    setLoadingCheckAttempt(true);
                     try {
-                        const attempt = await getOrCreateAttempt(quiz.id, quiz.duration);
-                        const questions = await getStudentQuestions(quiz.id);
-                        setCurrentAttempt(attempt);
-                        setActiveQuiz({
-                            ...quiz,
-                            questions
-                        });
-                        setCurrentQuestionIdx(0);
-                        setSelectedAnswers(attempt.answers || {});
-                        setTimeLeft(attempt.remaining_seconds);
-                        setQuizTimerActive(true);
-                    } catch (err: any) {
-                        console.error("Lỗi khi khởi tạo lượt thi:", err);
-                        alert("Không thể khởi tạo hoặc tiếp tục bài thi. Vui lòng thử lại!");
-                        onNavigate("/", true);
+                        const activeAttempt = await getActiveAttempt(quiz.id);
+                        setActiveAttemptInProgress(activeAttempt);
+                    } catch (err) {
+                        console.warn(
+                            "Không thể kiểm tra lượt thi dang dở:",
+                            err,
+                        );
                     } finally {
-                        setLoadingAttempt(false);
+                        setLoadingCheckAttempt(false);
                     }
                 };
-                initAttempt();
+                checkAttempt();
             }
         } else {
             setActiveQuiz(null);
             setCurrentAttempt(null);
             setQuizTimerActive(false);
+            setQuizEntryPhase("none");
+            setActiveAttemptInProgress(null);
         }
     }, [activeQuizId, quizzes]);
 
@@ -248,10 +296,16 @@ export default function StudentDashboard({
         // Debounce saving answers to Supabase
         const delayDebounceFn = setTimeout(async () => {
             try {
-                await updateAttemptAnswers(currentAttempt.attempt_id, selectedAnswers);
+                await updateAttemptAnswers(
+                    currentAttempt.attempt_id,
+                    selectedAnswers,
+                );
                 console.log("Đã tự động lưu đáp án nháp.");
             } catch (err) {
-                console.warn("Không thể lưu nháp đáp án (học sinh có thể đang rớt mạng):", err);
+                console.warn(
+                    "Không thể lưu nháp đáp án (học sinh có thể đang rớt mạng):",
+                    err,
+                );
             }
         }, 1500); // 1.5s debounce
 
@@ -270,7 +324,7 @@ export default function StudentDashboard({
                         if (quiz) {
                             setReviewQuiz({
                                 ...quiz,
-                                questions
+                                questions,
                             });
                             setReviewSubmission(sub);
                             setReviewQuestionIdx(0);
@@ -352,7 +406,7 @@ export default function StudentDashboard({
             // Server trigger will calculate exact score and total questions automatically
             const { score, totalQuestions } = await finalizeAndSubmitAttempt(
                 currentAttempt.attempt_id,
-                selectedAnswers
+                selectedAnswers,
             );
 
             const newSubmission: Submission = {
@@ -372,10 +426,16 @@ export default function StudentDashboard({
             };
 
             onAddSubmission(newSubmission);
-            onNavigate("/result/" + newSubmission.id, true);
+            if (navigateReplace) {
+                navigateReplace("/result/" + newSubmission.id);
+            } else {
+                onNavigate("/result/" + newSubmission.id, true);
+            }
         } catch (err: any) {
             console.error("Lỗi khi nộp bài:", err);
-            alert(`Lỗi khi nộp bài: ${err.message || 'Vui lòng kiểm tra lại kết nối mạng và thử lại!'}`);
+            alert(
+                `Lỗi khi nộp bài: ${err.message || "Vui lòng kiểm tra lại kết nối mạng và thử lại!"}`,
+            );
         }
     };
 
@@ -394,6 +454,24 @@ export default function StudentDashboard({
               ).toFixed(1)
             : "0.0";
 
+    const quizSubmissions = activeQuiz
+        ? submissions.filter(
+              (s) => s.quizId === activeQuiz.id && s.studentId === user.id,
+          )
+        : [];
+    const attemptsCount = quizSubmissions.length;
+    const remainingAttempts = Math.max(0, 5 - attemptsCount);
+    const maxScore =
+        quizSubmissions.length > 0
+            ? Math.max(...quizSubmissions.map((s) => s.score))
+            : 0;
+
+    const hasOtherActiveAttempt = !!(
+        ongoingAttempt &&
+        activeQuiz &&
+        ongoingAttempt.quiz_id !== activeQuiz.id
+    );
+
     return (
         <div
             className={`flex-1 min-h-0 ${activeQuiz || reviewSubmission ? "overflow-hidden h-full flex flex-col" : "overflow-y-auto min-h-screen"} bg-bg-base dark:bg-bg-base text-text-primary transition-colors duration-200`}
@@ -410,14 +488,21 @@ export default function StudentDashboard({
                 {loadingReview ? (
                     <div className="flex-1 flex flex-col items-center justify-center bg-white p-8 xl:p-12 text-center">
                         <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
-                        <h3 className="text-sm font-semibold text-slate-800">Đang tải đáp án và giải chi tiết...</h3>
-                        <p className="text-xs text-slate-400 mt-1">Đồng bộ an toàn với máy chủ để lấy đáp án chính thức.</p>
+                        <h3 className="text-sm font-semibold text-slate-800">
+                            Đang tải đáp án và giải chi tiết...
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                            Đồng bộ an toàn với máy chủ để lấy đáp án chính
+                            thức.
+                        </p>
                     </div>
                 ) : reviewSubmission ? (
                     (() => {
-                        const quiz = reviewQuiz || quizzes.find(
-                            (q) => q.id === reviewSubmission.quizId,
-                        );
+                        const quiz =
+                            reviewQuiz ||
+                            quizzes.find(
+                                (q) => q.id === reviewSubmission.quizId,
+                            );
                         if (!quiz) {
                             return (
                                 <div className="flex-1 flex items-center justify-center">
@@ -1192,9 +1277,11 @@ export default function StudentDashboard({
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                if (window.history.length > 1)
-                                                    window.history.back();
-                                                else onNavigate("/");
+                                                if (navigateReplace) {
+                                                    navigateReplace("/");
+                                                } else {
+                                                    onNavigate("/");
+                                                }
                                             }}
                                             className="w-full py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-95 cursor-pointer"
                                         >
@@ -1209,10 +1296,232 @@ export default function StudentDashboard({
                 ) : loadingAttempt ? (
                     <div className="flex-1 flex flex-col items-center justify-center bg-white p-8 xl:p-12 text-center">
                         <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
-                        <h3 className="text-sm font-semibold text-slate-800">Đang chuẩn bị lượt làm bài...</h3>
-                        <p className="text-xs text-slate-400 mt-1">Đồng bộ dữ liệu thời gian thực với máy chủ.</p>
+                        <h3 className="text-sm font-semibold text-slate-800">
+                            Đang chuẩn bị lượt làm bài...
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                            Đồng bộ dữ liệu thời gian thực với máy chủ.
+                        </p>
                     </div>
-                ) : activeQuiz ? (
+                ) : activeQuiz && quizEntryPhase === "entry" ? (
+                    <div className="flex-1 flex items-center justify-center p-4 bg-[#F9F8F6]">
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 sm:space-y-8"
+                        >
+                            {/* Quiz info header */}
+                            <div className="text-center space-y-3">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-50 border border-brand-200 text-brand-700 rounded-lg text-xs font-bold uppercase tracking-wider">
+                                    <span>
+                                        {activeQuiz.subject || "Toán Học"}
+                                    </span>
+                                </div>
+                                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                                    {activeQuiz.title}
+                                </h1>
+                                {activeQuiz.description && (
+                                    <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+                                        {activeQuiz.description}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Meta info inline simplified */}
+                            <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
+                                <div className="flex items-center gap-1.5">
+                                    <Clock className="w-4 h-4 text-slate-400" />
+                                    <span>
+                                        Thời gian:{" "}
+                                        <strong className="text-slate-800 font-extrabold">
+                                            {activeQuiz.duration} phút
+                                        </strong>
+                                    </span>
+                                </div>
+                                <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                                <div className="flex items-center gap-1.5">
+                                    <HelpCircle className="w-4 h-4 text-slate-400" />
+                                    <span>
+                                        Số câu hỏi:{" "}
+                                        <strong className="text-slate-800 font-extrabold">
+                                            {activeQuiz.questions?.length || 0}{" "}
+                                            câu
+                                        </strong>
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Attempts & History Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
+                                        Tiến trình làm bài (Tối đa 5 lượt)
+                                    </h3>
+                                    <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                                        Đã làm: {attemptsCount}/5 lượt
+                                    </span>
+                                </div>
+
+                                {/* Custom Attempts visual indicator circles */}
+                                <div className="flex items-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((idx) => {
+                                        const isUsed = idx <= attemptsCount;
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
+                                                    isUsed
+                                                        ? "bg-brand-500 shadow-xs"
+                                                        : "bg-slate-200/60 border border-dashed border-slate-350"
+                                                }`}
+                                                title={
+                                                    isUsed
+                                                        ? `Lượt thứ ${idx} đã dùng`
+                                                        : `Lượt thứ ${idx} chưa dùng`
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Attempts List */}
+                                {attemptsCount > 0 ? (
+                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                                        {quizSubmissions.map((sub, index) => (
+                                            <div
+                                                key={sub.id}
+                                                className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
+                                            >
+                                                <div className="space-y-1">
+                                                    <span className="block text-[10px] font-bold text-brand-600 uppercase">
+                                                        Lần làm thứ {index + 1}
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-400 block font-medium">
+                                                        Ngày nộp:{" "}
+                                                        {sub.submittedAt}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-right">
+                                                        <span className="text-[10px] text-slate-400 block font-bold">
+                                                            Điểm số
+                                                        </span>
+                                                        <span className="text-sm font-extrabold text-slate-800">
+                                                            {sub.score} điểm
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            onNavigate(
+                                                                "/result/" +
+                                                                    sub.id,
+                                                            )
+                                                        }
+                                                        className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                                    >
+                                                        Xem lại
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs italic">
+                                        🍀 Hãy chuẩn bị tinh thần và bấm "Bắt
+                                        đầu làm bài".
+                                    </div>
+                                )}
+
+                                {activeAttemptInProgress && (
+                                    <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
+                                        <RefreshCw
+                                            className="w-3.5 h-3.5 animate-spin"
+                                            style={{ animationDuration: "3s" }}
+                                        />
+                                        <span>
+                                            Bạn đang có lượt thi dang dở! Hãy
+                                            tiếp tục làm bài.
+                                        </span>
+                                    </div>
+                                )}
+
+                                {hasOtherActiveAttempt && (
+                                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
+                                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                        <span>
+                                            Bạn đang có bài thi khác chưa hoàn
+                                            thành!
+                                        </span>
+                                    </div>
+                                )}
+
+                                {attemptsCount > 0 && (
+                                    <div className="flex items-center gap-1.5 justify-center py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-150">
+                                        <Award className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-[11px] font-bold">
+                                            Điểm số cao nhất của bạn: {maxScore}{" "}
+                                            điểm
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Buttons actions */}
+                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (navigateReplace)
+                                            navigateReplace("/");
+                                        else onNavigate("/");
+                                    }}
+                                    className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    <span>Quay lại Dashboard</span>
+                                </button>
+
+                                {hasOtherActiveAttempt ? (
+                                    <button
+                                        type="button"
+                                        disabled
+                                        className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                    >
+                                        <span>Đang làm đề thi khác</span>
+                                        <AlertCircle className="w-4 h-4" />
+                                    </button>
+                                ) : activeAttemptInProgress ? (
+                                    <button
+                                        type="button"
+                                        onClick={startQuizAttempt}
+                                        className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
+                                    >
+                                        <span>Tiếp tục làm bài</span>
+                                        <RefreshCw
+                                            className="w-4 h-4 animate-spin"
+                                            style={{ animationDuration: "3s" }}
+                                        />
+                                    </button>
+                                ) : remainingAttempts > 0 ? (
+                                    <button
+                                        type="button"
+                                        onClick={startQuizAttempt}
+                                        className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
+                                    >
+                                        <span>Bắt đầu làm bài</span>
+                                        <ArrowRight className="w-4 h-4 animate-pulse" />
+                                    </button>
+                                ) : (
+                                    <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                        <span>Đã hết lượt thi (Tối đa 5)</span>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                ) : activeQuiz && quizEntryPhase === "taking" ? (
                     <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start xl:h-full xl:min-h-0 gap-6">
                         {/* CENTER COLUMN: Question Box Card & Options */}
                         <div className="w-full xl:flex-1 xl:max-w-4xl xl:h-full xl:min-h-0 flex flex-col">
@@ -1845,6 +2154,7 @@ export default function StudentDashboard({
                         quizzes={quizzes}
                         submissions={submissions}
                         onStartQuiz={handleStartQuiz}
+                        ongoingAttempt={ongoingAttempt}
                         loading={loading}
                     />
                 ) : (
@@ -2458,7 +2768,7 @@ export default function StudentDashboard({
                                                                 src={
                                                                     friend.isMe
                                                                         ? "/images/trang.jpg"
-                                                                        : ""
+                                                                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(friend.name)}&background=random&size=40`
                                                                 }
                                                                 alt={
                                                                     friend.name
@@ -2528,113 +2838,151 @@ export default function StudentDashboard({
                                         </div>
                                     ) : (
                                         paginatedQuizzes.map((quiz) => {
-                                        const hasDone = studentSubmissions.some(
-                                            (sub) => sub.quizId === quiz.id,
-                                        );
-                                        return (
-                                            <div
-                                                key={quiz.id}
-                                                className="bg-white border border-gray-100/80 rounded-2xl p-4.5 flex flex-col justify-between shadow-xs hover:border-brand-300/20 transition-all duration-200"
-                                            >
-                                                <div>
-                                                    <div className="flex items-center justify-between gap-2 mb-2.5">
-                                                        <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
-                                                            {quiz.subject}
-                                                        </span>
-                                                        {hasDone ? (
-                                                            <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
-                                                                Đã làm
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
-                                                                Chưa làm
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[38px]">
-                                                        {quiz.title}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 min-h-[32px]">
-                                                        {quiz.description}
-                                                    </p>
-
-                                                    <div className="flex items-center justify-between border-t border-b border-gray-50 py-2 my-3 text-[11px] text-gray-500">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <Clock className="w-4 h-4 text-gray-400" />
-                                                                <span>
-                                                                    {quiz.duration}{" "}
-                                                                    phút
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5">
-                                                                <HelpCircle className="w-4 h-4 text-gray-400" />
-                                                                <span>
-                                                                    {
-                                                                        quiz
-                                                                            .questions
-                                                                            .length
-                                                                    }{" "}
-                                                                    câu hỏi
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        {quiz.createdAt && (
-                                                            <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                                                                <span>
-                                                                    Đăng: {(() => {
-                                                                        const dateParts = quiz.createdAt.split("-");
-                                                                        if (dateParts.length === 3) {
-                                                                            return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                                                                        }
-                                                                        return quiz.createdAt;
-                                                                    })()}
-                                                                </span>
-                                                                <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    type="button"
-                                                    id={`btn-start-quiz-${quiz.id}`}
-                                                    onClick={() =>
-                                                        handleStartQuiz(quiz)
-                                                    }
-                                                    className="w-full py-2.5 bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                                            const hasDone =
+                                                studentSubmissions.some(
+                                                    (sub) =>
+                                                        sub.quizId === quiz.id,
+                                                );
+                                            const isOngoing = !!(ongoingAttempt && ongoingAttempt.quiz_id === quiz.id);
+                                            return (
+                                                <div
+                                                    key={quiz.id}
+                                                    className={`bg-white border ${
+                                                        isOngoing
+                                                            ? "border-blue-300 bg-blue-50/30 shadow-sm"
+                                                            : "border-gray-100/80 shadow-xs"
+                                                    } rounded-2xl p-4.5 flex flex-col justify-between hover:border-brand-300/20 transition-all duration-200`}
                                                 >
-                                                    <span>Bắt đầu làm bài</span>
-                                                    <ArrowRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        );
-                                    }) )}
+                                                    <div>
+                                                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                                                            <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
+                                                                {quiz.subject}
+                                                            </span>
+                                                            {hasDone ? (
+                                                                <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
+                                                                    Đã làm
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[9px] font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/30">
+                                                                    Chưa làm
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 min-h-[38px]">
+                                                            {quiz.title}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 min-h-[32px]">
+                                                            {quiz.description}
+                                                        </p>
+
+                                                        <div className="flex items-center justify-between border-t border-b border-gray-50 py-2 my-3 text-[11px] text-gray-500">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <Clock className="w-4 h-4 text-gray-400" />
+                                                                    <span>
+                                                                        {
+                                                                            quiz.duration
+                                                                        }{" "}
+                                                                        phút
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <HelpCircle className="w-4 h-4 text-gray-400" />
+                                                                    <span>
+                                                                        {
+                                                                            quiz
+                                                                                .questions
+                                                                                .length
+                                                                        }{" "}
+                                                                        câu hỏi
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            {quiz.createdAt && (
+                                                                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                                                                    <span>
+                                                                        Đăng:{" "}
+                                                                        {(() => {
+                                                                            const dateParts =
+                                                                                quiz.createdAt.split(
+                                                                                    "-",
+                                                                                );
+                                                                            if (
+                                                                                dateParts.length ===
+                                                                                3
+                                                                            ) {
+                                                                                return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                                                                            }
+                                                                            return quiz.createdAt;
+                                                                        })()}
+                                                                    </span>
+                                                                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        id={`btn-start-quiz-${quiz.id}`}
+                                                        onClick={() =>
+                                                            handleStartQuiz(
+                                                                quiz,
+                                                            )
+                                                        }
+                                                        className={`w-full py-2.5 bg-gradient-to-r ${
+                                                            isOngoing
+                                                                ? "from-[#18323E] to-[#10222B] shadow-md shadow-blue-500/10"
+                                                                : "from-brand-300 to-brand-400"
+                                                        } text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer`}
+                                                    >
+                                                        <span>
+                                                            {isOngoing ? "Tiếp tục làm bài" : "Bắt đầu làm bài"}
+                                                        </span>
+                                                        <ArrowRight className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                    )}
                                 </div>
 
                                 {/* Pagination Controls */}
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
                                         <span className="text-[11px] text-slate-400 font-semibold">
-                                            Trang {currentPage} / {totalPages} (Tổng số {quizzes.length} đề thi)
+                                            Trang {currentPage} / {totalPages}{" "}
+                                            (Tổng số {quizzes.length} đề thi)
                                         </span>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 disabled={currentPage === 1}
                                                 onClick={() => {
-                                                    setCurrentPage((prev) => prev - 1);
-                                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                                    setCurrentPage(
+                                                        (prev) => prev - 1,
+                                                    );
+                                                    window.scrollTo({
+                                                        top: 0,
+                                                        behavior: "smooth",
+                                                    });
                                                 }}
                                                 className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                                             >
                                                 <ChevronLeft className="w-3.5 h-3.5 text-slate-600" />
                                             </button>
                                             <button
-                                                disabled={currentPage === totalPages}
+                                                disabled={
+                                                    currentPage === totalPages
+                                                }
                                                 onClick={() => {
-                                                    setCurrentPage((prev) => prev + 1);
-                                                    window.scrollTo({ top: 0, behavior: "smooth" });
+                                                    setCurrentPage(
+                                                        (prev) => prev + 1,
+                                                    );
+                                                    window.scrollTo({
+                                                        top: 0,
+                                                        behavior: "smooth",
+                                                    });
                                                 }}
                                                 className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                                             >

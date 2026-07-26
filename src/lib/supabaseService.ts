@@ -554,6 +554,51 @@ export interface ExamAttempt {
 }
 
 /**
+ * Lấy lượt thi đang diễn ra (nếu có) mà chưa hết hạn
+ */
+export async function getActiveAttempt(quizId: string): Promise<any | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session || !session.user) return null;
+
+  const { data, error } = await supabase
+    .from('exam_attempts')
+    .select('*')
+    .eq('quiz_id', quizId)
+    .eq('user_id', session.user.id)
+    .eq('status', 'inprogress')
+    .gt('expires_at', new Date().toISOString())
+    .order('started_at', { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return null;
+  }
+  return data[0];
+}
+
+/**
+ * Lấy bất kỳ lượt thi nào đang diễn ra của học sinh (không phân biệt quiz)
+ */
+export async function getAnyActiveAttempt(): Promise<any | null> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session || !session.user) return null;
+
+  const { data, error } = await supabase
+    .from('exam_attempts')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .eq('status', 'inprogress')
+    .gt('expires_at', new Date().toISOString())
+    .order('started_at', { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return null;
+  }
+  return data[0];
+}
+
+/**
  * Lấy hoặc tạo lượt thi mới trực tiếp từ server
  */
 export async function getOrCreateAttempt(quizId: string, durationMinutes: number): Promise<ExamAttempt> {
