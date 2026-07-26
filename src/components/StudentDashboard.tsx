@@ -2430,9 +2430,6 @@ export default function StudentDashboard({
                                                 <h3 className="text-xs font-black text-slate-900 tracking-wider uppercase">
                                                     Biểu đồ điểm số
                                                 </h3>
-                                                <span className="text-[10px] font-bold text-slate-400">
-                                                    Điểm số thật
-                                                </span>
                                             </div>
 
                                             {/* SVG Dynamic Line Chart showing real scores */}
@@ -2843,7 +2840,11 @@ export default function StudentDashboard({
                                                     (sub) =>
                                                         sub.quizId === quiz.id,
                                                 );
-                                            const isOngoing = !!(ongoingAttempt && ongoingAttempt.quiz_id === quiz.id);
+                                            const isOngoing = !!(
+                                                ongoingAttempt &&
+                                                ongoingAttempt.quiz_id ===
+                                                    quiz.id
+                                            );
                                             return (
                                                 <div
                                                     key={quiz.id}
@@ -2938,7 +2939,9 @@ export default function StudentDashboard({
                                                         } text-white font-medium hover:opacity-95 shadow-xs transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer`}
                                                     >
                                                         <span>
-                                                            {isOngoing ? "Tiếp tục làm bài" : "Bắt đầu làm bài"}
+                                                            {isOngoing
+                                                                ? "Tiếp tục làm bài"
+                                                                : "Bắt đầu làm bài"}
                                                         </span>
                                                         <ArrowRight className="w-4 h-4" />
                                                     </button>
