@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Quiz, Submission, User } from '../types';
+import { Quiz, Submission, User, Question } from '../types';
 
 /**
  * ----------------------------------------------------
@@ -15,7 +15,8 @@ export async function signUpUser(
   name: string,
   username: string,
   password: string,
-  role: 'teacher' | 'student'
+  role: 'teacher' | 'student',
+  grade?: string | null
 ): Promise<User> {
   const cleanUsername = username.trim().toLowerCase();
   const email = `${cleanUsername}@hocvientinhte.edu.vn`;
@@ -52,7 +53,8 @@ export async function signUpUser(
       id: authData.user.id,
       name: name.trim(),
       username: cleanUsername,
-      role: role
+      role: role,
+      grade: grade || null
     });
 
   if (profileError) {
@@ -63,7 +65,8 @@ export async function signUpUser(
     id: authData.user.id,
     name: name.trim(),
     username: cleanUsername,
-    role: role
+    role: role,
+    grade: grade || undefined
   };
 }
 
@@ -116,6 +119,7 @@ export async function signInUser(username: string, password: string): Promise<Us
     username: profileData.username,
     role: profileData.role as 'teacher' | 'student',
     plan: (profileData.plan as any) || 'nothing',
+    grade: profileData.grade || undefined,
     avatarUrl: authData.user.user_metadata?.avatar_url || authData.user.user_metadata?.picture
   };
 }
@@ -169,6 +173,7 @@ export async function getCurrentUser(): Promise<User | null> {
     username: profileData.username,
     role: profileData.role as 'teacher' | 'student',
     plan: (profileData.plan as any) || 'nothing',
+    grade: profileData.grade || undefined,
     avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
   };
 }
@@ -193,6 +198,7 @@ export async function getAllProfiles(): Promise<User[]> {
     username: item.username,
     role: item.role as 'teacher' | 'student',
     plan: (item.plan as any) || 'nothing',
+    grade: item.grade || undefined,
     createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
   }));
 }
@@ -214,19 +220,34 @@ export async function updateUserPlan(userId: string, newPlan: 'nothing' | 'basic
 /**
  * Cập nhật thông tin chi tiết tài khoản (Cho Admin)
  */
-export async function updateUserProfile(userId: string, updatedData: { name: string; username: string; role: 'teacher' | 'student'; plan: 'nothing' | 'basic' | 'vip' }): Promise<void> {
+export async function updateUserProfile(userId: string, updatedData: { name: string; username: string; role: 'teacher' | 'student'; plan: 'nothing' | 'basic' | 'vip'; grade?: string | null }): Promise<void> {
   const { error } = await supabase
     .from('profiles')
     .update({
       name: updatedData.name,
       username: updatedData.username,
       role: updatedData.role,
-      plan: updatedData.plan
+      plan: updatedData.plan,
+      grade: updatedData.grade !== undefined ? updatedData.grade : null
     })
     .eq('id', userId);
 
   if (error) {
     throw new Error(`Không thể cập nhật tài khoản: ${error.message}`);
+  }
+}
+
+/**
+ * Cập nhật Lớp cho tài khoản người dùng
+ */
+export async function updateUserGrade(userId: string, newGrade: string | null): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ grade: newGrade || null })
+    .eq('id', userId);
+
+  if (error) {
+    throw new Error(`Không thể cập nhật Lớp: ${error.message}`);
   }
 }
 

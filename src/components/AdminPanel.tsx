@@ -10,6 +10,7 @@ import {
     signUpUser,
     updateUserProfile,
     deleteUserProfile,
+    updateUserGrade,
 } from "../lib/supabaseService";
 import WordImporter from "./WordImporter";
 import { renderMathHtml } from "../lib/math";
@@ -172,7 +173,7 @@ export default function AdminPanel({
                 <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded uppercase tracking-wider">
+                            <span className="text-[9px] font-bold bg-[#3B6D85]/10 text-[#3B6D85] px-2 py-0.5 rounded uppercase tracking-wider">
                                 Xem bài làm học sinh
                             </span>
                             <span className="text-[9px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase">
@@ -189,7 +190,7 @@ export default function AdminPanel({
                     </div>
                     <div className="flex items-center gap-6 self-stretch md:self-auto justify-between border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
                         <div className="flex items-center gap-4">
-                            <div className="flex flex-col items-center justify-center bg-brand-50 text-[#2B5467] w-14 h-14 rounded-full border border-brand-200 shadow-2xs">
+                            <div className="flex flex-col items-center justify-center bg-brand-50 text-[#3B6D85] w-14 h-14 rounded-full border border-brand-200 shadow-2xs">
                                 <span className="text-base font-extrabold leading-none">
                                     {sub.score}
                                 </span>
@@ -509,12 +510,12 @@ export default function AdminPanel({
 
                                 {q.explanation && (
                                     <div className="bg-slate-55 border border-slate-200 rounded-lg p-4 text-xs space-y-2 mt-4">
-                                        <div className="flex items-center gap-1.5 text-[#2B5467] font-extrabold">
-                                            <BookOpen className="w-4 h-4 text-[#2B5467]" />
+                                        <div className="flex items-center gap-1.5 text-[#3B6D85] font-extrabold">
+                                            <BookOpen className="w-4 h-4 text-[#3B6D85]" />
                                             <span>Lời giải chi tiết:</span>
                                         </div>
                                         <div
-                                            className="text-slate-705 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#2B5467]/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4"
+                                            className="text-slate-705 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#3B6D85]/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4"
                                             dangerouslySetInnerHTML={{
                                                 __html: renderMathHtml(
                                                     q.explanation,
@@ -553,6 +554,7 @@ export default function AdminPanel({
         "student",
     );
     const [newUserPlan, setNewUserPlan] = useState<UserPlan>("nothing");
+    const [newUserGrade, setNewUserGrade] = useState<string>("");
 
     // Edit User state
     const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -562,6 +564,7 @@ export default function AdminPanel({
         "student",
     );
     const [editUserPlan, setEditUserPlan] = useState<UserPlan>("nothing");
+    const [editUserGrade, setEditUserGrade] = useState<string>("");
 
     // Statistics & Analytics state
     const [statsQuizSortBy, setStatsQuizSortBy] = useState<
@@ -754,6 +757,27 @@ export default function AdminPanel({
         }
     };
 
+    const handleRoleChange = async (userId: string, newRole: "teacher" | "student") => {
+        const found = userProfiles.find((u) => u.id === userId);
+        if (!found) return;
+        setUpdatingUserId(userId);
+        try {
+            await updateUserProfile(userId, {
+                name: found.name,
+                username: found.username,
+                role: newRole,
+                plan: found.plan || "nothing",
+                grade: newRole === "student" ? found.grade || null : null,
+            });
+            await fetchProfiles();
+        } catch (err: any) {
+            console.error("Lỗi cập nhật vai trò:", err);
+            alert(`Lỗi cập nhật vai trò: ${err.message}`);
+        } finally {
+            setUpdatingUserId(null);
+        }
+    };
+
     // Add new account
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -772,6 +796,7 @@ export default function AdminPanel({
                 newUserUsername.trim(),
                 newUserPassword,
                 newUserRole,
+                newUserRole === "student" ? newUserGrade || null : null,
             );
             // If plan is not 'nothing', we need to update it
             if (newUserPlan !== "nothing") {
@@ -784,6 +809,7 @@ export default function AdminPanel({
             setNewUserPassword("");
             setNewUserRole("student");
             setNewUserPlan("nothing");
+            setNewUserGrade("");
             await fetchProfiles();
         } catch (err: any) {
             alert(`Lỗi khi tạo tài khoản: ${err.message}`);
@@ -797,6 +823,7 @@ export default function AdminPanel({
         setEditUserUsername(user.username);
         setEditUserRole(user.role);
         setEditUserPlan(user.plan || "nothing");
+        setEditUserGrade(user.grade || "");
     };
 
     const handleSaveEditUser = async (e: React.FormEvent) => {
@@ -812,6 +839,7 @@ export default function AdminPanel({
                 username: editUserUsername.trim(),
                 role: editUserRole,
                 plan: editUserPlan,
+                grade: editUserRole === "student" ? editUserGrade || null : null,
             });
             alert("Cập nhật tài khoản thành công!");
             setEditingUser(null);
@@ -1377,6 +1405,9 @@ export default function AdminPanel({
                                                 <th className="py-2.5 px-4">
                                                     Plan
                                                 </th>
+                                                <th className="py-2.5 px-4">
+                                                    Lớp
+                                                </th>
                                                 <th className="py-2.5 px-4 text-right">
                                                     Thao tác
                                                 </th>
@@ -1386,7 +1417,7 @@ export default function AdminPanel({
                                             {loadingProfiles ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={5}
+                                                        colSpan={6}
                                                         className="py-8 text-center text-slate-400"
                                                     >
                                                         Đang tải danh sách...
@@ -1395,7 +1426,7 @@ export default function AdminPanel({
                                             ) : paginatedUsers.length === 0 ? (
                                                 <tr>
                                                     <td
-                                                        colSpan={5}
+                                                        colSpan={6}
                                                         className="py-8 text-center text-slate-400"
                                                     >
                                                         Không tìm thấy tài khoản
@@ -1415,14 +1446,33 @@ export default function AdminPanel({
                                                             @{prof.username}
                                                         </td>
                                                         <td className="py-3 px-4">
-                                                            <span
-                                                                className={`px-2 py-0.5 rounded text-[10px] font-medium border ${prof.role === "teacher" ? "bg-amber-50/80 text-amber-700 border-amber-100" : "bg-sky-50/80 text-sky-700 border-sky-100"}`}
+                                                            <select
+                                                                disabled={
+                                                                    updatingUserId ===
+                                                                    prof.id
+                                                                }
+                                                                value={prof.role}
+                                                                onChange={(e) =>
+                                                                    handleRoleChange(
+                                                                        prof.id,
+                                                                        e.target
+                                                                            .value as "teacher" | "student",
+                                                                    )
+                                                                }
+                                                                className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
+                                                                    prof.role ===
+                                                                    "teacher"
+                                                                        ? "bg-amber-50 text-amber-800 border-amber-200"
+                                                                        : "bg-sky-50 text-sky-800 border-sky-200"
+                                                                }`}
                                                             >
-                                                                {prof.role ===
-                                                                "teacher"
-                                                                    ? "Giáo viên"
-                                                                    : "Học sinh"}
-                                                            </span>
+                                                                <option value="student">
+                                                                    Học sinh
+                                                                </option>
+                                                                <option value="teacher">
+                                                                    Giáo viên
+                                                                </option>
+                                                            </select>
                                                         </td>
                                                         <td className="py-3 px-4">
                                                             <select
@@ -1461,6 +1511,47 @@ export default function AdminPanel({
                                                                     VIP
                                                                 </option>
                                                             </select>
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            {prof.role === "student" ? (
+                                                                <select
+                                                                    disabled={
+                                                                        updatingUserId ===
+                                                                        prof.id
+                                                                    }
+                                                                    value={
+                                                                        prof.grade ||
+                                                                        ""
+                                                                    }
+                                                                    onChange={async (e) => {
+                                                                        const newGrade = e.target.value || null;
+                                                                        setUpdatingUserId(prof.id);
+                                                                        try {
+                                                                            await updateUserGrade(prof.id, newGrade);
+                                                                            await fetchProfiles();
+                                                                        } catch (err: any) {
+                                                                            console.error("Lỗi cập nhật lớp:", err);
+                                                                            alert(`Lỗi cập nhật lớp: ${err.message}`);
+                                                                        } finally {
+                                                                            setUpdatingUserId(null);
+                                                                        }
+                                                                    }}
+                                                                    className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
+                                                                        prof.grade
+                                                                            ? "bg-indigo-50 text-indigo-800 border-indigo-200"
+                                                                            : "bg-slate-50 text-slate-600 border-slate-200"
+                                                                    }`}
+                                                                >
+                                                                    <option value="">Chọn lớp</option>
+                                                                    <option value="8">Lớp 8</option>
+                                                                    <option value="9">Lớp 9</option>
+                                                                    <option value="10">Lớp 10</option>
+                                                                    <option value="11">Lớp 11</option>
+                                                                    <option value="12">Lớp 12</option>
+                                                                </select>
+                                                            ) : (
+                                                                <span className="text-[10px] text-slate-400 font-medium italic">Không có</span>
+                                                            )}
                                                         </td>
                                                         <td className="py-3 px-4 text-right space-x-1.5">
                                                             <button
@@ -1653,14 +1744,36 @@ export default function AdminPanel({
                                                         </select>
                                                     </div>
                                                 </div>
+                                                {newUserRole === "student" && (
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 mb-1 block uppercase">
+                                                            Lớp
+                                                        </label>
+                                                        <select
+                                                            value={newUserGrade}
+                                                            onChange={(e) =>
+                                                                setNewUserGrade(
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-slate-400"
+                                                        >
+                                                            <option value="">Chọn lớp</option>
+                                                            <option value="8">Lớp 8</option>
+                                                            <option value="9">Lớp 9</option>
+                                                            <option value="10">Lớp 10</option>
+                                                            <option value="11">Lớp 11</option>
+                                                            <option value="12">Lớp 12</option>
+                                                        </select>
+                                                    </div>
+                                                )}
                                                 <div className="flex justify-end gap-2 pt-3 border-t border-slate-50">
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            setIsCreateUserOpen(
-                                                                false,
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            setIsCreateUserOpen(false);
+                                                            setNewUserGrade("");
+                                                        }}
                                                         className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Hủy
@@ -1769,13 +1882,36 @@ export default function AdminPanel({
                                                         </select>
                                                     </div>
                                                 </div>
+                                                {editUserRole === "student" && (
+                                                    <div>
+                                                        <label className="text-[10px] font-bold text-slate-400 mb-1 block uppercase">
+                                                            Lớp
+                                                        </label>
+                                                        <select
+                                                            value={editUserGrade}
+                                                            onChange={(e) =>
+                                                                setEditUserGrade(
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-slate-400"
+                                                        >
+                                                            <option value="">Chọn lớp</option>
+                                                            <option value="8">Lớp 8</option>
+                                                            <option value="9">Lớp 9</option>
+                                                            <option value="10">Lớp 10</option>
+                                                            <option value="11">Lớp 11</option>
+                                                            <option value="12">Lớp 12</option>
+                                                        </select>
+                                                    </div>
+                                                )}
                                                 <div className="flex justify-end gap-2 pt-3 border-t border-slate-50">
                                                     <button
                                                         type="button"
                                                         onClick={() =>
                                                             setEditingUser(null)
                                                         }
-                                                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                                                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-650 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                                                     >
                                                         Hủy
                                                     </button>
@@ -2012,7 +2148,7 @@ export default function AdminPanel({
                                                             Lớp{" "}
                                                             {q.grade || "10"}
                                                         </td>
-                                                        <td className="py-3 px-4 text-center font-bold text-[#2B5467]">
+                                                        <td className="py-3 px-4 text-center font-bold text-[#3B6D85]">
                                                             {q.questions.length}{" "}
                                                             câu
                                                         </td>
@@ -2446,7 +2582,7 @@ export default function AdminPanel({
                                                     {/* Modal Header */}
                                                     <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 flex-shrink-0">
                                                         <div>
-                                                            <span className="text-[10px] font-extrabold text-[#2B5467] bg-[#2B5467]/10 px-2 py-0.5 rounded uppercase tracking-wider">
+                                                            <span className="text-[10px] font-extrabold text-[#3B6D85] bg-[#3B6D85]/10 px-2 py-0.5 rounded uppercase tracking-wider">
                                                                 Danh sách học
                                                                 sinh làm bài
                                                             </span>
@@ -2745,7 +2881,7 @@ export default function AdminPanel({
                                                     <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                                                         <div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[9px] font-bold bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded uppercase tracking-wider">
+                                                                <span className="text-[9px] font-bold bg-[#3B6D85]/10 text-[#3B6D85] px-2 py-0.5 rounded uppercase tracking-wider">
                                                                     Xem bài làm
                                                                     học sinh
                                                                 </span>
@@ -2770,7 +2906,7 @@ export default function AdminPanel({
                                                         </div>
                                                         <div className="flex items-center gap-6 self-stretch md:self-auto justify-between border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
                                                             <div className="flex items-center gap-4">
-                                                                <div className="flex flex-col items-center justify-center bg-brand-50 text-[#2B5467] w-14 h-14 rounded-full border border-brand-200 shadow-2xs">
+                                                                <div className="flex flex-col items-center justify-center bg-brand-50 text-[#3B6D85] w-14 h-14 rounded-full border border-brand-200 shadow-2xs">
                                                                     <span className="text-base font-extrabold leading-none">
                                                                         {
                                                                             adminReviewSubmission.score
@@ -3257,8 +3393,8 @@ export default function AdminPanel({
 
                                                                         {q.explanation && (
                                                                             <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-xs space-y-2 mt-4">
-                                                                                <div className="flex items-center gap-1.5 text-[#2B5467] font-extrabold">
-                                                                                    <BookOpen className="w-4 h-4 text-[#2B5467]" />
+                                                                                <div className="flex items-center gap-1.5 text-[#3B6D85] font-extrabold">
+                                                                                    <BookOpen className="w-4 h-4 text-[#3B6D85]" />
                                                                                     <span>
                                                                                         Lời
                                                                                         giải
@@ -3267,7 +3403,7 @@ export default function AdminPanel({
                                                                                     </span>
                                                                                 </div>
                                                                                 <div
-                                                                                    className="text-slate-700 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#2B5467]/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4"
+                                                                                    className="text-slate-700 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#3B6D85]/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4"
                                                                                     dangerouslySetInnerHTML={{
                                                                                         __html: renderMathHtml(
                                                                                             q.explanation,
@@ -3560,7 +3696,7 @@ export default function AdminPanel({
                                                                             Điểm
                                                                             TB
                                                                         </span>
-                                                                        <span className="text-sm font-extrabold text-[#2B5467] mt-0.5 block">
+                                                                        <span className="text-sm font-extrabold text-[#3B6D85] mt-0.5 block">
                                                                             {
                                                                                 avgScore
                                                                             }

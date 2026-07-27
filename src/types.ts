@@ -38,6 +38,7 @@ export interface User {
   username: string;
   role: 'teacher' | 'student';
   plan?: UserPlan;
+  grade?: string;
   avatarUrl?: string;
   createdAt?: string;
 }

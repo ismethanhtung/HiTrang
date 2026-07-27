@@ -83,6 +83,7 @@ export default function App() {
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -90,6 +91,16 @@ export default function App() {
     const [user, setUser] = useState<User | null>(() => {
         const saved = localStorage.getItem("hvt_user");
         return saved ? JSON.parse(saved) : null;
+    });
+
+    const filteredQuizzes = quizzes.filter((q) => {
+        const query = searchQuery.toLowerCase().trim();
+        if (!query) return true;
+        return (
+            q.title.toLowerCase().includes(query) ||
+            (q.description && q.description.toLowerCase().includes(query)) ||
+            q.subject.toLowerCase().includes(query)
+        );
     });
 
     const [activeTab, setActiveTab] = useState<string>("student-dashboard");
@@ -289,6 +300,8 @@ export default function App() {
             <Topbar
                 user={user}
                 selectedGrade={selectedGrade}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
                 onSelectGrade={(grade) => {
                     if (confirmNavigation()) {
                         if (grade) {
@@ -356,7 +369,7 @@ export default function App() {
                 ) : !user ? (
                     /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                     <LandingPage
-                        quizzes={quizzes}
+                        quizzes={filteredQuizzes}
                         selectedGrade={selectedGrade}
                         onSelectGrade={(grade) => {
                             if (grade) navigateTo("/grade/" + grade);
@@ -375,7 +388,7 @@ export default function App() {
                 ) : (
                     /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */
                     <div
-                        className={`flex-1 bg-white flex flex-col ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
+                        className={`flex-1 bg-transparent flex flex-col ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
                     >
                         {(() => {
                             if (
@@ -416,6 +429,33 @@ export default function App() {
                                 );
                             }
 
+                            if (isTakingOrReviewing) {
+                                return (
+                                    <StudentDashboard
+                                        user={user}
+                                        quizzes={filteredQuizzes}
+                                        submissions={submissions}
+                                        onAddSubmission={handleAddSubmission}
+                                        activeTab={activeTab}
+                                        selectedGrade={selectedGrade}
+                                        onSelectGrade={(grade) => {
+                                            if (confirmNavigation()) {
+                                                if (grade)
+                                                    navigateTo("/grade/" + grade);
+                                                else navigateTo("/");
+                                            }
+                                        }}
+                                        onQuizStateChange={setIsTakingQuiz}
+                                        activeQuizId={activeQuizId}
+                                        reviewSubmissionId={reviewSubmissionId}
+                                        onNavigate={navigateTo}
+                                        navigateReplace={navigateReplace}
+                                        ongoingAttempt={ongoingAttempt}
+                                        loading={loading}
+                                    />
+                                );
+                            }
+
                             if (
                                 selectedGrade !== null &&
                                 user.role === "teacher"
@@ -424,12 +464,10 @@ export default function App() {
                                     <GradeView
                                         user={user}
                                         grade={selectedGrade}
-                                        quizzes={quizzes}
+                                        quizzes={filteredQuizzes}
                                         submissions={submissions}
                                         onStartQuiz={(quiz) =>
-                                            alert(
-                                                "Tài khoản giáo viên chỉ có quyền xem trước đề thi.",
-                                            )
+                                            navigateTo("/quiz/" + quiz.id)
                                         }
                                         loading={loading}
                                     />
@@ -455,7 +493,7 @@ export default function App() {
                             return (
                                 <StudentDashboard
                                     user={user}
-                                    quizzes={quizzes}
+                                    quizzes={filteredQuizzes}
                                     submissions={submissions}
                                     onAddSubmission={handleAddSubmission}
                                     activeTab={activeTab}

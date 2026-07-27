@@ -199,7 +199,7 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme, subm
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-bold bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded uppercase tracking-wider">
+                    <span className="text-[9px] font-bold bg-[#3B6D85]/10 text-[#3B6D85] px-2 py-0.5 rounded uppercase tracking-wider">
                       Chi tiết bài thi
                     </span>
                     <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-350 px-2 py-0.5 rounded uppercase">
@@ -216,7 +216,7 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme, subm
                 </div>
                 <div className="flex items-center gap-6 self-stretch md:self-auto justify-between border-t md:border-t-0 border-slate-100 dark:border-slate-700 pt-4 md:pt-0">
                   <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-center justify-center bg-brand-50 dark:bg-brand-500/10 text-[#2B5467] dark:text-brand-400 w-14 h-14 rounded-full border border-brand-200 dark:border-brand-500/30 shadow-2xs">
+                    <div className="flex flex-col items-center justify-center bg-brand-50 dark:bg-brand-500/10 text-[#3B6D85] dark:text-brand-400 w-14 h-14 rounded-full border border-brand-200 dark:border-brand-500/30 shadow-2xs">
                       <span className="text-base font-extrabold leading-none">
                         {reviewSubmission.score}
                       </span>
@@ -422,11 +422,11 @@ export default function SettingsView({ user, onUpdateUser, onLogout, theme, subm
                       {/* Rich HTML Explanation */}
                       {q.explanation && (
                         <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/60 rounded-lg p-4 text-xs space-y-2 mt-4">
-                          <div className="flex items-center gap-1.5 text-[#2B5467] dark:text-brand-400 font-extrabold">
-                            <BookOpen className="w-4 h-4 text-[#2B5467] dark:text-brand-400" />
+                          <div className="flex items-center gap-1.5 text-[#3B6D85] dark:text-brand-400 font-extrabold">
+                            <BookOpen className="w-4 h-4 text-[#3B6D85] dark:text-brand-400" />
                             <span>Lời giải chi tiết:</span>
                           </div>
-                          <div className="text-slate-700 dark:text-slate-300 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#2B5467]/30 dark:border-brand-500/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4" dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation) }} />
+                          <div className="text-slate-700 dark:text-slate-300 overflow-x-auto leading-relaxed pl-5 border-l-2 border-[#3B6D85]/30 dark:border-brand-500/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4" dangerouslySetInnerHTML={{ __html: renderMathHtml(q.explanation) }} />
                         </div>
                       )}
                     </div>

@@ -185,7 +185,7 @@ export default function GradeView({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {loading ? (
                         <div className="col-span-full py-16 flex items-center justify-center">
-                            <Loader2 className="w-8 h-8 text-[#2B5467] animate-spin" />
+                            <Loader2 className="w-8 h-8 text-[#3B6D85] animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-250">
@@ -263,7 +263,7 @@ export default function GradeView({
                                     <div className="space-y-2">
                                         {/* Header line */}
                                         <div className="flex items-start justify-between gap-2">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider bg-[#2B5467]/10 text-[#2B5467] px-2 py-0.5 rounded">
+                                            <span className="text-[9px] font-bold uppercase tracking-wider bg-[#3B6D85]/10 text-[#3B6D85] px-2 py-0.5 rounded">
                                                 {getCleanSubjectName(
                                                     quiz.subject,
                                                 )}
@@ -347,7 +347,7 @@ export default function GradeView({
                                             className={`px-4 py-2 ${
                                                 isOngoing
                                                     ? "bg-[#18323E] hover:bg-[#10222B] shadow-md shadow-blue-500/10"
-                                                    : "bg-[#2B5467] hover:bg-[#204252]"
+                                                    : "bg-[#3B6D85] hover:bg-[#2C5A71]"
                                             } text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shadow-3xs cursor-pointer active:scale-98 flex-shrink-0`}
                                         >
                                             <span>

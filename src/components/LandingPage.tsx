@@ -90,7 +90,7 @@ export default function LandingPage({
                         <div className="flex flex-wrap items-center gap-4 pt-2">
                             <button
                                 onClick={() => onOpenAuth("register")}
-                                className="px-8 py-3.5 bg-[#2B5467] hover:bg-[#204252] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-98"
+                                className="px-8 py-3.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer active:scale-98"
                             >
                                 Đăng Ký Học Ngay
                             </button>
@@ -174,7 +174,7 @@ export default function LandingPage({
                             onClick={() => onSelectGrade(null)}
                             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                                 selectedGrade === null
-                                    ? "bg-[#2B5467] text-white shadow-xs"
+                                    ? "bg-[#3B6D85] text-white shadow-xs"
                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             }`}
                         >
@@ -186,7 +186,7 @@ export default function LandingPage({
                                 onClick={() => onSelectGrade(g)}
                                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                                     selectedGrade === g
-                                        ? "bg-[#2B5467] text-white shadow-xs"
+                                        ? "bg-[#3B6D85] text-white shadow-xs"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                             >
@@ -200,7 +200,7 @@ export default function LandingPage({
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {loading ? (
                         <div className="col-span-full py-16 flex items-center justify-center">
-                            <Loader2 className="w-8 h-8 text-[#2B5467] animate-spin" />
+                            <Loader2 className="w-8 h-8 text-[#3B6D85] animate-spin" />
                         </div>
                     ) : filteredQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -217,7 +217,7 @@ export default function LandingPage({
                             >
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-[#2B5467]/10 text-[#2B5467] px-2.5 py-1 rounded-md">
+                                        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-[#3B6D85]/10 text-[#3B6D85] px-2.5 py-1 rounded-md">
                                             {quiz.subject}
                                         </span>
                                         <span className="text-xs text-slate-500 font-medium flex items-center gap-1">
@@ -244,7 +244,7 @@ export default function LandingPage({
                                         onClick={() =>
                                             onSelectQuizToPreview(quiz)
                                         }
-                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2B5467] hover:bg-[#204252] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#3B6D85] hover:bg-[#2C5A71] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-98"
                                     >
                                         <span>Thi thử ngay</span>
                                         <ArrowRight className="w-3.5 h-3.5" />

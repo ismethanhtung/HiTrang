@@ -10,11 +10,14 @@ import {
     Crown,
     Zap,
     History,
+    Search,
 } from "lucide-react";
 
 interface TopbarProps {
     user: User | null;
     selectedGrade: string | null;
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
     onSelectGrade: (grade: string | null) => void;
     onOpenAuth: (mode?: "login" | "register") => void;
     onLogout: () => void;
@@ -27,6 +30,8 @@ interface TopbarProps {
 export default function Topbar({
     user,
     selectedGrade,
+    searchQuery,
+    onSearchChange,
     onSelectGrade,
     onOpenAuth,
     onLogout,
@@ -115,6 +120,19 @@ export default function Topbar({
 
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center gap-3">
+                    {/* SEARCH BOX */}
+                    <div className="relative hidden sm:block w-40 md:w-56 lg:w-64 flex-shrink-0">
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                            <Search className="h-3.5 w-3.5 text-slate-400" />
+                        </span>
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            placeholder="Tìm đề thi..."
+                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#3B6D85] focus:outline-none transition-all placeholder:text-slate-400 font-medium"
+                        />
+                    </div>
                     {/* ADMIN ROUTE BUTTON */}
                     <button
                         onClick={onNavigateAdmin}
