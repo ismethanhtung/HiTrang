@@ -259,14 +259,19 @@ export default function LandingPage({
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
                         <span className="text-[11px] text-slate-450 font-bold">
-                            Trang {currentPage} / {totalPages} (Tổng số {filteredQuizzes.length} đề thi)
+                            Trang {currentPage} / {totalPages} (Tổng số{" "}
+                            {filteredQuizzes.length} đề thi)
                         </span>
                         <div className="flex items-center gap-1.5">
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => {
                                     setCurrentPage((prev) => prev - 1);
-                                    document.getElementById("public-quiz-grid")?.scrollIntoView({ behavior: "smooth" });
+                                    document
+                                        .getElementById("public-quiz-grid")
+                                        ?.scrollIntoView({
+                                            behavior: "smooth",
+                                        });
                                 }}
                                 className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 cursor-pointer transition-colors"
                             >
@@ -276,7 +281,11 @@ export default function LandingPage({
                                 disabled={currentPage === totalPages}
                                 onClick={() => {
                                     setCurrentPage((prev) => prev + 1);
-                                    document.getElementById("public-quiz-grid")?.scrollIntoView({ behavior: "smooth" });
+                                    document
+                                        .getElementById("public-quiz-grid")
+                                        ?.scrollIntoView({
+                                            behavior: "smooth",
+                                        });
                                 }}
                                 className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-40 cursor-pointer transition-colors"
                             >

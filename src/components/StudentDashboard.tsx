@@ -237,7 +237,7 @@ export default function StudentDashboard({
         if (!activeQuiz) return;
         if (isGradeMismatch) {
             alert(
-                `Bạn đang là học sinh lớp ${user.grade} mà? Không được làm bài của lớp khác.`,
+                `Em đang là học sinh lớp ${user.grade} mà? Không được làm bài của lớp khác.`,
             );
             return;
         }
@@ -464,6 +464,9 @@ export default function StudentDashboard({
     };
 
     // Student specific stats, filtered by their current grade to prevent mixed totals
+    const gradeQuizzes = user.grade
+        ? quizzes.filter((q) => !q.grade || q.grade === user.grade)
+        : quizzes;
     const studentSubmissions = submissions.filter((sub) => {
         if (sub.studentId !== user.id) return false;
         const quizObj = quizzes.find((q) => q.id === sub.quizId);
@@ -492,8 +495,8 @@ export default function StudentDashboard({
         studentSubmissions.map((sub) => sub.quizId),
     ).size;
     const completionRate =
-        quizzes.length > 0
-            ? Math.round((uniqueQuizzesDone / quizzes.length) * 100)
+        gradeQuizzes.length > 0
+            ? Math.round((uniqueQuizzesDone / gradeQuizzes.length) * 100)
             : 0;
     const totalStudyHours = Math.round((completedCount * 45) / 60);
 
@@ -1574,7 +1577,7 @@ export default function StudentDashboard({
 
                             {isGradeMismatch && (
                                 <div className="text-center text-xs text-rose-400 font-semibold mt-2">
-                                    Bạn đang là học sinh lớp {user.grade} mà?
+                                    Em đang là học sinh lớp {user.grade} mà?
                                 </div>
                             )}
                         </motion.div>
@@ -2247,10 +2250,10 @@ export default function StudentDashboard({
                                         ),
                                     ).size;
                                     const completionRate =
-                                        quizzes.length > 0
+                                        gradeQuizzes.length > 0
                                             ? Math.round(
                                                   (uniqueQuizzesDone /
-                                                      quizzes.length) *
+                                                      gradeQuizzes.length) *
                                                       100,
                                               )
                                             : 0;
@@ -2282,7 +2285,7 @@ export default function StudentDashboard({
                                                         Số đề thi
                                                     </span>
                                                     <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                        {quizzes.length}
+                                                        {gradeQuizzes.length}
                                                     </span>
                                                 </div>
                                                 <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
@@ -2389,7 +2392,7 @@ export default function StudentDashboard({
                                                         onClick={
                                                             handleResumeOngoing
                                                         }
-                                                        className="px-6 py-2.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                                        className="px-6 py-2.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-lg transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
                                                     >
                                                         <span>
                                                             {ongoingAttempt
@@ -2409,8 +2412,10 @@ export default function StudentDashboard({
                                                         </span>
                                                         <span>
                                                             {uniqueQuizzesDone}/
-                                                            {quizzes.length} đề
-                                                            thi
+                                                            {
+                                                                gradeQuizzes.length
+                                                            }{" "}
+                                                            đề thi
                                                         </span>
                                                     </div>
                                                     <div className="w-full bg-slate-200/60 h-1.5 rounded-full overflow-hidden">
@@ -2449,216 +2454,238 @@ export default function StudentDashboard({
                                                     </button>
                                                 </div>
 
-                                                {/* Spacious borderless feed rows */}
+                                                {/* Spacious borderless feed rows — filter by user's grade locally here only */}
                                                 <div className="space-y-6">
-                                                    {quizzes.length === 0 ? (
-                                                        <div className="py-12 text-center text-slate-400 text-xs italic">
-                                                            Không có đề thi nào
-                                                            phù hợp cho lớp của
-                                                            bạn.
+                                                    {loading ? (
+                                                        <div className="py-10 flex items-center justify-center">
+                                                            <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
                                                         </div>
                                                     ) : (
-                                                        quizzes
-                                                            .slice(0, 5)
-                                                            .map((quiz) => {
-                                                                const hasDone =
-                                                                    studentSubmissions.some(
-                                                                        (sub) =>
-                                                                            sub.quizId ===
-                                                                            quiz.id,
-                                                                    );
-
-                                                                const sectionCount =
-                                                                    quiz
-                                                                        .scoringConfig
-                                                                        ?.sections
-                                                                        ?.length ||
-                                                                    new Set(
-                                                                        quiz.questions
-                                                                            .map(
-                                                                                (
-                                                                                    q,
-                                                                                ) =>
-                                                                                    q.sectionTitle,
-                                                                            )
-                                                                            .filter(
-                                                                                Boolean,
-                                                                            ),
-                                                                    ).size ||
-                                                                    1;
-
-                                                                const formattedDate =
-                                                                    (() => {
-                                                                        if (
-                                                                            !quiz.createdAt
-                                                                        )
-                                                                            return "Chưa rõ";
-                                                                        const dateParts =
-                                                                            quiz.createdAt.split(
-                                                                                "-",
-                                                                            );
-                                                                        if (
-                                                                            dateParts.length ===
-                                                                            3
-                                                                        ) {
-                                                                            return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                                                                        }
-                                                                        try {
-                                                                            const d =
-                                                                                new Date(
-                                                                                    quiz.createdAt,
-                                                                                );
-                                                                            if (
-                                                                                !isNaN(
-                                                                                    d.getTime(),
-                                                                                )
-                                                                            ) {
-                                                                                const day =
-                                                                                    String(
-                                                                                        d.getDate(),
-                                                                                    ).padStart(
-                                                                                        2,
-                                                                                        "0",
-                                                                                    );
-                                                                                const month =
-                                                                                    String(
-                                                                                        d.getMonth() +
-                                                                                            1,
-                                                                                    ).padStart(
-                                                                                        2,
-                                                                                        "0",
-                                                                                    );
-                                                                                const year =
-                                                                                    d.getFullYear();
-                                                                                return `${day}/${month}/${year}`;
-                                                                            }
-                                                                        } catch (e) {}
-                                                                        return quiz.createdAt;
-                                                                    })();
-
-                                                                const isVip =
-                                                                    quiz.id.includes(
-                                                                        "vip",
-                                                                    ) ||
-                                                                    quiz.title
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            "hsg",
-                                                                        ) ||
-                                                                    quiz.title
-                                                                        .toLowerCase()
-                                                                        .includes(
-                                                                            "chuyên",
-                                                                        );
-                                                                const badgeText =
-                                                                    isVip
-                                                                        ? "Nâng cao"
-                                                                        : "Cơ bản";
-                                                                const badgeStyles =
-                                                                    isVip
-                                                                        ? "bg-rose-50 text-rose-700 border-rose-100"
-                                                                        : "bg-slate-100 text-slate-600 border-slate-200/60";
-
+                                                        (() => {
+                                                            const gradeQuizzes =
+                                                                user.grade
+                                                                    ? quizzes.filter(
+                                                                          (q) =>
+                                                                              !q.grade ||
+                                                                              q.grade ===
+                                                                                  user.grade,
+                                                                      )
+                                                                    : quizzes;
+                                                            if (
+                                                                gradeQuizzes.length ===
+                                                                0
+                                                            ) {
                                                                 return (
-                                                                    <div
-                                                                        key={
-                                                                            quiz.id
-                                                                        }
-                                                                        className="group flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200/50 last:border-0 last:pb-0 gap-4 text-left transition-all"
-                                                                    >
-                                                                        {/* Left info */}
-                                                                        <div className="space-y-1.5 flex-1 w-full">
-                                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                                <h4 className="text-[13px] font-extrabold text-slate-800 group-hover:text-[#3B6D85] transition-colors leading-snug">
-                                                                                    {
-                                                                                        quiz.title
-                                                                                    }
-                                                                                </h4>
-                                                                            </div>
-
-                                                                            <p className="text-xs text-slate-400 font-medium line-clamp-1 max-w-[90%]">
-                                                                                {quiz.description ||
-                                                                                    "Tài liệu ôn thi trắc nghiệm toán học giúp chuẩn bị cho kì thi chính thức trên lớp."}
-                                                                            </p>
-
-                                                                            {/* Metas and real quiz data */}
-                                                                            <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold flex-wrap pt-0.5">
-                                                                                <span className="flex items-center gap-1">
-                                                                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                                                    {
-                                                                                        quiz.duration
-                                                                                    }{" "}
-                                                                                    phút
-                                                                                </span>
-                                                                                <span>
-                                                                                    •
-                                                                                </span>
-                                                                                <span className="flex items-center gap-1">
-                                                                                    <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-                                                                                    {
-                                                                                        quiz
-                                                                                            .questions
-                                                                                            .length
-                                                                                    }{" "}
-                                                                                    câu
-                                                                                    hỏi
-                                                                                </span>
-                                                                                <span>
-                                                                                    •
-                                                                                </span>
-                                                                                <span className="flex items-center gap-1">
-                                                                                    <BookMarked className="w-3.5 h-3.5 text-slate-400" />
-                                                                                    {
-                                                                                        sectionCount
-                                                                                    }{" "}
-                                                                                    phần
-                                                                                </span>
-                                                                                <span>
-                                                                                    •
-                                                                                </span>
-                                                                                <span className="flex items-center gap-1 text-slate-400 font-medium">
-                                                                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                                                    Ngày:{" "}
-                                                                                    {
-                                                                                        formattedDate
-                                                                                    }
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Right Action */}
-                                                                        <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100/50">
-                                                                            <span
-                                                                                className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${
-                                                                                    hasDone
-                                                                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                                                                                        : "bg-amber-50 text-amber-700 border border-amber-100"
-                                                                                }`}
-                                                                            >
-                                                                                {hasDone
-                                                                                    ? "✓ Đã nộp"
-                                                                                    : "○ Chưa làm"}
-                                                                            </span>
-
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() =>
-                                                                                    handleStartQuiz(
-                                                                                        quiz,
-                                                                                    )
-                                                                                }
-                                                                                className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
-                                                                            >
-                                                                                <span>
-                                                                                    Làm
-                                                                                    bài
-                                                                                </span>
-                                                                                <ChevronRight className="w-3.5 h-3.5" />
-                                                                            </button>
-                                                                        </div>
+                                                                    <div className="py-10 flex items-center justify-center">
+                                                                        <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
                                                                     </div>
                                                                 );
-                                                            })
+                                                            }
+                                                            return gradeQuizzes
+                                                                .slice(0, 5)
+                                                                .map((quiz) => {
+                                                                    const hasDone =
+                                                                        studentSubmissions.some(
+                                                                            (
+                                                                                sub,
+                                                                            ) =>
+                                                                                sub.quizId ===
+                                                                                quiz.id,
+                                                                        );
+
+                                                                    const sectionCount =
+                                                                        quiz
+                                                                            .scoringConfig
+                                                                            ?.sections
+                                                                            ?.length ||
+                                                                        new Set(
+                                                                            quiz.questions
+                                                                                .map(
+                                                                                    (
+                                                                                        q,
+                                                                                    ) =>
+                                                                                        q.sectionTitle,
+                                                                                )
+                                                                                .filter(
+                                                                                    Boolean,
+                                                                                ),
+                                                                        )
+                                                                            .size ||
+                                                                        1;
+
+                                                                    const formattedDate =
+                                                                        (() => {
+                                                                            if (
+                                                                                !quiz.createdAt
+                                                                            )
+                                                                                return "Chưa rõ";
+                                                                            const dateParts =
+                                                                                quiz.createdAt.split(
+                                                                                    "-",
+                                                                                );
+                                                                            if (
+                                                                                dateParts.length ===
+                                                                                3
+                                                                            ) {
+                                                                                return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                                                                            }
+                                                                            try {
+                                                                                const d =
+                                                                                    new Date(
+                                                                                        quiz.createdAt,
+                                                                                    );
+                                                                                if (
+                                                                                    !isNaN(
+                                                                                        d.getTime(),
+                                                                                    )
+                                                                                ) {
+                                                                                    const day =
+                                                                                        String(
+                                                                                            d.getDate(),
+                                                                                        ).padStart(
+                                                                                            2,
+                                                                                            "0",
+                                                                                        );
+                                                                                    const month =
+                                                                                        String(
+                                                                                            d.getMonth() +
+                                                                                                1,
+                                                                                        ).padStart(
+                                                                                            2,
+                                                                                            "0",
+                                                                                        );
+                                                                                    const year =
+                                                                                        d.getFullYear();
+                                                                                    return `${day}/${month}/${year}`;
+                                                                                }
+                                                                            } catch (e) {}
+                                                                            return quiz.createdAt;
+                                                                        })();
+
+                                                                    const isVip =
+                                                                        quiz.id.includes(
+                                                                            "vip",
+                                                                        ) ||
+                                                                        quiz.title
+                                                                            .toLowerCase()
+                                                                            .includes(
+                                                                                "hsg",
+                                                                            ) ||
+                                                                        quiz.title
+                                                                            .toLowerCase()
+                                                                            .includes(
+                                                                                "chuyên",
+                                                                            );
+                                                                    const badgeText =
+                                                                        isVip
+                                                                            ? "Nâng cao"
+                                                                            : "Cơ bản";
+                                                                    const badgeStyles =
+                                                                        isVip
+                                                                            ? "bg-rose-50 text-rose-700 border-rose-100"
+                                                                            : "bg-slate-100 text-slate-600 border-slate-200/60";
+
+                                                                    return (
+                                                                        <div
+                                                                            key={
+                                                                                quiz.id
+                                                                            }
+                                                                            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200/50 last:border-0 last:pb-0 gap-4 text-left transition-all"
+                                                                        >
+                                                                            {/* Left info */}
+                                                                            <div className="space-y-1.5 flex-1 w-full">
+                                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                                    <h4 className="text-[13px] font-extrabold text-slate-800 group-hover:text-[#3B6D85] transition-colors leading-snug">
+                                                                                        {
+                                                                                            quiz.title
+                                                                                        }
+                                                                                    </h4>
+                                                                                </div>
+
+                                                                                <p className="text-xs text-slate-400 font-medium line-clamp-1 max-w-[90%]">
+                                                                                    {quiz.description ||
+                                                                                        "Tài liệu ôn thi trắc nghiệm toán học giúp chuẩn bị cho kì thi chính thức trên lớp."}
+                                                                                </p>
+
+                                                                                {/* Metas and real quiz data */}
+                                                                                <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold flex-wrap pt-0.5">
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                                                                        {
+                                                                                            quiz.duration
+                                                                                        }{" "}
+                                                                                        phút
+                                                                                    </span>
+                                                                                    <span>
+                                                                                        •
+                                                                                    </span>
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                                                                                        {
+                                                                                            quiz
+                                                                                                .questions
+                                                                                                .length
+                                                                                        }{" "}
+                                                                                        câu
+                                                                                        hỏi
+                                                                                    </span>
+                                                                                    <span>
+                                                                                        •
+                                                                                    </span>
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <BookMarked className="w-3.5 h-3.5 text-slate-400" />
+                                                                                        {
+                                                                                            sectionCount
+                                                                                        }{" "}
+                                                                                        phần
+                                                                                    </span>
+                                                                                    <span>
+                                                                                        •
+                                                                                    </span>
+                                                                                    <span className="flex items-center gap-1 text-slate-400 font-medium">
+                                                                                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                                                        Ngày:{" "}
+                                                                                        {
+                                                                                            formattedDate
+                                                                                        }
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Right Action */}
+                                                                            <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100/50">
+                                                                                <span
+                                                                                    className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${
+                                                                                        hasDone
+                                                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                                                                                            : "bg-amber-50 text-amber-700 border border-amber-100"
+                                                                                    }`}
+                                                                                >
+                                                                                    {hasDone
+                                                                                        ? "✓ Đã nộp"
+                                                                                        : "○ Chưa làm"}
+                                                                                </span>
+
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() =>
+                                                                                        handleStartQuiz(
+                                                                                            quiz,
+                                                                                        )
+                                                                                    }
+                                                                                    className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
+                                                                                >
+                                                                                    <span>
+                                                                                        Làm
+                                                                                        bài
+                                                                                    </span>
+                                                                                    <ChevronRight className="w-3.5 h-3.5" />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                });
+                                                        })()
                                                     )}
                                                 </div>
                                             </div>
@@ -2694,7 +2721,11 @@ export default function StudentDashboard({
                                                             historyPoints.length ===
                                                             0
                                                         ) {
-                                                            return (
+                                                            return loading ? (
+                                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                                    <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
+                                                                </div>
+                                                            ) : (
                                                                 <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic">
                                                                     Hãy làm bài
                                                                     thi để vẽ
@@ -2905,7 +2936,9 @@ export default function StudentDashboard({
                                                             Tổng số đề thi
                                                         </span>
                                                         <span className="text-xl font-black text-slate-800 block">
-                                                            {quizzes.length}
+                                                            {
+                                                                gradeQuizzes.length
+                                                            }
                                                         </span>
                                                     </div>
                                                     <div className="space-y-1 pl-4 border-l border-slate-200/60">

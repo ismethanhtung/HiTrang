@@ -93,7 +93,7 @@ export default function Topbar({
                             onClick={() => onSelectGrade(null)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                                 selectedGrade === null && currentPath === "/"
-                                    ? "bg-slate-900 text-white shadow-2xs"
+                                    ? "bg-[#2C5A71] text-white shadow-2xs"
                                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                             }`}
                         >
