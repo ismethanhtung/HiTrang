@@ -130,7 +130,7 @@ export default function Topbar({
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
                             placeholder="Tìm đề thi..."
-                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#3B6D85] focus:outline-none transition-all placeholder:text-slate-400 font-medium"
+                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-[#3B6D85] focus:outline-none transition-all placeholder:text-slate-400 font-medium"
                         />
                     </div>
                     {/* ADMIN ROUTE BUTTON */}
