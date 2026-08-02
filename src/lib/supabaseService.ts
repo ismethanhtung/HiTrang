@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Quiz, Submission, User, Question } from '../types';
+import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderboardEntry } from '../types';
 
 /**
  * ----------------------------------------------------
@@ -722,3 +722,65 @@ export async function getReviewQuestions(submissionId: string): Promise<Question
 
   return (data || []) as Question[];
 }
+
+/**
+ * Lấy bảng xếp hạng của một đề thi cụ thể (lượt thi đầu tiên của học sinh)
+ */
+export async function getQuizLeaderboard(quizId: string): Promise<QuizLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('get_quiz_leaderboard', {
+    p_quiz_id: quizId
+  });
+
+  if (error) {
+    console.error('Error fetching quiz leaderboard:', error);
+    throw new Error(`Không thể lấy bảng xếp hạng đề thi: ${error.message}`);
+  }
+
+  return (data || []).map((item: any) => ({
+    rankPosition: Number(item.rank_position),
+    studentId: item.student_id,
+    studentName: item.student_name,
+    studentUsername: item.student_username,
+    studentGrade: item.student_grade,
+    score: Number(item.score),
+    durationSeconds: Number(item.duration_seconds),
+    submittedAt: item.submitted_at
+  }));
+}
+
+/**
+ * Lấy bảng xếp hạng chung theo Khối (tổng điểm và số bài đã làm)
+ */
+export async function getOverallLeaderboard(grade: string): Promise<OverallLeaderboardEntry[]> {
+  const { data, error } = await supabase.rpc('get_overall_leaderboard', {
+    p_grade: grade
+  });
+
+  if (error) {
+    console.error('Error fetching overall leaderboard:', error);
+    throw new Error(`Không thể lấy bảng xếp hạng chung: ${error.message}`);
+  }
+
+  return (data || []).map((item: any) => ({
+    rankPosition: Number(item.rank_position),
+    previousRankPosition: item.previous_rank_position ? Number(item.previous_rank_position) : null,
+    studentId: item.student_id,
+    studentName: item.student_name,
+    studentUsername: item.student_username,
+    studentGrade: item.student_grade,
+    totalPoints: Number(item.total_points),
+    testsCompleted: Number(item.tests_completed)
+  }));
+}
+
+/**
+ * Làm mới bảng xếp hạng chung thủ công (chỉ dùng cho giáo viên hoặc gỡ lỗi)
+ */
+export async function refreshOverallLeaderboard(): Promise<void> {
+  const { error } = await supabase.rpc('refresh_overall_leaderboard');
+  if (error) {
+    console.error('Error refreshing overall leaderboard:', error);
+    throw new Error(`Không thể làm mới bảng xếp hạng: ${error.message}`);
+  }
+}
+

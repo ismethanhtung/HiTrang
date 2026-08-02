@@ -1,3 +1,13 @@
+const safeParseDate = (dateVal: any): Date => {
+    if (!dateVal) return new Date(NaN);
+    if (dateVal instanceof Date) return dateVal;
+    if (typeof dateVal === 'string') {
+        const normalized = dateVal.includes(' ') ? dateVal.replace(' ', 'T') : dateVal;
+        return new Date(normalized);
+    }
+    return new Date(dateVal);
+};
+
 import React, { useState } from "react";
 import { Quiz, Submission, User } from "../types";
 import {
@@ -235,8 +245,8 @@ export default function GradeView({
                                 ...studentQuizSubmissions,
                             ].sort((a, b) => {
                                 return (
-                                    new Date(a.submittedAt).getTime() -
-                                    new Date(b.submittedAt).getTime()
+                                    safeParseDate(safeParseDate(a.submittedAt).getTime()).getTime() -
+                                    safeParseDate(safeParseDate(b.submittedAt).getTime()).getTime()
                                 );
                             });
                             const newestScore =

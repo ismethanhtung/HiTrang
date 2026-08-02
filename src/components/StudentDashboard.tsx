@@ -34,6 +34,18 @@ import {
     getActiveAttempt,
 } from "../lib/supabaseService";
 
+const safeParseDate = (dateVal: any): Date => {
+    if (!dateVal) return new Date(NaN);
+    if (dateVal instanceof Date) return dateVal;
+    if (typeof dateVal === "string") {
+        const normalized = dateVal.includes(" ")
+            ? dateVal.replace(" ", "T")
+            : dateVal;
+        return new Date(normalized);
+    }
+    return new Date(dateVal);
+};
+
 function cleanTrueFalseQuestionText(html: string): string {
     if (!html) return html;
 
@@ -179,6 +191,9 @@ export default function StudentDashboard({
     // Result Overview State
     const [showResultSummary, setShowResultSummary] =
         useState<Submission | null>(null);
+    const [hoveredChartPoint, setHoveredChartPoint] = useState<number | null>(
+        null,
+    );
 
     // Detailed Review State
     const [reviewSubmission, setReviewSubmission] = useState<Submission | null>(
@@ -271,7 +286,11 @@ export default function StudentDashboard({
 
     useEffect(() => {
         if (activeQuizId) {
-            if (activeQuiz && activeQuiz.id === activeQuizId && quizEntryPhase === "taking") {
+            if (
+                activeQuiz &&
+                activeQuiz.id === activeQuizId &&
+                quizEntryPhase === "taking"
+            ) {
                 return;
             }
             const quiz = quizzes.find((q) => q.id === activeQuizId);
@@ -491,6 +510,13 @@ export default function StudentDashboard({
                       (acc, curr) => acc + curr.score,
                       0,
                   ) / completedCount
+              ).toFixed(1)
+            : "0.0";
+
+    const highestScore =
+        completedCount > 0
+            ? Math.max(
+                  ...studentSubmissions.map((s) => Number(s.score)),
               ).toFixed(1)
             : "0.0";
 
@@ -1453,9 +1479,6 @@ export default function StudentDashboard({
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="text-right">
-                                                        <span className="text-[10px] text-slate-400 block font-bold">
-                                                            Điểm số
-                                                        </span>
                                                         <span className="text-sm font-extrabold text-slate-800">
                                                             {sub.score} điểm
                                                         </span>
@@ -1507,7 +1530,7 @@ export default function StudentDashboard({
                                 )}
 
                                 {attemptsCount > 0 && (
-                                    <div className="flex items-center gap-1.5 justify-center py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-150">
+                                    <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
                                         <Award className="w-4 h-4 text-emerald-600" />
                                         <span className="text-[11px] font-bold">
                                             Điểm số cao nhất của bạn: {maxScore}{" "}
@@ -2697,17 +2720,29 @@ export default function StudentDashboard({
                                         {/* Right Column: Sidebar (1/3 width) - Borderless Stats & Charts */}
                                         <div className="space-y-10 lg:pl-4 lg:border-l lg:border-slate-200/50">
                                             {/* Section 3: Lịch sử điểm số */}
+                                            {/* Section 3: Lịch sử điểm số */}
                                             <div className="space-y-4 text-left">
                                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/60 pb-2">
                                                     Lịch sử điểm số
                                                 </h3>
 
                                                 {/* Render chart directly on the page bg */}
-                                                <div className="h-[120px] w-full relative pt-2">
+                                                <div className="h-[160px] w-full relative">
                                                     {(() => {
+                                                        const sorted = [
+                                                            ...studentSubmissions,
+                                                        ].sort(
+                                                            (a, b) =>
+                                                                safeParseDate(
+                                                                    b.submittedAt,
+                                                                ).getTime() -
+                                                                safeParseDate(
+                                                                    a.submittedAt,
+                                                                ).getTime(),
+                                                        );
                                                         const historyPoints =
-                                                            studentSubmissions
-                                                                .slice(-7)
+                                                            sorted
+                                                                .reverse()
                                                                 .map(
                                                                     (
                                                                         sub,
@@ -2717,6 +2752,10 @@ export default function StudentDashboard({
                                                                         score: Number(
                                                                             sub.score,
                                                                         ),
+                                                                        quizTitle:
+                                                                            sub.quizTitle,
+                                                                        submittedAt:
+                                                                            sub.submittedAt,
                                                                     }),
                                                                 );
 
@@ -2737,32 +2776,35 @@ export default function StudentDashboard({
                                                             );
                                                         }
 
-                                                        const width = 240;
-                                                        const height = 90;
+                                                        const width = 280;
+                                                        const height = 120;
                                                         const maxVal = 10;
-                                                        const padding = 12;
+                                                        const paddingLeft = 8;
+                                                        const paddingRight = 8;
+                                                        const paddingTop = 12;
+                                                        const paddingBottom = 8;
 
                                                         const points =
                                                             historyPoints.map(
                                                                 (p, i) => {
                                                                     const x =
-                                                                        padding +
+                                                                        paddingLeft +
                                                                         (i *
                                                                             (width -
-                                                                                padding *
-                                                                                    2)) /
+                                                                                paddingLeft -
+                                                                                paddingRight)) /
                                                                             Math.max(
                                                                                 historyPoints.length -
                                                                                     1,
                                                                                 1,
                                                                             );
                                                                     const y =
-                                                                        height -
-                                                                        padding -
-                                                                        (p.score *
+                                                                        paddingTop +
+                                                                        ((maxVal -
+                                                                            p.score) *
                                                                             (height -
-                                                                                padding *
-                                                                                    2)) /
+                                                                                paddingTop -
+                                                                                paddingBottom)) /
                                                                             maxVal;
                                                                     return {
                                                                         x,
@@ -2772,18 +2814,93 @@ export default function StudentDashboard({
                                                                 },
                                                             );
 
-                                                        const pathD = points
-                                                            .map(
-                                                                (p, i) =>
-                                                                    `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`,
-                                                            )
-                                                            .join(" ");
-                                                        const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+                                                        let pathD = "";
+                                                        let areaD = "";
 
-                                                        const lastPtIdx =
-                                                            points.length - 1;
-                                                        const lastPt =
-                                                            points[lastPtIdx];
+                                                        if (points.length > 0) {
+                                                            if (
+                                                                points.length ===
+                                                                1
+                                                            ) {
+                                                                pathD = `M ${points[0].x} ${points[0].y}`;
+                                                                areaD = `M ${points[0].x} ${points[0].y} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                            } else if (
+                                                                points.length ===
+                                                                2
+                                                            ) {
+                                                                pathD = `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+                                                                areaD = `${pathD} L ${points[1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                            } else {
+                                                                pathD = `M ${points[0].x} ${points[0].y}`;
+                                                                for (
+                                                                    let i = 0;
+                                                                    i <
+                                                                    points.length -
+                                                                        1;
+                                                                    i++
+                                                                ) {
+                                                                    const curr =
+                                                                        points[
+                                                                            i
+                                                                        ];
+                                                                    const next =
+                                                                        points[
+                                                                            i +
+                                                                                1
+                                                                        ];
+                                                                    const cpX1 =
+                                                                        curr.x +
+                                                                        (next.x -
+                                                                            curr.x) /
+                                                                            3;
+                                                                    const cpY1 =
+                                                                        curr.y;
+                                                                    const cpX2 =
+                                                                        curr.x +
+                                                                        (2 *
+                                                                            (next.x -
+                                                                                curr.x)) /
+                                                                            3;
+                                                                    const cpY2 =
+                                                                        next.y;
+                                                                    pathD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${next.x} ${next.y}`;
+                                                                }
+                                                                areaD = `${pathD} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                            }
+                                                        }
+
+                                                        const formatDate = (
+                                                            dateStr,
+                                                        ) => {
+                                                            if (!dateStr)
+                                                                return "";
+                                                            try {
+                                                                const d =
+                                                                    safeParseDate(
+                                                                        dateStr,
+                                                                    );
+                                                                const day =
+                                                                    String(
+                                                                        d.getDate(),
+                                                                    ).padStart(
+                                                                        2,
+                                                                        "0",
+                                                                    );
+                                                                const month =
+                                                                    String(
+                                                                        d.getMonth() +
+                                                                            1,
+                                                                    ).padStart(
+                                                                        2,
+                                                                        "0",
+                                                                    );
+                                                                const year =
+                                                                    d.getFullYear();
+                                                                return `${day}/${month}/${year}`;
+                                                            } catch (e) {
+                                                                return "";
+                                                            }
+                                                        };
 
                                                         return (
                                                             <div className="w-full h-full relative">
@@ -2801,125 +2918,403 @@ export default function StudentDashboard({
                                                                         >
                                                                             <stop
                                                                                 offset="0%"
-                                                                                stopColor="#3B6D85"
+                                                                                stopColor="#8B5CF6"
                                                                                 stopOpacity="0.15"
                                                                             />
                                                                             <stop
                                                                                 offset="100%"
-                                                                                stopColor="#3B6D85"
+                                                                                stopColor="#8B5CF6"
                                                                                 stopOpacity="0"
                                                                             />
                                                                         </linearGradient>
+                                                                        <filter
+                                                                            id="chart-shadow"
+                                                                            x="-5%"
+                                                                            y="-5%"
+                                                                            width="110%"
+                                                                            height="110%"
+                                                                        >
+                                                                            <feDropShadow
+                                                                                dx="0"
+                                                                                dy="1.5"
+                                                                                stdDeviation="1.2"
+                                                                                floodColor="#8B5CF6"
+                                                                                floodOpacity="0.15"
+                                                                            />
+                                                                        </filter>
                                                                     </defs>
 
-                                                                    <line
-                                                                        x1="0"
-                                                                        y1={
-                                                                            height /
-                                                                            2
-                                                                        }
-                                                                        x2={
-                                                                            width
-                                                                        }
-                                                                        y2={
-                                                                            height /
-                                                                            2
-                                                                        }
-                                                                        stroke="#e2e8f0"
-                                                                        strokeWidth="0.8"
-                                                                        strokeDasharray="3"
-                                                                    />
-
-                                                                    {lastPt && (
-                                                                        <line
-                                                                            x1={
-                                                                                lastPt.x
+                                                                    {areaD && (
+                                                                        <path
+                                                                            d={
+                                                                                areaD
                                                                             }
-                                                                            y1={
-                                                                                4
-                                                                            }
-                                                                            x2={
-                                                                                lastPt.x
-                                                                            }
-                                                                            y2={
-                                                                                height -
-                                                                                padding
-                                                                            }
-                                                                            stroke="#F43F5E"
-                                                                            strokeWidth="1.2"
-                                                                            strokeDasharray="2"
+                                                                            fill="url(#chart-grad-dashboard-spacious-new)"
                                                                         />
                                                                     )}
-
-                                                                    <path
-                                                                        d={
-                                                                            areaD
-                                                                        }
-                                                                        fill="url(#chart-grad-dashboard-spacious-new)"
-                                                                    />
-
-                                                                    <path
-                                                                        d={
-                                                                            pathD
-                                                                        }
-                                                                        fill="none"
-                                                                        stroke="#3B6D85"
-                                                                        strokeWidth="2"
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                    />
+                                                                    {pathD && (
+                                                                        <path
+                                                                            d={
+                                                                                pathD
+                                                                            }
+                                                                            fill="none"
+                                                                            stroke="#8B5CF6"
+                                                                            strokeWidth="1.5"
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            filter="url(#chart-shadow)"
+                                                                        />
+                                                                    )}
 
                                                                     {points.map(
                                                                         (
                                                                             p,
                                                                             i,
-                                                                        ) => (
-                                                                            <g
-                                                                                key={
-                                                                                    i
-                                                                                }
-                                                                            >
+                                                                        ) => {
+                                                                            const isHovered =
+                                                                                hoveredChartPoint ===
+                                                                                i;
+                                                                            const isLast =
+                                                                                i ===
+                                                                                points.length -
+                                                                                    1;
+                                                                            const shouldShow =
+                                                                                isHovered ||
+                                                                                (hoveredChartPoint ===
+                                                                                    null &&
+                                                                                    isLast);
+                                                                            if (
+                                                                                !shouldShow
+                                                                            )
+                                                                                return null;
+                                                                            return (
                                                                                 <circle
+                                                                                    key={
+                                                                                        i
+                                                                                    }
                                                                                     cx={
                                                                                         p.x
                                                                                     }
                                                                                     cy={
                                                                                         p.y
                                                                                     }
-                                                                                    r="2.5"
-                                                                                    fill={
-                                                                                        i ===
-                                                                                        lastPtIdx
-                                                                                            ? "#F43F5E"
-                                                                                            : "#ffffff"
-                                                                                    }
-                                                                                    stroke={
-                                                                                        i ===
-                                                                                        lastPtIdx
-                                                                                            ? "#F43F5E"
-                                                                                            : "#3B6D85"
-                                                                                    }
-                                                                                    strokeWidth="1.5"
+                                                                                    r="4.5"
+                                                                                    fill="#ffffff"
+                                                                                    stroke="#8B5CF6"
+                                                                                    strokeWidth="2.5"
+                                                                                    className="transition-all duration-150"
                                                                                 />
-                                                                            </g>
+                                                                            );
+                                                                        },
+                                                                    )}
+
+                                                                    {points.map(
+                                                                        (
+                                                                            p,
+                                                                            i,
+                                                                        ) => {
+                                                                            const isHovered =
+                                                                                hoveredChartPoint ===
+                                                                                i;
+                                                                            const isLast =
+                                                                                i ===
+                                                                                points.length -
+                                                                                    1;
+                                                                            const shouldShow =
+                                                                                isHovered ||
+                                                                                (hoveredChartPoint ===
+                                                                                    null &&
+                                                                                    isLast);
+                                                                            if (
+                                                                                !shouldShow
+                                                                            )
+                                                                                return null;
+                                                                            return (
+                                                                                <text
+                                                                                    key={`score-lbl-${i}`}
+                                                                                    x={
+                                                                                        p.x
+                                                                                    }
+                                                                                    y={
+                                                                                        p.y -
+                                                                                        8
+                                                                                    }
+                                                                                    textAnchor="middle"
+                                                                                    className="text-[7.5px] font-black fill-[#8B5CF6] select-none"
+                                                                                >
+                                                                                    {
+                                                                                        p.score
+                                                                                    }
+
+                                                                                    đ
+                                                                                </text>
+                                                                            );
+                                                                        },
+                                                                    )}
+
+                                                                    {points.map(
+                                                                        (
+                                                                            p,
+                                                                            i,
+                                                                        ) => (
+                                                                            <circle
+                                                                                key={`hover-${i}`}
+                                                                                cx={
+                                                                                    p.x
+                                                                                }
+                                                                                cy={
+                                                                                    p.y
+                                                                                }
+                                                                                r="12"
+                                                                                fill="transparent"
+                                                                                className="cursor-pointer"
+                                                                                onMouseEnter={() =>
+                                                                                    setHoveredChartPoint(
+                                                                                        i,
+                                                                                    )
+                                                                                }
+                                                                                onMouseLeave={() =>
+                                                                                    setHoveredChartPoint(
+                                                                                        null,
+                                                                                    )
+                                                                                }
+                                                                            />
                                                                         ),
                                                                     )}
                                                                 </svg>
 
-                                                                {lastPt && (
-                                                                    <div
-                                                                        className="absolute bg-[#F43F5E] text-white text-[7px] font-black px-1.5 py-0.5 rounded shadow-3xs -translate-x-1/2 pointer-events-none"
-                                                                        style={{
-                                                                            left: `${(lastPt.x / width) * 100}%`,
-                                                                            top: `0px`,
-                                                                        }}
-                                                                    >
+                                                                {hoveredChartPoint !==
+                                                                    null &&
+                                                                    points[
+                                                                        hoveredChartPoint
+                                                                    ] && (
+                                                                        <div
+                                                                            className="absolute bg-white border border-slate-200/80 text-slate-855 p-2.5 rounded-xl shadow-lg pointer-events-none transition-all duration-150 animate-in fade-in-50 zoom-in-95 z-30 select-none text-left min-w-[140px]"
+                                                                            style={{
+                                                                                left: `${(points[hoveredChartPoint].x / width) * 100}%`,
+                                                                                top: `${(points[hoveredChartPoint].y / height) * 100}%`,
+                                                                                transform:
+                                                                                    "translate(-50%, -115%)",
+                                                                            }}
+                                                                        >
+                                                                            <div className="text-[8px] font-bold text-slate-400 leading-none mb-1">
+                                                                                {formatDate(
+                                                                                    historyPoints[
+                                                                                        hoveredChartPoint
+                                                                                    ]
+                                                                                        .submittedAt,
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="text-[9px] font-black text-slate-800 truncate max-w-[130px] mb-1">
+                                                                                {
+                                                                                    historyPoints[
+                                                                                        hoveredChartPoint
+                                                                                    ]
+                                                                                        .quizTitle
+                                                                                }
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1 mt-0.5 text-[9px] font-bold text-[#8B5CF6]">
+                                                                                <span className="w-1 h-1 rounded-full bg-[#8B5CF6]"></span>
+                                                                                <span>
+                                                                                    Điểm:{" "}
+                                                                                    {
+                                                                                        points[
+                                                                                            hoveredChartPoint
+                                                                                        ]
+                                                                                            .score
+                                                                                    }
+                                                                                    /10đ
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="absolute top-[100%] left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white border-b border-r border-slate-200/80 rotate-45" />
+                                                                        </div>
+                                                                    )}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            {/* Section 3.5: Tần suất hoạt động */}
+                                            <div className="space-y-4 text-left">
+                                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/60 pb-2">
+                                                    Tần suất hoạt động (30 ngày
+                                                    gần đây)
+                                                </h3>
+                                                <div className="py-2">
+                                                    {(() => {
+                                                        const today =
+                                                            new Date();
+                                                        today.setHours(
+                                                            23,
+                                                            59,
+                                                            59,
+                                                            999,
+                                                        );
+                                                        const daysList = [];
+                                                        for (
+                                                            let k = 29;
+                                                            k >= 0;
+                                                            k--
+                                                        ) {
+                                                            const d = new Date(
+                                                                today,
+                                                            );
+                                                            d.setDate(
+                                                                today.getDate() -
+                                                                    k,
+                                                            );
+                                                            const dStr =
+                                                                d.toDateString();
+                                                            const count =
+                                                                submissions.filter(
+                                                                    (s) => {
+                                                                        return (
+                                                                            s.studentId ===
+                                                                                user.id &&
+                                                                            safeParseDate(
+                                                                                s.submittedAt,
+                                                                            ).toDateString() ===
+                                                                                dStr
+                                                                        );
+                                                                    },
+                                                                ).length;
+                                                            daysList.push({
+                                                                date: d,
+                                                                count,
+                                                            });
+                                                        }
+
+                                                        const startDayOfWeek =
+                                                            (daysList[0].date.getDay() +
+                                                                6) %
+                                                            7;
+
+                                                        const formatDateLabel =
+                                                            (d) => {
+                                                                const day =
+                                                                    String(
+                                                                        d.getDate(),
+                                                                    ).padStart(
+                                                                        2,
+                                                                        "0",
+                                                                    );
+                                                                const month =
+                                                                    String(
+                                                                        d.getMonth() +
+                                                                            1,
+                                                                    ).padStart(
+                                                                        2,
+                                                                        "0",
+                                                                    );
+                                                                return `${day}/${month}`;
+                                                            };
+
+                                                        const weekHeaders = [
+                                                            "T2",
+                                                            "T3",
+                                                            "T4",
+                                                            "T5",
+                                                            "T6",
+                                                            "T7",
+                                                            "CN",
+                                                        ];
+
+                                                        return (
+                                                            <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100/80 w-fit text-left flex flex-col gap-2">
+                                                                {/* Headers */}
+                                                                <div className="grid grid-cols-7 gap-1.5 text-center text-[8px] font-bold text-slate-400 mb-1.5">
+                                                                    {weekHeaders.map(
+                                                                        (h) => (
+                                                                            <div
+                                                                                key={
+                                                                                    h
+                                                                                }
+                                                                                className="w-2.5"
+                                                                            >
+                                                                                {
+                                                                                    h
+                                                                                }
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                                {/* Grid */}
+                                                                <div className="grid grid-cols-7 gap-1.5 w-fit">
+                                                                    {Array.from(
                                                                         {
-                                                                            lastPt.score
-                                                                        }
-                                                                        /10đ
-                                                                    </div>
-                                                                )}
+                                                                            length: startDayOfWeek,
+                                                                        },
+                                                                    ).map(
+                                                                        (
+                                                                            _,
+                                                                            i,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={`empty-${i}`}
+                                                                                className="w-2.5 h-2.5"
+                                                                            />
+                                                                        ),
+                                                                    )}
+                                                                    {daysList.map(
+                                                                        (
+                                                                            dayInfo,
+                                                                            idx,
+                                                                        ) => {
+                                                                            let colorClass =
+                                                                                "bg-slate-200 text-slate-400";
+                                                                            if (
+                                                                                dayInfo.count ===
+                                                                                1
+                                                                            ) {
+                                                                                colorClass =
+                                                                                    "bg-[#A7F3D0] text-emerald-800";
+                                                                            } else if (
+                                                                                dayInfo.count ===
+                                                                                2
+                                                                            ) {
+                                                                                colorClass =
+                                                                                    "bg-[#34D399] text-emerald-950";
+                                                                            } else if (
+                                                                                dayInfo.count >=
+                                                                                3
+                                                                            ) {
+                                                                                colorClass =
+                                                                                    "bg-[#059669] text-white";
+                                                                            }
+
+                                                                            const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={
+                                                                                        idx
+                                                                                    }
+                                                                                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                >
+                                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50">
+                                                                                        {
+                                                                                            tooltipText
+                                                                                        }
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        },
+                                                                    )}
+                                                                </div>
+                                                                {/* Legend */}
+                                                                <div className="flex items-center gap-1 text-[8px] text-slate-400 self-end mt-1">
+                                                                    <span>
+                                                                        Ít
+                                                                    </span>
+                                                                    <div className="w-2 h-2 rounded-full bg-slate-200" />
+                                                                    <div className="w-2 h-2 rounded-full bg-[#A7F3D0]" />
+                                                                    <div className="w-2 h-2 rounded-full bg-[#34D399]" />
+                                                                    <div className="w-2 h-2 rounded-full bg-[#059669]" />
+                                                                    <span>
+                                                                        Nhiều
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         );
                                                     })()}
@@ -2962,12 +3357,10 @@ export default function StudentDashboard({
                                                     </div>
                                                     <div className="space-y-1 pl-4 border-l border-slate-200/60 border-t border-slate-200/60 pt-4">
                                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                                            Thời gian học
+                                                            Điểm cao nhất
                                                         </span>
                                                         <span className="text-xl font-black text-slate-800 block">
-                                                            {totalStudyHours > 0
-                                                                ? `${totalStudyHours}h`
-                                                                : `${completedCount * 45}m`}
+                                                            {highestScore}/10
                                                         </span>
                                                     </div>
                                                 </div>

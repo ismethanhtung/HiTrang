@@ -11,6 +11,7 @@ import {
     Zap,
     History,
     Search,
+    Trophy,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -25,6 +26,8 @@ interface TopbarProps {
     onNavigateHome: () => void;
     onNavigateSettings: (tab?: "profile" | "history") => void;
     currentPath: string;
+    onNavigateLeaderboard: () => void;
+    activeTab: string;
 }
 
 export default function Topbar({
@@ -39,6 +42,8 @@ export default function Topbar({
     onNavigateHome,
     onNavigateSettings,
     currentPath,
+    onNavigateLeaderboard,
+    activeTab,
 }: TopbarProps) {
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -133,6 +138,20 @@ export default function Topbar({
                             className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-[#3B6D85] focus:outline-none transition-all placeholder:text-slate-400 font-medium"
                         />
                     </div>
+                    {/* LEADERBOARD ROUTE BUTTON */}
+                    {user && (
+                        <button
+                            onClick={onNavigateLeaderboard}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                activeTab === "leaderboard" && currentPath === "/"
+                                    ? "bg-slate-900 text-white shadow-2xs"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                            }`}
+                        >
+                            <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                            BXH 🏆
+                        </button>
+                    )}
                     {/* ADMIN ROUTE BUTTON */}
                     <button
                         onClick={onNavigateAdmin}

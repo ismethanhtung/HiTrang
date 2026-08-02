@@ -64,6 +64,8 @@ export default function AdminPanel({
     const [passwordInput, setPasswordInput] = useState("");
     const [authError, setAuthError] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
+    const [adminStudentHoveredPointIdx, setAdminStudentHoveredPointIdx] =
+        useState<number | null>(null);
 
     const [activeTab, setActiveTab] = useState<
         "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students"
@@ -87,7 +89,14 @@ export default function AdminPanel({
         return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
     };
 
-    const handleTabClick = (tab: "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students") => {
+    const handleTabClick = (
+        tab:
+            | "plans"
+            | "create-quiz"
+            | "quizzes"
+            | "stats-quizzes"
+            | "stats-students",
+    ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
         setSelectedQuizForDetails(null);
@@ -137,57 +146,45 @@ export default function AdminPanel({
         const totalQ = quiz.questions.length;
 
         // Compute per-question status
-        const qStatuses: (
-            | "correct"
-            | "wrong"
-            | "partial"
-            | "unanswered"
-        )[] = quiz.questions.map((q) => {
-            const chosen = sub.answers[q.id];
-            if (
-                chosen === undefined ||
-                chosen === null ||
-                chosen === ""
-            )
-                return "unanswered";
-            if (!q.type || q.type === "single_choice") {
-                return chosen === q.correctAnswerIndex
-                    ? "correct"
-                    : "wrong";
-            } else if (q.type === "true_false") {
-                const correctTf = q.correctAnswers || [
-                    false,
-                    false,
-                    false,
-                    false,
-                ];
-                const studentTf = (chosen as (
-                    | boolean
-                    | null
-                )[]) || [null, null, null, null];
-                const matchCount = q.options.filter(
-                    (_, i) => studentTf[i] === correctTf[i],
-                ).length;
-                if (matchCount === 4) return "correct";
-                if (matchCount > 0) return "partial";
+        const qStatuses: ("correct" | "wrong" | "partial" | "unanswered")[] =
+            quiz.questions.map((q) => {
+                const chosen = sub.answers[q.id];
+                if (chosen === undefined || chosen === null || chosen === "")
+                    return "unanswered";
+                if (!q.type || q.type === "single_choice") {
+                    return chosen === q.correctAnswerIndex
+                        ? "correct"
+                        : "wrong";
+                } else if (q.type === "true_false") {
+                    const correctTf = q.correctAnswers || [
+                        false,
+                        false,
+                        false,
+                        false,
+                    ];
+                    const studentTf = (chosen as (boolean | null)[]) || [
+                        null,
+                        null,
+                        null,
+                        null,
+                    ];
+                    const matchCount = q.options.filter(
+                        (_, i) => studentTf[i] === correctTf[i],
+                    ).length;
+                    if (matchCount === 4) return "correct";
+                    if (matchCount > 0) return "partial";
+                    return "wrong";
+                } else if (q.type === "short_answer") {
+                    const cKey = (q.shortAnswerKey || "").trim().toLowerCase();
+                    const sKey = String(chosen || "")
+                        .trim()
+                        .toLowerCase();
+                    return cKey && sKey === cKey ? "correct" : "wrong";
+                }
                 return "wrong";
-            } else if (q.type === "short_answer") {
-                const cKey = (q.shortAnswerKey || "")
-                    .trim()
-                    .toLowerCase();
-                const sKey = String(chosen || "")
-                    .trim()
-                    .toLowerCase();
-                return cKey && sKey === cKey
-                    ? "correct"
-                    : "wrong";
-            }
-            return "wrong";
-        });
+            });
 
-        const correctCount = qStatuses.filter(
-            (s) => s === "correct",
-        ).length;
+        const correctCount = qStatuses.filter((s) => s === "correct").length;
 
         const safeIdx = Math.min(adminReviewQuestionIdx, totalQ - 1);
         const q = quiz.questions[safeIdx];
@@ -202,16 +199,13 @@ export default function AdminPanel({
             correctVal: boolean;
         }[] = [];
         if (q.type === "true_false") {
-            const correctTf = q.correctAnswers || [
-                false,
-                false,
-                false,
-                false,
+            const correctTf = q.correctAnswers || [false, false, false, false];
+            const studentTf = (chosen as (boolean | null)[]) || [
+                null,
+                null,
+                null,
+                null,
             ];
-            const studentTf = (chosen as (
-                | boolean
-                | null
-            )[]) || [null, null, null, null];
             tfStatusList = q.options.map((opt, i) => ({
                 text: opt,
                 correct: studentTf[i] === correctTf[i],
@@ -277,7 +271,8 @@ export default function AdminPanel({
                             <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg border bg-brand-50 border-brand-200 text-brand-700 text-xs font-bold self-start sm:self-auto shadow-3xs">
                                 <Crown className="w-4 h-4" />
                                 <span>
-                                    Điểm số: {sub.score} (Đúng {correctCount}/{totalQ})
+                                    Điểm số: {sub.score} (Đúng {correctCount}/
+                                    {totalQ})
                                 </span>
                             </div>
                         </div>
@@ -289,7 +284,8 @@ export default function AdminPanel({
                                     Đang xem câu {safeIdx + 1} trên {totalQ}
                                 </span>
                                 <span>
-                                    Tỷ lệ đúng: {Math.round((correctCount / totalQ) * 100)}%
+                                    Tỷ lệ đúng:{" "}
+                                    {Math.round((correctCount / totalQ) * 100)}%
                                 </span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -305,7 +301,9 @@ export default function AdminPanel({
                         {/* Question & Options Content */}
                         <div className="space-y-5 text-left">
                             {/* Question Box Card */}
-                            <div className={`bg-slate-50/50 border border-slate-200 p-6 rounded-xl space-y-4 ${cardAccentClass}`}>
+                            <div
+                                className={`bg-slate-50/50 border border-slate-200 p-6 rounded-xl space-y-4 ${cardAccentClass}`}
+                            >
                                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-extrabold text-brand-700 bg-brand-100 px-2 py-0.5 rounded">
@@ -339,10 +337,8 @@ export default function AdminPanel({
                                         {q.sectionTitle}
                                     </div>
                                 )}
-                                
-                                <h3
-                                    className="font-semibold text-slate-900 leading-relaxed overflow-x-auto text-[14px] [&_img]:mx-auto [&_img]:block [&_img]:my-4"
-                                >
+
+                                <h3 className="font-semibold text-slate-900 leading-relaxed overflow-x-auto text-[14px] [&_img]:mx-auto [&_img]:block [&_img]:my-4">
                                     <span
                                         dangerouslySetInnerHTML={{
                                             __html: renderMathHtml(
@@ -357,68 +353,97 @@ export default function AdminPanel({
                                     if (!q.type || q.type === "single_choice") {
                                         return (
                                             <div className="space-y-3">
-                                                {q.options.map((option, idx) => {
-                                                    const isChosen = chosen === idx;
-                                                    const isCorrectOpt = q.correctAnswerIndex === idx;
-                                                    const cleanedOpt = option.replace(
-                                                        /^\s*[a-f][\)\.\:\-]\s*/i,
-                                                        "",
-                                                    );
+                                                {q.options.map(
+                                                    (option, idx) => {
+                                                        const isChosen =
+                                                            chosen === idx;
+                                                        const isCorrectOpt =
+                                                            q.correctAnswerIndex ===
+                                                            idx;
+                                                        const cleanedOpt =
+                                                            option.replace(
+                                                                /^\s*[a-f][\)\.\:\-]\s*/i,
+                                                                "",
+                                                            );
 
-                                                    let borderStyle = "border-gray-200 text-slate-700 bg-white";
-                                                    let letterCircleStyle = "bg-slate-100 text-slate-500";
-                                                    let badge = null;
+                                                        let borderStyle =
+                                                            "border-gray-200 text-slate-700 bg-white";
+                                                        let letterCircleStyle =
+                                                            "bg-slate-100 text-slate-500";
+                                                        let badge = null;
 
-                                                    if (isCorrectOpt) {
-                                                        borderStyle = "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500/10";
-                                                        letterCircleStyle = "bg-emerald-500 text-white font-medium";
-                                                        badge = (
-                                                            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white font-medium flex items-center justify-center">
-                                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                            </div>
-                                                        );
-                                                    } else if (isChosen && !isCorrectOpt) {
-                                                        borderStyle = "border-rose-400 bg-rose-50 text-rose-900 ring-2 ring-rose-500/10";
-                                                        letterCircleStyle = "bg-rose-500 text-white font-medium";
-                                                        badge = (
-                                                            <span className="text-[9px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-md">
-                                                                Học sinh chọn
-                                                            </span>
-                                                        );
-                                                    } else if (isChosen) {
-                                                        badge = (
-                                                            <div className="w-5 h-5 rounded-full bg-emerald-500 text-white font-medium flex items-center justify-center">
-                                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className={`w-full flex items-center justify-between p-4 border rounded-lg text-left font-medium transition-all duration-155 ${borderStyle}`}
-                                                        >
-                                                            <div className="flex items-center gap-3">
-                                                                <span
-                                                                    className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] ${letterCircleStyle}`}
-                                                                >
-                                                                    {String.fromCharCode(65 + idx)}
+                                                        if (isCorrectOpt) {
+                                                            borderStyle =
+                                                                "border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500/10";
+                                                            letterCircleStyle =
+                                                                "bg-emerald-500 text-white font-medium";
+                                                            badge = (
+                                                                <div className="w-5 h-5 rounded-full bg-emerald-500 text-white font-medium flex items-center justify-center">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                </div>
+                                                            );
+                                                        } else if (
+                                                            isChosen &&
+                                                            !isCorrectOpt
+                                                        ) {
+                                                            borderStyle =
+                                                                "border-rose-400 bg-rose-50 text-rose-900 ring-2 ring-rose-500/10";
+                                                            letterCircleStyle =
+                                                                "bg-rose-500 text-white font-medium";
+                                                            badge = (
+                                                                <span className="text-[9px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-md">
+                                                                    Học sinh
+                                                                    chọn
                                                                 </span>
-                                                                <span
-                                                                    dangerouslySetInnerHTML={{
-                                                                        __html: renderMathHtml(cleanedOpt),
-                                                                    }}
-                                                                />
+                                                            );
+                                                        } else if (isChosen) {
+                                                            badge = (
+                                                                <div className="w-5 h-5 rounded-full bg-emerald-500 text-white font-medium flex items-center justify-center">
+                                                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className={`w-full flex items-center justify-between p-4 border rounded-lg text-left font-medium transition-all duration-155 ${borderStyle}`}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <span
+                                                                        className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] ${letterCircleStyle}`}
+                                                                    >
+                                                                        {String.fromCharCode(
+                                                                            65 +
+                                                                                idx,
+                                                                        )}
+                                                                    </span>
+                                                                    <span
+                                                                        dangerouslySetInnerHTML={{
+                                                                            __html: renderMathHtml(
+                                                                                cleanedOpt,
+                                                                            ),
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                {badge}
                                                             </div>
-                                                            {badge}
-                                                        </div>
-                                                    );
-                                                })}
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                         );
                                     } else if (q.type === "true_false") {
-                                        const correctTf = q.correctAnswers || [false, false, false, false];
-                                        const studentTf = (chosen as (boolean | null)[]) || [null, null, null, null];
+                                        const correctTf = q.correctAnswers || [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                        ];
+                                        const studentTf = (chosen as (
+                                            | boolean
+                                            | null
+                                        )[]) || [null, null, null, null];
 
                                         return (
                                             <div className="bg-white border border-slate-200 p-4 rounded-xl space-y-3 overflow-x-auto">
@@ -430,76 +455,116 @@ export default function AdminPanel({
                                                         Đáp án & Kết quả
                                                     </div>
                                                 </div>
-                                                {q.options.map((option, idx) => {
-                                                    const currentVal = studentTf[idx];
-                                                    const correctVal = correctTf[idx];
-                                                    const isCorrect = currentVal === correctVal;
-                                                    const cleanedOption = option.replace(
-                                                        /^\s*[a-f][\)\.\:\-]\s*/i,
-                                                        "",
-                                                    );
+                                                {q.options.map(
+                                                    (option, idx) => {
+                                                        const currentVal =
+                                                            studentTf[idx];
+                                                        const correctVal =
+                                                            correctTf[idx];
+                                                        const isCorrect =
+                                                            currentVal ===
+                                                            correctVal;
+                                                        const cleanedOption =
+                                                            option.replace(
+                                                                /^\s*[a-f][\)\.\:\-]\s*/i,
+                                                                "",
+                                                            );
 
-                                                    let dungBtnClass = "bg-white border border-slate-200 text-slate-400";
-                                                    let saiBtnClass = "bg-white border border-slate-200 text-slate-400";
+                                                        let dungBtnClass =
+                                                            "bg-white border border-slate-200 text-slate-400";
+                                                        let saiBtnClass =
+                                                            "bg-white border border-slate-200 text-slate-400";
 
-                                                    if (currentVal === true) {
-                                                        dungBtnClass = isCorrect ? "bg-emerald-500 text-white shadow-sm" : "bg-rose-500 text-white shadow-sm";
-                                                    } else if (currentVal === false) {
-                                                        saiBtnClass = isCorrect ? "bg-emerald-500 text-white shadow-sm" : "bg-rose-500 text-white shadow-sm";
-                                                    }
+                                                        if (
+                                                            currentVal === true
+                                                        ) {
+                                                            dungBtnClass =
+                                                                isCorrect
+                                                                    ? "bg-emerald-500 text-white shadow-sm"
+                                                                    : "bg-rose-500 text-white shadow-sm";
+                                                        } else if (
+                                                            currentVal === false
+                                                        ) {
+                                                            saiBtnClass =
+                                                                isCorrect
+                                                                    ? "bg-emerald-500 text-white shadow-sm"
+                                                                    : "bg-rose-500 text-white shadow-sm";
+                                                        }
 
-                                                    if (correctVal === true) {
-                                                        dungBtnClass += " ring-2 ring-emerald-500 ring-offset-1 border-emerald-500";
-                                                    } else {
-                                                        saiBtnClass += " ring-2 ring-emerald-500 ring-offset-1 border-emerald-500";
-                                                    }
+                                                        if (
+                                                            correctVal === true
+                                                        ) {
+                                                            dungBtnClass +=
+                                                                " ring-2 ring-emerald-500 ring-offset-1 border-emerald-500";
+                                                        } else {
+                                                            saiBtnClass +=
+                                                                " ring-2 ring-emerald-500 ring-offset-1 border-emerald-500";
+                                                        }
 
-                                                    return (
-                                                        <div
-                                                            key={idx}
-                                                            className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]"
-                                                        >
-                                                            <div className="col-span-8 sm:col-span-9 flex gap-2 text-slate-800 [&_img]:mx-auto [&_img]:block [&_img]:my-2 text-xs">
-                                                                <span className="font-bold text-slate-500">
-                                                                    {String.fromCharCode(97 + idx)})
-                                                                </span>
-                                                                <span
-                                                                    dangerouslySetInnerHTML={{
-                                                                        __html: renderMathHtml(cleanedOption),
-                                                                    }}
-                                                                />
+                                                        return (
+                                                            <div
+                                                                key={idx}
+                                                                className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]"
+                                                            >
+                                                                <div className="col-span-8 sm:col-span-9 flex gap-2 text-slate-800 [&_img]:mx-auto [&_img]:block [&_img]:my-2 text-xs">
+                                                                    <span className="font-bold text-slate-500">
+                                                                        {String.fromCharCode(
+                                                                            97 +
+                                                                                idx,
+                                                                        )}
+                                                                        )
+                                                                    </span>
+                                                                    <span
+                                                                        dangerouslySetInnerHTML={{
+                                                                            __html: renderMathHtml(
+                                                                                cleanedOption,
+                                                                            ),
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
+                                                                    <span
+                                                                        className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${dungBtnClass}`}
+                                                                    >
+                                                                        Đúng
+                                                                    </span>
+                                                                    <span
+                                                                        className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${saiBtnClass}`}
+                                                                    >
+                                                                        Sai
+                                                                    </span>
+                                                                    <span className="flex items-center ml-1">
+                                                                        {currentVal ===
+                                                                        null ? (
+                                                                            <span className="text-[8px] text-gray-400 font-bold">
+                                                                                Chưa
+                                                                                chọn
+                                                                            </span>
+                                                                        ) : isCorrect ? (
+                                                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                                        ) : (
+                                                                            <AlertCircle className="w-4 h-4 text-rose-500" />
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             </div>
-                                                            <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
-                                                                <span className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${dungBtnClass}`}>
-                                                                    Đúng
-                                                                </span>
-                                                                <span className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${saiBtnClass}`}>
-                                                                    Sai
-                                                                </span>
-                                                                <span className="flex items-center ml-1">
-                                                                    {currentVal === null ? (
-                                                                        <span className="text-[8px] text-gray-400 font-bold">Chưa chọn</span>
-                                                                    ) : isCorrect ? (
-                                                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                                                    ) : (
-                                                                        <AlertCircle className="w-4 h-4 text-rose-500" />
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                         );
                                     } else if (q.type === "short_answer") {
                                         const textVal = String(chosen || "");
                                         const isCorrect = status === "correct";
 
-                                        let inputBorderClass = "border-rose-300 bg-rose-50/20 text-rose-900";
+                                        let inputBorderClass =
+                                            "border-rose-300 bg-rose-50/20 text-rose-900";
                                         if (isCorrect) {
-                                            inputBorderClass = "border-emerald-300 bg-emerald-50/20 text-emerald-900";
+                                            inputBorderClass =
+                                                "border-emerald-300 bg-emerald-50/20 text-emerald-900";
                                         } else if (textVal === "") {
-                                            inputBorderClass = "border-slate-300 bg-slate-50 text-slate-400";
+                                            inputBorderClass =
+                                                "border-slate-300 bg-slate-50 text-slate-400";
                                         }
 
                                         return (
@@ -510,14 +575,19 @@ export default function AdminPanel({
                                                 <div className="flex flex-col gap-2">
                                                     <input
                                                         type="text"
-                                                        value={textVal !== "" ? textVal : "(Để trống)"}
+                                                        value={
+                                                            textVal !== ""
+                                                                ? textVal
+                                                                : "(Để trống)"
+                                                        }
                                                         disabled
                                                         className={`w-full px-4 py-3 font-bold rounded-lg ${inputBorderClass} text-xs`}
                                                     />
                                                     <div className="text-xs text-emerald-700 font-bold mt-1 flex items-center gap-1">
                                                         <CheckCircle2 className="w-3.5 h-3.5" />
                                                         <span>
-                                                            Đáp án chính xác: {q.shortAnswerKey}
+                                                            Đáp án chính xác:{" "}
+                                                            {q.shortAnswerKey}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -538,7 +608,9 @@ export default function AdminPanel({
                                     <div
                                         className="text-slate-705 overflow-x-auto leading-relaxed pl-2 border-l-2 border-[#3B6D85]/30 [&_img]:mx-auto [&_img]:block [&_img]:my-4"
                                         dangerouslySetInnerHTML={{
-                                            __html: renderMathHtml(q.explanation),
+                                            __html: renderMathHtml(
+                                                q.explanation,
+                                            ),
                                         }}
                                     />
                                 </div>
@@ -549,7 +621,11 @@ export default function AdminPanel({
                         <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                             <button
                                 type="button"
-                                onClick={() => setAdminReviewQuestionIdx((p) => Math.max(0, p - 1))}
+                                onClick={() =>
+                                    setAdminReviewQuestionIdx((p) =>
+                                        Math.max(0, p - 1),
+                                    )
+                                }
                                 disabled={safeIdx === 0}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 border border-gray-100 hover:bg-slate-100 disabled:opacity-40 text-slate-600 text-xs font-semibold rounded-lg transition-all cursor-pointer"
                             >
@@ -559,7 +635,11 @@ export default function AdminPanel({
 
                             <button
                                 type="button"
-                                onClick={() => setAdminReviewQuestionIdx((p) => Math.min(totalQ - 1, p + 1))}
+                                onClick={() =>
+                                    setAdminReviewQuestionIdx((p) =>
+                                        Math.min(totalQ - 1, p + 1),
+                                    )
+                                }
                                 disabled={safeIdx === totalQ - 1}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-lg transition-all cursor-pointer"
                             >
@@ -592,52 +672,74 @@ export default function AdminPanel({
                         {/* Render Questions grouped by Section */}
                         <div className="space-y-4 overflow-y-auto max-h-[350px] pr-1">
                             {(() => {
-                                const sections: Record<string, { qIndex: number; q: any }[]> = {};
+                                const sections: Record<
+                                    string,
+                                    { qIndex: number; q: any }[]
+                                > = {};
                                 quiz.questions.forEach((q, idx) => {
-                                    const secTitle = q.sectionTitle || "Phần câu hỏi";
+                                    const secTitle =
+                                        q.sectionTitle || "Phần câu hỏi";
                                     if (!sections[secTitle]) {
                                         sections[secTitle] = [];
                                     }
                                     sections[secTitle].push({ qIndex: idx, q });
                                 });
 
-                                return Object.entries(sections).map(([secTitle, items]) => (
-                                    <div key={secTitle} className="space-y-2">
-                                        <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40">
-                                            {secTitle}
-                                        </h4>
-                                        <div className="grid grid-cols-5 gap-2 p-1">
-                                            {items.map(({ qIndex, q }) => {
-                                                const s = qStatuses[qIndex];
-                                                const isCurrent = qIndex === safeIdx;
+                                return Object.entries(sections).map(
+                                    ([secTitle, items]) => (
+                                        <div
+                                            key={secTitle}
+                                            className="space-y-2"
+                                        >
+                                            <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40">
+                                                {secTitle}
+                                            </h4>
+                                            <div className="grid grid-cols-5 gap-2 p-1">
+                                                {items.map(({ qIndex, q }) => {
+                                                    const s = qStatuses[qIndex];
+                                                    const isCurrent =
+                                                        qIndex === safeIdx;
 
-                                                let btnColorClass = "bg-rose-200 text-rose-900 border-rose-300 hover:bg-rose-300";
-                                                if (s === "correct") {
-                                                    btnColorClass = "bg-emerald-200 text-emerald-900 border-emerald-300 hover:bg-emerald-300";
-                                                } else if (s === "partial") {
-                                                    btnColorClass = "bg-amber-200 text-amber-900 border-amber-300 hover:bg-emerald-300";
-                                                } else if (s === "unanswered") {
-                                                    btnColorClass = "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
-                                                }
+                                                    let btnColorClass =
+                                                        "bg-rose-200 text-rose-900 border-rose-300 hover:bg-rose-300";
+                                                    if (s === "correct") {
+                                                        btnColorClass =
+                                                            "bg-emerald-200 text-emerald-900 border-emerald-300 hover:bg-emerald-300";
+                                                    } else if (
+                                                        s === "partial"
+                                                    ) {
+                                                        btnColorClass =
+                                                            "bg-amber-200 text-amber-900 border-amber-300 hover:bg-emerald-300";
+                                                    } else if (
+                                                        s === "unanswered"
+                                                    ) {
+                                                        btnColorClass =
+                                                            "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
+                                                    }
 
-                                                return (
-                                                    <button
-                                                        key={q.id}
-                                                        type="button"
-                                                        onClick={() => setAdminReviewQuestionIdx(qIndex)}
-                                                        className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${btnColorClass} ${
-                                                            isCurrent
-                                                                ? "ring-2 ring-slate-400 ring-offset-1 border-slate-500 scale-105 shadow-xs z-10"
-                                                                : ""
-                                                        }`}
-                                                    >
-                                                        {qIndex + 1}
-                                                    </button>
-                                                );
-                                            })}
+                                                    return (
+                                                        <button
+                                                            key={q.id}
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setAdminReviewQuestionIdx(
+                                                                    qIndex,
+                                                                )
+                                                            }
+                                                            className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${btnColorClass} ${
+                                                                isCurrent
+                                                                    ? "ring-2 ring-slate-400 ring-offset-1 border-slate-500 scale-105 shadow-xs z-10"
+                                                                    : ""
+                                                            }`}
+                                                        >
+                                                            {qIndex + 1}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
-                                ));
+                                    ),
+                                );
                             })()}
                         </div>
                     </div>
@@ -721,10 +823,14 @@ export default function AdminPanel({
             }
 
             if (adminReviewSubmission) {
-                const quiz = quizzes.find((q) => q.id === adminReviewSubmission.quizId);
+                const quiz = quizzes.find(
+                    (q) => q.id === adminReviewSubmission.quizId,
+                );
                 if (quiz) {
                     if (e.key === "ArrowLeft") {
-                        setAdminReviewQuestionIdx((prev) => Math.max(0, prev - 1));
+                        setAdminReviewQuestionIdx((prev) =>
+                            Math.max(0, prev - 1),
+                        );
                     } else if (e.key === "ArrowRight") {
                         setAdminReviewQuestionIdx((prev) =>
                             Math.min(quiz.questions.length - 1, prev + 1),
@@ -921,7 +1027,10 @@ export default function AdminPanel({
         }
     };
 
-    const handleRoleChange = async (userId: string, newRole: "teacher" | "student") => {
+    const handleRoleChange = async (
+        userId: string,
+        newRole: "teacher" | "student",
+    ) => {
         const found = userProfiles.find((u) => u.id === userId);
         if (!found) return;
         setUpdatingUserId(userId);
@@ -1003,7 +1112,8 @@ export default function AdminPanel({
                 username: editUserUsername.trim(),
                 role: editUserRole,
                 plan: editUserPlan,
-                grade: editUserRole === "student" ? editUserGrade || null : null,
+                grade:
+                    editUserRole === "student" ? editUserGrade || null : null,
             });
             alert("Cập nhật tài khoản thành công!");
             setEditingUser(null);
@@ -1343,7 +1453,9 @@ export default function AdminPanel({
                                         sidebarSearchQuery.toLowerCase(),
                                     )) && (
                                     <button
-                                        onClick={() => handleTabClick("quizzes")}
+                                        onClick={() =>
+                                            handleTabClick("quizzes")
+                                        }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "quizzes"
                                                 ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -1615,12 +1727,16 @@ export default function AdminPanel({
                                                                     updatingUserId ===
                                                                     prof.id
                                                                 }
-                                                                value={prof.role}
+                                                                value={
+                                                                    prof.role
+                                                                }
                                                                 onChange={(e) =>
                                                                     handleRoleChange(
                                                                         prof.id,
                                                                         e.target
-                                                                            .value as "teacher" | "student",
+                                                                            .value as
+                                                                            | "teacher"
+                                                                            | "student",
                                                                     )
                                                                 }
                                                                 className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
@@ -1677,7 +1793,8 @@ export default function AdminPanel({
                                                             </select>
                                                         </td>
                                                         <td className="py-3 px-4">
-                                                            {prof.role === "student" ? (
+                                                            {prof.role ===
+                                                            "student" ? (
                                                                 <select
                                                                     disabled={
                                                                         updatingUserId ===
@@ -1687,17 +1804,35 @@ export default function AdminPanel({
                                                                         prof.grade ||
                                                                         ""
                                                                     }
-                                                                    onChange={async (e) => {
-                                                                        const newGrade = e.target.value || null;
-                                                                        setUpdatingUserId(prof.id);
+                                                                    onChange={async (
+                                                                        e,
+                                                                    ) => {
+                                                                        const newGrade =
+                                                                            e
+                                                                                .target
+                                                                                .value ||
+                                                                            null;
+                                                                        setUpdatingUserId(
+                                                                            prof.id,
+                                                                        );
                                                                         try {
-                                                                            await updateUserGrade(prof.id, newGrade);
+                                                                            await updateUserGrade(
+                                                                                prof.id,
+                                                                                newGrade,
+                                                                            );
                                                                             await fetchProfiles();
                                                                         } catch (err: any) {
-                                                                            console.error("Lỗi cập nhật lớp:", err);
-                                                                            alert(`Lỗi cập nhật lớp: ${err.message}`);
+                                                                            console.error(
+                                                                                "Lỗi cập nhật lớp:",
+                                                                                err,
+                                                                            );
+                                                                            alert(
+                                                                                `Lỗi cập nhật lớp: ${err.message}`,
+                                                                            );
                                                                         } finally {
-                                                                            setUpdatingUserId(null);
+                                                                            setUpdatingUserId(
+                                                                                null,
+                                                                            );
                                                                         }
                                                                     }}
                                                                     className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
@@ -1706,15 +1841,29 @@ export default function AdminPanel({
                                                                             : "bg-slate-50 text-slate-600 border-slate-200"
                                                                     }`}
                                                                 >
-                                                                    <option value="">Chọn lớp</option>
-                                                                    <option value="8">Lớp 8</option>
-                                                                    <option value="9">Lớp 9</option>
-                                                                    <option value="10">Lớp 10</option>
-                                                                    <option value="11">Lớp 11</option>
-                                                                    <option value="12">Lớp 12</option>
+                                                                    <option value="">
+                                                                        Chọn lớp
+                                                                    </option>
+                                                                    <option value="8">
+                                                                        Lớp 8
+                                                                    </option>
+                                                                    <option value="9">
+                                                                        Lớp 9
+                                                                    </option>
+                                                                    <option value="10">
+                                                                        Lớp 10
+                                                                    </option>
+                                                                    <option value="11">
+                                                                        Lớp 11
+                                                                    </option>
+                                                                    <option value="12">
+                                                                        Lớp 12
+                                                                    </option>
                                                                 </select>
                                                             ) : (
-                                                                <span className="text-[10px] text-slate-400 font-medium italic">Không có</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium italic">
+                                                                    Không có
+                                                                </span>
                                                             )}
                                                         </td>
                                                         <td className="py-3 px-4 text-right space-x-1.5">
@@ -1917,17 +2066,30 @@ export default function AdminPanel({
                                                             value={newUserGrade}
                                                             onChange={(e) =>
                                                                 setNewUserGrade(
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-slate-400"
                                                         >
-                                                            <option value="">Chọn lớp</option>
-                                                            <option value="8">Lớp 8</option>
-                                                            <option value="9">Lớp 9</option>
-                                                            <option value="10">Lớp 10</option>
-                                                            <option value="11">Lớp 11</option>
-                                                            <option value="12">Lớp 12</option>
+                                                            <option value="">
+                                                                Chọn lớp
+                                                            </option>
+                                                            <option value="8">
+                                                                Lớp 8
+                                                            </option>
+                                                            <option value="9">
+                                                                Lớp 9
+                                                            </option>
+                                                            <option value="10">
+                                                                Lớp 10
+                                                            </option>
+                                                            <option value="11">
+                                                                Lớp 11
+                                                            </option>
+                                                            <option value="12">
+                                                                Lớp 12
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 )}
@@ -1935,7 +2097,9 @@ export default function AdminPanel({
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            setIsCreateUserOpen(false);
+                                                            setIsCreateUserOpen(
+                                                                false,
+                                                            );
                                                             setNewUserGrade("");
                                                         }}
                                                         className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium rounded-lg transition-colors cursor-pointer"
@@ -2052,20 +2216,35 @@ export default function AdminPanel({
                                                             Lớp
                                                         </label>
                                                         <select
-                                                            value={editUserGrade}
+                                                            value={
+                                                                editUserGrade
+                                                            }
                                                             onChange={(e) =>
                                                                 setEditUserGrade(
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-slate-400"
                                                         >
-                                                            <option value="">Chọn lớp</option>
-                                                            <option value="8">Lớp 8</option>
-                                                            <option value="9">Lớp 9</option>
-                                                            <option value="10">Lớp 10</option>
-                                                            <option value="11">Lớp 11</option>
-                                                            <option value="12">Lớp 12</option>
+                                                            <option value="">
+                                                                Chọn lớp
+                                                            </option>
+                                                            <option value="8">
+                                                                Lớp 8
+                                                            </option>
+                                                            <option value="9">
+                                                                Lớp 9
+                                                            </option>
+                                                            <option value="10">
+                                                                Lớp 10
+                                                            </option>
+                                                            <option value="11">
+                                                                Lớp 11
+                                                            </option>
+                                                            <option value="12">
+                                                                Lớp 12
+                                                            </option>
                                                         </select>
                                                     </div>
                                                 )}
@@ -3869,6 +4048,626 @@ export default function AdminPanel({
                                                                 </div>
                                                             </div>
 
+                                                            {/* Practice Heatmap & Chart Side-by-Side */}
+                                                            {completedCount >
+                                                                0 && (
+                                                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2 pb-6 border-b border-slate-150">
+                                                                    {/* Left Column: Biểu đồ tiến trình điểm số */}
+                                                                    <div className="lg:col-span-7 space-y-3">
+                                                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-150">
+                                                                            Biểu
+                                                                            đồ
+                                                                            tiến
+                                                                            trình
+                                                                            điểm
+                                                                            số
+                                                                        </h4>
+                                                                        <div className="h-[140px] w-full relative pt-2">
+                                                                            {(() => {
+                                                                                const chartPointsData =
+                                                                                    [
+                                                                                        ...studentSubs,
+                                                                                    ]
+                                                                                        .reverse()
+                                                                                        .slice(
+                                                                                            -7,
+                                                                                        )
+                                                                                        .map(
+                                                                                            (
+                                                                                                sub,
+                                                                                                i,
+                                                                                            ) => ({
+                                                                                                day: `Lượt ${i + 1}`,
+                                                                                                score: Number(
+                                                                                                    sub.score,
+                                                                                                ),
+                                                                                                quizTitle:
+                                                                                                    sub.quizTitle,
+                                                                                                submittedAt:
+                                                                                                    sub.submittedAt,
+                                                                                            }),
+                                                                                        );
+
+                                                                                const width = 400;
+                                                                                const height = 100;
+                                                                                const maxVal = 10;
+                                                                                const paddingLeft = 12;
+                                                                                const paddingRight = 12;
+                                                                                const paddingTop = 16;
+                                                                                const paddingBottom = 12;
+
+                                                                                const points =
+                                                                                    chartPointsData.map(
+                                                                                        (
+                                                                                            p,
+                                                                                            i,
+                                                                                        ) => {
+                                                                                            const x =
+                                                                                                paddingLeft +
+                                                                                                (i *
+                                                                                                    (width -
+                                                                                                        paddingLeft -
+                                                                                                        paddingRight)) /
+                                                                                                    Math.max(
+                                                                                                        chartPointsData.length -
+                                                                                                            1,
+                                                                                                        1,
+                                                                                                    );
+                                                                                            const y =
+                                                                                                paddingTop +
+                                                                                                ((maxVal -
+                                                                                                    p.score) *
+                                                                                                    (height -
+                                                                                                        paddingTop -
+                                                                                                        paddingBottom)) /
+                                                                                                    maxVal;
+                                                                                            return {
+                                                                                                x,
+                                                                                                y,
+                                                                                                score: p.score,
+                                                                                            };
+                                                                                        },
+                                                                                    );
+
+                                                                                let pathD =
+                                                                                    "";
+                                                                                let areaD =
+                                                                                    "";
+
+                                                                                if (
+                                                                                    points.length >
+                                                                                    0
+                                                                                ) {
+                                                                                    if (
+                                                                                        points.length ===
+                                                                                        1
+                                                                                    ) {
+                                                                                        pathD = `M ${points[0].x} ${points[0].y}`;
+                                                                                        areaD = `M ${points[0].x} ${points[0].y} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                                                    } else if (
+                                                                                        points.length ===
+                                                                                        2
+                                                                                    ) {
+                                                                                        pathD = `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+                                                                                        areaD = `${pathD} L ${points[1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                                                    } else {
+                                                                                        pathD = `M ${points[0].x} ${points[0].y}`;
+                                                                                        for (
+                                                                                            let i = 0;
+                                                                                            i <
+                                                                                            points.length -
+                                                                                                1;
+                                                                                            i++
+                                                                                        ) {
+                                                                                            const curr =
+                                                                                                points[
+                                                                                                    i
+                                                                                                ];
+                                                                                            const next =
+                                                                                                points[
+                                                                                                    i +
+                                                                                                        1
+                                                                                                ];
+                                                                                            const cpX1 =
+                                                                                                curr.x +
+                                                                                                (next.x -
+                                                                                                    curr.x) /
+                                                                                                    3;
+                                                                                            const cpY1 =
+                                                                                                curr.y;
+                                                                                            const cpX2 =
+                                                                                                curr.x +
+                                                                                                (2 *
+                                                                                                    (next.x -
+                                                                                                        curr.x)) /
+                                                                                                    3;
+                                                                                            const cpY2 =
+                                                                                                next.y;
+                                                                                            pathD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${next.x} ${next.y}`;
+                                                                                        }
+                                                                                        areaD = `${pathD} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
+                                                                                    }
+                                                                                }
+
+                                                                                const formatDate =
+                                                                                    (
+                                                                                        dateStr,
+                                                                                    ) => {
+                                                                                        if (
+                                                                                            !dateStr
+                                                                                        )
+                                                                                            return "";
+                                                                                        try {
+                                                                                            const d =
+                                                                                                new Date(
+                                                                                                    dateStr.replace(
+                                                                                                        " ",
+                                                                                                        "T",
+                                                                                                    ),
+                                                                                                );
+                                                                                            const day =
+                                                                                                String(
+                                                                                                    d.getDate(),
+                                                                                                ).padStart(
+                                                                                                    2,
+                                                                                                    "0",
+                                                                                                );
+                                                                                            const month =
+                                                                                                String(
+                                                                                                    d.getMonth() +
+                                                                                                        1,
+                                                                                                ).padStart(
+                                                                                                    2,
+                                                                                                    "0",
+                                                                                                );
+                                                                                            const year =
+                                                                                                d.getFullYear();
+                                                                                            return `${day}/${month}/${year}`;
+                                                                                        } catch (e) {
+                                                                                            return "";
+                                                                                        }
+                                                                                    };
+
+                                                                                return (
+                                                                                    <div className="w-full h-full relative">
+                                                                                        <svg
+                                                                                            viewBox={`0 0 ${width} ${height}`}
+                                                                                            className="w-full h-full"
+                                                                                        >
+                                                                                            <defs>
+                                                                                                <linearGradient
+                                                                                                    id="admin-student-chart-grad"
+                                                                                                    x1="0"
+                                                                                                    y1="0"
+                                                                                                    x2="0"
+                                                                                                    y2="1"
+                                                                                                >
+                                                                                                    <stop
+                                                                                                        offset="0%"
+                                                                                                        stopColor="#8B5CF6"
+                                                                                                        stopOpacity="0.15"
+                                                                                                    />
+                                                                                                    <stop
+                                                                                                        offset="100%"
+                                                                                                        stopColor="#8B5CF6"
+                                                                                                        stopOpacity="0"
+                                                                                                    />
+                                                                                                </linearGradient>
+                                                                                                <filter
+                                                                                                    id="admin-chart-shadow"
+                                                                                                    x="-5%"
+                                                                                                    y="-5%"
+                                                                                                    width="110%"
+                                                                                                    height="110%"
+                                                                                                >
+                                                                                                    <feDropShadow
+                                                                                                        dx="0"
+                                                                                                        dy="1.5"
+                                                                                                        stdDeviation="1.2"
+                                                                                                        floodColor="#8B5CF6"
+                                                                                                        floodOpacity="0.15"
+                                                                                                    />
+                                                                                                </filter>
+                                                                                            </defs>
+
+                                                                                            {areaD && (
+                                                                                                <path
+                                                                                                    d={
+                                                                                                        areaD
+                                                                                                    }
+                                                                                                    fill="url(#admin-student-chart-grad)"
+                                                                                                />
+                                                                                            )}
+                                                                                            {pathD && (
+                                                                                                <path
+                                                                                                    d={
+                                                                                                        pathD
+                                                                                                    }
+                                                                                                    fill="none"
+                                                                                                    stroke="#8B5CF6"
+                                                                                                    strokeWidth="1.5"
+                                                                                                    strokeLinecap="round"
+                                                                                                    strokeLinejoin="round"
+                                                                                                    filter="url(#admin-chart-shadow)"
+                                                                                                />
+                                                                                            )}
+
+                                                                                            {points.map(
+                                                                                                (
+                                                                                                    p,
+                                                                                                    i,
+                                                                                                ) => {
+                                                                                                    const isHovered =
+                                                                                                        adminStudentHoveredPointIdx ===
+                                                                                                        i;
+                                                                                                    const isLast =
+                                                                                                        i ===
+                                                                                                        points.length -
+                                                                                                            1;
+                                                                                                    const shouldShow =
+                                                                                                        isHovered ||
+                                                                                                        (adminStudentHoveredPointIdx ===
+                                                                                                            null &&
+                                                                                                            isLast);
+                                                                                                    if (
+                                                                                                        !shouldShow
+                                                                                                    )
+                                                                                                        return null;
+                                                                                                    return (
+                                                                                                        <circle
+                                                                                                            key={
+                                                                                                                i
+                                                                                                            }
+                                                                                                            cx={
+                                                                                                                p.x
+                                                                                                            }
+                                                                                                            cy={
+                                                                                                                p.y
+                                                                                                            }
+                                                                                                            r="4.5"
+                                                                                                            fill="#ffffff"
+                                                                                                            stroke="#8B5CF6"
+                                                                                                            strokeWidth="2.5"
+                                                                                                            className="transition-all duration-150"
+                                                                                                        />
+                                                                                                    );
+                                                                                                },
+                                                                                            )}
+
+                                                                                            {points.map(
+                                                                                                (
+                                                                                                    p,
+                                                                                                    i,
+                                                                                                ) => {
+                                                                                                    const isHovered =
+                                                                                                        adminStudentHoveredPointIdx ===
+                                                                                                        i;
+                                                                                                    const isLast =
+                                                                                                        i ===
+                                                                                                        points.length -
+                                                                                                            1;
+                                                                                                    const shouldShow =
+                                                                                                        isHovered ||
+                                                                                                        (adminStudentHoveredPointIdx ===
+                                                                                                            null &&
+                                                                                                            isLast);
+                                                                                                    if (
+                                                                                                        !shouldShow
+                                                                                                    )
+                                                                                                        return null;
+                                                                                                    return (
+                                                                                                        <text
+                                                                                                            key={`score-lbl-${i}`}
+                                                                                                            x={
+                                                                                                                p.x
+                                                                                                            }
+                                                                                                            y={
+                                                                                                                p.y -
+                                                                                                                8
+                                                                                                            }
+                                                                                                            textAnchor="middle"
+                                                                                                            className="text-[7.5px] font-black fill-[#8B5CF6] select-none"
+                                                                                                        >
+                                                                                                            {
+                                                                                                                p.score
+                                                                                                            }
+
+                                                                                                            đ
+                                                                                                        </text>
+                                                                                                    );
+                                                                                                },
+                                                                                            )}
+
+                                                                                            {points.map(
+                                                                                                (
+                                                                                                    p,
+                                                                                                    i,
+                                                                                                ) => (
+                                                                                                    <circle
+                                                                                                        key={`hover-${i}`}
+                                                                                                        cx={
+                                                                                                            p.x
+                                                                                                        }
+                                                                                                        cy={
+                                                                                                            p.y
+                                                                                                        }
+                                                                                                        r="12"
+                                                                                                        fill="transparent"
+                                                                                                        className="cursor-pointer"
+                                                                                                        onMouseEnter={() =>
+                                                                                                            setAdminStudentHoveredPointIdx(
+                                                                                                                i,
+                                                                                                            )
+                                                                                                        }
+                                                                                                        onMouseLeave={() =>
+                                                                                                            setAdminStudentHoveredPointIdx(
+                                                                                                                null,
+                                                                                                            )
+                                                                                                        }
+                                                                                                    />
+                                                                                                ),
+                                                                                            )}
+                                                                                        </svg>
+
+                                                                                        {adminStudentHoveredPointIdx !==
+                                                                                            null &&
+                                                                                            points[
+                                                                                                adminStudentHoveredPointIdx
+                                                                                            ] && (
+                                                                                                <div
+                                                                                                    className="absolute bg-white border border-slate-200/80 text-slate-855 p-2.5 rounded-xl shadow-lg pointer-events-none transition-all duration-150 animate-in fade-in-50 zoom-in-95 z-30 select-none text-left min-w-[140px]"
+                                                                                                    style={{
+                                                                                                        left: `${(points[adminStudentHoveredPointIdx].x / width) * 100}%`,
+                                                                                                        top: `${(points[adminStudentHoveredPointIdx].y / height) * 100}%`,
+                                                                                                        transform:
+                                                                                                            "translate(-50%, -115%)",
+                                                                                                    }}
+                                                                                                >
+                                                                                                    <div className="text-[8px] font-bold text-slate-400 leading-none mb-1">
+                                                                                                        {formatDate(
+                                                                                                            chartPointsData[
+                                                                                                                adminStudentHoveredPointIdx
+                                                                                                            ]
+                                                                                                                .submittedAt,
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                    <div className="text-[9px] font-black text-slate-800 truncate max-w-[130px] mb-1">
+                                                                                                        {
+                                                                                                            chartPointsData[
+                                                                                                                adminStudentHoveredPointIdx
+                                                                                                            ]
+                                                                                                                .quizTitle
+                                                                                                        }
+                                                                                                    </div>
+                                                                                                    <div className="flex items-center gap-1 mt-0.5 text-[9px] font-bold text-[#8B5CF6]">
+                                                                                                        <span className="w-1 h-1 rounded-full bg-[#8B5CF6]"></span>
+                                                                                                        <span>
+                                                                                                            Điểm:{" "}
+                                                                                                            {
+                                                                                                                points[
+                                                                                                                    adminStudentHoveredPointIdx
+                                                                                                                ]
+                                                                                                                    .score
+                                                                                                            }
+                                                                                                            /10đ
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <div className="absolute top-[100%] left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white border-b border-r border-slate-200/80 rotate-45" />
+                                                                                                </div>
+                                                                                            )}
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Right Column: Tần suất hoạt động */}
+                                                                    <div className="lg:col-span-5 space-y-3">
+                                                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-150">
+                                                                            Tần
+                                                                            suất
+                                                                            hoạt
+                                                                            động
+                                                                            (30
+                                                                            ngày
+                                                                            gần
+                                                                            đây)
+                                                                        </h4>
+                                                                        <div className="py-2">
+                                                                            {(() => {
+                                                                                const today =
+                                                                                    new Date();
+                                                                                today.setHours(
+                                                                                    23,
+                                                                                    59,
+                                                                                    59,
+                                                                                    999,
+                                                                                );
+                                                                                const daysList =
+                                                                                    [];
+                                                                                for (
+                                                                                    let k = 29;
+                                                                                    k >=
+                                                                                    0;
+                                                                                    k--
+                                                                                ) {
+                                                                                    const d =
+                                                                                        new Date(
+                                                                                            today,
+                                                                                        );
+                                                                                    d.setDate(
+                                                                                        today.getDate() -
+                                                                                            k,
+                                                                                    );
+                                                                                    const dStr =
+                                                                                        d.toDateString();
+                                                                                    const count =
+                                                                                        studentSubs.filter(
+                                                                                            (
+                                                                                                s,
+                                                                                            ) => {
+                                                                                                return (
+                                                                                                    new Date(
+                                                                                                        s.submittedAt.replace(
+                                                                                                            " ",
+                                                                                                            "T",
+                                                                                                        ),
+                                                                                                    ).toDateString() ===
+                                                                                                    dStr
+                                                                                                );
+                                                                                            },
+                                                                                        ).length;
+                                                                                    daysList.push(
+                                                                                        {
+                                                                                            date: d,
+                                                                                            count,
+                                                                                        },
+                                                                                    );
+                                                                                }
+
+                                                                                const startDayOfWeek =
+                                                                                    (daysList[0].date.getDay() +
+                                                                                        6) %
+                                                                                    7;
+
+                                                                                const formatDateLabel =
+                                                                                    (
+                                                                                        d,
+                                                                                    ) => {
+                                                                                        const day =
+                                                                                            String(
+                                                                                                d.getDate(),
+                                                                                            ).padStart(
+                                                                                                2,
+                                                                                                "0",
+                                                                                            );
+                                                                                        const month =
+                                                                                            String(
+                                                                                                d.getMonth() +
+                                                                                                    1,
+                                                                                            ).padStart(
+                                                                                                2,
+                                                                                                "0",
+                                                                                            );
+                                                                                        return `${day}/${month}`;
+                                                                                    };
+
+                                                                                const weekHeaders =
+                                                                                    [
+                                                                                        "T2",
+                                                                                        "T3",
+                                                                                        "T4",
+                                                                                        "T5",
+                                                                                        "T6",
+                                                                                        "T7",
+                                                                                        "CN",
+                                                                                    ];
+
+                                                                                return (
+                                                                                    <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100/80 w-fit text-left flex flex-col gap-2">
+                                                                                        {/* Headers */}
+                                                                                        <div className="grid grid-cols-7 gap-1.5 text-center text-[8px] font-bold text-slate-400 mb-1.5">
+                                                                                            {weekHeaders.map(
+                                                                                                (
+                                                                                                    h,
+                                                                                                ) => (
+                                                                                                    <div
+                                                                                                        key={
+                                                                                                            h
+                                                                                                        }
+                                                                                                        className="w-2.5"
+                                                                                                    >
+                                                                                                        {
+                                                                                                            h
+                                                                                                        }
+                                                                                                    </div>
+                                                                                                ),
+                                                                                            )}
+                                                                                        </div>
+                                                                                        {/* Grid */}
+                                                                                        <div className="grid grid-cols-7 gap-1.5 w-fit">
+                                                                                            {Array.from(
+                                                                                                {
+                                                                                                    length: startDayOfWeek,
+                                                                                                },
+                                                                                            ).map(
+                                                                                                (
+                                                                                                    _,
+                                                                                                    i,
+                                                                                                ) => (
+                                                                                                    <div
+                                                                                                        key={`empty-${i}`}
+                                                                                                        className="w-2.5 h-2.5"
+                                                                                                    />
+                                                                                                ),
+                                                                                            )}
+                                                                                            {daysList.map(
+                                                                                                (
+                                                                                                    dayInfo,
+                                                                                                    idx,
+                                                                                                ) => {
+                                                                                                    let colorClass =
+                                                                                                        "bg-slate-200 text-slate-400";
+                                                                                                    if (
+                                                                                                        dayInfo.count ===
+                                                                                                        1
+                                                                                                    ) {
+                                                                                                        colorClass =
+                                                                                                            "bg-[#A7F3D0] text-emerald-800";
+                                                                                                    } else if (
+                                                                                                        dayInfo.count ===
+                                                                                                        2
+                                                                                                    ) {
+                                                                                                        colorClass =
+                                                                                                            "bg-[#34D399] text-emerald-950";
+                                                                                                    } else if (
+                                                                                                        dayInfo.count >=
+                                                                                                        3
+                                                                                                    ) {
+                                                                                                        colorClass =
+                                                                                                            "bg-[#059669] text-white";
+                                                                                                    }
+
+                                                                                                    const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
+
+                                                                                                    return (
+                                                                                                        <div
+                                                                                                            key={
+                                                                                                                idx
+                                                                                                            }
+                                                                                                            className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                                        >
+                                                                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50">
+                                                                                                                {
+                                                                                                                    tooltipText
+                                                                                                                }
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    );
+                                                                                                },
+                                                                                            )}
+                                                                                        </div>
+                                                                                        {/* Legend */}
+                                                                                        <div className="flex items-center gap-1 text-[8px] text-slate-400 self-end mt-1">
+                                                                                            <span>
+                                                                                                Ít
+                                                                                            </span>
+                                                                                            <div className="w-2 h-2 rounded-full bg-slate-200" />
+                                                                                            <div className="w-2 h-2 rounded-full bg-[#A7F3D0]" />
+                                                                                            <div className="w-2 h-2 rounded-full bg-[#34D399]" />
+                                                                                            <div className="w-2 h-2 rounded-full bg-[#059669]" />
+                                                                                            <span>
+                                                                                                Nhiều
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
                                                             {/* Submission list */}
                                                             <div className="space-y-3">
                                                                 <h4 className="text-xs font-bold text-slate-800">
@@ -4253,8 +5052,10 @@ export default function AdminPanel({
                                                         <span
                                                             className={
                                                                 Math.abs(
-                                                                    Object.values(
-                                                                        sectionPoints,
+                                                                    (
+                                                                        Object.values(
+                                                                            sectionPoints,
+                                                                        ) as number[]
                                                                     ).reduce(
                                                                         (
                                                                             a,

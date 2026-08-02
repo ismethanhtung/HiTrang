@@ -476,7 +476,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
         
         // Track templates and container stack
         const tmplStack: TmplContext[] = [];
-        const containerStack: ("LINE" | "TMPL")[] = [];
+        const containerStack: ("LINE" | "TMPL" | "EMBELL")[] = [];
         let indent = 0;
         let hasStarted = false;
         let propertyCharsToSkip = 0;

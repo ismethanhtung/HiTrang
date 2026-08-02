@@ -17,6 +17,7 @@ import {
     ChevronsUpDown,
     Sun,
     Moon,
+    Trophy,
 } from "lucide-react";
 import { User } from "../types";
 
@@ -48,6 +49,7 @@ export default function Sidebar({
         { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
         { id: "quizzes", label: "Quản lý Đề thi", icon: ClipboardList },
         { id: "students", label: "Tiến độ Học sinh", icon: GraduationCap },
+        { id: "leaderboard", label: "Bảng xếp hạng", icon: Trophy },
     ];
 
     const studentMenuItems = [
@@ -58,6 +60,7 @@ export default function Sidebar({
         },
         { id: "student-quizzes", label: "Làm bài thi", icon: ClipboardList },
         { id: "student-results", label: "Lịch sử học tập", icon: Award },
+        { id: "leaderboard", label: "Bảng xếp hạng", icon: Trophy },
     ];
 
     const menuItems =

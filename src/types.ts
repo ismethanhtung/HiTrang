@@ -57,3 +57,26 @@ export interface Submission {
   timeSpent?: number; // time spent in seconds
 }
 
+export interface QuizLeaderboardEntry {
+  rankPosition: number;
+  studentId: string;
+  studentName: string;
+  studentUsername: string;
+  studentGrade: string | null;
+  score: number;
+  durationSeconds: number;
+  submittedAt: string;
+}
+
+export interface OverallLeaderboardEntry {
+  rankPosition: number;
+  previousRankPosition: number | null;
+  studentId: string;
+  studentName: string;
+  studentUsername: string;
+  studentGrade: string | null;
+  totalPoints: number;
+  testsCompleted: number;
+}
+
+

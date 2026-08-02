@@ -18,6 +18,7 @@ import {
     getAnyActiveAttempt,
 } from "./lib/supabaseService";
 import GradeView from "./components/GradeView";
+import LeaderboardView from "./components/LeaderboardView";
 import {
     HelpCircle,
     X,
@@ -331,6 +332,13 @@ export default function App() {
                         );
                     }
                 }}
+                onNavigateLeaderboard={() => {
+                    if (confirmNavigation()) {
+                        setActiveTab("leaderboard");
+                        navigateTo("/");
+                    }
+                }}
+                activeTab={activeTab}
                 currentPath={currentPath}
             />
 
@@ -424,6 +432,16 @@ export default function App() {
                                                     : "/settings",
                                             );
                                         }}
+                                        onNavigate={navigateTo}
+                                    />
+                                );
+                            }
+
+                            if (activeTab === "leaderboard") {
+                                return (
+                                    <LeaderboardView
+                                        user={user}
+                                        quizzes={quizzes}
                                         onNavigate={navigateTo}
                                     />
                                 );
