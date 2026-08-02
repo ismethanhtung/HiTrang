@@ -271,6 +271,9 @@ export default function StudentDashboard({
 
     useEffect(() => {
         if (activeQuizId) {
+            if (activeQuiz && activeQuiz.id === activeQuizId && quizEntryPhase === "taking") {
+                return;
+            }
             const quiz = quizzes.find((q) => q.id === activeQuizId);
             if (quiz) {
                 setActiveQuiz(quiz);
@@ -299,7 +302,7 @@ export default function StudentDashboard({
             setQuizEntryPhase("none");
             setActiveAttemptInProgress(null);
         }
-    }, [activeQuizId, quizzes]);
+    }, [activeQuizId, quizzes, quizEntryPhase, activeQuiz]);
 
     // Auto-save effect
     useEffect(() => {
