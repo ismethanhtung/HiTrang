@@ -87,6 +87,12 @@ export default function AdminPanel({
         return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
     };
 
+    const handleTabClick = (tab: "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students") => {
+        setActiveTab(tab);
+        setAdminReviewSubmission(null);
+        setSelectedQuizForDetails(null);
+    };
+
     const cleanTrueFalseQuestionText = (html: string) => {
         if (!html) return "";
         let clean = html.replace(
@@ -1281,7 +1287,7 @@ export default function AdminPanel({
                                     <ChevronDown className="w-3 h-3 text-slate-400" />
                                 </div>
                                 <button
-                                    onClick={() => setActiveTab("plans")}
+                                    onClick={() => handleTabClick("plans")}
                                     className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                         activeTab === "plans"
                                             ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -1319,7 +1325,7 @@ export default function AdminPanel({
                                     )) && (
                                     <button
                                         onClick={() =>
-                                            setActiveTab("create-quiz")
+                                            handleTabClick("create-quiz")
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "create-quiz"
@@ -1337,7 +1343,7 @@ export default function AdminPanel({
                                         sidebarSearchQuery.toLowerCase(),
                                     )) && (
                                     <button
-                                        onClick={() => setActiveTab("quizzes")}
+                                        onClick={() => handleTabClick("quizzes")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "quizzes"
                                                 ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -1408,7 +1414,7 @@ export default function AdminPanel({
                                     )) && (
                                     <button
                                         onClick={() =>
-                                            setActiveTab("stats-quizzes")
+                                            handleTabClick("stats-quizzes")
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "stats-quizzes"
@@ -1427,7 +1433,7 @@ export default function AdminPanel({
                                     )) && (
                                     <button
                                         onClick={() =>
-                                            setActiveTab("stats-students")
+                                            handleTabClick("stats-students")
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "stats-students"
