@@ -65,6 +65,10 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                 setError("Vui lòng nhập họ và tên.");
                 return;
             }
+            if (username.trim().length < 8) {
+                setError("Tên đăng nhập phải chứa ít nhất 8 ký tự.");
+                return;
+            }
             if (password !== confirmPassword) {
                 setError("Mật khẩu xác nhận không trùng khớp.");
                 return;

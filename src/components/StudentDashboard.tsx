@@ -270,6 +270,16 @@ export default function StudentDashboard({
             );
             return;
         }
+
+        // Request browser fullscreen synchronously under user gesture context
+        try {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        } catch (err) {
+            console.warn("Lỗi khi chuyển sang chế độ toàn màn hình:", err);
+        }
+
         setLoadingAttempt(true);
         try {
             const attempt = await getOrCreateAttempt(
@@ -586,7 +596,9 @@ export default function StudentDashboard({
             <div
                 className={
                     activeQuiz
-                        ? "w-full h-full p-4 xl:p-6 flex flex-col min-h-0"
+                        ? quizEntryPhase === "taking"
+                            ? "w-full h-full p-0 sm:p-2 md:p-4 flex flex-col min-h-0"
+                            : "w-full h-full p-4 xl:p-6 flex flex-col min-h-0"
                         : reviewSubmission
                           ? "w-full h-full p-4 xl:p-6 flex flex-col min-h-0"
                           : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
@@ -3052,98 +3064,109 @@ export default function StudentDashboard({
                                                         const width = 280;
                                                         const height = 120;
                                                         const maxVal = 10;
-                                                        const paddingLeft = 8;
-                                                        const paddingRight = 8;
+                                                        const paddingLeft = 12;
+                                                        const paddingRight = 12;
                                                         const paddingTop = 12;
-                                                        const paddingBottom = 8;
+                                                        const paddingBottom = 12;
+
+                                                        const getBarPath = (
+                                                            x: number,
+                                                            y: number,
+                                                            w: number,
+                                                            h: number,
+                                                            r: number,
+                                                        ) => {
+                                                            const realR =
+                                                                Math.min(
+                                                                    r,
+                                                                    h,
+                                                                    w / 2,
+                                                                );
+                                                            if (realR <= 0) {
+                                                                return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+                                                            }
+                                                            return `M ${x} ${y + h} L ${x} ${y + realR} A ${realR} ${realR} 0 0 1 ${x + realR} ${y} L ${x + w - realR} ${y} A ${realR} ${realR} 0 0 1 ${x + w} ${y + realR} L ${x + w} ${y + h} Z`;
+                                                        };
+
+                                                        const getBarGradient = (
+                                                            score: number,
+                                                        ) => {
+                                                            if (score >= 8)
+                                                                return "url(#chart-bar-grad-green)";
+                                                            if (score >= 5)
+                                                                return "url(#chart-bar-grad-amber)";
+                                                            return "url(#chart-bar-grad-red)";
+                                                        };
+
+                                                        const getTextColor = (
+                                                            score: number,
+                                                        ) => {
+                                                            if (score >= 8)
+                                                                return "#10B981";
+                                                            if (score >= 5)
+                                                                return "#D97706";
+                                                            return "#EF4444";
+                                                        };
+
+                                                        const usableWidth =
+                                                            width -
+                                                            paddingLeft -
+                                                            paddingRight;
+                                                        const usableHeight =
+                                                            height -
+                                                            paddingTop -
+                                                            paddingBottom;
+                                                        const count =
+                                                            historyPoints.length;
 
                                                         const points =
                                                             historyPoints.map(
                                                                 (p, i) => {
-                                                                    const x =
+                                                                    const colWidth =
+                                                                        usableWidth /
+                                                                        count;
+                                                                    const barWidth =
+                                                                        Math.min(
+                                                                            14,
+                                                                            colWidth *
+                                                                                0.6,
+                                                                        );
+                                                                    const barX =
                                                                         paddingLeft +
-                                                                        (i *
-                                                                            (width -
-                                                                                paddingLeft -
-                                                                                paddingRight)) /
-                                                                            Math.max(
-                                                                                historyPoints.length -
-                                                                                    1,
-                                                                                1,
-                                                                            );
+                                                                        i *
+                                                                            colWidth +
+                                                                        (colWidth -
+                                                                            barWidth) /
+                                                                            2;
+                                                                    const barHeight =
+                                                                        (p.score /
+                                                                            maxVal) *
+                                                                        usableHeight;
                                                                     const y =
                                                                         paddingTop +
-                                                                        ((maxVal -
-                                                                            p.score) *
-                                                                            (height -
-                                                                                paddingTop -
-                                                                                paddingBottom)) /
-                                                                            maxVal;
+                                                                        usableHeight -
+                                                                        barHeight;
+                                                                    const x =
+                                                                        barX +
+                                                                        barWidth /
+                                                                            2;
                                                                     return {
                                                                         x,
                                                                         y,
+                                                                        barX,
+                                                                        barWidth,
+                                                                        barHeight,
                                                                         score: p.score,
+                                                                        day: p.day,
                                                                     };
                                                                 },
                                                             );
 
-                                                        let pathD = "";
-                                                        let areaD = "";
-
-                                                        if (points.length > 0) {
-                                                            if (
-                                                                points.length ===
-                                                                1
-                                                            ) {
-                                                                pathD = `M ${points[0].x} ${points[0].y}`;
-                                                                areaD = `M ${points[0].x} ${points[0].y} L ${points[0].x} ${height - paddingBottom} Z`;
-                                                            } else if (
-                                                                points.length ===
-                                                                2
-                                                            ) {
-                                                                pathD = `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
-                                                                areaD = `${pathD} L ${points[1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
-                                                            } else {
-                                                                pathD = `M ${points[0].x} ${points[0].y}`;
-                                                                for (
-                                                                    let i = 0;
-                                                                    i <
-                                                                    points.length -
-                                                                        1;
-                                                                    i++
-                                                                ) {
-                                                                    const curr =
-                                                                        points[
-                                                                            i
-                                                                        ];
-                                                                    const next =
-                                                                        points[
-                                                                            i +
-                                                                                1
-                                                                        ];
-                                                                    const cpX1 =
-                                                                        curr.x +
-                                                                        (next.x -
-                                                                            curr.x) /
-                                                                            3;
-                                                                    const cpY1 =
-                                                                        curr.y;
-                                                                    const cpX2 =
-                                                                        curr.x +
-                                                                        (2 *
-                                                                            (next.x -
-                                                                                curr.x)) /
-                                                                            3;
-                                                                    const cpY2 =
-                                                                        next.y;
-                                                                    pathD += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${next.x} ${next.y}`;
-                                                                }
-                                                                areaD = `${pathD} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z`;
-                                                            }
-                                                        }
-
                                                         const formatDate = (
-                                                            dateStr,
+                                                            dateStr:
+                                                                | string
+                                                                | null
+                                                                | undefined,
                                                         ) => {
                                                             if (!dateStr)
                                                                 return "";
@@ -3182,8 +3205,9 @@ export default function StudentDashboard({
                                                                     className="w-full h-full"
                                                                 >
                                                                     <defs>
+                                                                        {/* Green gradient (Score >= 8) */}
                                                                         <linearGradient
-                                                                            id="chart-grad-dashboard-spacious-new"
+                                                                            id="chart-bar-grad-green"
                                                                             x1="0"
                                                                             y1="0"
                                                                             x2="0"
@@ -3191,53 +3215,115 @@ export default function StudentDashboard({
                                                                         >
                                                                             <stop
                                                                                 offset="0%"
-                                                                                stopColor="#8B5CF6"
-                                                                                stopOpacity="0.15"
+                                                                                stopColor="#10B981"
+                                                                                stopOpacity="0.7"
                                                                             />
                                                                             <stop
                                                                                 offset="100%"
-                                                                                stopColor="#8B5CF6"
-                                                                                stopOpacity="0"
+                                                                                stopColor="#34D399"
+                                                                                stopOpacity="0.2"
                                                                             />
                                                                         </linearGradient>
-                                                                        <filter
-                                                                            id="chart-shadow"
-                                                                            x="-5%"
-                                                                            y="-5%"
-                                                                            width="110%"
-                                                                            height="110%"
+                                                                        {/* Amber gradient (5 <= Score < 8) */}
+                                                                        <linearGradient
+                                                                            id="chart-bar-grad-amber"
+                                                                            x1="0"
+                                                                            y1="0"
+                                                                            x2="0"
+                                                                            y2="1"
                                                                         >
-                                                                            <feDropShadow
-                                                                                dx="0"
-                                                                                dy="1.5"
-                                                                                stdDeviation="1.2"
-                                                                                floodColor="#8B5CF6"
-                                                                                floodOpacity="0.15"
+                                                                            <stop
+                                                                                offset="0%"
+                                                                                stopColor="#F59E0B"
+                                                                                stopOpacity="0.7"
                                                                             />
-                                                                        </filter>
+                                                                            <stop
+                                                                                offset="100%"
+                                                                                stopColor="#FBBF24"
+                                                                                stopOpacity="0.2"
+                                                                            />
+                                                                        </linearGradient>
+                                                                        {/* Red gradient (Score < 5) */}
+                                                                        <linearGradient
+                                                                            id="chart-bar-grad-red"
+                                                                            x1="0"
+                                                                            y1="0"
+                                                                            x2="0"
+                                                                            y2="1"
+                                                                        >
+                                                                            <stop
+                                                                                offset="0%"
+                                                                                stopColor="#EF4444"
+                                                                                stopOpacity="0.7"
+                                                                            />
+                                                                            <stop
+                                                                                offset="100%"
+                                                                                stopColor="#F87171"
+                                                                                stopOpacity="0.2"
+                                                                            />
+                                                                        </linearGradient>
                                                                     </defs>
 
-                                                                    {areaD && (
-                                                                        <path
-                                                                            d={
-                                                                                areaD
-                                                                            }
-                                                                            fill="url(#chart-grad-dashboard-spacious-new)"
-                                                                        />
-                                                                    )}
-                                                                    {pathD && (
-                                                                        <path
-                                                                            d={
-                                                                                pathD
-                                                                            }
-                                                                            fill="none"
-                                                                            stroke="#8B5CF6"
-                                                                            strokeWidth="1.5"
-                                                                            strokeLinecap="round"
-                                                                            strokeLinejoin="round"
-                                                                            filter="url(#chart-shadow)"
-                                                                        />
-                                                                    )}
+                                                                    {/* Horizontal guide lines */}
+                                                                    <line
+                                                                        x1={
+                                                                            paddingLeft
+                                                                        }
+                                                                        y1={
+                                                                            paddingTop
+                                                                        }
+                                                                        x2={
+                                                                            width -
+                                                                            paddingRight
+                                                                        }
+                                                                        y2={
+                                                                            paddingTop
+                                                                        }
+                                                                        stroke="#E2E8F0"
+                                                                        strokeWidth="0.8"
+                                                                        strokeDasharray="3,3"
+                                                                    />
+                                                                    <line
+                                                                        x1={
+                                                                            paddingLeft
+                                                                        }
+                                                                        y1={
+                                                                            paddingTop +
+                                                                            usableHeight /
+                                                                                2
+                                                                        }
+                                                                        x2={
+                                                                            width -
+                                                                            paddingRight
+                                                                        }
+                                                                        y2={
+                                                                            paddingTop +
+                                                                            usableHeight /
+                                                                                2
+                                                                        }
+                                                                        stroke="#E2E8F0"
+                                                                        strokeWidth="0.8"
+                                                                        strokeDasharray="3,3"
+                                                                    />
+                                                                    <line
+                                                                        x1={
+                                                                            paddingLeft
+                                                                        }
+                                                                        y1={
+                                                                            paddingTop +
+                                                                            usableHeight
+                                                                        }
+                                                                        x2={
+                                                                            width -
+                                                                            paddingRight
+                                                                        }
+                                                                        y2={
+                                                                            paddingTop +
+                                                                            usableHeight
+                                                                        }
+                                                                        stroke="#CBD5E1"
+                                                                        strokeWidth="1"
+                                                                    />
 
                                                                     {points.map(
                                                                         (
@@ -3251,108 +3337,101 @@ export default function StudentDashboard({
                                                                                 i ===
                                                                                 points.length -
                                                                                     1;
-                                                                            const shouldShow =
+                                                                            const showLabel =
                                                                                 isHovered ||
                                                                                 (hoveredChartPoint ===
                                                                                     null &&
                                                                                     isLast);
-                                                                            if (
-                                                                                !shouldShow
-                                                                            )
-                                                                                return null;
                                                                             return (
-                                                                                <circle
+                                                                                <g
                                                                                     key={
                                                                                         i
                                                                                     }
-                                                                                    cx={
-                                                                                        p.x
-                                                                                    }
-                                                                                    cy={
-                                                                                        p.y
-                                                                                    }
-                                                                                    r="4.5"
-                                                                                    fill="#ffffff"
-                                                                                    stroke="#8B5CF6"
-                                                                                    strokeWidth="2.5"
-                                                                                    className="transition-all duration-150"
-                                                                                />
-                                                                            );
-                                                                        },
-                                                                    )}
-
-                                                                    {points.map(
-                                                                        (
-                                                                            p,
-                                                                            i,
-                                                                        ) => {
-                                                                            const isHovered =
-                                                                                hoveredChartPoint ===
-                                                                                i;
-                                                                            const isLast =
-                                                                                i ===
-                                                                                points.length -
-                                                                                    1;
-                                                                            const shouldShow =
-                                                                                isHovered ||
-                                                                                (hoveredChartPoint ===
-                                                                                    null &&
-                                                                                    isLast);
-                                                                            if (
-                                                                                !shouldShow
-                                                                            )
-                                                                                return null;
-                                                                            return (
-                                                                                <text
-                                                                                    key={`score-lbl-${i}`}
-                                                                                    x={
-                                                                                        p.x
-                                                                                    }
-                                                                                    y={
-                                                                                        p.y -
-                                                                                        8
-                                                                                    }
-                                                                                    textAnchor="middle"
-                                                                                    className="text-[7.5px] font-black fill-[#8B5CF6] select-none"
                                                                                 >
-                                                                                    {
-                                                                                        p.score
-                                                                                    }
+                                                                                    {/* Background track (full 10 points) */}
+                                                                                    <path
+                                                                                        d={getBarPath(
+                                                                                            p.barX,
+                                                                                            paddingTop,
+                                                                                            p.barWidth,
+                                                                                            usableHeight,
+                                                                                            3,
+                                                                                        )}
+                                                                                        fill="currentColor"
+                                                                                        className="text-slate-200/40 dark:text-slate-800/40 transition-colors duration-200"
+                                                                                    />
+                                                                                    {/* Active score bar */}
+                                                                                    {p.barHeight >
+                                                                                        0 && (
+                                                                                        <path
+                                                                                            d={getBarPath(
+                                                                                                p.barX,
+                                                                                                p.y,
+                                                                                                p.barWidth,
+                                                                                                p.barHeight,
+                                                                                                3,
+                                                                                            )}
+                                                                                            fill={getBarGradient(
+                                                                                                p.score,
+                                                                                            )}
+                                                                                            className="transition-all duration-150"
+                                                                                        />
+                                                                                    )}
+                                                                                    {/* Value Label above the bar */}
+                                                                                    {showLabel && (
+                                                                                        <text
+                                                                                            x={
+                                                                                                p.x
+                                                                                            }
+                                                                                            y={
+                                                                                                p.y -
+                                                                                                4
+                                                                                            }
+                                                                                            textAnchor="middle"
+                                                                                            className="text-[7.5px] font-black select-none"
+                                                                                            fill={getTextColor(
+                                                                                                p.score,
+                                                                                            )}
+                                                                                        >
+                                                                                            {
+                                                                                                p.score
+                                                                                            }
 
-                                                                                    đ
-                                                                                </text>
+                                                                                            đ
+                                                                                        </text>
+                                                                                    )}
+                                                                                    {/* Interactive hover area */}
+                                                                                    <rect
+                                                                                        x={
+                                                                                            p.barX -
+                                                                                            4
+                                                                                        }
+                                                                                        y={
+                                                                                            paddingTop
+                                                                                        }
+                                                                                        width={
+                                                                                            p.barWidth +
+                                                                                            8
+                                                                                        }
+                                                                                        height={
+                                                                                            usableHeight
+                                                                                        }
+                                                                                        fill="transparent"
+                                                                                        className="cursor-pointer"
+                                                                                        onMouseEnter={() =>
+                                                                                            setHoveredChartPoint(
+                                                                                                i,
+                                                                                            )
+                                                                                        }
+                                                                                        onMouseLeave={() =>
+                                                                                            setHoveredChartPoint(
+                                                                                                null,
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </g>
                                                                             );
                                                                         },
-                                                                    )}
-
-                                                                    {points.map(
-                                                                        (
-                                                                            p,
-                                                                            i,
-                                                                        ) => (
-                                                                            <circle
-                                                                                key={`hover-${i}`}
-                                                                                cx={
-                                                                                    p.x
-                                                                                }
-                                                                                cy={
-                                                                                    p.y
-                                                                                }
-                                                                                r="12"
-                                                                                fill="transparent"
-                                                                                className="cursor-pointer"
-                                                                                onMouseEnter={() =>
-                                                                                    setHoveredChartPoint(
-                                                                                        i,
-                                                                                    )
-                                                                                }
-                                                                                onMouseLeave={() =>
-                                                                                    setHoveredChartPoint(
-                                                                                        null,
-                                                                                    )
-                                                                                }
-                                                                            />
-                                                                        ),
                                                                     )}
                                                                 </svg>
 
@@ -3386,8 +3465,29 @@ export default function StudentDashboard({
                                                                                         .quizTitle
                                                                                 }
                                                                             </div>
-                                                                            <div className="flex items-center gap-1 mt-0.5 text-[9px] font-bold text-[#8B5CF6]">
-                                                                                <span className="w-1 h-1 rounded-full bg-[#8B5CF6]"></span>
+                                                                            <div
+                                                                                className="flex items-center gap-1 mt-0.5 text-[9px] font-bold"
+                                                                                style={{
+                                                                                    color: getTextColor(
+                                                                                        points[
+                                                                                            hoveredChartPoint
+                                                                                        ]
+                                                                                            .score,
+                                                                                    ),
+                                                                                }}
+                                                                            >
+                                                                                <span
+                                                                                    className="w-1 h-1 rounded-full animate-pulse"
+                                                                                    style={{
+                                                                                        backgroundColor:
+                                                                                            getTextColor(
+                                                                                                points[
+                                                                                                    hoveredChartPoint
+                                                                                                ]
+                                                                                                    .score,
+                                                                                            ),
+                                                                                    }}
+                                                                                ></span>
                                                                                 <span>
                                                                                     Điểm:{" "}
                                                                                     {
@@ -3614,7 +3714,7 @@ export default function StudentDashboard({
                                                     </div>
                                                     <div className="space-y-1 pl-4 border-l border-slate-200/60">
                                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                                            Đã hoàn thành
+                                                            Lượt làm
                                                         </span>
                                                         <span className="text-xl font-black text-slate-800 block">
                                                             {completedCount}

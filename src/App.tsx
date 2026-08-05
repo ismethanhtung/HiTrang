@@ -229,6 +229,19 @@ export default function App() {
         return () => clearInterval(interval);
     }, [user, currentPath]);
 
+    // Exit browser fullscreen mode when student stops taking test
+    useEffect(() => {
+        if (!isTakingQuiz) {
+            try {
+                if (document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            } catch (err) {
+                console.warn("Lỗi khi thoát chế độ toàn màn hình:", err);
+            }
+        }
+    }, [isTakingQuiz]);
+
     const navigateTo = (path: string, bypassConfirm = false) => {
         if (!bypassConfirm && !confirmNavigation()) return;
         setCurrentPath(path);
@@ -298,55 +311,57 @@ export default function App() {
             className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} bg-[#F9F8F6] text-[#222B38] font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
-            <Topbar
-                user={user}
-                selectedGrade={selectedGrade}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onSelectGrade={(grade) => {
-                    if (confirmNavigation()) {
-                        setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
-                        if (grade) {
-                            navigateTo("/grade/" + grade);
-                        } else {
+            {!isTakingQuiz && (
+                <Topbar
+                    user={user}
+                    selectedGrade={selectedGrade}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onSelectGrade={(grade) => {
+                        if (confirmNavigation()) {
+                            setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
+                            if (grade) {
+                                navigateTo("/grade/" + grade);
+                            } else {
+                                navigateTo("/");
+                            }
+                        }
+                    }}
+                    onOpenAuth={(mode = "login") => {
+                        if (confirmNavigation()) {
+                            setAuthMode(mode);
+                            setAuthModalOpen(true);
+                        }
+                    }}
+                    onLogout={() => {
+                        if (confirmNavigation()) {
+                            handleLogout();
+                        }
+                    }}
+                    onNavigateAdmin={() => navigateTo("/admin")}
+                    onNavigateHome={() => {
+                        if (confirmNavigation()) {
+                            setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
                             navigateTo("/");
                         }
-                    }
-                }}
-                onOpenAuth={(mode = "login") => {
-                    if (confirmNavigation()) {
-                        setAuthMode(mode);
-                        setAuthModalOpen(true);
-                    }
-                }}
-                onLogout={() => {
-                    if (confirmNavigation()) {
-                        handleLogout();
-                    }
-                }}
-                onNavigateAdmin={() => navigateTo("/admin")}
-                onNavigateHome={() => {
-                    if (confirmNavigation()) {
-                        setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
-                        navigateTo("/");
-                    }
-                }}
-                onNavigateSettings={(tab = "profile") => {
-                    if (confirmNavigation()) {
-                        navigateTo(
-                            tab === "history" ? "/history" : "/settings",
-                        );
-                    }
-                }}
-                onNavigateLeaderboard={() => {
-                    if (confirmNavigation()) {
-                        setActiveTab("leaderboard");
-                        navigateTo("/");
-                    }
-                }}
-                activeTab={activeTab}
-                currentPath={currentPath}
-            />
+                    }}
+                    onNavigateSettings={(tab = "profile") => {
+                        if (confirmNavigation()) {
+                            navigateTo(
+                                tab === "history" ? "/history" : "/settings",
+                            );
+                        }
+                    }}
+                    onNavigateLeaderboard={() => {
+                        if (confirmNavigation()) {
+                            setActiveTab("leaderboard");
+                            navigateTo("/");
+                        }
+                    }}
+                    activeTab={activeTab}
+                    currentPath={currentPath}
+                />
+            )}
 
             {/* AUTH MODAL OVERLAY */}
             {authModalOpen && !user && (

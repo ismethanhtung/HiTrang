@@ -34,7 +34,9 @@ export default function LeaderboardView({
         return "10";
     });
 
-    const [overallData, setOverallData] = useState<OverallLeaderboardEntry[]>([]);
+    const [overallData, setOverallData] = useState<OverallLeaderboardEntry[]>(
+        [],
+    );
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -84,13 +86,21 @@ export default function LeaderboardView({
     // Filter overall data
     const filteredOverall = overallData.filter(
         (entry) =>
-            entry.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            entry.studentUsername.toLowerCase().includes(searchQuery.toLowerCase())
+            entry.studentName
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
+            entry.studentUsername
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase()),
     );
 
     // Current User positions
-    const myOverallStats = overallData.find((entry) => entry.studentId === user.id);
-    const myOverallIndex = overallData.findIndex((entry) => entry.studentId === user.id);
+    const myOverallStats = overallData.find(
+        (entry) => entry.studentId === user.id,
+    );
+    const myOverallIndex = overallData.findIndex(
+        (entry) => entry.studentId === user.id,
+    );
     const nextUserAbove =
         myOverallIndex > 0 ? overallData[myOverallIndex - 1] : null;
 
@@ -140,15 +150,13 @@ export default function LeaderboardView({
             {/* Header vinh danh tối giản & sang trọng */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-150 dark:border-slate-850">
                 <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-amber-500/10 dark:bg-amber-500/5 border border-amber-500/20 rounded-2xl flex items-center justify-center text-amber-500 shadow-xs">
-                        <Trophy className="w-6 h-6 stroke-[1.8] animate-pulse" />
-                    </div>
                     <div className="space-y-0.5">
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             Bảng Vinh Danh Học Tập 🏆
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            Tôn vinh nỗ lực học tập xuất sắc của các chiến binh lớp {activeGrade}.
+                            Tôn vinh nỗ lực học tập xuất sắc của các học sinh
+                            lớp {activeGrade}.
                         </p>
                     </div>
                 </div>
@@ -160,58 +168,12 @@ export default function LeaderboardView({
                         disabled={refreshing || loading}
                         className="self-start md:self-center px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50 animate-in fade-in"
                     >
-                        <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                        <RefreshCw
+                            className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
+                        />
                         <span>Đồng bộ dữ liệu bảng xếp hạng</span>
                     </button>
                 )}
-            </div>
-
-            {/* Bộ lọc khối lớp */}
-            {user.role === "teacher" ? (
-                <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 select-none">
-                        <Filter className="w-3.5 h-3.5" /> Lọc theo Khối lớp (Dành cho Giáo viên)
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                        {grades.map((grade) => (
-                            <button
-                                key={grade.id}
-                                onClick={() => {
-                                    setActiveGrade(grade.id);
-                                    setSearchQuery("");
-                                }}
-                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                                    activeGrade === grade.id
-                                        ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 shadow-md shadow-slate-900/10"
-                                        : "bg-white dark:bg-slate-900 text-slate-650 dark:text-slate-400 border-slate-200/70 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                }`}
-                            >
-                                {grade.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-[#2C5A71]/5 border border-[#2C5A71]/10 px-4 py-2.5 rounded-xl self-start inline-flex items-center gap-2.5 select-none">
-                    <span className="w-2 h-2 rounded-full bg-[#2C5A71] animate-pulse"></span>
-                    <span className="text-xs font-bold text-[#2C5A71]">
-                        Đang xem bảng xếp hạng: Khối {activeGrade} (Mặc định theo lớp học của bạn)
-                    </span>
-                </div>
-            )}
-
-            {/* Tìm kiếm học sinh */}
-            <div className="flex items-center justify-between gap-4">
-                <div className="relative w-full max-w-xs">
-                    <Search className="absolute inset-y-0 left-3.5 flex items-center w-4 h-4 text-slate-400 pointer-events-none" />
-                    <input
-                        type="text"
-                        placeholder="Tìm học sinh theo tên..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200/70 dark:border-slate-850 bg-white dark:bg-slate-900/50 rounded-xl text-xs outline-none focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-500/10 focus:border-brand-500 dark:focus:border-brand-400 placeholder:text-slate-400 text-slate-800 dark:text-slate-250 transition-all"
-                    />
-                </div>
             </div>
 
             {/* Error view */}
@@ -252,9 +214,16 @@ export default function LeaderboardView({
                                 >
                                     <div className="relative mb-3">
                                         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-slate-50 dark:bg-slate-800 flex items-center justify-center font-bold text-lg text-slate-500 shadow-md group-hover:scale-105 transition-transform">
-                                            {podiumOrder[0].studentName.charAt(0)}
+                                            {podiumOrder[0].studentName.charAt(
+                                                0,
+                                            )}
                                         </div>
-                                        <span className="absolute -top-1.5 -right-1 text-xl" title="Hạng 2">🥈</span>
+                                        <span
+                                            className="absolute -top-1.5 -right-1 text-xl"
+                                            title="Hạng 2"
+                                        >
+                                            🥈
+                                        </span>
                                     </div>
                                     <div className="space-y-0.5 max-w-full">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
@@ -265,7 +234,9 @@ export default function LeaderboardView({
                                         </p>
                                     </div>
                                     <div className="mt-3.5 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] font-black text-slate-450 tracking-wider">HẠNG 2</span>
+                                        <span className="text-[9px] font-black text-slate-450 tracking-wider">
+                                            HẠNG 2
+                                        </span>
                                         <span className="text-xs font-black text-slate-700 dark:text-slate-300 mt-0.5">
                                             {podiumOrder[0].totalPoints} điểm
                                         </span>
@@ -283,9 +254,19 @@ export default function LeaderboardView({
                                 >
                                     <div className="relative mb-4">
                                         <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden border-3 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-center font-black text-xl text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-transform ring-4 ring-amber-400/10">
-                                            {podiumOrder[1].studentName.charAt(0)}
+                                            {podiumOrder[1].studentName.charAt(
+                                                0,
+                                            )}
                                         </div>
-                                        <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl animate-bounce" style={{ animationDuration: "2.5s" }} title="Vô địch">👑</span>
+                                        <span
+                                            className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl animate-bounce"
+                                            style={{
+                                                animationDuration: "2.5s",
+                                            }}
+                                            title="Vô địch"
+                                        >
+                                            👑
+                                        </span>
                                     </div>
                                     <div className="space-y-0.5 max-w-full">
                                         <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
@@ -296,7 +277,9 @@ export default function LeaderboardView({
                                         </p>
                                     </div>
                                     <div className="mt-3.5 w-full bg-gradient-to-b from-amber-500/10 to-transparent dark:from-amber-500/5 dark:to-transparent border border-amber-400/40 dark:border-amber-900/30 rounded-2xl p-3 flex flex-col items-center justify-center ring-2 ring-amber-400/5">
-                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-widest">🥇 HẠNG 1</span>
+                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-widest">
+                                            🥇 HẠNG 1
+                                        </span>
                                         <span className="text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints} điểm
                                         </span>
@@ -314,9 +297,16 @@ export default function LeaderboardView({
                                 >
                                     <div className="relative mb-3">
                                         <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-400/80 bg-orange-50/20 dark:bg-orange-950/10 flex items-center justify-center font-bold text-lg text-orange-700 shadow-md group-hover:scale-105 transition-transform">
-                                            {podiumOrder[2].studentName.charAt(0)}
+                                            {podiumOrder[2].studentName.charAt(
+                                                0,
+                                            )}
                                         </div>
-                                        <span className="absolute -top-1.5 -right-1 text-xl" title="Hạng 3">🥉</span>
+                                        <span
+                                            className="absolute -top-1.5 -right-1 text-xl"
+                                            title="Hạng 3"
+                                        >
+                                            🥉
+                                        </span>
                                     </div>
                                     <div className="space-y-0.5 max-w-full">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
@@ -327,7 +317,9 @@ export default function LeaderboardView({
                                         </p>
                                     </div>
                                     <div className="mt-3.5 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] font-black text-orange-600 tracking-wider">HẠNG 3</span>
+                                        <span className="text-[9px] font-black text-orange-600 tracking-wider">
+                                            HẠNG 3
+                                        </span>
                                         <span className="text-xs font-black text-slate-700 dark:text-slate-300 mt-0.5">
                                             {podiumOrder[2].totalPoints} điểm
                                         </span>
@@ -348,17 +340,30 @@ export default function LeaderboardView({
                                 <table className="w-full text-left border-collapse text-xs">
                                     <thead>
                                         <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/10 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                            <th className="py-4 px-5 w-16 text-center">Thứ hạng</th>
-                                            <th className="py-4 px-2 w-16 text-center">Xu hướng</th>
-                                            <th className="py-4 px-4">Học sinh</th>
-                                            <th className="py-4 px-4 text-center">Khối</th>
-                                            <th className="py-4 px-4 text-center">Đề thi đã hoàn thành</th>
-                                            <th className="py-4 px-6 text-right">Tổng điểm</th>
+                                            <th className="py-4 px-5 w-16 text-center">
+                                                Thứ hạng
+                                            </th>
+                                            <th className="py-4 px-2 w-16 text-center">
+                                                Xu hướng
+                                            </th>
+                                            <th className="py-4 px-4">
+                                                Học sinh
+                                            </th>
+                                            <th className="py-4 px-4 text-center">
+                                                Khối
+                                            </th>
+                                            <th className="py-4 px-4 text-center">
+                                                Đề thi đã hoàn thành
+                                            </th>
+                                            <th className="py-4 px-6 text-right">
+                                                Tổng điểm
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                         {filteredOverall.map((entry) => {
-                                            const isMe = entry.studentId === user.id;
+                                            const isMe =
+                                                entry.studentId === user.id;
                                             const rank = entry.rankPosition;
                                             const isTop3 = rank <= 3;
 
@@ -375,7 +380,11 @@ export default function LeaderboardView({
                                                     <td className="py-4 px-5 text-center font-bold text-slate-800 dark:text-slate-250">
                                                         {isTop3 ? (
                                                             <span className="text-sm">
-                                                                {rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉"}
+                                                                {rank === 1
+                                                                    ? "🥇"
+                                                                    : rank === 2
+                                                                      ? "🥈"
+                                                                      : "🥉"}
                                                             </span>
                                                         ) : (
                                                             <span>#{rank}</span>
@@ -386,25 +395,35 @@ export default function LeaderboardView({
                                                     <td className="py-4 px-2 text-center">
                                                         {renderTrend(
                                                             entry.rankPosition,
-                                                            entry.previousRankPosition
+                                                            entry.previousRankPosition,
                                                         )}
                                                     </td>
 
                                                     {/* Tên học sinh */}
                                                     <td className="py-4 px-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs select-none ${
-                                                                isMe 
-                                                                    ? "bg-brand-100 text-brand-650 dark:bg-brand-500/20 dark:text-brand-300"
-                                                                    : isTop3
-                                                                        ? "bg-slate-150 text-slate-655 dark:bg-slate-800 dark:text-slate-350"
-                                                                        : "bg-slate-100 text-slate-500 dark:bg-slate-800/40 dark:text-slate-450"
-                                                            }`}>
-                                                                {entry.studentName.charAt(0)}
+                                                            <div
+                                                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs select-none ${
+                                                                    isMe
+                                                                        ? "bg-brand-100 text-brand-650 dark:bg-brand-500/20 dark:text-brand-300"
+                                                                        : isTop3
+                                                                          ? "bg-slate-150 text-slate-655 dark:bg-slate-800 dark:text-slate-350"
+                                                                          : "bg-slate-100 text-slate-500 dark:bg-slate-800/40 dark:text-slate-450"
+                                                                }`}
+                                                            >
+                                                                {entry.studentName.charAt(
+                                                                    0,
+                                                                )}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <p className={`truncate leading-snug flex items-center gap-1.5 ${isMe ? "text-slate-900 dark:text-slate-100 font-extrabold" : "text-slate-800 dark:text-slate-200"}`}>
-                                                                    <span>{entry.studentName}</span>
+                                                                <p
+                                                                    className={`truncate leading-snug flex items-center gap-1.5 ${isMe ? "text-slate-900 dark:text-slate-100 font-extrabold" : "text-slate-800 dark:text-slate-200"}`}
+                                                                >
+                                                                    <span>
+                                                                        {
+                                                                            entry.studentName
+                                                                        }
+                                                                    </span>
                                                                     {isMe && (
                                                                         <span className="text-[8px] bg-brand-500 text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider scale-90">
                                                                             Bạn
@@ -412,7 +431,10 @@ export default function LeaderboardView({
                                                                     )}
                                                                 </p>
                                                                 <p className="text-[10px] text-slate-400 truncate">
-                                                                    @{entry.studentUsername}
+                                                                    @
+                                                                    {
+                                                                        entry.studentUsername
+                                                                    }
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -420,24 +442,30 @@ export default function LeaderboardView({
 
                                                     {/* Khối lớp */}
                                                     <td className="py-4 px-4 text-center font-semibold text-slate-500 dark:text-slate-450">
-                                                        Lớp {entry.studentGrade || activeGrade}
+                                                        Lớp{" "}
+                                                        {entry.studentGrade ||
+                                                            activeGrade}
                                                     </td>
 
                                                     {/* Số đề thi đã hoàn thành */}
                                                     <td className="py-4 px-4 text-center text-slate-500">
-                                                        {entry.testsCompleted} đề thi
+                                                        {entry.testsCompleted}{" "}
+                                                        đề thi
                                                     </td>
 
                                                     {/* Tổng điểm tích lũy */}
                                                     <td className="py-4 px-6 text-right">
-                                                        <span className={`font-black text-sm ${
-                                                            isMe
-                                                                ? "text-brand-600 dark:text-brand-400"
-                                                                : isTop3
-                                                                    ? "text-slate-900 dark:text-slate-150"
-                                                                    : "text-slate-700 dark:text-slate-350"
-                                                        }`}>
-                                                            {entry.totalPoints} điểm
+                                                        <span
+                                                            className={`font-black text-sm ${
+                                                                isMe
+                                                                    ? "text-brand-600 dark:text-brand-400"
+                                                                    : isTop3
+                                                                      ? "text-slate-900 dark:text-slate-150"
+                                                                      : "text-slate-700 dark:text-slate-350"
+                                                            }`}
+                                                        >
+                                                            {entry.totalPoints}{" "}
+                                                            điểm
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -469,17 +497,19 @@ export default function LeaderboardView({
                                             </span>
                                             {renderTrend(
                                                 myOverallStats.rankPosition,
-                                                myOverallStats.previousRankPosition
+                                                myOverallStats.previousRankPosition,
                                             )}
                                         </h4>
                                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
                                             Tổng tích lũy:{" "}
                                             <span className="font-extrabold text-slate-700 dark:text-slate-350">
-                                                {myOverallStats.totalPoints} điểm
+                                                {myOverallStats.totalPoints}{" "}
+                                                điểm
                                             </span>{" "}
                                             | Số bài thi:{" "}
                                             <span className="font-extrabold text-slate-700 dark:text-slate-350">
-                                                {myOverallStats.testsCompleted} bài
+                                                {myOverallStats.testsCompleted}{" "}
+                                                bài
                                             </span>
                                         </p>
                                     </div>
@@ -491,18 +521,27 @@ export default function LeaderboardView({
                                             <span>
                                                 Bạn cần thêm{" "}
                                                 <span className="font-black text-brand-600 dark:text-brand-400">
-                                                    {Number((nextUserAbove.totalPoints - myOverallStats.totalPoints).toFixed(1))} điểm
+                                                    {Number(
+                                                        (
+                                                            nextUserAbove.totalPoints -
+                                                            myOverallStats.totalPoints
+                                                        ).toFixed(1),
+                                                    )}{" "}
+                                                    điểm
                                                 </span>{" "}
                                                 để vượt hạng học sinh{" "}
                                                 <span className="font-bold text-slate-700 dark:text-slate-200">
                                                     {nextUserAbove.studentName}
                                                 </span>{" "}
-                                                (Hạng #{nextUserAbove.rankPosition})
+                                                (Hạng #
+                                                {nextUserAbove.rankPosition})
                                             </span>
                                         </>
                                     ) : (
                                         <span className="text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-1">
-                                            👑 Bạn đang là quán quân của Khối {activeGrade}! Hãy tiếp tục duy trì vị thế nhé!
+                                            👑 Bạn đang là quán quân của Khối{" "}
+                                            {activeGrade}! Hãy tiếp tục duy trì
+                                            vị thế nhé!
                                         </span>
                                     )}
                                 </div>
@@ -512,11 +551,15 @@ export default function LeaderboardView({
                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
                                     <Award className="w-4 h-4 text-slate-400" />
                                     <span>
-                                        Bạn chưa có tên trên bảng xếp hạng khối {activeGrade}. Hãy làm bài thi để tích lũy điểm ngay nhé!
+                                        Bạn chưa có tên trên bảng xếp hạng khối{" "}
+                                        {activeGrade}. Hãy làm bài thi để tích
+                                        lũy điểm ngay nhé!
                                     </span>
                                 </p>
                                 <button
-                                    onClick={() => onNavigate("/student-quizzes")}
+                                    onClick={() =>
+                                        onNavigate("/student-quizzes")
+                                    }
                                     className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-md shadow-brand-500/20"
                                 >
                                     Làm bài ngay
