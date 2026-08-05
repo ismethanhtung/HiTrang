@@ -34,7 +34,8 @@ RETURNS VOID AS $$
 BEGIN
   -- Bước A: Lưu lại current_rank cũ vào previous_rank trước khi tính thứ hạng mới
   UPDATE public.user_overall_stats
-  SET previous_rank = current_rank;
+  SET previous_rank = current_rank
+  WHERE user_id IS NOT NULL;
 
   -- Bước B: Cập nhật tổng điểm tích lũy của từng học sinh (chỉ lấy điểm của lần làm đầu tiên của mỗi bài test)
   WITH first_attempts AS (

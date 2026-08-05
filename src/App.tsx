@@ -305,6 +305,7 @@ export default function App() {
                 onSearchChange={setSearchQuery}
                 onSelectGrade={(grade) => {
                     if (confirmNavigation()) {
+                        setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
                         if (grade) {
                             navigateTo("/grade/" + grade);
                         } else {
@@ -324,7 +325,12 @@ export default function App() {
                     }
                 }}
                 onNavigateAdmin={() => navigateTo("/admin")}
-                onNavigateHome={() => navigateTo("/")}
+                onNavigateHome={() => {
+                    if (confirmNavigation()) {
+                        setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
+                        navigateTo("/");
+                    }
+                }}
                 onNavigateSettings={(tab = "profile") => {
                     if (confirmNavigation()) {
                         navigateTo(
@@ -441,7 +447,6 @@ export default function App() {
                                 return (
                                     <LeaderboardView
                                         user={user}
-                                        quizzes={quizzes}
                                         onNavigate={navigateTo}
                                     />
                                 );

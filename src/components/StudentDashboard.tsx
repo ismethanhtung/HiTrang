@@ -22,7 +22,13 @@ import {
     Loader2,
     Crown,
 } from "lucide-react";
-import { Quiz, Question, Submission, User } from "../types";
+import {
+    Quiz,
+    Question,
+    Submission,
+    User,
+    QuizLeaderboardEntry,
+} from "../types";
 import { renderMathHtml } from "../lib/math";
 import GradeView from "./GradeView";
 import {
@@ -32,6 +38,7 @@ import {
     getStudentQuestions,
     getReviewQuestions,
     getActiveAttempt,
+    getQuizLeaderboard,
 } from "../lib/supabaseService";
 
 const safeParseDate = (dateVal: any): Date => {
@@ -137,6 +144,13 @@ export default function StudentDashboard({
         any | null
     >(null);
     const [loadingCheckAttempt, setLoadingCheckAttempt] = useState(false);
+
+    // Quiz leaderboard states
+    const [quizLeaderboard, setQuizLeaderboard] = useState<
+        QuizLeaderboardEntry[]
+    >([]);
+    const [loadingQuizLeaderboard, setLoadingQuizLeaderboard] =
+        useState<boolean>(false);
 
     // Prevent leaving page/tab changes & detect tab switching
     const [currentPage, setCurrentPage] = useState(1);
@@ -312,7 +326,24 @@ export default function StudentDashboard({
                         setLoadingCheckAttempt(false);
                     }
                 };
+
+                const fetchLeaderboard = async () => {
+                    setLoadingQuizLeaderboard(true);
+                    try {
+                        const data = await getQuizLeaderboard(quiz.id);
+                        setQuizLeaderboard(data);
+                    } catch (err) {
+                        console.warn(
+                            "Không thể tải bảng xếp hạng bài thi:",
+                            err,
+                        );
+                    } finally {
+                        setLoadingQuizLeaderboard(false);
+                    }
+                };
+
                 checkAttempt();
+                fetchLeaderboard();
             }
         } else {
             setActiveQuiz(null);
@@ -320,6 +351,7 @@ export default function StudentDashboard({
             setQuizTimerActive(false);
             setQuizEntryPhase("none");
             setActiveAttemptInProgress(null);
+            setQuizLeaderboard([]);
         }
     }, [activeQuizId, quizzes, quizEntryPhase, activeQuiz]);
 
@@ -1379,234 +1411,475 @@ export default function StudentDashboard({
                         </p>
                     </div>
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
-                    <div className="flex-1 flex items-center justify-center p-4 bg-[#F9F8F6]">
-                        <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
-                            className="w-full max-w-md bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6 sm:space-y-8"
-                        >
-                            {/* Quiz info header */}
-                            <div className="text-center space-y-3">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-50 border border-brand-200 text-brand-700 rounded-lg text-xs font-bold uppercase tracking-wider">
-                                    <span>
-                                        {activeQuiz.subject || "Toán Học"}
-                                    </span>
-                                </div>
-                                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
-                                    {activeQuiz.title}
-                                </h1>
-                                {activeQuiz.description && (
-                                    <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
-                                        {activeQuiz.description}
-                                    </p>
-                                )}
-                            </div>
+                    <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] overflow-y-auto">
+                        <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
+                            {/* Cột 1: Thông tin đề thi */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                className="w-full lg:w-[420px] shrink-0 bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-6"
+                            >
+                                <div className="space-y-6">
+                                    {/* Quiz info header */}
+                                    <div className="text-center space-y-3">
+                                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                                            {activeQuiz.title}
+                                        </h1>
+                                        {activeQuiz.description && (
+                                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                                {activeQuiz.description}
+                                            </p>
+                                        )}
+                                    </div>
 
-                            {/* Meta info inline simplified */}
-                            <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
-                                <div className="flex items-center gap-1.5">
-                                    <Clock className="w-4 h-4 text-slate-400" />
-                                    <span>
-                                        Thời gian:{" "}
-                                        <strong className="text-slate-800 font-extrabold">
-                                            {activeQuiz.duration} phút
-                                        </strong>
-                                    </span>
-                                </div>
-                                <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
-                                <div className="flex items-center gap-1.5">
-                                    <HelpCircle className="w-4 h-4 text-slate-400" />
-                                    <span>
-                                        Số câu hỏi:{" "}
-                                        <strong className="text-slate-800 font-extrabold">
-                                            {activeQuiz.questions?.length || 0}{" "}
-                                            câu
-                                        </strong>
-                                    </span>
-                                </div>
-                            </div>
+                                    {/* Meta info inline simplified */}
+                                    <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock className="w-4 h-4 text-slate-400" />
+                                            <span>
+                                                Thời gian:{" "}
+                                                <strong className="text-slate-800 font-extrabold">
+                                                    {activeQuiz.duration} phút
+                                                </strong>
+                                            </span>
+                                        </div>
+                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                                        <div className="flex items-center gap-1.5">
+                                            <HelpCircle className="w-4 h-4 text-slate-400" />
+                                            <span>
+                                                Số câu hỏi:{" "}
+                                                <strong className="text-slate-800 font-extrabold">
+                                                    {activeQuiz.questions
+                                                        ?.length || 0}{" "}
+                                                    câu
+                                                </strong>
+                                            </span>
+                                        </div>
+                                    </div>
 
-                            {/* Attempts & History Section */}
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
-                                        Tiến trình làm bài (Tối đa 5 lượt)
-                                    </h3>
-                                    <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                                        Đã làm: {attemptsCount}/5 lượt
-                                    </span>
+                                    {/* Attempts & History Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
+                                                Tiến trình làm bài (Tối đa 5
+                                                lượt)
+                                            </h3>
+                                            <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                Đã làm: {attemptsCount}/5 lượt
+                                            </span>
+                                        </div>
+
+                                        {/* Custom Attempts visual indicator circles */}
+                                        <div className="flex items-center gap-2">
+                                            {[1, 2, 3, 4, 5].map((idx) => {
+                                                const isUsed =
+                                                    idx <= attemptsCount;
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
+                                                            isUsed
+                                                                ? "bg-brand-500 shadow-xs"
+                                                                : "bg-slate-200/60 border border-dashed border-slate-350"
+                                                        }`}
+                                                        title={
+                                                            isUsed
+                                                                ? `Lượt thứ ${idx} đã dùng`
+                                                                : `Lượt thứ ${idx} chưa dùng`
+                                                        }
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Attempts List */}
+                                        {attemptsCount > 0 ? (
+                                            <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
+                                                {quizSubmissions.map(
+                                                    (sub, index) => (
+                                                        <div
+                                                            key={sub.id}
+                                                            className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
+                                                        >
+                                                            <div className="space-y-1">
+                                                                <span className="block text-[10px] font-bold text-brand-600 uppercase">
+                                                                    Lần làm thứ{" "}
+                                                                    {index + 1}
+                                                                </span>
+                                                                <span className="text-[11px] text-slate-400 block font-medium">
+                                                                    Ngày nộp:{" "}
+                                                                    {
+                                                                        sub.submittedAt
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="text-right">
+                                                                    <span className="text-sm font-extrabold text-slate-800">
+                                                                        {
+                                                                            sub.score
+                                                                        }{" "}
+                                                                        điểm
+                                                                    </span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        onNavigate(
+                                                                            "/result/" +
+                                                                                sub.id,
+                                                                        )
+                                                                    }
+                                                                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                                                >
+                                                                    Xem lại
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs italic">
+                                                🍀 Hãy chuẩn bị tinh thần và bấm
+                                                "Bắt đầu làm bài".
+                                            </div>
+                                        )}
+
+                                        {activeAttemptInProgress && (
+                                            <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
+                                                <RefreshCw
+                                                    className="w-3.5 h-3.5 animate-spin"
+                                                    style={{
+                                                        animationDuration: "3s",
+                                                    }}
+                                                />
+                                                <span>
+                                                    Bạn đang có lượt thi dang
+                                                    dở! Hãy tiếp tục làm bài.
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {hasOtherActiveAttempt && (
+                                            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
+                                                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                                <span>
+                                                    Bạn đang có bài thi khác
+                                                    chưa hoàn thành!
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {attemptsCount > 0 && (
+                                            <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
+                                                <Award className="w-4 h-4 text-emerald-600" />
+                                                <span className="text-[11px] font-bold">
+                                                    Điểm số cao nhất của bạn:{" "}
+                                                    {maxScore} điểm
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Custom Attempts visual indicator circles */}
-                                <div className="flex items-center gap-2">
-                                    {[1, 2, 3, 4, 5].map((idx) => {
-                                        const isUsed = idx <= attemptsCount;
-                                        return (
-                                            <div
-                                                key={idx}
-                                                className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
-                                                    isUsed
-                                                        ? "bg-brand-500 shadow-xs"
-                                                        : "bg-slate-200/60 border border-dashed border-slate-350"
-                                                }`}
-                                                title={
-                                                    isUsed
-                                                        ? `Lượt thứ ${idx} đã dùng`
-                                                        : `Lượt thứ ${idx} chưa dùng`
-                                                }
-                                            />
-                                        );
-                                    })}
-                                </div>
+                                {/* Buttons actions */}
+                                <div className="space-y-3 pt-4">
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (navigateReplace)
+                                                    navigateReplace("/");
+                                                else onNavigate("/");
+                                            }}
+                                            className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                            <span>Quay lại Dashboard</span>
+                                        </button>
 
-                                {/* Attempts List */}
-                                {attemptsCount > 0 ? (
-                                    <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
-                                        {quizSubmissions.map((sub, index) => (
-                                            <div
-                                                key={sub.id}
-                                                className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
+                                        {isGradeMismatch ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
                                             >
-                                                <div className="space-y-1">
-                                                    <span className="block text-[10px] font-bold text-brand-600 uppercase">
-                                                        Lần làm thứ {index + 1}
-                                                    </span>
-                                                    <span className="text-[11px] text-slate-400 block font-medium">
-                                                        Ngày nộp:{" "}
-                                                        {sub.submittedAt}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="text-right">
-                                                        <span className="text-sm font-extrabold text-slate-800">
-                                                            {sub.score} điểm
+                                                <span>Bắt đầu làm bài</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        ) : hasOtherActiveAttempt ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                            >
+                                                <span>
+                                                    Đang làm đề thi khác
+                                                </span>
+                                                <AlertCircle className="w-4 h-4" />
+                                            </button>
+                                        ) : activeAttemptInProgress ? (
+                                            <button
+                                                type="button"
+                                                onClick={startQuizAttempt}
+                                                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
+                                            >
+                                                <span>Tiếp tục làm bài</span>
+                                                <RefreshCw
+                                                    className="w-4 h-4 animate-spin"
+                                                    style={{
+                                                        animationDuration: "3s",
+                                                    }}
+                                                />
+                                            </button>
+                                        ) : remainingAttempts > 0 ? (
+                                            <button
+                                                type="button"
+                                                onClick={startQuizAttempt}
+                                                className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
+                                            >
+                                                <span>Bắt đầu làm bài</span>
+                                                <ArrowRight className="w-4 h-4 animate-pulse" />
+                                            </button>
+                                        ) : (
+                                            <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                                <span>
+                                                    Đã hết lượt thi (Tối đa 5)
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isGradeMismatch && (
+                                        <div className="text-center text-xs text-rose-400 font-semibold">
+                                            Em đang là học sinh lớp {user.grade}{" "}
+                                            mà?
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+
+                            {/* Cột 2: Bảng xếp hạng của bài thi */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{
+                                    duration: 0.3,
+                                    delay: 0.1,
+                                    ease: "easeOut",
+                                }}
+                                className="flex-1 bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-4"
+                            >
+                                <div className="space-y-4 flex-1 flex flex-col min-h-0">
+                                    {/* Header BXH */}
+                                    <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                                        <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                                            <Trophy className="w-4.5 h-4.5 text-amber-500" />{" "}
+                                            Bảng xếp hạng thi thử
+                                        </h3>
+                                        <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
+                                            Lượt thi đầu tiên
+                                        </span>
+                                    </div>
+
+                                    {/* Loader hoặc Danh sách BXH */}
+                                    {loadingQuizLeaderboard ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+                                            <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+                                            <span className="text-xs font-semibold">
+                                                Đang tải bảng xếp hạng...
+                                            </span>
+                                        </div>
+                                    ) : quizLeaderboard.length > 0 ? (
+                                        <div className="flex-1 flex flex-col justify-between min-h-0">
+                                            {/* Podium Top 3 Mini */}
+                                            <div className="grid grid-cols-3 gap-3 items-end justify-center py-4 border-b border-slate-100/60 mb-3 select-none">
+                                                {/* Hạng 2 */}
+                                                {quizLeaderboard[1] ? (
+                                                    <div className="flex flex-col items-center text-center">
+                                                        <div className="relative">
+                                                            <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500">
+                                                                {quizLeaderboard[1].studentName.charAt(
+                                                                    0,
+                                                                )}
+                                                            </div>
+                                                            <span className="absolute -top-1.5 -right-1 text-xs">
+                                                                🥈
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
+                                                            {
+                                                                quizLeaderboard[1]
+                                                                    .studentName
+                                                            }
+                                                        </span>
+                                                        <span className="text-[10px] font-black text-slate-500">
+                                                            {
+                                                                quizLeaderboard[1]
+                                                                    .score
+                                                            }{" "}
+                                                            điểm
                                                         </span>
                                                     </div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            onNavigate(
-                                                                "/result/" +
-                                                                    sub.id,
-                                                            )
-                                                        }
-                                                        className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                                    >
-                                                        Xem lại
-                                                    </button>
-                                                </div>
+                                                ) : (
+                                                    <div />
+                                                )}
+
+                                                {/* Hạng 1 */}
+                                                {quizLeaderboard[0] ? (
+                                                    <div className="flex flex-col items-center text-center">
+                                                        <div className="relative">
+                                                            <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600">
+                                                                {quizLeaderboard[0].studentName.charAt(
+                                                                    0,
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[11px] font-black text-slate-800 truncate max-w-[90px] block mt-1">
+                                                            {
+                                                                quizLeaderboard[0]
+                                                                    .studentName
+                                                            }
+                                                        </span>
+                                                        <span className="text-[11px] font-black text-amber-600">
+                                                            {
+                                                                quizLeaderboard[0]
+                                                                    .score
+                                                            }{" "}
+                                                            điểm
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div />
+                                                )}
+
+                                                {/* Hạng 3 */}
+                                                {quizLeaderboard[2] ? (
+                                                    <div className="flex flex-col items-center text-center">
+                                                        <div className="relative">
+                                                            <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80">
+                                                                {quizLeaderboard[2].studentName.charAt(
+                                                                    0,
+                                                                )}
+                                                            </div>
+                                                            <span className="absolute -top-1.5 -right-1 text-xs">
+                                                                🥉
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
+                                                            {
+                                                                quizLeaderboard[2]
+                                                                    .studentName
+                                                            }
+                                                        </span>
+                                                        <span className="text-[10px] font-black text-slate-500">
+                                                            {
+                                                                quizLeaderboard[2]
+                                                                    .score
+                                                            }{" "}
+                                                            điểm
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div />
+                                                )}
                                             </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs italic">
-                                        🍀 Hãy chuẩn bị tinh thần và bấm "Bắt
-                                        đầu làm bài".
-                                    </div>
-                                )}
 
-                                {activeAttemptInProgress && (
-                                    <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
-                                        <RefreshCw
-                                            className="w-3.5 h-3.5 animate-spin"
-                                            style={{ animationDuration: "3s" }}
-                                        />
-                                        <span>
-                                            Bạn đang có lượt thi dang dở! Hãy
-                                            tiếp tục làm bài.
-                                        </span>
-                                    </div>
-                                )}
+                                            {/* Danh sách các thứ hạng khác */}
+                                            <div className="flex-1 overflow-y-auto max-h-[220px] divide-y divide-slate-100 pr-1 text-xs">
+                                                {quizLeaderboard.map(
+                                                    (entry) => {
+                                                        const isMe =
+                                                            entry.studentId ===
+                                                            user.id;
+                                                        const minVal =
+                                                            Math.floor(
+                                                                entry.durationSeconds /
+                                                                    60,
+                                                            );
+                                                        const secVal =
+                                                            entry.durationSeconds %
+                                                            60;
+                                                        const timeStr =
+                                                            minVal === 0
+                                                                ? `${secVal}s`
+                                                                : `${minVal}p ${secVal}s`;
 
-                                {hasOtherActiveAttempt && (
-                                    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
-                                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                        <span>
-                                            Bạn đang có bài thi khác chưa hoàn
-                                            thành!
-                                        </span>
-                                    </div>
-                                )}
-
-                                {attemptsCount > 0 && (
-                                    <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
-                                        <Award className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-[11px] font-bold">
-                                            Điểm số cao nhất của bạn: {maxScore}{" "}
-                                            điểm
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Buttons actions */}
-                            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (navigateReplace)
-                                            navigateReplace("/");
-                                        else onNavigate("/");
-                                    }}
-                                    className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-650 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                    <span>Quay lại Dashboard</span>
-                                </button>
-
-                                {isGradeMismatch ? (
-                                    <button
-                                        type="button"
-                                        disabled
-                                        className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                    >
-                                        <span>Bắt đầu làm bài</span>
-                                        <ArrowRight className="w-4 h-4" />
-                                    </button>
-                                ) : hasOtherActiveAttempt ? (
-                                    <button
-                                        type="button"
-                                        disabled
-                                        className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                    >
-                                        <span>Đang làm đề thi khác</span>
-                                        <AlertCircle className="w-4 h-4" />
-                                    </button>
-                                ) : activeAttemptInProgress ? (
-                                    <button
-                                        type="button"
-                                        onClick={startQuizAttempt}
-                                        className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
-                                    >
-                                        <span>Tiếp tục làm bài</span>
-                                        <RefreshCw
-                                            className="w-4 h-4 animate-spin"
-                                            style={{ animationDuration: "3s" }}
-                                        />
-                                    </button>
-                                ) : remainingAttempts > 0 ? (
-                                    <button
-                                        type="button"
-                                        onClick={startQuizAttempt}
-                                        className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
-                                    >
-                                        <span>Bắt đầu làm bài</span>
-                                        <ArrowRight className="w-4 h-4 animate-pulse" />
-                                    </button>
-                                ) : (
-                                    <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
-                                        <span>Đã hết lượt thi (Tối đa 5)</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {isGradeMismatch && (
-                                <div className="text-center text-xs text-rose-400 font-semibold mt-2">
-                                    Em đang là học sinh lớp {user.grade} mà?
+                                                        return (
+                                                            <div
+                                                                key={
+                                                                    entry.studentId
+                                                                }
+                                                                className={`py-2.5 px-3.5 flex items-center justify-between rounded-xl transition-colors ${
+                                                                    isMe
+                                                                        ? "bg-brand-50/30 font-bold border border-brand-100/50"
+                                                                        : "hover:bg-slate-50/50"
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="font-extrabold text-slate-400 w-6">
+                                                                        {entry.rankPosition <=
+                                                                        3
+                                                                            ? entry.rankPosition ===
+                                                                              1
+                                                                                ? "🥇"
+                                                                                : entry.rankPosition ===
+                                                                                    2
+                                                                                  ? "🥈"
+                                                                                  : "🥉"
+                                                                            : `#${entry.rankPosition}`}
+                                                                    </span>
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-slate-800 font-semibold truncate max-w-[120px]">
+                                                                            {
+                                                                                entry.studentName
+                                                                            }
+                                                                        </p>
+                                                                        <p className="text-[9px] text-slate-400">
+                                                                            @
+                                                                            {
+                                                                                entry.studentUsername
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="font-extrabold text-slate-750">
+                                                                        {
+                                                                            entry.score
+                                                                        }
+                                                                        /10
+                                                                    </span>
+                                                                    <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium">
+                                                                        <Clock className="w-2.5 h-2.5" />{" "}
+                                                                        {
+                                                                            timeStr
+                                                                        }
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    },
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-2.5">
+                                            <BookOpen className="w-8 h-8 text-slate-300" />
+                                            <span className="text-xs">
+                                                Chưa có ai hoàn thành đề thi
+                                                này. Hãy là người mở màn!
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </motion.div>
+                                <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3">
+                                    💡 Điểm thi trên BXH được tính theo lượt thi
+                                    ĐẦU TIÊN để đảm bảo sự khách quan.
+                                </p>
+                            </motion.div>
+                        </div>
                     </div>
                 ) : activeQuiz && quizEntryPhase === "taking" ? (
                     <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start xl:h-full xl:min-h-0 gap-6">
