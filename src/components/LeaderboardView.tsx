@@ -9,21 +9,29 @@ import {
     RefreshCw,
     Award,
     Filter,
+    Clock,
+    BookOpen,
+    ArrowRight,
+    User as UserIcon,
 } from "lucide-react";
-import { User, OverallLeaderboardEntry } from "../types";
+import { User, Quiz, Submission, OverallLeaderboardEntry } from "../types";
 import {
     getOverallLeaderboard,
     refreshOverallLeaderboard,
 } from "../lib/supabaseService";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface LeaderboardViewProps {
     user: User;
+    quizzes: Quiz[];
+    submissions: Submission[];
     onNavigate: (path: string) => void;
 }
 
 export default function LeaderboardView({
     user,
+    quizzes,
+    submissions,
     onNavigate,
 }: LeaderboardViewProps) {
     // Grade states: students are locked to their profile grade (fallback to "10"), teachers default to "10"
@@ -49,6 +57,19 @@ export default function LeaderboardView({
         { id: "11", label: "Khối 11" },
         { id: "12", label: "Khối 12" },
     ];
+
+    // Filter quizzes to only match the active grade tab
+    const gradeQuizzes = quizzes.filter(
+        (q) => q.grade === activeGrade || (!q.grade && activeGrade === "10"),
+    );
+
+    // Quiz IDs that the student has completed
+    const submittedQuizIds = new Set(submissions.map((sub) => sub.quizId));
+
+    // Quizzes not taken yet
+    const untakenQuizzes = gradeQuizzes.filter(
+        (q) => !submittedQuizIds.has(q.id),
+    );
 
     // Fetch Overall Leaderboard for the active grade
     const fetchOverallRankings = async (showSilence = false) => {
@@ -83,7 +104,7 @@ export default function LeaderboardView({
         }
     };
 
-    // Filter overall data
+    // Filter overall data based on search input
     const filteredOverall = overallData.filter(
         (entry) =>
             entry.studentName
@@ -94,7 +115,6 @@ export default function LeaderboardView({
                 .includes(searchQuery.toLowerCase()),
     );
 
-    // Current User positions
     const myOverallStats = overallData.find(
         (entry) => entry.studentId === user.id,
     );
@@ -108,7 +128,7 @@ export default function LeaderboardView({
     const renderTrend = (current: number, previous: number | null) => {
         if (previous === null) {
             return (
-                <span className="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                <span className="text-[8px] font-black text-blue-650 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/30 px-1 py-0.2 rounded-md uppercase tracking-wider scale-90">
                     Mới
                 </span>
             );
@@ -116,29 +136,27 @@ export default function LeaderboardView({
         const diff = previous - current;
         if (diff > 0) {
             return (
-                <span className="flex items-center text-xs font-black text-emerald-600 dark:text-emerald-400">
-                    <ChevronUp className="w-3.5 h-3.5 stroke-[3]" />
-                    {diff}
+                <span className="flex items-center text-[11px] font-black text-emerald-600 dark:text-emerald-450 gap-0.5">
+                    <ChevronUp className="w-3 h-3 stroke-[3]" />
+                    <span>{diff}</span>
                 </span>
             );
         } else if (diff < 0) {
             return (
-                <span className="flex items-center text-xs font-black text-rose-500">
-                    <ChevronDown className="w-3.5 h-3.5 stroke-[3]" />
-                    {Math.abs(diff)}
+                <span className="flex items-center text-[11px] font-black text-rose-500 gap-0.5">
+                    <ChevronDown className="w-3 h-3 stroke-[3]" />
+                    <span>{Math.abs(diff)}</span>
                 </span>
             );
         }
         return (
-            <span className="flex items-center text-xs text-slate-400">
+            <span className="flex items-center text-slate-350 dark:text-slate-650">
                 <Minus className="w-3.5 h-3.5" />
             </span>
         );
     };
 
     const top3 = filteredOverall.slice(0, 3);
-    const rest = filteredOverall.slice(3);
-
     const podiumOrder = [
         top3[1] || null, // Hạng 2 (Trái)
         top3[0] || null, // Hạng 1 (Giữa)
@@ -146,65 +164,43 @@ export default function LeaderboardView({
     ];
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 pb-32 animate-in fade-in duration-200">
-            {/* Header vinh danh tối giản & sang trọng */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-150 dark:border-slate-850">
+        <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
+            {/* 1. Header Vinh Danh */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">
                     <div className="space-y-0.5">
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             Bảng Vinh Danh Học Tập 🏆
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            Tôn vinh nỗ lực học tập xuất sắc của các học sinh
-                            lớp {activeGrade}.
+                            Tôn vinh nỗ lực xuất sắc và sự chăm chỉ của các học
+                            sinh lớp {activeGrade}.
                         </p>
                     </div>
                 </div>
 
-                {/* Teacher sync button */}
                 {user.role === "teacher" && (
                     <button
                         onClick={handleManualRefresh}
                         disabled={refreshing || loading}
-                        className="self-start md:self-center px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50 animate-in fade-in"
+                        className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-3xs transition-all cursor-pointer disabled:opacity-50"
                     >
                         <RefreshCw
                             className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
                         />
-                        <span>Đồng bộ dữ liệu bảng xếp hạng</span>
+                        <span>Đồng bộ điểm toàn khối</span>
                     </button>
                 )}
             </div>
 
-            {/* Error view */}
-            {error && (
-                <div className="p-4 bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/30 rounded-2xl flex items-start gap-3">
-                    <span className="text-rose-500">⚠️</span>
-                    <div className="space-y-1">
-                        <h4 className="text-xs font-bold text-rose-800 dark:text-rose-400">
-                            Không thể tải dữ liệu xếp hạng
-                        </h4>
-                        <p className="text-[11px] text-rose-650 dark:text-rose-450 leading-relaxed font-medium">
-                            {error}
-                        </p>
-                    </div>
-                </div>
-            )}
-
-            {/* Loading view */}
-            {loading ? (
-                <div className="py-24 flex flex-col items-center justify-center gap-3">
-                    <RefreshCw className="w-6 h-6 text-brand-500 animate-spin" />
-                    <span className="text-xs text-slate-450 font-semibold">
-                        Đang đồng bộ thứ hạng khối {activeGrade}...
-                    </span>
-                </div>
-            ) : (
-                <div className="space-y-10">
-                    {/* TOP 3 PODIUM - Thiết kế cao cấp tối giản */}
-                    {top3.length > 0 ? (
-                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-8 pt-8 pb-4 relative select-none">
-                            {/* Hạng 2 (Bên trái) */}
+            {/* 3. Bố Cục Grid Hai Cột (Bảng Xếp Hạng Bên Trái | Góc Học Tập & Đề Thi Chưa Thi Bên Phải) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* CỘT TRÁI (Col-span 8): Podium & Danh sách thứ hạng */}
+                <div className="lg:col-span-8 space-y-8 min-w-0">
+                    {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
+                    {!loading && top3.length > 0 && (
+                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-6 pt-10 pb-4 relative select-none">
+                            {/* HẠNG 2 (Bên trái) */}
                             {podiumOrder[0] && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 15 }}
@@ -213,38 +209,36 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-slate-50 dark:bg-slate-800 flex items-center justify-center font-bold text-lg text-slate-500 shadow-md group-hover:scale-105 transition-transform">
+                                        <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
+                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[0].studentName.charAt(
                                                 0,
                                             )}
                                         </div>
-                                        <span
-                                            className="absolute -top-1.5 -right-1 text-xl"
-                                            title="Hạng 2"
-                                        >
+                                        <span className="absolute -top-2 -right-1 text-lg z-20">
                                             🥈
                                         </span>
                                     </div>
-                                    <div className="space-y-0.5 max-w-full">
-                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
+                                    <div className="space-y-0.5 max-w-full z-10">
+                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-350 truncate">
                                             {podiumOrder[0].studentName}
                                         </h4>
                                         <p className="text-[10px] text-slate-400 truncate">
                                             @{podiumOrder[0].studentUsername}
                                         </p>
                                     </div>
-                                    <div className="mt-3.5 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] font-black text-slate-450 tracking-wider">
+                                    <div className="mt-4 w-full bg-white dark:bg-[#27374D] border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center shadow-3xs group-hover:border-slate-300 transition-all">
+                                        <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                             HẠNG 2
                                         </span>
-                                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 mt-0.5">
+                                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[0].totalPoints} điểm
                                         </span>
                                     </div>
                                 </motion.div>
                             )}
 
-                            {/* Hạng 1 (Chính giữa - Nổi bật) */}
+                            {/* HẠNG 1 (Giữa - Cao nhất & Phát sáng nhẹ) */}
                             {podiumOrder[1] && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
@@ -253,41 +247,42 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group relative z-10"
                                 >
                                     <div className="relative mb-4">
-                                        <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full overflow-hidden border-3 border-amber-400 bg-amber-50/50 dark:bg-amber-950/20 flex items-center justify-center font-black text-xl text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-transform ring-4 ring-amber-400/10">
+                                        <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
+                                        <div className="w-16 h-16 sm:w-19 sm:h-19 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-lg text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
                                             {podiumOrder[1].studentName.charAt(
                                                 0,
                                             )}
                                         </div>
                                         <span
                                             className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl animate-bounce"
-                                            style={{
-                                                animationDuration: "2.5s",
-                                            }}
-                                            title="Vô địch"
+                                            style={{ animationDuration: "3s" }}
                                         >
                                             👑
                                         </span>
                                     </div>
-                                    <div className="space-y-0.5 max-w-full">
-                                        <h4 className="text-sm sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
+                                    <div className="space-y-0.5 max-w-full z-10">
+                                        <h4 className="text-xs sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
                                             {podiumOrder[1].studentName}
                                         </h4>
                                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate">
                                             @{podiumOrder[1].studentUsername}
                                         </p>
                                     </div>
-                                    <div className="mt-3.5 w-full bg-gradient-to-b from-amber-500/10 to-transparent dark:from-amber-500/5 dark:to-transparent border border-amber-400/40 dark:border-amber-900/30 rounded-2xl p-3 flex flex-col items-center justify-center ring-2 ring-amber-400/5">
-                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-widest">
-                                            🥇 HẠNG 1
+                                    <div className="mt-4 w-full bg-gradient-to-b from-amber-500/5 to-white dark:from-amber-500/5 dark:to-[#27374D] border border-amber-400/30 dark:border-amber-900/30 rounded-2xl p-3 flex flex-col items-center justify-center shadow-2xs group-hover:border-amber-400/50 transition-all relative">
+                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider">
+                                            🥇 QUÁN QUÂN
                                         </span>
                                         <span className="text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints} điểm
+                                        </span>
+                                        <span className="absolute -bottom-5 right-2 font-brand text-amber-500/80 text-[11px] select-none rotate-6 hidden sm:inline">
+                                            Nhà vô địch!
                                         </span>
                                     </div>
                                 </motion.div>
                             )}
 
-                            {/* Hạng 3 (Bên phải) */}
+                            {/* HẠNG 3 (Bên phải) */}
                             {podiumOrder[2] && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 15 }}
@@ -296,279 +291,337 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-400/80 bg-orange-50/20 dark:bg-orange-950/10 flex items-center justify-center font-bold text-lg text-orange-700 shadow-md group-hover:scale-105 transition-transform">
+                                        <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
+                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[2].studentName.charAt(
                                                 0,
                                             )}
                                         </div>
-                                        <span
-                                            className="absolute -top-1.5 -right-1 text-xl"
-                                            title="Hạng 3"
-                                        >
+                                        <span className="absolute -top-2 -right-1 text-lg z-20">
                                             🥉
                                         </span>
                                     </div>
-                                    <div className="space-y-0.5 max-w-full">
-                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 truncate">
+                                    <div className="space-y-0.5 max-w-full z-10">
+                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
                                             {podiumOrder[2].studentName}
                                         </h4>
                                         <p className="text-[10px] text-slate-400 truncate">
                                             @{podiumOrder[2].studentUsername}
                                         </p>
                                     </div>
-                                    <div className="mt-3.5 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center">
-                                        <span className="text-[9px] font-black text-orange-600 tracking-wider">
+                                    <div className="mt-4 w-full bg-white dark:bg-[#27374D] border border-slate-100/80 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center shadow-3xs group-hover:border-orange-400/40 transition-all">
+                                        <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                             HẠNG 3
                                         </span>
-                                        <span className="text-xs font-black text-slate-700 dark:text-slate-300 mt-0.5">
+                                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[2].totalPoints} điểm
                                         </span>
                                     </div>
                                 </motion.div>
                             )}
                         </div>
-                    ) : (
-                        <div className="py-16 text-center text-slate-400 font-semibold text-xs border border-dashed border-slate-200 dark:border-slate-850 rounded-2xl">
-                            Không tìm thấy học sinh nào phù hợp.
+                    )}
+
+                    {/* DÀNH CHO LOAD CHỜ */}
+                    {loading && (
+                        <div className="py-24 flex flex-col items-center justify-center gap-3">
+                            <RefreshCw className="w-6 h-6 text-[#4B726B] animate-spin" />
+                            <span className="text-xs text-slate-450 font-semibold">
+                                Đang cập nhật danh sách...
+                            </span>
                         </div>
                     )}
 
-                    {/* BẢNG XẾP HẠNG CHI TIẾT */}
-                    {filteredOverall.length > 0 && (
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 rounded-2xl overflow-hidden shadow-xs">
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse text-xs">
-                                    <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-850/10 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                                            <th className="py-4 px-5 w-16 text-center">
-                                                Thứ hạng
-                                            </th>
-                                            <th className="py-4 px-2 w-16 text-center">
-                                                Xu hướng
-                                            </th>
-                                            <th className="py-4 px-4">
-                                                Học sinh
-                                            </th>
-                                            <th className="py-4 px-4 text-center">
-                                                Khối
-                                            </th>
-                                            <th className="py-4 px-4 text-center">
-                                                Đề thi đã hoàn thành
-                                            </th>
-                                            <th className="py-4 px-6 text-right">
-                                                Tổng điểm
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {filteredOverall.map((entry) => {
-                                            const isMe =
-                                                entry.studentId === user.id;
-                                            const rank = entry.rankPosition;
-                                            const isTop3 = rank <= 3;
+                    {/* DANH SÁCH BẢNG XẾP HẠNG CHI TIẾT */}
+                    {!loading && filteredOverall.length > 0 && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-6">
+                                    <span className="w-8 text-center">
+                                        Hạng
+                                    </span>
+                                    <span>Học sinh</span>
+                                </div>
+                                <div className="flex items-center gap-12">
+                                    <span className="hidden sm:inline">
+                                        Số đề đã thi
+                                    </span>
+                                    <span className="w-20 text-right">
+                                        Tổng điểm
+                                    </span>
+                                </div>
+                            </div>
 
-                                            return (
-                                                <tr
-                                                    key={entry.studentId}
-                                                    className={`transition-colors font-medium ${
-                                                        isMe
-                                                            ? "bg-brand-50/20 dark:bg-brand-500/5 font-semibold text-slate-900 dark:text-slate-100 ring-2 ring-inset ring-brand-100/50 dark:ring-brand-500/20"
-                                                            : "hover:bg-slate-50/50 dark:hover:bg-slate-850/20 text-slate-650 dark:text-slate-400"
-                                                    }`}
-                                                >
-                                                    {/* Thứ hạng */}
-                                                    <td className="py-4 px-5 text-center font-bold text-slate-800 dark:text-slate-250">
+                            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+                                <AnimatePresence>
+                                    {filteredOverall.map((entry) => {
+                                        const isMe =
+                                            entry.studentId === user.id;
+                                        const rank = entry.rankPosition;
+                                        const isTop3 = rank <= 3;
+
+                                        return (
+                                            <motion.div
+                                                layout
+                                                key={entry.studentId}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className={`p-3 px-4 rounded-2xl flex items-center justify-between transition-all duration-200 border ${
+                                                    isMe
+                                                        ? "bg-[#4B726B]/5 border-[#4B726B]/25 font-bold shadow-3xs"
+                                                        : "bg-white dark:bg-[#27374D] border-slate-150/60 dark:border-slate-850 hover:border-slate-200 dark:hover:border-slate-700"
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-6 min-w-0">
+                                                    <span className="w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center">
                                                         {isTop3 ? (
-                                                            <span className="text-sm">
-                                                                {rank === 1
-                                                                    ? "🥇"
-                                                                    : rank === 2
-                                                                      ? "🥈"
-                                                                      : "🥉"}
-                                                            </span>
+                                                            rank === 1 ? (
+                                                                "🥇"
+                                                            ) : rank === 2 ? (
+                                                                "🥈"
+                                                            ) : (
+                                                                "🥉"
+                                                            )
                                                         ) : (
-                                                            <span>#{rank}</span>
+                                                            <span className="text-slate-450">
+                                                                #{rank}
+                                                            </span>
                                                         )}
-                                                    </td>
+                                                    </span>
 
-                                                    {/* Xu hướng */}
-                                                    <td className="py-4 px-2 text-center">
+                                                    <span className="w-6 flex items-center justify-center">
                                                         {renderTrend(
                                                             entry.rankPosition,
                                                             entry.previousRankPosition,
                                                         )}
-                                                    </td>
+                                                    </span>
 
-                                                    {/* Tên học sinh */}
-                                                    <td className="py-4 px-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div
-                                                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs select-none ${
-                                                                    isMe
-                                                                        ? "bg-brand-100 text-brand-650 dark:bg-brand-500/20 dark:text-brand-300"
-                                                                        : isTop3
-                                                                          ? "bg-slate-150 text-slate-655 dark:bg-slate-800 dark:text-slate-350"
-                                                                          : "bg-slate-100 text-slate-500 dark:bg-slate-800/40 dark:text-slate-450"
-                                                                }`}
-                                                            >
-                                                                {entry.studentName.charAt(
-                                                                    0,
-                                                                )}
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <p
-                                                                    className={`truncate leading-snug flex items-center gap-1.5 ${isMe ? "text-slate-900 dark:text-slate-100 font-extrabold" : "text-slate-800 dark:text-slate-200"}`}
-                                                                >
-                                                                    <span>
-                                                                        {
-                                                                            entry.studentName
-                                                                        }
-                                                                    </span>
-                                                                    {isMe && (
-                                                                        <span className="text-[8px] bg-brand-500 text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider scale-90">
-                                                                            Bạn
-                                                                        </span>
-                                                                    )}
-                                                                </p>
-                                                                <p className="text-[10px] text-slate-400 truncate">
-                                                                    @
-                                                                    {
-                                                                        entry.studentUsername
-                                                                    }
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Khối lớp */}
-                                                    <td className="py-4 px-4 text-center font-semibold text-slate-500 dark:text-slate-450">
-                                                        Lớp{" "}
-                                                        {entry.studentGrade ||
-                                                            activeGrade}
-                                                    </td>
-
-                                                    {/* Số đề thi đã hoàn thành */}
-                                                    <td className="py-4 px-4 text-center text-slate-500">
-                                                        {entry.testsCompleted}{" "}
-                                                        đề thi
-                                                    </td>
-
-                                                    {/* Tổng điểm tích lũy */}
-                                                    <td className="py-4 px-6 text-right">
-                                                        <span
-                                                            className={`font-black text-sm ${
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div
+                                                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none ${
                                                                 isMe
-                                                                    ? "text-brand-600 dark:text-brand-400"
+                                                                    ? "bg-[#4B726B]/20 text-[#4B726B] dark:bg-[#4B726B]/30 dark:text-brand-300"
                                                                     : isTop3
-                                                                      ? "text-slate-900 dark:text-slate-150"
-                                                                      : "text-slate-700 dark:text-slate-350"
+                                                                      ? "bg-slate-100 text-slate-655 dark:bg-slate-800"
+                                                                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40"
                                                             }`}
                                                         >
-                                                            {entry.totalPoints}{" "}
-                                                            điểm
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                                            {entry.studentName.charAt(
+                                                                0,
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p
+                                                                className={`truncate leading-snug flex items-center gap-1.5 text-xs sm:text-sm ${
+                                                                    isMe
+                                                                        ? "text-slate-900 dark:text-slate-150 font-extrabold"
+                                                                        : "text-slate-800 dark:text-slate-200"
+                                                                }`}
+                                                            >
+                                                                <span>
+                                                                    {
+                                                                        entry.studentName
+                                                                    }
+                                                                </span>
+                                                                {isMe && (
+                                                                    <span className="text-[8px] bg-[#4B726B] text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider font-sans">
+                                                                        Bạn
+                                                                    </span>
+                                                                )}
+                                                            </p>
+                                                            <p className="text-[10px] text-slate-400 truncate">
+                                                                @
+                                                                {
+                                                                    entry.studentUsername
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-12 shrink-0 text-xs">
+                                                    <span className="hidden sm:inline text-slate-450 dark:text-slate-400 font-medium">
+                                                        {entry.testsCompleted}{" "}
+                                                        đề thi
+                                                    </span>
+                                                    <span
+                                                        className={`w-20 text-right font-mono font-bold sm:text-sm ${
+                                                            isMe
+                                                                ? "text-[#4B726B] dark:text-[#88BDA4]"
+                                                                : isTop3
+                                                                  ? "text-slate-900 dark:text-slate-100"
+                                                                  : "text-slate-700 dark:text-slate-350"
+                                                        }`}
+                                                    >
+                                                        {entry.totalPoints} đ
+                                                    </span>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </AnimatePresence>
                             </div>
                         </div>
                     )}
-                </div>
-            )}
 
-            {/* Sticky Bottom Bar hiển thị vị trí cá nhân */}
-            {!loading && !error && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-950/90 border-t border-slate-200/60 dark:border-slate-850 backdrop-blur-md py-4 px-6 z-40 shadow-2xl animate-in slide-in-from-bottom duration-300">
-                    <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
+                    {!loading && filteredOverall.length === 0 && (
+                        <div className="py-12 bg-white dark:bg-[#27374D] border border-slate-150/60 dark:border-slate-850 rounded-2xl text-center text-slate-450 text-xs italic">
+                            Chưa tìm thấy thông tin xếp hạng học sinh.
+                        </div>
+                    )}
+                </div>
+
+                {/* CỘT PHẢI (Col-span 4): Thành tích cá nhân & Bài thi chưa thi */}
+                <div className="lg:col-span-4 space-y-6">
+                    {/* A. CARD THÀNH TÍCH CÁ NHÂN */}
+                    <div className="bg-gradient-to-br from-[#4B726B]/5 to-transparent border border-[#4B726B]/15 dark:border-[#4B726B]/10 rounded-3xl p-6 space-y-4 shadow-3xs relative overflow-hidden">
+                        <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#4B726B]/5 rounded-full blur-xl pointer-events-none" />
+
+                        <div className="flex items-center justify-between border-b border-slate-150/40 pb-3">
+                            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <UserIcon className="w-4 h-4 text-[#4B726B]" />{" "}
+                                Góc thành tích của bạn
+                            </h3>
+                            <span className="text-[9px] font-bold text-slate-450 uppercase">
+                                Hồ sơ
+                            </span>
+                        </div>
+
                         {myOverallStats ? (
-                            <>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-500 dark:text-brand-450 font-extrabold flex items-center justify-center border border-brand-500/20 text-sm shadow-inner select-none">
-                                        {myOverallStats.studentName.charAt(0)}
-                                    </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
                                     <div>
-                                        <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 leading-tight">
-                                            <span>Hạng của bạn hiện tại:</span>
-                                            <span className="text-brand-600 dark:text-brand-400 font-black text-sm">
-                                                #{myOverallStats.rankPosition}
-                                            </span>
+                                        <p className="text-xs text-slate-450">
+                                            Thứ hạng hiện tại
+                                        </p>
+                                        <p className="text-xl font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5 flex items-center gap-1.5">
+                                            #{myOverallStats.rankPosition}
                                             {renderTrend(
                                                 myOverallStats.rankPosition,
                                                 myOverallStats.previousRankPosition,
                                             )}
-                                        </h4>
-                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                                            Tổng tích lũy:{" "}
-                                            <span className="font-extrabold text-slate-700 dark:text-slate-350">
-                                                {myOverallStats.totalPoints}{" "}
-                                                điểm
-                                            </span>{" "}
-                                            | Số bài thi:{" "}
-                                            <span className="font-extrabold text-slate-700 dark:text-slate-350">
-                                                {myOverallStats.testsCompleted}{" "}
-                                                bài
-                                            </span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-455">
+                                            Tổng tích lũy
+                                        </p>
+                                        <p className="text-base font-extrabold text-[#4B726B] font-mono mt-0.5">
+                                            {myOverallStats.totalPoints} điểm
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+
+                                <div className="p-3 bg-white dark:bg-slate-900 border border-[#4B726B]/10 rounded-xl space-y-1 relative">
                                     {nextUserAbove ? (
-                                        <>
-                                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                            <span>
-                                                Bạn cần thêm{" "}
-                                                <span className="font-black text-brand-600 dark:text-brand-400">
-                                                    {Number(
-                                                        (
-                                                            nextUserAbove.totalPoints -
-                                                            myOverallStats.totalPoints
-                                                        ).toFixed(1),
-                                                    )}{" "}
-                                                    điểm
-                                                </span>{" "}
-                                                để vượt hạng học sinh{" "}
-                                                <span className="font-bold text-slate-700 dark:text-slate-200">
-                                                    {nextUserAbove.studentName}
-                                                </span>{" "}
-                                                (Hạng #
-                                                {nextUserAbove.rankPosition})
-                                            </span>
-                                        </>
+                                        <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                                            💡 Bạn cần tích lũy thêm{" "}
+                                            <strong className="text-[#4B726B] font-mono">
+                                                {Number(
+                                                    (
+                                                        nextUserAbove.totalPoints -
+                                                        myOverallStats.totalPoints
+                                                    ).toFixed(1),
+                                                )}{" "}
+                                                điểm
+                                            </strong>{" "}
+                                            để vượt qua học sinh{" "}
+                                            <strong className="text-slate-700 dark:text-slate-300">
+                                                {nextUserAbove.studentName}
+                                            </strong>{" "}
+                                            (Hạng #{nextUserAbove.rankPosition})
+                                        </p>
                                     ) : (
-                                        <span className="text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-1">
-                                            👑 Bạn đang là quán quân của Khối{" "}
-                                            {activeGrade}! Hãy tiếp tục duy trì
-                                            vị thế nhé!
-                                        </span>
+                                        <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-relaxed font-black">
+                                            👑 Bạn đang dẫn đầu Khối{" "}
+                                            {activeGrade}! Hãy kiên trì duy trì
+                                            vị trí của mình nhé!
+                                        </p>
                                     )}
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex items-center gap-3 w-full justify-between">
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
-                                    <Award className="w-4 h-4 text-slate-400" />
-                                    <span>
-                                        Bạn chưa có tên trên bảng xếp hạng khối{" "}
-                                        {activeGrade}. Hãy làm bài thi để tích
-                                        lũy điểm ngay nhé!
+                                    <span className="block font-brand text-[#4B726B]/80 text-[12px] text-right mt-1 select-none">
+                                        Cố gắng lên nhé!
                                     </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-4 space-y-3">
+                                <p className="text-xs text-slate-400 italic">
+                                    Học bạ của bạn chưa được ghi nhận trên bảng
+                                    xếp hạng khối {activeGrade}.
                                 </p>
-                                <button
-                                    onClick={() =>
-                                        onNavigate("/student-quizzes")
-                                    }
-                                    className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider cursor-pointer active:scale-95 transition-all shadow-md shadow-brand-500/20"
-                                >
-                                    Làm bài ngay
-                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* B. CARD NÂNG CAO ĐIỂM SỐ: Danh sách đề thi chưa thi (CTA để leo hạng) */}
+                    <div className="bg-white dark:bg-[#27374D] border border-slate-150/60 dark:border-slate-850 rounded-3xl p-6 space-y-4 shadow-3xs">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <Sparkles className="w-4 h-4 text-[#4B726B]" />{" "}
+                                Nâng cao điểm số 🚀
+                            </h3>
+                            <span className="text-[9px] bg-[#4B726B]/10 text-[#4B726B] dark:text-brand-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
+                                Chưa làm
+                            </span>
+                        </div>
+
+                        {untakenQuizzes.length > 0 ? (
+                            <div className="space-y-3">
+                                <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
+                                    💡 Hãy làm các đề thi dưới đây để tích lũy
+                                    thêm điểm số và thăng thứ hạng của mình:
+                                </p>
+                                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                                    {untakenQuizzes.slice(0, 5).map((quiz) => (
+                                        <div
+                                            key={quiz.id}
+                                            onClick={() =>
+                                                onNavigate(`/quiz/${quiz.id}`)
+                                            }
+                                            className="p-3 bg-slate-50/50 hover:bg-[#4B726B]/5 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 border border-slate-100 dark:border-slate-800 hover:border-[#4B726B]/20 rounded-2xl flex items-center justify-between transition-all duration-200 cursor-pointer group"
+                                        >
+                                            <div className="space-y-1 min-w-0 pr-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                                                        {quiz.subject}
+                                                    </span>
+                                                </div>
+                                                <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200 truncate group-hover:text-[#4B726B] transition-colors">
+                                                    {quiz.title}
+                                                </h4>
+                                                <p className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
+                                                    <Clock className="w-3 h-3 text-slate-350" />
+                                                    <span>
+                                                        {quiz.duration} phút •{" "}
+                                                        {quiz.questions
+                                                            ?.length || 0}{" "}
+                                                        câu
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            <span className="text-[10px] text-slate-400 group-hover:text-[#4B726B] font-bold flex items-center gap-0.5 shrink-0 transition-colors">
+                                                Làm bài{" "}
+                                                <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center space-y-2 text-slate-400">
+                                <BookOpen className="w-8 h-8 text-slate-300 mx-auto" />
+                                <p className="text-xs font-semibold">
+                                    Tuyệt vời! Bạn đã hoàn thành tất cả đề thi.
+                                </p>
+                                <p className="text-[10px] text-slate-455">
+                                    Không còn đề thi chưa hoàn thành của Khối{" "}
+                                    {activeGrade}.
+                                </p>
                             </div>
                         )}
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

@@ -242,5 +242,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 7. Làm mới bảng xếp hạng tổng lần đầu khi chạy migration để đồng bộ dữ liệu cũ
+-- 7. RPC Function: Lấy danh sách nộp bài gần đây của một Khối lớp để hiển thị Bảng tin Hoạt động
+CREATE OR REPLACE FUNCTION public.get_recent_submissions_by_grade(p_grade text)
+RETURNS TABLE (
+  id uuid,
+  quiz_title text,
+  student_name text,
+  score numeric,
+  submitted_at timestamp with time zone
+) AS $$
+DECLARE
+  v_role text;
+  v_user_grade text;
+BEGIN
+  -- Lấy thông tin role và grade của người đang đăng nhập
+  SELECT role, grade INTO v_role, v_user_grade
+  FROM public.profiles
+  WHERE id = auth.uid();
+
+  -- Nếu là học sinh, cưỡng chế chỉ xem hoạt động của Khối lớp mình
+  IF v_role = 'student' THEN
+    p_grade := COALESCE(v_user_grade, '');
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    s.id,
+    s.quiz_title,
+    s.student_name,
+    s.score,
+    s.submitted_at
+  FROM public.submissions s
+  JOIN public.profiles p ON p.id = s.student_id
+  WHERE p.role = 'student'
+    AND COALESCE(p.grade, '') = p_grade
+  ORDER BY s.submitted_at DESC
+  LIMIT 5;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8. Làm mới bảng xếp hạng tổng lần đầu khi chạy migration để đồng bộ dữ liệu cũ
 SELECT public.refresh_overall_leaderboard();

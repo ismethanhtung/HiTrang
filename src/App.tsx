@@ -458,15 +458,6 @@ export default function App() {
                                 );
                             }
 
-                            if (activeTab === "leaderboard") {
-                                return (
-                                    <LeaderboardView
-                                        user={user}
-                                        onNavigate={navigateTo}
-                                    />
-                                );
-                            }
-
                             if (isTakingOrReviewing) {
                                 return (
                                     <StudentDashboard
@@ -490,6 +481,17 @@ export default function App() {
                                         navigateReplace={navigateReplace}
                                         ongoingAttempt={ongoingAttempt}
                                         loading={loading}
+                                    />
+                                );
+                            }
+
+                            if (activeTab === "leaderboard") {
+                                return (
+                                    <LeaderboardView
+                                        user={user}
+                                        quizzes={quizzes}
+                                        submissions={submissions}
+                                        onNavigate={navigateTo}
                                     />
                                 );
                             }

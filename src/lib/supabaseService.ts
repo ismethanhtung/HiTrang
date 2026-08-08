@@ -784,3 +784,25 @@ export async function refreshOverallLeaderboard(): Promise<void> {
   }
 }
 
+/**
+ * Lấy danh sách nộp bài thi thử gần đây của một Khối lớp
+ */
+export async function getRecentSubmissionsByGrade(grade: string): Promise<any[]> {
+  const { data, error } = await supabase.rpc('get_recent_submissions_by_grade', {
+    p_grade: grade
+  });
+
+  if (error) {
+    console.error('Error fetching recent submissions by grade:', error);
+    return [];
+  }
+
+  return (data || []).map((item: any) => ({
+    id: item.id,
+    quizTitle: item.quiz_title,
+    studentName: item.student_name,
+    score: Number(item.score),
+    submittedAt: item.submitted_at
+  }));
+}
+
