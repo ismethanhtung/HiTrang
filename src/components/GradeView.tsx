@@ -24,6 +24,7 @@ import {
     ChevronLeft,
     ChevronRight,
     RefreshCw,
+    BookMarked,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -119,11 +120,38 @@ export default function GradeView({
         (s) => s.studentId === user.id,
     );
 
+    // Grid column border and padding classes for borderless line-separated columns
+    const getColClasses = (index: number) => {
+        let classes = "group flex flex-col justify-between bg-transparent border-t border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
+        
+        // Tablet (2 columns on md)
+        const mdCol = index % 2;
+        if (mdCol === 0) {
+            classes += "md:border-l-0 md:pl-0 md:pr-6 ";
+        } else {
+            classes += "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-0 ";
+        }
+
+        // Desktop (3 columns on lg)
+        const lgCol = index % 3;
+        if (lgCol === 0) {
+            classes += "lg:border-l-0 lg:pl-0 lg:pr-6 ";
+        } else if (lgCol === 1) {
+            classes += "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+        } else {
+            classes += "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-0 ";
+        }
+
+        // Mobile reset
+        classes += "max-md:border-l-0 max-md:pl-0 max-md:pr-0";
+        return classes;
+    };
+
     return (
-        <div className="min-h-screen bg-[#FDFDFD] text-slate-800">
-            <div className="max-w-5xl mx-auto px-6 py-12 space-y-8 animate-in fade-in duration-200">
+        <div className="bg-transparent text-text-primary animate-in fade-in duration-200">
+            <div className="max-w-5xl mx-auto space-y-8">
                 {/* Banner Header */}
-                <div className="pb-6 border-b border-slate-100 space-y-2">
+                <div className="pb-6 border-b border-slate-100 space-y-2 text-left">
                     <h1 className="text-2xl font-bold text-slate-900 font-serif">
                         Kho Đề Thi Ôn Luyện Lớp {grade}
                     </h1>
@@ -134,7 +162,6 @@ export default function GradeView({
                 </div>
 
                 {/* Search, Filter & Sort Controls */}
-                {/* Search, Filter & Sort Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-between pb-2">
                     {/* Search Box */}
                     <div className="relative w-full sm:max-w-xs">
@@ -143,7 +170,7 @@ export default function GradeView({
                             placeholder="Tìm kiếm đề thi..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400"
+                            className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500"
                         />
                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                     </div>
@@ -151,7 +178,7 @@ export default function GradeView({
                     {/* Filters */}
                     <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
                         <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 font-medium">
+                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
                                 Môn:
                             </span>
                             <select
@@ -159,7 +186,7 @@ export default function GradeView({
                                 onChange={(e) =>
                                     setSelectedSubject(e.target.value)
                                 }
-                                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-brand-500 cursor-pointer"
+                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
                             >
                                 {subjectOptions.map((sub) => (
                                     <option key={sub} value={sub}>
@@ -170,13 +197,13 @@ export default function GradeView({
                         </div>
 
                         <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 font-medium">
+                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
                                 Sắp xếp:
                             </span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-brand-500 cursor-pointer"
+                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
                             >
                                 <option value="newest">Mới nhất</option>
                                 <option value="duration_asc">
@@ -193,11 +220,11 @@ export default function GradeView({
                     </div>
                 </div>
 
-                {/* Quizzes List - 3 Columns Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {/* Quizzes List - Grid layout of borderless feed items with dynamic border lines */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-0 gap-y-0">
                     {loading ? (
                         <div className="col-span-full py-16 flex items-center justify-center">
-                            <Loader2 className="w-8 h-8 text-[#3B6D85] animate-spin" />
+                            <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-250">
@@ -208,7 +235,7 @@ export default function GradeView({
                             </p>
                         </div>
                     ) : (
-                        paginatedQuizzes.map((quiz) => {
+                        paginatedQuizzes.map((quiz, index) => {
                             // Check if student has done this quiz
                             const bestSubmission = studentSubmissions
                                 .filter((s) => s.quizId === quiz.id)
@@ -267,111 +294,114 @@ export default function GradeView({
                                 ongoingAttempt.quiz_id === quiz.id
                             );
 
+                            const isVip =
+                                quiz.id.includes("vip") ||
+                                quiz.title.toLowerCase().includes("hsg") ||
+                                quiz.title.toLowerCase().includes("chuyên");
+
+                            const formattedDate = (() => {
+                                if (!quiz.createdAt) return "";
+                                const dateParts = quiz.createdAt.split("-");
+                                if (dateParts.length === 3) {
+                                    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                                }
+                                return quiz.createdAt;
+                            })();
+
                             return (
                                 <div
                                     key={quiz.id}
-                                    className={`bg-bg-base border ${
-                                        isOngoing
-                                            ? "border-blue-300 bg-blue-50/30 shadow-sm"
-                                            : "border-border-primary shadow-2xs"
-                                    } rounded-xl p-3.5 flex flex-col justify-between hover:shadow-xs hover:border-border-secondary hover:bg-brand-50/30 transition-all duration-200`}
+                                    className={getColClasses(index)}
                                 >
-                                    <div className="space-y-2">
-                                        {/* Header line */}
-                                        <div className="flex items-start justify-between gap-2">
-                                            <span className="text-[9px] font-bold uppercase tracking-wider bg-[#3B6D85]/10 text-[#3B6D85] px-2 py-0.5 rounded">
-                                                {getCleanSubjectName(
-                                                    quiz.subject,
-                                                )}
-                                            </span>
-                                            <div className="flex flex-col items-end gap-1 text-[10px] text-slate-500 leading-tight">
-                                                <div className="flex items-center gap-1">
-                                                    <span>
-                                                        {quiz.duration} phút
+                                    <div className="space-y-2.5">
+                                        {/* Header line: Tags & Date */}
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 px-2 py-0.5 rounded-md border border-brand-200/40 dark:border-brand-500/20">
+                                                    {getCleanSubjectName(quiz.subject)}
+                                                </span>
+                                                {isVip && (
+                                                    <span className="text-[9px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-350 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
+                                                        Nâng cao
                                                     </span>
-                                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                </div>
-                                                {quiz.createdAt && (
-                                                    <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                                                        <span>
-                                                            {(() => {
-                                                                const dateParts =
-                                                                    quiz.createdAt.split(
-                                                                        "-",
-                                                                    );
-                                                                if (
-                                                                    dateParts.length ===
-                                                                    3
-                                                                ) {
-                                                                    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-                                                                }
-                                                                return quiz.createdAt;
-                                                            })()}
-                                                        </span>
-                                                    </div>
+                                                )}
+                                                {isOngoing && (
+                                                    <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-350 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/40 animate-pulse">
+                                                        Đang làm dở
+                                                    </span>
                                                 )}
                                             </div>
+                                            {formattedDate && (
+                                                <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">
+                                                    {formattedDate}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Title */}
-                                        <h3 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
+                                        <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
                                             {quiz.title}
                                         </h3>
 
                                         {/* Description */}
                                         {quiz.description && (
-                                            <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
                                                 {quiz.description}
                                             </p>
                                         )}
 
-                                        {/* Info items */}
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
+                                        {/* Metadata */}
+                                        <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold flex-wrap pt-0.5">
                                             <span className="flex items-center gap-1">
-                                                • {quiz.questions.length} câu
-                                                hỏi • {sectionsCount} phần
+                                                <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                {quiz.duration} phút
                                             </span>
-                                            {bestSubmission && (
-                                                <span className="flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-150">
-                                                    <CheckCircle2 className="w-3 h-3" />
-                                                    {bestSubmission.score}/10
-                                                </span>
-                                            )}
+                                            <span>•</span>
+                                            <span className="flex items-center gap-1">
+                                                <HelpCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                {quiz.questions.length} câu
+                                            </span>
+                                            <span>•</span>
+                                            <span className="flex items-center gap-1">
+                                                <BookMarked className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                {sectionsCount} phần
+                                            </span>
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
-                                    <div className="pt-2 mt-2 border-t border-border-primary flex items-center justify-between gap-2">
-                                        {studentQuizSubmissions.length > 0 ? (
-                                            <div className="flex flex-wrap items-center gap-1 text-[9px] font-medium text-slate-500">
-                                                <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-md border border-emerald-100/40">
-                                                    Max: {maxScore}
+                                    {/* Action line */}
+                                    <div className="flex items-center justify-between gap-3 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/60">
+                                        <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold">
+                                            {studentQuizSubmissions.length > 0 ? (
+                                                <>
+                                                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-100/40 dark:border-emerald-900/30">
+                                                        Max: {maxScore}
+                                                    </span>
+                                                    <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-350 px-2 py-0.5 rounded-md border border-slate-200/50 dark:border-slate-700">
+                                                        Avg: {avgScore}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="bg-amber-50/50 text-amber-700 dark:bg-amber-950/10 dark:text-amber-400 px-2.5 py-0.5 rounded-md border border-amber-100/50 dark:border-amber-900/30">
+                                                    Chưa làm
                                                 </span>
-                                                <span className="bg-slate-50/80 text-slate-600 px-1.5 py-0.5 rounded-md border border-slate-100">
-                                                    Avg: {avgScore}
-                                                </span>
-                                                <span className="bg-slate-50/80 text-slate-600 px-1.5 py-0.5 rounded-md border border-slate-100">
-                                                    Mới: {newestScore}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <div />
-                                        )}
+                                            )}
+                                        </div>
 
                                         <button
                                             onClick={() => onStartQuiz(quiz)}
-                                            className={`px-4 py-2 ${
+                                            className={`px-4 py-1.5 ${
                                                 isOngoing
-                                                    ? "bg-[#18323E] hover:bg-[#10222B] shadow-md shadow-blue-500/10"
-                                                    : "bg-[#3B6D85] hover:bg-[#2C5A71]"
-                                            } text-white rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all shadow-3xs cursor-pointer active:scale-98 flex-shrink-0`}
+                                                    ? "bg-[#18323E] hover:bg-[#10222B] dark:bg-slate-800 dark:hover:bg-slate-900 text-white shadow-md shadow-blue-500/10"
+                                                    : "bg-[#3B6D85] hover:bg-[#2C5A71] text-white"
+                                            } rounded-md text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
                                         >
                                             <span>
                                                 {isOngoing
                                                     ? "Tiếp tục làm"
                                                     : bestSubmission
-                                                      ? "Vào thi lại"
-                                                      : "Vào thi thử"}
+                                                      ? "Làm lại"
+                                                      : "Làm bài"}
                                             </span>
                                             <ArrowRight className="w-3.5 h-3.5" />
                                         </button>
@@ -384,12 +414,12 @@ export default function GradeView({
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-100">
-                        <span className="text-[11px] text-slate-400 font-semibold">
+                    <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-200/60 dark:border-slate-800">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold">
                             Trang {currentPage} / {totalPages} (Tổng số{" "}
                             {processedQuizzes.length} đề thi)
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
                             <button
                                 disabled={currentPage === 1}
                                 onClick={() => {
@@ -399,9 +429,9 @@ export default function GradeView({
                                         behavior: "smooth",
                                     });
                                 }}
-                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                                className="p-2 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                             >
-                                <ChevronLeft className="w-3.5 h-3.5 text-slate-655" />
+                                <ChevronLeft className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                             </button>
                             <button
                                 disabled={currentPage === totalPages}
@@ -412,9 +442,9 @@ export default function GradeView({
                                         behavior: "smooth",
                                     });
                                 }}
-                                className="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
+                                className="p-2 border border-slate-200 dark:border-slate-800 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer transition-colors"
                             >
-                                <ChevronRight className="w-3.5 h-3.5 text-slate-655" />
+                                <ChevronRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
                             </button>
                         </div>
                     </div>

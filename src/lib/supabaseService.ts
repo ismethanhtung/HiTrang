@@ -341,9 +341,6 @@ export async function createQuiz(quiz: Quiz, creatorId?: string): Promise<void> 
   const isValidUuid = typeof creatorId === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(creatorId);
 
   let finalTitle = quiz.title;
-  if (quiz.grade && !quiz.title.toLowerCase().includes(`lớp ${quiz.grade}`) && !quiz.title.toLowerCase().includes(`khối ${quiz.grade}`)) {
-    finalTitle = `${quiz.title} (Lớp ${quiz.grade})`;
-  }
 
   // Inject grade into the first question's metadata so it is stored in the jsonb column
   const updatedQuestions = [...quiz.questions];
@@ -393,6 +390,9 @@ export async function updateQuiz(quizId: string, updatedData: Partial<Quiz>): Pr
       payload.questions = qs;
     }
   }
+
+  // Delete grade field from payload since it is not a direct column on the quizzes table
+  delete payload.grade;
 
   const { error } = await supabase
     .from('quizzes')

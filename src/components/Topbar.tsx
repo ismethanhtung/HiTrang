@@ -184,10 +184,10 @@ export default function Topbar({
                                 setSearchFocused(true);
                             }}
                             placeholder="Tìm đề thi..."
-                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-bg-surface border border-border-primary rounded-lg focus:bg-bg-card focus:border-brand-400 focus:outline-none transition-all placeholder:text-text-tertiary text-text-primary font-medium"
+                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
                         />
                         {searchFocused && localSearchQuery.trim().length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-xl shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                            <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
                                 {filteredSearchQuizzes.length > 0 ? (
                                     filteredSearchQuizzes.map((quiz) => (
                                         <button

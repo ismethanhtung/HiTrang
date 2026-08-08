@@ -250,6 +250,10 @@ export default function App() {
         setQuizzes([newQuiz, ...quizzes]);
     };
 
+    const handleUpdateQuiz = (updatedQuiz: Quiz) => {
+        setQuizzes((prev) => prev.map((q) => q.id === updatedQuiz.id ? updatedQuiz : q));
+    };
+
     const handleDeleteQuiz = async (quizId: string) => {
         try {
             await deleteQuiz(quizId);
@@ -384,6 +388,7 @@ export default function App() {
                         submissions={submissions}
                         onAddQuiz={handleAddQuiz}
                         onDeleteQuiz={handleDeleteQuiz}
+                        onUpdateQuiz={handleUpdateQuiz}
                     />
                 ) : !user ? (
                     /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */

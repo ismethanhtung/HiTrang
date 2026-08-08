@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { User, Quiz, Submission, UserPlan } from "../types";
+import { User, Quiz, Submission, UserPlan, Question, QuestionType } from "../types";
 import {
     getAllProfiles,
     updateUserPlan,
@@ -42,6 +42,8 @@ import {
     ArrowLeft,
     User as UserIcon,
     ChevronDown,
+    ArrowUp,
+    ArrowDown,
 } from "lucide-react";
 
 interface AdminPanelProps {
@@ -49,6 +51,7 @@ interface AdminPanelProps {
     submissions: Submission[];
     onAddQuiz: (newQuiz: Quiz) => void;
     onDeleteQuiz: (quizId: string) => void;
+    onUpdateQuiz: (updatedQuiz: Quiz) => void;
 }
 
 export default function AdminPanel({
@@ -56,6 +59,7 @@ export default function AdminPanel({
     submissions,
     onAddQuiz,
     onDeleteQuiz,
+    onUpdateQuiz,
 }: AdminPanelProps) {
     // Persist admin verification across reloads
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -963,6 +967,19 @@ export default function AdminPanel({
     const [editTitle, setEditTitle] = useState("");
     const [editDescription, setEditDescription] = useState("");
     const [editIsPublic, setEditIsPublic] = useState<boolean>(true);
+    const [editSubject, setEditSubject] = useState("");
+    const [editGrade, setEditGrade] = useState("");
+    const [editDuration, setEditDuration] = useState(45);
+    const [editQuestions, setEditQuestions] = useState<Question[]>([]);
+    const [editScoringMode, setEditScoringMode] = useState<"EQUAL_WEIGHT" | "SECTION_BASED" | "THPT_QG">("EQUAL_WEIGHT");
+    const [editSectionPoints, setEditSectionPoints] = useState<Record<string, number>>({});
+    const [editDurationOption, setEditDurationOption] = useState<string>("45");
+
+    // Question player state inside edit modal
+    const [editModalTab, setEditModalTab] = useState<"questions" | "settings">("questions");
+    const [editCurrentQuestionIdx, setEditCurrentQuestionIdx] = useState(0);
+    const [editExpandedHtmlQuestions, setEditExpandedHtmlQuestions] = useState<Record<string, boolean>>({});
+    const [editFontSize, setEditFontSize] = useState(14);
 
     // Quiz list search, filter, sorting, and pagination states
     const [quizSearchQuery, setQuizSearchQuery] = useState("");
@@ -1201,28 +1218,210 @@ export default function AdminPanel({
     };
 
     // Edit quiz handling
+    // Edit quiz handling
     const startEditQuiz = (quiz: Quiz) => {
         setEditingQuiz(quiz);
         setEditTitle(quiz.title);
         setEditDescription(quiz.description);
         setEditIsPublic(quiz.isPublic !== undefined ? quiz.isPublic : true);
+        setEditSubject(quiz.subject || "Toán Học");
+        setEditGrade(quiz.grade || "12");
+        setEditDuration(quiz.duration || 45);
+        setEditQuestions(quiz.questions || []);
+        setEditModalTab("questions");
+        setEditCurrentQuestionIdx(0);
+        setEditExpandedHtmlQuestions({});
+        setEditFontSize(14);
+
+        const durationStr = quiz.duration ? String(quiz.duration) : "45";
+        if (["15", "30", "45", "60", "90"].includes(durationStr)) {
+            setEditDurationOption(durationStr);
+        } else {
+            setEditDurationOption("other");
+        }
+
+        const scoringType = quiz.scoringConfig?.type || "EQUAL_WEIGHT";
+        setEditScoringMode(scoringType);
+
+        const secPts: Record<string, number> = {};
+        if (scoringType === "SECTION_BASED" && quiz.scoringConfig?.sections) {
+            quiz.scoringConfig.sections.forEach((sec) => {
+                secPts[sec.section_id] = sec.total_points;
+            });
+        }
+        setEditSectionPoints(secPts);
     };
 
     const cancelEdit = () => {
         setEditingQuiz(null);
     };
 
+    const handleUpdateQuestionText = (index: number, text: string) => {
+        const updated = [...editQuestions];
+        updated[index] = { ...updated[index], text };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateOption = (qIndex: number, oIndex: number, val: string) => {
+        const updated = [...editQuestions];
+        const opts = [...(updated[qIndex].options || [])];
+        while (opts.length <= oIndex) {
+            opts.push("");
+        }
+        opts[oIndex] = val;
+        updated[qIndex] = { ...updated[qIndex], options: opts };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateCorrectAnswer = (qIndex: number, ansIdx: number) => {
+        const updated = [...editQuestions];
+        updated[qIndex] = { ...updated[qIndex], correctAnswerIndex: ansIdx };
+        setEditQuestions(updated);
+    };
+
+    const handleToggleTF = (qIndex: number, oIndex: number, val: boolean) => {
+        const updated = [...editQuestions];
+        if (!updated[qIndex].correctAnswers) {
+            updated[qIndex].correctAnswers = [false, false, false, false];
+        }
+        const ans = [...updated[qIndex].correctAnswers!];
+        ans[oIndex] = val;
+        updated[qIndex] = { ...updated[qIndex], correctAnswers: ans };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateShortAnswer = (qIndex: number, key: string) => {
+        const updated = [...editQuestions];
+        updated[qIndex] = { ...updated[qIndex], shortAnswerKey: key };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateExplanation = (qIndex: number, explanation: string) => {
+        const updated = [...editQuestions];
+        updated[qIndex] = { ...updated[qIndex], explanation };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateSectionTitle = (qIndex: number, sectionTitle: string) => {
+        const updated = [...editQuestions];
+        updated[qIndex] = { ...updated[qIndex], sectionTitle };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateQuestionPoints = (qIndex: number, points: number) => {
+        const updated = [...editQuestions];
+        updated[qIndex] = { ...updated[qIndex], points: Number(points) };
+        setEditQuestions(updated);
+    };
+
+    const handleUpdateQuestionType = (qIndex: number, type: QuestionType) => {
+        const updated = [...editQuestions];
+        const currentQ = updated[qIndex];
+        
+        let opts = currentQ.options || [];
+        if (type === "single_choice" && opts.length !== 4) {
+            opts = ["Phương án A", "Phương án B", "Phương án C", "Phương án D"];
+        } else if (type === "true_false" && opts.length !== 4) {
+            opts = ["Phát biểu A", "Phát biểu B", "Phát biểu C", "Phát biểu D"];
+        } else if (type === "short_answer") {
+            opts = [];
+        }
+
+        updated[qIndex] = {
+            ...currentQ,
+            type,
+            options: opts,
+            correctAnswerIndex: type === "single_choice" ? 0 : currentQ.correctAnswerIndex || 0,
+            correctAnswers: type === "true_false" ? currentQ.correctAnswers || [false, false, false, false] : undefined,
+            shortAnswerKey: type === "short_answer" ? currentQ.shortAnswerKey || "" : undefined,
+        };
+        setEditQuestions(updated);
+    };
+
+    const handleAddNewQuestionToEdit = () => {
+        const newQ: Question = {
+            id: "question_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+            text: "Nhập nội dung câu hỏi mới...",
+            options: ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+            correctAnswerIndex: 0,
+            type: "single_choice",
+            sectionTitle: "Phần I",
+            points: 0.25,
+        };
+        const updated = [...editQuestions, newQ];
+        setEditQuestions(updated);
+        setEditCurrentQuestionIdx(updated.length - 1);
+    };
+
+    const handleDeleteQuestionFromEdit = (index: number) => {
+        const updated = editQuestions.filter((_, idx) => idx !== index);
+        setEditQuestions(updated);
+        setEditCurrentQuestionIdx((prev) => Math.max(0, Math.min(updated.length - 2, prev)));
+    };
+
+    const handleMoveQuestionUp = (index: number) => {
+        if (index === 0) return;
+        const updated = [...editQuestions];
+        const temp = updated[index];
+        updated[index] = updated[index - 1];
+        updated[index - 1] = temp;
+        setEditQuestions(updated);
+        setEditCurrentQuestionIdx(index - 1);
+    };
+
+    const handleMoveQuestionDown = (index: number) => {
+        if (index === editQuestions.length - 1) return;
+        const updated = [...editQuestions];
+        const temp = updated[index];
+        updated[index] = updated[index + 1];
+        updated[index + 1] = temp;
+        setEditQuestions(updated);
+        setEditCurrentQuestionIdx(index + 1);
+    };
+
     const saveEditQuiz = async () => {
         if (!editingQuiz) return;
+        if (!editTitle.trim() || !editSubject.trim()) {
+            alert("Vui lòng nhập tên đề thi và môn học.");
+            return;
+        }
+
+        let scoringConfigObj: any = { type: editScoringMode };
+        if (editScoringMode === "SECTION_BASED") {
+            scoringConfigObj.sections = Object.keys(editSectionPoints).map(
+                (sec) => ({
+                    section_id: sec,
+                    total_points: editSectionPoints[sec] || 0,
+                }),
+            );
+        } else if (editScoringMode === "THPT_QG") {
+            scoringConfigObj.sections = [
+                { section_id: "Phần I", total_points: 3.0 },
+                { section_id: "Phần II", total_points: 4.0 },
+                { section_id: "Phần III", total_points: 3.0 },
+            ];
+            scoringConfigObj.true_false_rules = {
+                "1_correct": 0.1,
+                "2_correct": 0.25,
+                "3_correct": 0.5,
+                "4_correct": 1.0,
+            };
+        }
+
         const updated: Partial<Quiz> = {
-            title: editTitle,
-            description: editDescription,
+            title: editTitle.trim(),
+            description: editDescription.trim() || "Bài kiểm tra chất lượng cao HiTrang",
+            subject: editSubject,
+            grade: editGrade,
+            duration: Number(editDuration),
+            questions: editQuestions,
             isPublic: editIsPublic,
+            scoringConfig: scoringConfigObj,
         };
+
         try {
             await updateQuiz(editingQuiz.id, updated);
-            onDeleteQuiz(editingQuiz.id);
-            onAddQuiz({ ...editingQuiz, ...updated } as Quiz);
+            onUpdateQuiz({ ...editingQuiz, ...updated } as Quiz);
             setEditingQuiz(null);
         } catch (err: any) {
             alert(`Lỗi khi cập nhật đề thi: ${err.message}`);
@@ -5203,58 +5402,755 @@ export default function AdminPanel({
                     </div>
                 )}
                 {editingQuiz && (
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-                        <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
-                            <h2 className="text-lg font-bold mb-4">
-                                Sửa Đề Thi
-                            </h2>
-                            <div className="space-y-3">
-                                <input
-                                    type="text"
-                                    value={editTitle}
-                                    onChange={(e) =>
-                                        setEditTitle(e.target.value)
-                                    }
-                                    placeholder="Tiêu đề"
-                                    className="w-full border border-slate-300 rounded p-2"
-                                />
-                                <textarea
-                                    value={editDescription}
-                                    onChange={(e) =>
-                                        setEditDescription(e.target.value)
-                                    }
-                                    placeholder="Mô tả"
-                                    className="w-full border border-slate-300 rounded p-2"
-                                />
-                                <label className="inline-flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={editIsPublic}
-                                        onChange={(e) =>
-                                            setEditIsPublic(e.target.checked)
-                                        }
-                                        className="form-checkbox"
-                                    />
-                                    <span>Công khai</span>
-                                </label>
-                                <div className="flex justify-end space-x-2 mt-4">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-[9999] animate-in fade-in duration-200">
+                        <div className={`bg-white rounded-3xl w-full shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh] transition-all duration-300 ${
+                            editModalTab === "questions" ? "max-w-5xl" : "max-w-lg"
+                        }`}>
+                            {/* Modal Header */}
+                            <div className="px-6 py-4.5 border-b border-gray-100 flex items-center justify-between bg-slate-50/50 flex-shrink-0">
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                                        {editModalTab === "questions" ? (
+                                            <>
+                                                <BookOpen className="w-5 h-5 text-[#3B6D85]" />
+                                                <span>Xem Trước & Chỉnh Sửa Câu Hỏi</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CheckCircle2 className="w-5 h-5 text-[#3B6D85]" />
+                                                <span>Cấu Hình & Lưu Đề Thi</span>
+                                            </>
+                                        )}
+                                    </h3>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">
+                                        Đang chỉnh sửa đề: <strong className="text-slate-700">{editTitle || editingQuiz.title}</strong>
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={cancelEdit}
+                                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+
+                            {/* Modal Body (Conditional Render based on Tab) */}
+                            {editModalTab === "questions" ? (
+                                <div className="p-6 overflow-y-auto flex-1 flex flex-col lg:flex-row gap-6 bg-slate-50/20 text-left min-h-0">
+                                    {/* LEFT COLUMN: Question Box Card */}
+                                    <div className="flex-1 flex flex-col min-w-0">
+                                        <div className="bg-white border border-slate-150 rounded-2xl p-6 shadow-sm flex flex-col justify-between flex-1 min-h-0">
+                                            {/* Header Toolbar */}
+                                            {(() => {
+                                                const q = editQuestions[editCurrentQuestionIdx];
+                                                if (!q) {
+                                                    return (
+                                                        <div className="flex flex-col items-center justify-center py-12 flex-1 text-slate-400">
+                                                            <BookOpen className="w-12 h-12 text-slate-300 mb-2" />
+                                                            <p className="italic text-xs">Chưa có câu hỏi nào trong đề thi này.</p>
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleAddNewQuestionToEdit}
+                                                                className="mt-3 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-lg transition-all"
+                                                            >
+                                                                Thêm câu hỏi đầu tiên
+                                                            </button>
+                                                        </div>
+                                                    );
+                                                }
+                                                return (
+                                                    <div className="space-y-4 flex-1 flex flex-col min-h-0">
+                                                        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 flex-wrap flex-shrink-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <span className="text-xs font-black text-white bg-[#3B6D85] px-3 py-1 rounded-lg">
+                                                                    Câu {editCurrentQuestionIdx + 1}
+                                                                </span>
+                                                                <select
+                                                                    value={q.type || "single_choice"}
+                                                                    onChange={(e) => handleUpdateQuestionType(editCurrentQuestionIdx, e.target.value as QuestionType)}
+                                                                    className="text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase bg-slate-50 border-slate-200 text-slate-700 focus:outline-none cursor-pointer"
+                                                                >
+                                                                    <option value="single_choice">Phần 1: 4 Lựa chọn</option>
+                                                                    <option value="true_false">Phần 2: Đúng / Sai</option>
+                                                                    <option value="short_answer">Phần 3: Điền đáp án</option>
+                                                                </select>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                {/* Section input */}
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Mục/Phần"
+                                                                    value={q.sectionTitle || ""}
+                                                                    onChange={(e) => handleUpdateSectionTitle(editCurrentQuestionIdx, e.target.value)}
+                                                                    className="w-20 px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-center text-slate-700 focus:outline-none focus:bg-white"
+                                                                    title="Phần (VD: Phần I, Phần II, Phần III)"
+                                                                />
+                                                                {/* Points input */}
+                                                                <div className="flex items-center gap-0.5">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.05"
+                                                                        min="0"
+                                                                        value={q.points !== undefined ? q.points : 0.25}
+                                                                        onChange={(e) => handleUpdateQuestionPoints(editCurrentQuestionIdx, Number(e.target.value))}
+                                                                        className="w-12 px-1 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-center text-slate-700 focus:outline-none focus:bg-white"
+                                                                        title="Số điểm"
+                                                                    />
+                                                                    <span className="text-[9px] font-bold text-slate-400">đ</span>
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setEditExpandedHtmlQuestions((prev) => ({
+                                                                            ...prev,
+                                                                            [q.id]: !prev[q.id],
+                                                                        }))
+                                                                    }
+                                                                    className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border flex items-center gap-1 cursor-pointer transition-all ${
+                                                                        editExpandedHtmlQuestions[q.id]
+                                                                            ? "bg-slate-200 border-slate-350 text-slate-700"
+                                                                            : "bg-white border-slate-200 text-slate-500 hover:text-slate-700"
+                                                                    }`}
+                                                                >
+                                                                    <Edit className="w-2.5 h-2.5" />
+                                                                    <span>Sửa chữ</span>
+                                                                </button>
+                                                                
+                                                                {/* Move Up/Down */}
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={editCurrentQuestionIdx === 0}
+                                                                    onClick={() => handleMoveQuestionUp(editCurrentQuestionIdx)}
+                                                                    className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                                                                    title="Di chuyển lên"
+                                                                >
+                                                                    <ArrowUp className="w-3.5 h-3.5" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    disabled={editCurrentQuestionIdx === editQuestions.length - 1}
+                                                                    onClick={() => handleMoveQuestionDown(editCurrentQuestionIdx)}
+                                                                    className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                                                                    title="Di chuyển xuống"
+                                                                >
+                                                                    <ArrowDown className="w-3.5 h-3.5" />
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteQuestionFromEdit(editCurrentQuestionIdx)}
+                                                                    className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                                                    title="Xóa câu hỏi này"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Content area */}
+                                                        <div className="space-y-5 overflow-y-auto flex-1 pr-1 min-h-0 text-slate-800" style={{ fontSize: `${editFontSize}px` }}>
+                                                            {/* Render Question Text */}
+                                                            <div className="bg-slate-50 border border-slate-100 p-4 rounded-xl space-y-3">
+                                                                {!editExpandedHtmlQuestions[q.id] ? (
+                                                                    <h3
+                                                                        className="font-semibold text-slate-900 leading-relaxed overflow-x-auto text-left [&_img]:mx-auto [&_img]:block [&_img]:my-3"
+                                                                        dangerouslySetInnerHTML={{
+                                                                            __html: renderMathHtml(q.text || ""),
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="space-y-1.5 text-left">
+                                                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                                                                            Nội dung câu hỏi (Hỗ trợ HTML/KaTeX):
+                                                                        </label>
+                                                                        <textarea
+                                                                            value={q.text || ""}
+                                                                            onChange={(e) => handleUpdateQuestionText(editCurrentQuestionIdx, e.target.value)}
+                                                                            rows={3}
+                                                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500"
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Options render */}
+                                                            {(() => {
+                                                                if (!q.type || q.type === "single_choice") {
+                                                                    const options = q.options || ["Phương án A", "Phương án B", "Phương án C", "Phương án D"];
+                                                                    return (
+                                                                        <div className="space-y-2.5 text-left">
+                                                                            {options.map((option, idx) => {
+                                                                                const isSelected = q.correctAnswerIndex === idx;
+                                                                                const letter = String.fromCharCode(65 + idx);
+                                                                                return (
+                                                                                    <div
+                                                                                        key={idx}
+                                                                                        onClick={() => {
+                                                                                            if (!editExpandedHtmlQuestions[q.id]) {
+                                                                                                handleUpdateCorrectAnswer(editCurrentQuestionIdx, idx);
+                                                                                            }
+                                                                                        }}
+                                                                                        className={`w-full flex items-center justify-between p-3.5 border rounded-xl text-left font-medium transition-all duration-150 cursor-pointer ${
+                                                                                            isSelected
+                                                                                                ? "border-emerald-500 bg-emerald-50 text-emerald-950 ring-1 ring-emerald-500/20"
+                                                                                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-350"
+                                                                                        }`}
+                                                                                    >
+                                                                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={(e) => {
+                                                                                                    e.stopPropagation();
+                                                                                                    handleUpdateCorrectAnswer(editCurrentQuestionIdx, idx);
+                                                                                                }}
+                                                                                                className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] cursor-pointer transition-all flex-shrink-0 ${
+                                                                                                    isSelected
+                                                                                                        ? "bg-emerald-500 text-white"
+                                                                                                        : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                                                                                }`}
+                                                                                            >
+                                                                                                {letter}
+                                                                                            </button>
+                                                                                            {editExpandedHtmlQuestions[q.id] ? (
+                                                                                                <input
+                                                                                                    type="text"
+                                                                                                    value={option}
+                                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                                    onChange={(e) => handleUpdateOption(editCurrentQuestionIdx, idx, e.target.value)}
+                                                                                                    className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs focus:outline-none focus:bg-white"
+                                                                                                    placeholder={`Lựa chọn ${letter}`}
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span
+                                                                                                    className="flex-1 text-slate-800 text-xs font-semibold leading-relaxed overflow-x-auto"
+                                                                                                    dangerouslySetInnerHTML={{
+                                                                                                        __html: renderMathHtml(option),
+                                                                                                    }}
+                                                                                                />
+                                                                                            )}
+                                                                                        </div>
+                                                                                        {isSelected && <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 ml-2" />}
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    );
+                                                                } else if (q.type === "true_false") {
+                                                                    const options = q.options && q.options.length === 4 ? q.options : ["Ý phát biểu A", "Ý phát biểu B", "Ý phát biểu C", "Ý phát biểu D"];
+                                                                    const tfAnswers = q.correctAnswers || [false, false, false, false];
+                                                                    return (
+                                                                        <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3 overflow-x-auto text-left">
+                                                                            <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase pb-2 border-b border-slate-200 min-w-[320px]">
+                                                                                <div className="col-span-8 sm:col-span-9">Khẳng định / Phát biểu</div>
+                                                                                <div className="col-span-4 sm:col-span-3 text-center">Đáp án Đúng/Sai</div>
+                                                                            </div>
+                                                                            {options.map((option, idx) => {
+                                                                                const currentVal = tfAnswers[idx];
+                                                                                const letter = String.fromCharCode(97 + idx);
+                                                                                return (
+                                                                                    <div key={idx} className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-200/50 last:border-0 min-w-[320px]">
+                                                                                        <div className="col-span-8 sm:col-span-9 flex gap-2 text-slate-800">
+                                                                                            <span className="font-bold text-slate-500 uppercase">{letter})</span>
+                                                                                            {editExpandedHtmlQuestions[q.id] ? (
+                                                                                                <input
+                                                                                                    type="text"
+                                                                                                    value={option}
+                                                                                                    onChange={(e) => handleUpdateOption(editCurrentQuestionIdx, idx, e.target.value)}
+                                                                                                    className="flex-1 bg-white border border-slate-200 px-2 py-1 rounded-md text-xs focus:outline-none"
+                                                                                                    placeholder={`Phát biểu ${letter}`}
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span
+                                                                                                    className="flex-1 text-slate-800 text-xs font-semibold leading-relaxed overflow-x-auto"
+                                                                                                    dangerouslySetInnerHTML={{
+                                                                                                        __html: renderMathHtml(option),
+                                                                                                    }}
+                                                                                                />
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => handleToggleTF(editCurrentQuestionIdx, idx, true)}
+                                                                                                className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                                    currentVal === true
+                                                                                                        ? "bg-emerald-500 text-white shadow-sm"
+                                                                                                        : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                                                }`}
+                                                                                            >
+                                                                                                Đúng
+                                                                                            </button>
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => handleToggleTF(editCurrentQuestionIdx, idx, false)}
+                                                                                                className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                                    currentVal === false
+                                                                                                        ? "bg-rose-500 text-white shadow-sm"
+                                                                                                        : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                                                }`}
+                                                                                            >
+                                                                                                Sai
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    );
+                                                                } else if (q.type === "short_answer") {
+                                                                    return (
+                                                                        <div className="space-y-2 text-left bg-slate-50 border border-slate-200 p-4 rounded-xl">
+                                                                            <label className="text-[11px] font-bold text-purple-800 uppercase tracking-wider block">
+                                                                                Đáp án điền khuyết (Đáp số):
+                                                                            </label>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={q.shortAnswerKey || ""}
+                                                                                onChange={(e) => handleUpdateShortAnswer(editCurrentQuestionIdx, e.target.value)}
+                                                                                placeholder="Ví dụ: 150, 24, 2.05, -3..."
+                                                                                className="w-full px-4 py-2.5 bg-white border border-purple-200 hover:border-purple-300 focus:border-purple-500 font-bold text-slate-900 rounded-xl focus:outline-none transition-all placeholder:text-slate-400 text-xs"
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                }
+                                                                return null;
+                                                            })()}
+
+                                                            {/* Explanation Box */}
+                                                            <div className="pt-4 border-t border-slate-200/60 space-y-2 text-left">
+                                                                <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
+                                                                    <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                                                                    <span>Lời giải chi tiết:</span>
+                                                                </div>
+                                                                {!editExpandedHtmlQuestions[q.id] ? (
+                                                                    q.explanation ? (
+                                                                        <div
+                                                                            className="p-4 bg-amber-50/15 border border-amber-200/35 rounded-xl text-xs text-slate-700 overflow-x-auto leading-relaxed font-semibold [&_img]:mx-auto [&_img]:block [&_img]:my-3"
+                                                                            dangerouslySetInnerHTML={{
+                                                                                __html: renderMathHtml(q.explanation || ""),
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <p className="text-slate-400 italic text-[11px] px-1">Chưa cấu hình lời giải chi tiết.</p>
+                                                                    )
+                                                                ) : (
+                                                                    <textarea
+                                                                        value={q.explanation || ""}
+                                                                        onChange={(e) => handleUpdateExplanation(editCurrentQuestionIdx, e.target.value)}
+                                                                        rows={2}
+                                                                        placeholder="Nhập nội dung lời giải chi tiết..."
+                                                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Card Navigation Footer */}
+                                                        <div className="flex items-center justify-between pt-4 border-t border-slate-100 flex-shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditCurrentQuestionIdx((prev) => Math.max(0, prev - 1))}
+                                                                disabled={editCurrentQuestionIdx === 0}
+                                                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 disabled:opacity-40 text-slate-650 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                                            >
+                                                                <ChevronLeft className="w-4 h-4" />
+                                                                <span>Quay lại</span>
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={handleAddNewQuestionToEdit}
+                                                                className="px-3.5 py-2 bg-emerald-55 border border-emerald-250 text-emerald-700 text-xs font-bold rounded-xl flex items-center gap-1 transition-all cursor-pointer"
+                                                            >
+                                                                <Plus className="w-3.5 h-3.5" />
+                                                                <span>Thêm câu mới</span>
+                                                            </button>
+
+                                                            {editCurrentQuestionIdx < editQuestions.length - 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setEditCurrentQuestionIdx((prev) => prev + 1)}
+                                                                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                                                >
+                                                                    <span>Tiếp theo</span>
+                                                                    <ChevronRight className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+                                    </div>
+
+                                    {/* RIGHT COLUMN: Sidebar Question Tracker */}
+                                    <div className="w-full lg:w-72 bg-white border border-slate-150 rounded-2xl p-5 shadow-sm space-y-6 flex flex-col shrink-0 justify-between min-h-[300px]">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-tight">
+                                                    Bảng câu hỏi
+                                                </h3>
+                                                <p className="text-[10px] text-slate-400 mt-1 font-semibold leading-normal">
+                                                    Nhấp vào số câu để chuyển nhanh. Ô màu vàng là chưa điền đáp án, ô màu xanh là đã cấu hình đáp án.
+                                                </p>
+                                            </div>
+
+                                            {/* Progress bar */}
+                                            {(() => {
+                                                const configCount = editQuestions.filter((q) => {
+                                                    if (q.type === "single_choice") {
+                                                        return q.correctAnswerIndex !== undefined && q.correctAnswerIndex !== -1;
+                                                    }
+                                                    if (q.type === "true_false") {
+                                                        return q.correctAnswers && q.correctAnswers.some((x) => x !== undefined && x !== null);
+                                                    }
+                                                    if (q.type === "short_answer") {
+                                                        return q.shortAnswerKey && q.shortAnswerKey.trim() !== "";
+                                                    }
+                                                    return false;
+                                                }).length;
+
+                                                return (
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                                                            <span>Tiến độ đáp án:</span>
+                                                            <span>{configCount} / {editQuestions.length} câu</span>
+                                                        </div>
+                                                        <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                            <div
+                                                                className="bg-emerald-500 h-1.5 transition-all duration-300"
+                                                                style={{
+                                                                    width: `${editQuestions.length > 0 ? (configCount / editQuestions.length) * 100 : 0}%`,
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Section grid display */}
+                                            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                                                {(() => {
+                                                    const sections: Record<string, { qIndex: number; q: Question }[]> = {};
+                                                    editQuestions.forEach((q, idx) => {
+                                                        let secTitle = "Phần 1: Trắc nghiệm";
+                                                        if (q.type === "true_false") {
+                                                            secTitle = "Phần 2: Đúng / Sai";
+                                                        } else if (q.type === "short_answer") {
+                                                            secTitle = "Phần 3: Điền đáp án";
+                                                        }
+                                                        if (!sections[secTitle]) {
+                                                            sections[secTitle] = [];
+                                                        }
+                                                        sections[secTitle].push({ qIndex: idx, q });
+                                                    });
+
+                                                    return Object.entries(sections).map(([secTitle, items]) => (
+                                                        <div key={secTitle} className="space-y-1.5">
+                                                            <h4 className="text-[9px] font-black text-brand-600 bg-brand-50/50 px-2 py-0.5 rounded border border-brand-100/40 uppercase">
+                                                                {secTitle}
+                                                            </h4>
+                                                            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 p-0.5">
+                                                                {items.map(({ qIndex, q }) => {
+                                                                    const isCurrent = qIndex === editCurrentQuestionIdx;
+                                                                    let isConfigured = false;
+                                                                    if (q.type === "single_choice") {
+                                                                        isConfigured = q.correctAnswerIndex !== undefined && q.correctAnswerIndex !== -1;
+                                                                    } else if (q.type === "true_false") {
+                                                                        isConfigured = q.correctAnswers && q.correctAnswers.some((x) => x !== undefined && x !== null);
+                                                                    } else if (q.type === "short_answer") {
+                                                                        isConfigured = q.shortAnswerKey !== undefined && q.shortAnswerKey.trim() !== "";
+                                                                    }
+
+                                                                    return (
+                                                                        <button
+                                                                            key={q.id}
+                                                                            type="button"
+                                                                            onClick={() => setEditCurrentQuestionIdx(qIndex)}
+                                                                            className={`w-8 h-8 rounded-lg text-xs font-black transition-all border cursor-pointer ${
+                                                                                isCurrent
+                                                                                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                                                                                    : isConfigured
+                                                                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                                                      : "bg-amber-50 text-amber-750 border-amber-200"
+                                                                            }`}
+                                                                        >
+                                                                            {qIndex + 1}
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        </div>
+
+                                        {/* Font size and Cấu hình & Lưu */}
+                                        <div className="space-y-4 pt-3 border-t border-slate-100 flex-shrink-0">
+                                            <div className="flex items-center justify-between text-xs text-slate-650 font-bold">
+                                                <span>Cỡ chữ:</span>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditFontSize((prev) => Math.max(11, prev - 1))}
+                                                        className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer active:scale-95 transition-all"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <span className="font-bold text-slate-800 w-8 text-center">{editFontSize}px</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditFontSize((prev) => Math.min(20, prev + 1))}
+                                                        className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center font-bold text-slate-700 hover:bg-slate-100 cursor-pointer active:scale-95 transition-all"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditModalTab("settings")}
+                                                className="w-full py-3 bg-[#3B6D85] hover:bg-[#2C5A71] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-97"
+                                            >
+                                                <span>Cấu hình & Lưu đề thi</span>
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* TAB 2: GENERAL SETTINGS FORM */
+                                <div className="p-6 space-y-4 overflow-y-auto flex-1 text-left">
+                                    {/* Title */}
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                            Tên bài kiểm tra / Đề thi: <span className="text-rose-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            placeholder="VD: Kiểm tra cuối kì I Giải Tích lớp 11"
+                                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:text-slate-400"
+                                        />
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                            Mô tả ngắn:
+                                        </label>
+                                        <textarea
+                                            rows={2}
+                                            value={editDescription}
+                                            onChange={(e) => setEditDescription(e.target.value)}
+                                            placeholder="VD: Đề thi thử tự luyện tập giúp củng cố kiến thức..."
+                                            className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all placeholder:text-slate-400 resize-none"
+                                        />
+                                    </div>
+
+                                    {/* Subject & Grade */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                                Phân loại (Danh mục):
+                                            </label>
+                                            <select
+                                                value={editSubject}
+                                                onChange={(e) => setEditSubject(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
+                                            >
+                                                <option value="Giải Tích">Giải Tích</option>
+                                                <option value="Đại Số">Đại Số</option>
+                                                <option value="Hình Học">Hình Học</option>
+                                                <option value="Thi Thử">Thi Thử</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                                Khối lớp:
+                                            </label>
+                                            <select
+                                                value={editGrade}
+                                                onChange={(e) => setEditGrade(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
+                                            >
+                                                <option value="8">Lớp 8</option>
+                                                <option value="9">Lớp 9</option>
+                                                <option value="10">Lớp 10</option>
+                                                <option value="11">Lớp 11</option>
+                                                <option value="12">Lớp 12</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Duration */}
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                            Thời gian làm bài (Phút):
+                                        </label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {["15", "30", "45", "60", "90"].map((time) => (
+                                                <button
+                                                    key={time}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditDurationOption(time);
+                                                        setEditDuration(Number(time));
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                        editDurationOption === time
+                                                            ? "bg-[#EBF3FF] border border-[#1B72E8] text-[#1B72E8]"
+                                                            : "bg-slate-50 border border-slate-200 text-slate-655 hover:bg-slate-100"
+                                                    }`}
+                                                >
+                                                    {time} phút
+                                                </button>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditDurationOption("other")}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                    editDurationOption === "other"
+                                                        ? "bg-[#EBF3FF] border border-[#1B72E8] text-[#1B72E8]"
+                                                        : "bg-slate-50 border border-slate-200 text-slate-655 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                Khác...
+                                            </button>
+                                        </div>
+
+                                        {editDurationOption === "other" && (
+                                            <div className="flex items-center gap-2 mt-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                <input
+                                                    type="number"
+                                                    value={editDuration}
+                                                    onChange={(e) => setEditDuration(Number(e.target.value))}
+                                                    placeholder="Nhập số phút..."
+                                                    min={5}
+                                                    className="w-32 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                />
+                                                <span className="text-xs text-slate-500 font-semibold">phút</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Scoring Mode */}
+                                    <div className="border-t border-gray-100 pt-3.5 space-y-3">
+                                        <div>
+                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                                Chế độ chấm điểm (Bareme):
+                                            </label>
+                                            <select
+                                                value={editScoringMode}
+                                                onChange={(e) => setEditScoringMode(e.target.value as any)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
+                                            >
+                                                <option value="EQUAL_WEIGHT">Chia đều điểm (Tổng 10đ cho tất cả câu)</option>
+                                                <option value="SECTION_BASED">Chia điểm theo Phần (Tự cấu hình điểm mỗi phần)</option>
+                                                <option value="THPT_QG">Thang điểm chuẩn thi THPT Quốc Gia (3 - 4 - 3)</option>
+                                            </select>
+                                        </div>
+
+                                        {editScoringMode === "SECTION_BASED" && (
+                                            <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100 space-y-3 text-xs">
+                                                <div className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                                                    Cấu hình điểm số cho từng phần:
+                                                </div>
+                                                {(() => {
+                                                    const sections = Array.from(new Set(editQuestions.map(q => q.sectionTitle).filter(Boolean)));
+                                                    if (sections.length === 0) {
+                                                        return <p className="text-slate-450 italic text-[11px]">Cần phân loại sectionTitle cho câu hỏi để dùng chế độ này.</p>;
+                                                    }
+                                                    return (
+                                                        <div className="space-y-2">
+                                                            {sections.map((sec) => (
+                                                                <div key={sec} className="flex items-center justify-between gap-3">
+                                                                    <span className="font-semibold text-slate-600 truncate max-w-[200px]">{sec}:</span>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.1"
+                                                                            min="0"
+                                                                            max="10"
+                                                                            value={editSectionPoints[sec] || 0}
+                                                                            onChange={(e) => {
+                                                                                const val = Number(e.target.value);
+                                                                                setEditSectionPoints(prev => ({ ...prev, [sec]: val }));
+                                                                            }}
+                                                                            className="w-20 px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold text-center bg-white"
+                                                                        />
+                                                                        <span className="text-slate-400">điểm</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        )}
+
+                                        {editScoringMode === "THPT_QG" && (
+                                            <div className="bg-blue-50/50 rounded-2xl p-3 border border-blue-105 text-[11px] text-slate-655 leading-normal space-y-1.5 animate-in fade-in duration-150">
+                                                <div className="font-bold text-slate-700 uppercase tracking-wide text-[10px]">
+                                                    Cấu hình chuẩn THPT Quốc Gia (Bộ Giáo Dục):
+                                                </div>
+                                                <ul className="list-disc pl-4 space-y-0.5 font-medium">
+                                                    <li>Phần I: 3.0 điểm (12 câu, mỗi câu 0.25đ)</li>
+                                                    <li>Phần II: 4.0 điểm (4 câu. Đúng 1 ý được 0.1đ, 2 ý 0.25đ, 3 ý 0.5đ, 4 ý 1.0đ)</li>
+                                                    <li>Phần III: 3.0 điểm (6 câu, mỗi câu 0.5đ)</li>
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Public Checkbox */}
+                                    <div className="flex items-center gap-2.5 py-2 select-none border-t border-gray-100 mt-2">
+                                        <input
+                                            type="checkbox"
+                                            id="edit-modal-checkbox-is-public"
+                                            checked={editIsPublic}
+                                            onChange={(e) => setEditIsPublic(e.target.checked)}
+                                            className="h-4 w-4 text-[#1B72E8] border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                        />
+                                        <label
+                                            htmlFor="edit-modal-checkbox-is-public"
+                                            className="text-xs font-semibold text-slate-700 cursor-pointer"
+                                        >
+                                            Công khai đề thi này (Học sinh có thể thi ngay)
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Modal Footer (Conditional based on tab) */}
+                            {editModalTab === "settings" && (
+                                <div className="px-6 py-4.5 border-t border-gray-100 bg-slate-50/50 flex items-center justify-end gap-3 flex-shrink-0">
                                     <button
-                                        onClick={cancelEdit}
-                                        className="px-4 py-2 bg-gray-200 rounded"
+                                        type="button"
+                                        onClick={() => setEditModalTab("questions")}
+                                        className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-500 transition-all cursor-pointer"
                                     >
-                                        Hủy
+                                        Quay lại chỉnh sửa câu hỏi
                                     </button>
                                     <button
                                         onClick={saveEditQuiz}
-                                        className="px-4 py-2 bg-brand-600 text-white rounded"
+                                        className="px-5 py-2 bg-[#3B6D85] hover:bg-[#2C5A71] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
                                     >
-                                        Lưu
+                                        <CheckCircle className="w-4 h-4" />
+                                        <span>Lưu thay đổi Đề thi</span>
                                     </button>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
+
             </section>
         </div>
     );
