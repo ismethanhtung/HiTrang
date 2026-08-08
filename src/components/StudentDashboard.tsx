@@ -3377,29 +3377,7 @@ export default function StudentDashboard({
                                                                                             className="transition-all duration-150"
                                                                                         />
                                                                                     )}
-                                                                                    {/* Value Label above the bar */}
-                                                                                    {showLabel && (
-                                                                                        <text
-                                                                                            x={
-                                                                                                p.x
-                                                                                            }
-                                                                                            y={
-                                                                                                p.y -
-                                                                                                4
-                                                                                            }
-                                                                                            textAnchor="middle"
-                                                                                            className="text-[7.5px] font-black select-none"
-                                                                                            fill={getTextColor(
-                                                                                                p.score,
-                                                                                            )}
-                                                                                        >
-                                                                                            {
-                                                                                                p.score
-                                                                                            }
 
-                                                                                            đ
-                                                                                        </text>
-                                                                                    )}
                                                                                     {/* Interactive hover area */}
                                                                                     <rect
                                                                                         x={

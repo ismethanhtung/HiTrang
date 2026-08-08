@@ -84,7 +84,6 @@ export default function App() {
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [searchQuery, setSearchQuery] = useState("");
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -94,15 +93,7 @@ export default function App() {
         return saved ? JSON.parse(saved) : null;
     });
 
-    const filteredQuizzes = quizzes.filter((q) => {
-        const query = searchQuery.toLowerCase().trim();
-        if (!query) return true;
-        return (
-            q.title.toLowerCase().includes(query) ||
-            (q.description && q.description.toLowerCase().includes(query)) ||
-            q.subject.toLowerCase().includes(query)
-        );
-    });
+    const filteredQuizzes = quizzes;
 
     const [activeTab, setActiveTab] = useState<string>("student-dashboard");
     const [isTakingQuiz, setIsTakingQuiz] = useState(false);
@@ -315,8 +306,7 @@ export default function App() {
                 <Topbar
                     user={user}
                     selectedGrade={selectedGrade}
-                    searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
+                    quizzes={quizzes}
                     onSelectGrade={(grade) => {
                         if (confirmNavigation()) {
                             setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
