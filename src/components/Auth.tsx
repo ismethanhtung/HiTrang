@@ -20,12 +20,12 @@ import {
 
 interface AuthProps {
     onLogin: (user: UserType) => void;
-    initialRole?: "teacher" | "student";
+    initialRole?: "admin" | "student";
 }
 
 export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
     const [isRegister, setIsRegister] = useState(false);
-    const [role, setRole] = useState<"teacher" | "student">("student");
+    const [role, setRole] = useState<"admin" | "student">("student");
 
     const handleGoogleSignIn = async () => {
         setError("");

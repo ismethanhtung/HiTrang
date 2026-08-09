@@ -157,8 +157,7 @@ export default function Topbar({
                             <button
                                 onClick={onNavigateLeaderboard}
                                 className={navButtonClass(
-                                    activeTab === "leaderboard" &&
-                                        currentPath === "/",
+                                    currentPath === "/leaderboard",
                                 )}
                             >
                                 <Trophy className="w-3.5 h-3.5 text-amber-500" />
@@ -282,7 +281,7 @@ export default function Topbar({
                                         </div>
                                     </div>
 
-                                    {(user.role === "teacher" ||
+                                    {(user.role === "admin" ||
                                         user.username === "admin") && (
                                         <button
                                             onClick={() => {

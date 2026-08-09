@@ -26,6 +26,7 @@ interface LeaderboardViewProps {
     quizzes: Quiz[];
     submissions: Submission[];
     onNavigate: (path: string) => void;
+    initialData?: OverallLeaderboardEntry[] | null;
 }
 
 export default function LeaderboardView({
@@ -33,6 +34,7 @@ export default function LeaderboardView({
     quizzes,
     submissions,
     onNavigate,
+    initialData,
 }: LeaderboardViewProps) {
     // Grade states: students are locked to their profile grade (fallback to "10"), teachers default to "10"
     const [activeGrade, setActiveGrade] = useState<string>(() => {
@@ -43,9 +45,13 @@ export default function LeaderboardView({
     });
 
     const [overallData, setOverallData] = useState<OverallLeaderboardEntry[]>(
-        [],
+        () => {
+            return initialData || [];
+        },
     );
-    const [loading, setLoading] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(() => {
+        return !initialData;
+    });
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -62,6 +68,7 @@ export default function LeaderboardView({
     const gradeQuizzes = quizzes.filter(
         (q) => q.grade === activeGrade || (!q.grade && activeGrade === "10"),
     );
+    const totalQuizzesForGrade = gradeQuizzes.length || 1;
 
     // Quiz IDs that the student has completed
     const submittedQuizIds = new Set(submissions.map((sub) => sub.quizId));
@@ -73,7 +80,8 @@ export default function LeaderboardView({
 
     // Fetch Overall Leaderboard for the active grade
     const fetchOverallRankings = async (showSilence = false) => {
-        if (!showSilence) setLoading(true);
+        const silent = showSilence || overallData.length > 0;
+        if (!silent) setLoading(true);
         setError(null);
         try {
             const data = await getOverallLeaderboard(activeGrade);
@@ -82,7 +90,7 @@ export default function LeaderboardView({
             console.error("Lỗi khi tải bảng xếp hạng chung:", err);
             setError(err.message || "Không thể tải dữ liệu bảng xếp hạng.");
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
@@ -92,7 +100,7 @@ export default function LeaderboardView({
 
     // Handle manual refresh for teacher
     const handleManualRefresh = async () => {
-        if (user.role !== "teacher") return;
+        if (user.role !== "admin") return;
         setRefreshing(true);
         try {
             await refreshOverallLeaderboard();
@@ -104,8 +112,114 @@ export default function LeaderboardView({
         }
     };
 
+    // Mix in mock data if database has <= 1 user, to let the user preview the design.
+    let displayData = overallData;
+    if (overallData.length <= 1) {
+        const currentUserId = user.id;
+        const currentUserEntry = overallData.find(
+            (u) => u.studentId === currentUserId,
+        ) || {
+            studentId: currentUserId,
+            studentName: user.name || "Tung Khách",
+            studentUsername: user.username || "tungkhach",
+            studentGrade: activeGrade,
+            totalPoints:
+                submissions.length > 0
+                    ? Number(
+                          submissions
+                              .reduce((acc, s) => acc + s.score, 0)
+                              .toFixed(1),
+                      )
+                    : 10.0,
+            testsCompleted: submissions.length,
+            rankPosition: 1,
+            previousRankPosition: null,
+        };
+
+        const mockUsers = [
+            {
+                studentId: "mock-1",
+                studentName: "Nguyễn Thanh Tùng",
+                studentUsername: "thanhtung",
+                studentGrade: activeGrade,
+                totalPoints: 125.5,
+                testsCompleted: 14,
+                rankPosition: 1,
+                previousRankPosition: 2,
+            },
+            {
+                studentId: "mock-2",
+                studentName: "Lê Minh Triết",
+                studentUsername: "minhtriet",
+                studentGrade: activeGrade,
+                totalPoints: 112.0,
+                testsCompleted: 12,
+                rankPosition: 2,
+                previousRankPosition: 1,
+            },
+            {
+                studentId: "mock-3",
+                studentName: "Phạm Hải Đăng",
+                studentUsername: "haidang",
+                studentGrade: activeGrade,
+                totalPoints: 98.4,
+                testsCompleted: 11,
+                rankPosition: 3,
+                previousRankPosition: 4,
+            },
+            {
+                studentId: "mock-4",
+                studentName: "Trần Thị Hồng",
+                studentUsername: "hongtran",
+                studentGrade: activeGrade,
+                totalPoints: 85.0,
+                testsCompleted: 9,
+                rankPosition: 4,
+                previousRankPosition: 3,
+            },
+            {
+                studentId: "mock-5",
+                studentName: "Nguyễn Hoàng Nam",
+                studentUsername: "namhoang",
+                studentGrade: activeGrade,
+                totalPoints: 72.8,
+                testsCompleted: 8,
+                rankPosition: 5,
+                previousRankPosition: 5,
+            },
+            {
+                studentId: "mock-6",
+                studentName: "Vũ Bảo Ngọc",
+                studentUsername: "baongoc",
+                studentGrade: activeGrade,
+                totalPoints: 5.2,
+                testsCompleted: 3,
+                rankPosition: 6,
+                previousRankPosition: 7,
+            },
+        ];
+
+        // Combine
+        const combined = [
+            currentUserEntry,
+            ...mockUsers.filter(
+                (mu) => mu.studentId !== currentUserEntry.studentId,
+            ),
+        ];
+
+        // Sort by totalPoints descending
+        combined.sort((a, b) => b.totalPoints - a.totalPoints);
+
+        // Recalculate rank position
+        displayData = combined.map((entry, index) => ({
+            ...entry,
+            rankPosition: index + 1,
+            previousRankPosition: entry.previousRankPosition || index + 2,
+        }));
+    }
+
     // Filter overall data based on search input
-    const filteredOverall = overallData.filter(
+    const filteredOverall = displayData.filter(
         (entry) =>
             entry.studentName
                 .toLowerCase()
@@ -115,14 +229,14 @@ export default function LeaderboardView({
                 .includes(searchQuery.toLowerCase()),
     );
 
-    const myOverallStats = overallData.find(
+    const myOverallStats = displayData.find(
         (entry) => entry.studentId === user.id,
     );
-    const myOverallIndex = overallData.findIndex(
+    const myOverallIndex = displayData.findIndex(
         (entry) => entry.studentId === user.id,
     );
     const nextUserAbove =
-        myOverallIndex > 0 ? overallData[myOverallIndex - 1] : null;
+        myOverallIndex > 0 ? displayData[myOverallIndex - 1] : null;
 
     // Render Rank Trend Badge
     const renderTrend = (current: number, previous: number | null) => {
@@ -164,22 +278,22 @@ export default function LeaderboardView({
     ];
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
             {/* 1. Header Vinh Danh */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">
                     <div className="space-y-0.5">
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                            Bảng Vinh Danh Học Tập 🏆
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2">
+                            Bảng Xếp Hạng Học Tập 🏆
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            Tôn vinh nỗ lực xuất sắc và sự chăm chỉ của các học
-                            sinh lớp {activeGrade}.
+                            Ghi lại nỗ lực và sự chăm chỉ của các học sinh lớp{" "}
+                            {activeGrade}.
                         </p>
                     </div>
                 </div>
 
-                {user.role === "teacher" && (
+                {user.role === "admin" && (
                     <button
                         onClick={handleManualRefresh}
                         disabled={refreshing || loading}
@@ -198,7 +312,7 @@ export default function LeaderboardView({
                 {/* CỘT TRÁI (Col-span 8): Podium & Danh sách thứ hạng */}
                 <div className="lg:col-span-8 space-y-8 min-w-0">
                     {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
-                    {!loading && top3.length > 0 && (
+                    {top3.length > 0 && (
                         <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-6 pt-10 pb-4 relative select-none">
                             {/* HẠNG 2 (Bên trái) */}
                             {podiumOrder[0] && (
@@ -223,11 +337,8 @@ export default function LeaderboardView({
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-350 truncate">
                                             {podiumOrder[0].studentName}
                                         </h4>
-                                        <p className="text-[10px] text-slate-400 truncate">
-                                            @{podiumOrder[0].studentUsername}
-                                        </p>
                                     </div>
-                                    <div className="mt-4 w-full bg-white dark:bg-[#27374D] border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center shadow-3xs group-hover:border-slate-300 transition-all">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none p-2.5 flex flex-col items-center justify-center transition-all">
                                         <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                             HẠNG 2
                                         </span>
@@ -264,11 +375,8 @@ export default function LeaderboardView({
                                         <h4 className="text-xs sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
                                             {podiumOrder[1].studentName}
                                         </h4>
-                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate">
-                                            @{podiumOrder[1].studentUsername}
-                                        </p>
                                     </div>
-                                    <div className="mt-4 w-full bg-gradient-to-b from-amber-500/5 to-white dark:from-amber-500/5 dark:to-[#27374D] border border-amber-400/30 dark:border-amber-900/30 rounded-2xl p-3 flex flex-col items-center justify-center shadow-2xs group-hover:border-amber-400/50 transition-all relative">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none p-3 flex flex-col items-center justify-center transition-all relative">
                                         <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider">
                                             🥇 QUÁN QUÂN
                                         </span>
@@ -305,11 +413,8 @@ export default function LeaderboardView({
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
                                             {podiumOrder[2].studentName}
                                         </h4>
-                                        <p className="text-[10px] text-slate-400 truncate">
-                                            @{podiumOrder[2].studentUsername}
-                                        </p>
                                     </div>
-                                    <div className="mt-4 w-full bg-white dark:bg-[#27374D] border border-slate-100/80 dark:border-slate-800 rounded-2xl p-2.5 flex flex-col items-center justify-center shadow-3xs group-hover:border-orange-400/40 transition-all">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100/80 dark:border-slate-800 rounded-none p-2.5 flex flex-col items-center justify-center transition-all">
                                         <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                             HẠNG 3
                                         </span>
@@ -333,7 +438,7 @@ export default function LeaderboardView({
                     )}
 
                     {/* DANH SÁCH BẢNG XẾP HẠNG CHI TIẾT */}
-                    {!loading && filteredOverall.length > 0 && (
+                    {filteredOverall.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-6">
@@ -359,6 +464,16 @@ export default function LeaderboardView({
                                             entry.studentId === user.id;
                                         const rank = entry.rankPosition;
                                         const isTop3 = rank <= 3;
+                                        const completedRatio = Math.min(
+                                            (entry.testsCompleted || 0) /
+                                                totalQuizzesForGrade,
+                                            1,
+                                        );
+                                        const pointsRatio = Math.min(
+                                            (entry.totalPoints || 0) /
+                                                (totalQuizzesForGrade * 10),
+                                            1,
+                                        );
 
                                         return (
                                             <motion.div
@@ -366,13 +481,27 @@ export default function LeaderboardView({
                                                 key={entry.studentId}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                className={`p-3 px-4 rounded-2xl flex items-center justify-between transition-all duration-200 border ${
+                                                className={`relative overflow-hidden py-3 px-2 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800/80 ${
                                                     isMe
-                                                        ? "bg-[#4B726B]/5 border-[#4B726B]/25 font-bold shadow-3xs"
-                                                        : "bg-white dark:bg-[#27374D] border-slate-150/60 dark:border-slate-850 hover:border-slate-200 dark:hover:border-slate-700"
+                                                        ? "bg-[#4B726B]/5 font-bold"
+                                                        : "bg-transparent hover:bg-slate-50/20 dark:hover:bg-slate-900/10"
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-6 min-w-0">
+                                                {/* Progress bar background visualizations */}
+                                                <div
+                                                    className="absolute left-0 top-0 bottom-0 bg-[#4B726B]/5 dark:bg-[#4B726B]/10 pointer-events-none transition-all duration-500"
+                                                    style={{
+                                                        width: `${completedRatio * 100}%`,
+                                                    }}
+                                                />
+                                                <div
+                                                    className="absolute left-0 top-0 bottom-0 bg-[#4B726B]/15 dark:bg-[#4B726B]/25 pointer-events-none transition-all duration-500"
+                                                    style={{
+                                                        width: `${pointsRatio * 100}%`,
+                                                    }}
+                                                />
+
+                                                <div className="relative z-10 flex items-center gap-6 min-w-0">
                                                     <span className="w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center">
                                                         {isTop3 ? (
                                                             rank === 1 ? (
@@ -429,17 +558,11 @@ export default function LeaderboardView({
                                                                     </span>
                                                                 )}
                                                             </p>
-                                                            <p className="text-[10px] text-slate-400 truncate">
-                                                                @
-                                                                {
-                                                                    entry.studentUsername
-                                                                }
-                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-12 shrink-0 text-xs">
+                                                <div className="relative z-10 flex items-center gap-12 shrink-0 text-xs">
                                                     <span className="hidden sm:inline text-slate-450 dark:text-slate-400 font-medium">
                                                         {entry.testsCompleted}{" "}
                                                         đề thi
@@ -464,8 +587,8 @@ export default function LeaderboardView({
                         </div>
                     )}
 
-                    {!loading && filteredOverall.length === 0 && (
-                        <div className="py-12 bg-white dark:bg-[#27374D] border border-slate-150/60 dark:border-slate-850 rounded-2xl text-center text-slate-450 text-xs italic">
+                    {filteredOverall.length === 0 && (
+                        <div className="py-12 bg-transparent border-b border-slate-150/60 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic">
                             Chưa tìm thấy thông tin xếp hạng học sinh.
                         </div>
                     )}
@@ -474,17 +597,13 @@ export default function LeaderboardView({
                 {/* CỘT PHẢI (Col-span 4): Thành tích cá nhân & Bài thi chưa thi */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* A. CARD THÀNH TÍCH CÁ NHÂN */}
-                    <div className="bg-gradient-to-br from-[#4B726B]/5 to-transparent border border-[#4B726B]/15 dark:border-[#4B726B]/10 rounded-3xl p-6 space-y-4 shadow-3xs relative overflow-hidden">
+                    <div className="bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none py-6 space-y-4 relative">
                         <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#4B726B]/5 rounded-full blur-xl pointer-events-none" />
 
-                        <div className="flex items-center justify-between border-b border-slate-150/40 pb-3">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                <UserIcon className="w-4 h-4 text-[#4B726B]" />{" "}
-                                Góc thành tích của bạn
+                                Thành tích của bạn
                             </h3>
-                            <span className="text-[9px] font-bold text-slate-450 uppercase">
-                                Hồ sơ
-                            </span>
                         </div>
 
                         {myOverallStats ? (
@@ -512,25 +631,44 @@ export default function LeaderboardView({
                                     </div>
                                 </div>
 
-                                <div className="p-3 bg-white dark:bg-slate-900 border border-[#4B726B]/10 rounded-xl space-y-1 relative">
+                                <div className="p-3 bg-[#4B726B]/5 border-l-2 border-[#4B726B] rounded-none space-y-1 relative">
                                     {nextUserAbove ? (
-                                        <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                                            💡 Bạn cần tích lũy thêm{" "}
-                                            <strong className="text-[#4B726B] font-mono">
-                                                {Number(
-                                                    (
-                                                        nextUserAbove.totalPoints -
-                                                        myOverallStats.totalPoints
-                                                    ).toFixed(1),
-                                                )}{" "}
-                                                điểm
-                                            </strong>{" "}
-                                            để vượt qua học sinh{" "}
-                                            <strong className="text-slate-700 dark:text-slate-300">
-                                                {nextUserAbove.studentName}
-                                            </strong>{" "}
-                                            (Hạng #{nextUserAbove.rankPosition})
-                                        </p>
+                                        Number(
+                                            (
+                                                nextUserAbove.totalPoints -
+                                                myOverallStats.totalPoints
+                                            ).toFixed(1),
+                                        ) > 0 ? (
+                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                                                💡 Bạn cần tích lũy thêm{" "}
+                                                <strong className="text-[#4B726B] font-mono">
+                                                    {Number(
+                                                        (
+                                                            nextUserAbove.totalPoints -
+                                                            myOverallStats.totalPoints
+                                                        ).toFixed(1),
+                                                    )}{" "}
+                                                    điểm
+                                                </strong>{" "}
+                                                để vượt qua học sinh{" "}
+                                                <strong className="text-slate-700 dark:text-slate-300">
+                                                    {nextUserAbove.studentName}
+                                                </strong>{" "}
+                                                (Hạng #
+                                                {nextUserAbove.rankPosition})
+                                            </p>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                                                💡 Bạn đang đồng hạng với{" "}
+                                                <strong className="text-slate-700 dark:text-slate-300">
+                                                    {nextUserAbove.studentName}
+                                                </strong>{" "}
+                                                (Hạng #
+                                                {nextUserAbove.rankPosition}).
+                                                Hãy tích lũy thêm điểm để bứt
+                                                phá vươn lên!
+                                            </p>
+                                        )
                                     ) : (
                                         <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-relaxed font-black">
                                             👑 Bạn đang dẫn đầu Khối{" "}
@@ -554,11 +692,10 @@ export default function LeaderboardView({
                     </div>
 
                     {/* B. CARD NÂNG CAO ĐIỂM SỐ: Danh sách đề thi chưa thi (CTA để leo hạng) */}
-                    <div className="bg-white dark:bg-[#27374D] border border-slate-150/60 dark:border-slate-850 rounded-3xl p-6 space-y-4 shadow-3xs">
+                    <div className="bg-transparent rounded-none py-6 space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                <Sparkles className="w-4 h-4 text-[#4B726B]" />{" "}
-                                Nâng cao điểm số 🚀
+                                Nâng cao điểm số
                             </h3>
                             <span className="text-[9px] bg-[#4B726B]/10 text-[#4B726B] dark:text-brand-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
                                 Chưa làm
@@ -568,8 +705,7 @@ export default function LeaderboardView({
                         {untakenQuizzes.length > 0 ? (
                             <div className="space-y-3">
                                 <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
-                                    💡 Hãy làm các đề thi dưới đây để tích lũy
-                                    thêm điểm số và thăng thứ hạng của mình:
+                                    💡 Dưới đây là các bài thi bạn chưa làm:
                                 </p>
                                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                                     {untakenQuizzes.slice(0, 5).map((quiz) => (
@@ -578,7 +714,7 @@ export default function LeaderboardView({
                                             onClick={() =>
                                                 onNavigate(`/quiz/${quiz.id}`)
                                             }
-                                            className="p-3 bg-slate-50/50 hover:bg-[#4B726B]/5 dark:bg-slate-900/20 dark:hover:bg-slate-900/40 border border-slate-100 dark:border-slate-800 hover:border-[#4B726B]/20 rounded-2xl flex items-center justify-between transition-all duration-200 cursor-pointer group"
+                                            className="py-3 bg-transparent hover:bg-[#4B726B]/5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 flex items-center justify-between transition-all duration-200 cursor-pointer group"
                                         >
                                             <div className="space-y-1 min-w-0 pr-2">
                                                 <div className="flex items-center gap-2">

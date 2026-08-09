@@ -36,7 +36,7 @@ export interface User {
   id: string;
   name: string;
   username: string;
-  role: 'teacher' | 'student';
+  role: 'admin' | 'student';
   plan?: UserPlan;
   grade?: string;
   avatarUrl?: string;

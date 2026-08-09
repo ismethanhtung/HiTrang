@@ -453,7 +453,7 @@ export default function StudentDashboard({
     // Start taking a quiz
     const handleStartQuiz = (quiz: Quiz) => {
         if (
-            user.role !== "teacher" &&
+            user.role !== "admin" &&
             (!user.plan || user.plan === "nothing")
         ) {
             setShowUpgradeModal(true);

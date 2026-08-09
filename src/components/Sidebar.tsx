@@ -46,7 +46,7 @@ export default function Sidebar({
 
     // Menu items for Teacher vs Student
     const teacherMenuItems = [
-        { id: "overview", label: "Tổng quan", icon: LayoutDashboard },
+        { id: "student-dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
         { id: "quizzes", label: "Quản lý Đề thi", icon: ClipboardList },
         { id: "students", label: "Tiến độ Học sinh", icon: GraduationCap },
         { id: "leaderboard", label: "Bảng xếp hạng", icon: Trophy },
@@ -64,7 +64,7 @@ export default function Sidebar({
     ];
 
     const menuItems =
-        user.role === "teacher" ? teacherMenuItems : studentMenuItems;
+        user.role === "admin" ? teacherMenuItems : studentMenuItems;
 
     const handleTabClick = (tabId: string) => {
         setActiveTab(tabId);
@@ -98,7 +98,7 @@ export default function Sidebar({
             {/* Section Header */}
             <div className="px-6 py-2 text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase flex items-center justify-between select-none">
                 <span>
-                    {user.role === "teacher" ? "QUẢN TRỊ" : "CHUYÊN MỤC"}
+                    {user.role === "admin" ? "QUẢN TRỊ" : "CHUYÊN MỤC"}
                 </span>
             </div>
 

@@ -8,6 +8,13 @@ import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderbo
  */
 
 /**
+ * Đảm bảo Supabase Client đã khôi phục xong Session từ localStorage
+ */
+export async function initializeSession(): Promise<void> {
+  await supabase.auth.getSession();
+}
+
+/**
  * Đăng ký tài khoản người dùng mới (Học sinh hoặc Giáo viên)
  * Vì không yêu cầu nhập Email, hệ thống tự động sinh Email ẩn dưới dạng [username]@hocvientinhte.edu.vn
  */
@@ -15,7 +22,7 @@ export async function signUpUser(
   name: string,
   username: string,
   password: string,
-  role: 'teacher' | 'student',
+  role: 'admin' | 'student',
   grade?: string | null
 ): Promise<User> {
   const cleanUsername = username.trim().toLowerCase();
@@ -108,7 +115,7 @@ export async function signInUser(username: string, password: string): Promise<Us
       id: authData.user.id,
       name: meta.name || username,
       username: cleanUsername,
-      role: (meta.role as 'teacher' | 'student') || 'student',
+      role: (meta.role as 'admin' | 'student') || 'student',
       avatarUrl: meta.avatar_url || meta.picture
     };
   }
@@ -117,7 +124,7 @@ export async function signInUser(username: string, password: string): Promise<Us
     id: profileData.id,
     name: profileData.name,
     username: profileData.username,
-    role: profileData.role as 'teacher' | 'student',
+    role: profileData.role as 'admin' | 'student',
     plan: (profileData.plan as any) || 'nothing',
     grade: profileData.grade || undefined,
     avatarUrl: authData.user.user_metadata?.avatar_url || authData.user.user_metadata?.picture
@@ -143,7 +150,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const meta = user.user_metadata || {};
     const name = meta.full_name || meta.name || user.email?.split('@')[0] || 'Người dùng Google';
     const username = meta.username || user.email?.split('@')[0] || `user_${user.id.substring(0, 5)}`;
-    const role = (meta.role as 'teacher' | 'student') || 'student';
+    const role = (meta.role as 'admin' | 'student') || 'student';
     const avatarUrl = meta.avatar_url || meta.picture;
 
     // Tự động tạo hồ sơ người dùng trong bảng profiles nếu chưa tồn tại (ví dụ: đăng nhập qua Google lần đầu)
@@ -171,7 +178,7 @@ export async function getCurrentUser(): Promise<User | null> {
     id: profileData.id,
     name: profileData.name,
     username: profileData.username,
-    role: profileData.role as 'teacher' | 'student',
+    role: profileData.role as 'admin' | 'student',
     plan: (profileData.plan as any) || 'nothing',
     grade: profileData.grade || undefined,
     avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
@@ -196,7 +203,7 @@ export async function getAllProfiles(): Promise<User[]> {
     id: item.id,
     name: item.name,
     username: item.username,
-    role: item.role as 'teacher' | 'student',
+    role: item.role as 'admin' | 'student',
     plan: (item.plan as any) || 'nothing',
     grade: item.grade || undefined,
     createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : ''
@@ -220,7 +227,7 @@ export async function updateUserPlan(userId: string, newPlan: 'nothing' | 'basic
 /**
  * Cập nhật thông tin chi tiết tài khoản (Cho Admin)
  */
-export async function updateUserProfile(userId: string, updatedData: { name: string; username: string; role: 'teacher' | 'student'; plan: 'nothing' | 'basic' | 'vip'; grade?: string | null }): Promise<void> {
+export async function updateUserProfile(userId: string, updatedData: { name: string; username: string; role: 'admin' | 'student'; plan: 'nothing' | 'basic' | 'vip'; grade?: string | null }): Promise<void> {
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -328,6 +335,7 @@ export async function getQuizzes(): Promise<Quiz[]> {
       duration: item.duration,
       questions: item.questions,
       grade: grade,
+      isPublic: item.is_public,
       createdAt: item.created_at ? new Date(item.created_at).toISOString().split('T')[0] : '',
       scoringConfig: item.scoring_config
     };
@@ -448,7 +456,7 @@ export async function deleteQuiz(quizId: string): Promise<void> {
 /**
  * Lấy danh sách bài nộp dựa trên vai trò của người dùng
  */
-export async function getSubmissions(role: 'teacher' | 'student', studentId?: string): Promise<Submission[]> {
+export async function getSubmissions(role: 'admin' | 'student', studentId?: string): Promise<Submission[]> {
   // Tự động dọn dẹp các lượt thi quá hạn chưa nộp trước khi tải danh sách
   try {
     await supabase.rpc('auto_submit_expired_attempts');

@@ -770,7 +770,7 @@ export default function AdminPanel({
 
     // User Management filters, search and pagination
     const [searchQuery, setSearchQuery] = useState("");
-    const [filterRole, setFilterRole] = useState<"all" | "teacher" | "student">(
+    const [filterRole, setFilterRole] = useState<"all" | "admin" | "student">(
         "all",
     );
     const [filterPlan, setFilterPlan] = useState<"all" | UserPlan>("all");
@@ -782,7 +782,7 @@ export default function AdminPanel({
     const [newUserName, setNewUserName] = useState("");
     const [newUserUsername, setNewUserUsername] = useState("");
     const [newUserPassword, setNewUserPassword] = useState("");
-    const [newUserRole, setNewUserRole] = useState<"teacher" | "student">(
+    const [newUserRole, setNewUserRole] = useState<"admin" | "student">(
         "student",
     );
     const [newUserPlan, setNewUserPlan] = useState<UserPlan>("nothing");
@@ -792,7 +792,7 @@ export default function AdminPanel({
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [editUserName, setEditUserName] = useState("");
     const [editUserUsername, setEditUserUsername] = useState("");
-    const [editUserRole, setEditUserRole] = useState<"teacher" | "student">(
+    const [editUserRole, setEditUserRole] = useState<"admin" | "student">(
         "student",
     );
     const [editUserPlan, setEditUserPlan] = useState<UserPlan>("nothing");
@@ -975,6 +975,25 @@ export default function AdminPanel({
     const [editSectionPoints, setEditSectionPoints] = useState<Record<string, number>>({});
     const [editDurationOption, setEditDurationOption] = useState<string>("45");
 
+    // Quiz visibility toggle state & helper
+    const [togglingQuizId, setTogglingQuizId] = useState<string | null>(null);
+    const handleToggleQuizVisibility = async (quizId: string, makePublic: boolean) => {
+        const quizObj = quizzes.find((q) => q.id === quizId);
+        if (!quizObj) return;
+        setTogglingQuizId(quizId);
+        try {
+            await updateQuiz(quizId, { isPublic: makePublic });
+            onUpdateQuiz({
+                ...quizObj,
+                isPublic: makePublic,
+            });
+        } catch (err: any) {
+            alert(`Lỗi khi cập nhật trạng thái hiển thị: ${err.message}`);
+        } finally {
+            setTogglingQuizId(null);
+        }
+    };
+
     // Question player state inside edit modal
     const [editModalTab, setEditModalTab] = useState<"questions" | "settings">("questions");
     const [editCurrentQuestionIdx, setEditCurrentQuestionIdx] = useState(0);
@@ -1046,7 +1065,7 @@ export default function AdminPanel({
 
     const handleRoleChange = async (
         userId: string,
-        newRole: "teacher" | "student",
+        newRole: "admin" | "student",
     ) => {
         const found = userProfiles.find((u) => u.id === userId);
         if (!found) return;
@@ -1833,8 +1852,8 @@ export default function AdminPanel({
                                             <option value="all">
                                                 Tất cả vai trò
                                             </option>
-                                            <option value="teacher">
-                                                Giáo viên
+                                            <option value="admin">
+                                                Admin
                                             </option>
                                             <option value="student">
                                                 Học sinh
@@ -1934,13 +1953,13 @@ export default function AdminPanel({
                                                                         prof.id,
                                                                         e.target
                                                                             .value as
-                                                                            | "teacher"
+                                                                            | "admin"
                                                                             | "student",
                                                                     )
                                                                 }
                                                                 className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
                                                                     prof.role ===
-                                                                    "teacher"
+                                                                    "admin"
                                                                         ? "bg-amber-50 text-amber-800 border-amber-200"
                                                                         : "bg-sky-50 text-sky-800 border-sky-200"
                                                                 }`}
@@ -1948,8 +1967,8 @@ export default function AdminPanel({
                                                                 <option value="student">
                                                                     Học sinh
                                                                 </option>
-                                                                <option value="teacher">
-                                                                    Giáo viên
+                                                                <option value="admin">
+                                                                    Admin
                                                                 </option>
                                                             </select>
                                                         </td>
@@ -2225,8 +2244,8 @@ export default function AdminPanel({
                                                             <option value="student">
                                                                 Học sinh
                                                             </option>
-                                                            <option value="teacher">
-                                                                Giáo viên
+                                                            <option value="admin">
+                                                                Admin
                                                             </option>
                                                         </select>
                                                     </div>
@@ -2378,8 +2397,8 @@ export default function AdminPanel({
                                                             <option value="student">
                                                                 Học sinh
                                                             </option>
-                                                            <option value="teacher">
-                                                                Giáo viên
+                                                            <option value="admin">
+                                                                Admin
                                                             </option>
                                                         </select>
                                                     </div>
@@ -2715,19 +2734,24 @@ export default function AdminPanel({
                                                                 : "-"}
                                                         </td>
                                                         <td className="py-3 px-4 text-center">
-                                                            <span
-                                                                className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                                                                    q.isPublic !==
-                                                                    false
+                                                            <select
+                                                                disabled={togglingQuizId === q.id}
+                                                                value={q.isPublic !== false ? "public" : "private"}
+                                                                onChange={(e) =>
+                                                                    handleToggleQuizVisibility(
+                                                                        q.id,
+                                                                        e.target.value === "public",
+                                                                    )
+                                                                }
+                                                                className={`px-2 py-1 rounded text-[10px] font-bold border focus:outline-none cursor-pointer transition-colors ${
+                                                                    q.isPublic !== false
                                                                         ? "bg-emerald-50 text-emerald-700 border-emerald-100"
                                                                         : "bg-rose-50 text-rose-700 border-rose-100"
                                                                 }`}
                                                             >
-                                                                {q.isPublic !==
-                                                                false
-                                                                    ? "Công khai"
-                                                                    : "Riêng tư"}
-                                                            </span>
+                                                                <option value="public">Công khai</option>
+                                                                <option value="private">Riêng tư</option>
+                                                            </select>
                                                         </td>
                                                         <td className="py-3 px-4">
                                                             <div className="flex items-center justify-end gap-2">

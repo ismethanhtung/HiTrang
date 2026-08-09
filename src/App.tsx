@@ -16,6 +16,7 @@ import {
     deleteQuiz,
     createSubmission,
     getAnyActiveAttempt,
+    initializeSession,
 } from "./lib/supabaseService";
 import GradeView from "./components/GradeView";
 import LeaderboardView from "./components/LeaderboardView";
@@ -57,6 +58,7 @@ export default function App() {
         if (path === "/trang" || path === "/teacher")
             return { route: "teacher" };
         if (path === "/admin") return { route: "admin" };
+        if (path === "/leaderboard") return { route: "leaderboard" };
 
         const gradeMatch = path.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
         if (gradeMatch) return { route: "grade", gradeId: gradeMatch[1] };
@@ -85,6 +87,7 @@ export default function App() {
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<any[] | null>(null);
     const [loading, setLoading] = useState(true);
 
     // User Session State
@@ -140,6 +143,9 @@ export default function App() {
         const fetchInitialData = async () => {
             setLoading(true);
             try {
+                // Wait for local session token recovery to load auth headers
+                await initializeSession();
+
                 // Fetch quizzes and current user in parallel to eliminate network latency bottlenecks
                 const [dbQuizzes, currentUser] = await Promise.all([
                     getQuizzes(),
@@ -152,27 +158,43 @@ export default function App() {
 
                 if (currentUser) {
                     setUser(currentUser);
-                    if (currentUser.role === "teacher") {
-                        setActiveTab("overview");
+                    if (currentUser.role === "admin") {
+                        setActiveTab("student-dashboard");
                     } else {
                         setActiveTab("student-dashboard");
                     }
 
-                    // Turn off loading indicator immediately so visual elements render in ~200ms
-                    setLoading(false);
-
-                    // Load user's previous submissions asynchronously in the background
+                    // Pre-fetch submissions & leaderboard in parallel to optimize load speed
                     try {
-                        const dbSubmissions = await getSubmissions(
-                            currentUser.role,
-                            currentUser.id,
-                        );
-                        if (dbSubmissions && dbSubmissions.length > 0) {
-                            setSubmissions(dbSubmissions);
+                        const userGrade = currentUser.role === "student" ? currentUser.grade || "10" : "10";
+                        const isLeaderboardPath = window.location.pathname === "/leaderboard";
+                        
+                        if (isLeaderboardPath) {
+                            const [dbSubmissions, dbLeaderboard] = await Promise.all([
+                                getSubmissions(currentUser.role, currentUser.id),
+                                getOverallLeaderboard(userGrade)
+                            ]);
+                            if (dbSubmissions && dbSubmissions.length > 0) {
+                                setSubmissions(dbSubmissions);
+                            }
+                            if (dbLeaderboard) {
+                                setPrefetchedLeaderboard(dbLeaderboard);
+                            }
+                        } else {
+                            const dbSubmissions = await getSubmissions(
+                                currentUser.role,
+                                currentUser.id,
+                            );
+                            if (dbSubmissions && dbSubmissions.length > 0) {
+                                setSubmissions(dbSubmissions);
+                            }
                         }
                     } catch (subErr) {
-                        console.error("Lỗi tải bài nộp ban đầu:", subErr);
+                        console.error("Lỗi tải ngầm dữ liệu ban đầu:", subErr);
                     }
+
+                    // Turn off loading indicator immediately so visual elements render in ~200ms
+                    setLoading(false);
                 } else {
                     setLoading(false);
                 }
@@ -196,7 +218,7 @@ export default function App() {
 
     // Periodic check for any ongoing/unfinished attempt
     useEffect(() => {
-        if (!user || user.role === "teacher") {
+        if (!user || user.role === "admin") {
             setOngoingAttempt(null);
             return;
         }
@@ -272,9 +294,9 @@ export default function App() {
     const handleLogin = async (loggedInUser: User) => {
         setUser(loggedInUser);
         setAuthModalOpen(false);
-        if (loggedInUser.role === "teacher") {
-            setActiveTab("overview");
-            navigateTo("/trang");
+        if (loggedInUser.role === "admin") {
+            setActiveTab("student-dashboard");
+            navigateTo("/");
         } else {
             setActiveTab("student-dashboard");
             navigateTo("/");
@@ -313,7 +335,7 @@ export default function App() {
                     quizzes={quizzes}
                     onSelectGrade={(grade) => {
                         if (confirmNavigation()) {
-                            setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
+                            setActiveTab("student-dashboard");
                             if (grade) {
                                 navigateTo("/grade/" + grade);
                             } else {
@@ -335,7 +357,7 @@ export default function App() {
                     onNavigateAdmin={() => navigateTo("/admin")}
                     onNavigateHome={() => {
                         if (confirmNavigation()) {
-                            setActiveTab(user?.role === "teacher" ? "overview" : "student-dashboard");
+                             setActiveTab("student-dashboard");
                             navigateTo("/");
                         }
                     }}
@@ -348,8 +370,7 @@ export default function App() {
                     }}
                     onNavigateLeaderboard={() => {
                         if (confirmNavigation()) {
-                            setActiveTab("leaderboard");
-                            navigateTo("/");
+                            navigateTo("/leaderboard");
                         }
                     }}
                     activeTab={activeTab}
@@ -383,13 +404,31 @@ export default function App() {
             >
                 {/* 1. ADMIN PANEL ROUTE */}
                 {currentPath === "/admin" ? (
-                    <AdminPanel
-                        quizzes={quizzes}
-                        submissions={submissions}
-                        onAddQuiz={handleAddQuiz}
-                        onDeleteQuiz={handleDeleteQuiz}
-                        onUpdateQuiz={handleUpdateQuiz}
-                    />
+                    user && user.role === "admin" ? (
+                        <AdminPanel
+                            quizzes={quizzes}
+                            submissions={submissions}
+                            onAddQuiz={handleAddQuiz}
+                            onDeleteQuiz={handleDeleteQuiz}
+                            onUpdateQuiz={handleUpdateQuiz}
+                        />
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
+                            <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                                </svg>
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Không có quyền truy cập</h2>
+                            <p className="text-xs text-slate-500 max-w-sm">Bạn không có quyền truy cập vào trang quản trị. Vui lòng đăng nhập với tài khoản Admin.</p>
+                            <button
+                                onClick={() => navigateTo("/")}
+                                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                            >
+                                Quay lại Trang chủ
+                            </button>
+                        </div>
+                    )
                 ) : !user ? (
                     /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                     <LandingPage
@@ -480,39 +519,25 @@ export default function App() {
                                 );
                             }
 
-                            if (activeTab === "leaderboard") {
+                            if (currentPath === "/leaderboard") {
                                 return (
                                     <LeaderboardView
                                         user={user}
                                         quizzes={quizzes}
                                         submissions={submissions}
                                         onNavigate={navigateTo}
+                                        initialData={prefetchedLeaderboard}
                                     />
                                 );
                             }
 
-                            if (
-                                selectedGrade !== null &&
-                                user.role === "teacher"
-                            ) {
-                                return (
-                                    <GradeView
-                                        user={user}
-                                        grade={selectedGrade}
-                                        quizzes={filteredQuizzes}
-                                        submissions={submissions}
-                                        onStartQuiz={(quiz) =>
-                                            navigateTo("/quiz/" + quiz.id)
-                                        }
-                                        loading={loading}
-                                    />
-                                );
-                            }
+
 
                             if (
-                                user.role === "teacher" ||
+                                (user.role === "admin" ||
                                 currentPath === "/trang" ||
-                                currentPath === "/teacher"
+                                currentPath === "/teacher") &&
+                                activeTab !== "student-dashboard"
                             ) {
                                 return (
                                     <AdminDashboard
