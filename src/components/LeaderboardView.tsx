@@ -21,6 +21,70 @@ import {
 } from "../lib/supabaseService";
 import { motion, AnimatePresence } from "motion/react";
 
+// Cute custom SVG sticker-style indicators for Crown (No bounce, clean illustration look)
+const CuteCrown = () => (
+    <svg
+        viewBox="0 0 32 32"
+        className="w-10 h-10 drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
+    >
+        {/* Sticker white outline */}
+        <path
+            d="M4 26 L28 26 L25 14 L19.5 20 L16 9 L12.5 20 L7 14 Z"
+            fill="white"
+            stroke="white"
+            strokeWidth="4.5"
+            strokeLinejoin="round"
+        />
+        {/* Main gold crown */}
+        <path
+            d="M5 25 L27 25 L24 15 L19.5 21 L16 10 L12.5 21 L8 15 Z"
+            fill="#FFC000"
+            stroke="#78350F"
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+        />
+        {/* Crown base band */}
+        <rect
+            x="7"
+            y="23"
+            width="18"
+            height="3"
+            rx="1"
+            fill="#E28C00"
+            stroke="#78350F"
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+        />
+        {/* Jewels */}
+        <circle
+            cx="8"
+            cy="15"
+            r="1.8"
+            fill="#EF4444"
+            stroke="#78350F"
+            strokeWidth="1.5"
+        />
+        <circle
+            cx="16"
+            cy="10"
+            r="2.2"
+            fill="#3B82F6"
+            stroke="#78350F"
+            strokeWidth="1.5"
+        />
+        <circle
+            cx="24"
+            cy="15"
+            r="1.8"
+            fill="#EF4444"
+            stroke="#78350F"
+            strokeWidth="1.5"
+        />
+        {/* Shine glint */}
+        <circle cx="16" cy="24.5" r="1.2" fill="#FFF" />
+    </svg>
+);
+
 interface LeaderboardViewProps {
     user: User;
     quizzes: Quiz[];
@@ -36,6 +100,15 @@ export default function LeaderboardView({
     onNavigate,
     initialData,
 }: LeaderboardViewProps) {
+    // Helper to get the display initial of a Vietnamese name (given name first letter)
+    const getAvatarInitial = (name: string) => {
+        if (!name) return "";
+        const parts = name.trim().split(/\s+/);
+        const lastWord = parts[parts.length - 1];
+        return lastWord
+            ? lastWord.charAt(0).toUpperCase()
+            : name.charAt(0).toUpperCase();
+    };
     // Grade states: students are locked to their profile grade (fallback to "10"), teachers default to "10"
     const [activeGrade, setActiveGrade] = useState<string>(() => {
         if (user.role === "student") {
@@ -278,7 +351,7 @@ export default function LeaderboardView({
     ];
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
             {/* 1. Header Vinh Danh */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">
@@ -307,10 +380,84 @@ export default function LeaderboardView({
                 )}
             </div>
 
-            {/* 3. Bố Cục Grid Hai Cột (Bảng Xếp Hạng Bên Trái | Góc Học Tập & Đề Thi Chưa Thi Bên Phải) */}
+            {/* 3. Bố Cục Grid Ba Cột (Vinh Danh Bên Trái | Bảng Xếp Hạng Ở Giữa | Góc Học Tập Bên Phải) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* CỘT TRÁI (Col-span 8): Podium & Danh sách thứ hạng */}
-                <div className="lg:col-span-8 space-y-8 min-w-0">
+                {/* CỘT TRÁI (Col-span 3): Lịch sử vinh danh (Hall of Fame) */}
+                <div className="hidden lg:block lg:col-span-3 space-y-6">
+                    <div className="bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none py-6 space-y-4 relative">
+                        {/* Golden backdrop blur effect */}
+                        <div className="absolute -top-12 -left-12 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                Lịch sử vinh danh
+                            </h3>
+                            <span className="text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
+                                Hạng nhất
+                            </span>
+                        </div>
+
+                        <div className="space-y-3">
+                            <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
+                                Học sinh hạng nhất trước kia:
+                            </p>
+                            <div className="space-y-1">
+                                {[
+                                    {
+                                        period: "Tháng 07/2026",
+                                        name: "Nguyễn Thanh Tùng",
+                                        points: 285.4,
+                                        tests: 28,
+                                        initial: "T",
+                                    },
+                                    {
+                                        period: "Tháng 06/2026",
+                                        name: "Lê Minh Triết",
+                                        points: 262.0,
+                                        tests: 26,
+                                        initial: "T",
+                                    },
+                                    {
+                                        period: "Tháng 05/2026",
+                                        name: "Phạm Hải Đăng",
+                                        points: 245.8,
+                                        tests: 25,
+                                        initial: "Đ",
+                                    },
+                                ].map((champion, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="py-3 bg-transparent hover:bg-amber-500/5 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 flex items-center gap-3.5 transition-all duration-200 group"
+                                    >
+                                        {/* Small gold avatar */}
+                                        <div className="w-8.5 h-8.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform">
+                                            {champion.initial}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600/85 dark:text-amber-400/85">
+                                                    {champion.period}
+                                                </span>
+                                            </div>
+                                            <h4 className="text-xs font-black text-slate-750 dark:text-slate-200 truncate mt-0.5 group-hover:text-amber-500 transition-colors">
+                                                {champion.name}
+                                            </h4>
+                                            <p className="text-[9px] text-slate-450 dark:text-slate-400 font-medium mt-0.5">
+                                                {champion.tests} đề thi •{" "}
+                                                {champion.points} đ
+                                            </p>
+                                        </div>
+                                        {/* Trophy icon */}
+                                        <Trophy className="w-3.5 h-3.5 text-amber-500/60 group-hover:text-amber-500 group-hover:scale-110 transition-all shrink-0" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* CỘT GIỮA (Col-span 6): Podium & Danh sách thứ hạng */}
+                <div className="lg:col-span-6 space-y-8 min-w-0">
                     {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
                     {top3.length > 0 && (
                         <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-6 pt-10 pb-4 relative select-none">
@@ -323,15 +470,15 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
-                                            {podiumOrder[0].studentName.charAt(
-                                                0,
-                                            )}
-                                        </div>
-                                        <span className="absolute -top-2 -right-1 text-lg z-20">
+                                        <span className="absolute -top-3 -right-3 text-xl sm:text-2xl select-none z-20">
                                             🥈
                                         </span>
+                                        <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
+                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
+                                            {getAvatarInitial(
+                                                podiumOrder[0].studentName,
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-350 truncate">
@@ -358,18 +505,15 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group relative z-10"
                                 >
                                     <div className="relative mb-4">
+                                        <div className="absolute -top-7.5 left-1/2 -translate-x-1/2 z-20">
+                                            <CuteCrown />
+                                        </div>
                                         <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
                                         <div className="w-16 h-16 sm:w-19 sm:h-19 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-lg text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
-                                            {podiumOrder[1].studentName.charAt(
-                                                0,
+                                            {getAvatarInitial(
+                                                podiumOrder[1].studentName,
                                             )}
                                         </div>
-                                        <span
-                                            className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-2xl animate-bounce"
-                                            style={{ animationDuration: "3s" }}
-                                        >
-                                            👑
-                                        </span>
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
@@ -377,8 +521,8 @@ export default function LeaderboardView({
                                         </h4>
                                     </div>
                                     <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none p-3 flex flex-col items-center justify-center transition-all relative">
-                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider">
-                                            🥇 QUÁN QUÂN
+                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
+                                            🥇 Hạng nhất
                                         </span>
                                         <span className="text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints} điểm
@@ -399,15 +543,15 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
-                                            {podiumOrder[2].studentName.charAt(
-                                                0,
-                                            )}
-                                        </div>
-                                        <span className="absolute -top-2 -right-1 text-lg z-20">
+                                        <span className="absolute -top-3 -right-3 text-xl sm:text-2xl select-none z-20">
                                             🥉
                                         </span>
+                                        <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
+                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
+                                            {getAvatarInitial(
+                                                podiumOrder[2].studentName,
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
@@ -595,7 +739,7 @@ export default function LeaderboardView({
                 </div>
 
                 {/* CỘT PHẢI (Col-span 4): Thành tích cá nhân & Bài thi chưa thi */}
-                <div className="lg:col-span-4 space-y-6">
+                <div className="lg:col-span-3 space-y-6">
                     {/* A. CARD THÀNH TÍCH CÁ NHÂN */}
                     <div className="bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none py-6 space-y-4 relative">
                         <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#4B726B]/5 rounded-full blur-xl pointer-events-none" />
