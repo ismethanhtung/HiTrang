@@ -49,7 +49,10 @@ export default function Topbar({
     // Click outside handler for user profile dropdown
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setUserDropdownOpen(false);
             }
         }
@@ -64,7 +67,10 @@ export default function Topbar({
     // Click outside handler for search quiz container
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+            if (
+                searchContainerRef.current &&
+                !searchContainerRef.current.contains(event.target as Node)
+            ) {
                 setSearchFocused(false);
             }
         }
@@ -80,7 +86,8 @@ export default function Topbar({
         if (!query) return false;
         return (
             quiz.title.toLowerCase().includes(query) ||
-            (quiz.description && quiz.description.toLowerCase().includes(query)) ||
+            (quiz.description &&
+                quiz.description.toLowerCase().includes(query)) ||
             (quiz.subject && quiz.subject.toLowerCase().includes(query))
         );
     });
@@ -132,7 +139,7 @@ export default function Topbar({
                         onClick={onNavigateHome}
                         className="flex items-center gap-2 group cursor-pointer focus:outline-none"
                     >
-                        <span className="font-calligraphy text-2xl sm:text-3xl text-brand-400 dark:text-brand-300 font-bold tracking-tight group-hover:opacity-90 transition-opacity">
+                        <span className="font-calligraphy text-1xl sm:text-2xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
                             HiTrang
                         </span>
                     </button>
@@ -170,7 +177,10 @@ export default function Topbar({
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center gap-3">
                     {/* SEARCH BOX */}
-                    <div ref={searchContainerRef} className="relative hidden sm:block w-40 md:w-56 lg:w-64 flex-shrink-0">
+                    <div
+                        ref={searchContainerRef}
+                        className="relative hidden sm:block w-40 md:w-56 lg:w-64 flex-shrink-0"
+                    >
                         <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
                             <Search className="h-3.5 w-3.5 text-text-tertiary" />
                         </span>
@@ -185,42 +195,45 @@ export default function Topbar({
                             placeholder="Tìm đề thi..."
                             className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
                         />
-                        {searchFocused && localSearchQuery.trim().length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                {filteredSearchQuizzes.length > 0 ? (
-                                    filteredSearchQuizzes.map((quiz) => (
-                                        <button
-                                            key={quiz.id}
-                                            onClick={() => {
-                                                onSelectGrade(quiz.grade || null);
-                                                setLocalSearchQuery("");
-                                                setSearchFocused(false);
-                                            }}
-                                            className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
-                                        >
-                                            <span className="text-xs font-semibold text-text-primary line-clamp-1">
-                                                {quiz.title}
-                                            </span>
-                                            <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
-                                                <span>{quiz.subject}</span>
-                                                {quiz.grade && (
-                                                    <>
-                                                        <span className="w-1 h-1 rounded-full bg-border-secondary" />
-                                                        <span className="font-semibold text-brand-500 dark:text-brand-300">
-                                                            Lớp {quiz.grade}
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </span>
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
-                                        Không tìm thấy đề thi phù hợp
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        {searchFocused &&
+                            localSearchQuery.trim().length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                    {filteredSearchQuizzes.length > 0 ? (
+                                        filteredSearchQuizzes.map((quiz) => (
+                                            <button
+                                                key={quiz.id}
+                                                onClick={() => {
+                                                    onSelectGrade(
+                                                        quiz.grade || null,
+                                                    );
+                                                    setLocalSearchQuery("");
+                                                    setSearchFocused(false);
+                                                }}
+                                                className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                            >
+                                                <span className="text-xs font-semibold text-text-primary line-clamp-1">
+                                                    {quiz.title}
+                                                </span>
+                                                <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
+                                                    <span>{quiz.subject}</span>
+                                                    {quiz.grade && (
+                                                        <>
+                                                            <span className="w-1 h-1 rounded-full bg-border-secondary" />
+                                                            <span className="font-semibold text-brand-500 dark:text-brand-300">
+                                                                Lớp {quiz.grade}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </span>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
+                                            Không tìm thấy đề thi phù hợp
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                     </div>
 
                     {/* LEADERBOARD ROUTE BUTTON */}
@@ -248,7 +261,7 @@ export default function Topbar({
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-all cursor-pointer"
+                                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl   transition-all cursor-pointer"
                             >
                                 <div className="hidden sm:flex flex-col text-right">
                                     <span className="text-xs font-bold text-text-primary leading-tight">
@@ -275,7 +288,7 @@ export default function Topbar({
                                         </p>
                                         <div className="mt-2 flex items-center justify-between">
                                             <span className="text-[10px] uppercase font-semibold text-text-tertiary">
-                                                Gói tài khoản
+                                                Tài khoản
                                             </span>
                                             {getPlanBadge(user.plan)}
                                         </div>

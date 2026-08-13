@@ -1,8 +1,10 @@
 const safeParseDate = (dateVal: any): Date => {
     if (!dateVal) return new Date(NaN);
     if (dateVal instanceof Date) return dateVal;
-    if (typeof dateVal === 'string') {
-        const normalized = dateVal.includes(' ') ? dateVal.replace(' ', 'T') : dateVal;
+    if (typeof dateVal === "string") {
+        const normalized = dateVal.includes(" ")
+            ? dateVal.replace(" ", "T")
+            : dateVal;
         return new Date(normalized);
     }
     return new Date(dateVal);
@@ -691,14 +693,16 @@ export default function SettingsView({
         .filter((sub) => sub.studentId === user.id)
         .sort(
             (a, b) =>
-                safeParseDate(safeParseDate(b.submittedAt).getTime()).getTime() -
+                safeParseDate(
+                    safeParseDate(b.submittedAt).getTime(),
+                ).getTime() -
                 safeParseDate(safeParseDate(a.submittedAt).getTime()).getTime(),
         );
 
     return (
         <div className="flex-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
             {/* Title Header with Tabs */}
-            <div className="max-w-4xl mx-auto pt-8 pb-6 px-6 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="max-w-4xl mx-auto pt-8 pb-6 px-6   dark:border-slate-800/80">
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     Cài đặt cá nhân
                 </h1>

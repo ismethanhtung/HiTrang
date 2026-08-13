@@ -122,14 +122,16 @@ export default function GradeView({
 
     // Grid column border and padding classes for borderless line-separated columns
     const getColClasses = (index: number) => {
-        let classes = "group flex flex-col justify-between bg-transparent border-t border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
-        
+        let classes =
+            "group flex flex-col justify-between bg-transparent border-t border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
+
         // Tablet (2 columns on md)
         const mdCol = index % 2;
         if (mdCol === 0) {
             classes += "md:border-l-0 md:pl-0 md:pr-6 ";
         } else {
-            classes += "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-0 ";
+            classes +=
+                "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-0 ";
         }
 
         // Desktop (3 columns on lg)
@@ -137,9 +139,11 @@ export default function GradeView({
         if (lgCol === 0) {
             classes += "lg:border-l-0 lg:pl-0 lg:pr-6 ";
         } else if (lgCol === 1) {
-            classes += "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+            classes +=
+                "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         } else {
-            classes += "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-0 ";
+            classes +=
+                "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-0 ";
         }
 
         // Mobile reset
@@ -227,7 +231,7 @@ export default function GradeView({
                             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-250">
+                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-300">
                             <p className="text-xs font-medium">
                                 {rawGradeQuizzes.length === 0
                                     ? `Chưa có đề thi nào cho khối lớp ${grade} ở thời điểm hiện tại.`
@@ -318,7 +322,9 @@ export default function GradeView({
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex flex-wrap items-center gap-1.5">
                                                 <span className="text-[9px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 px-2 py-0.5 rounded-md border border-brand-200/40 dark:border-brand-500/20">
-                                                    {getCleanSubjectName(quiz.subject)}
+                                                    {getCleanSubjectName(
+                                                        quiz.subject,
+                                                    )}
                                                 </span>
                                                 {isVip && (
                                                     <span className="text-[9px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-350 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
@@ -372,7 +378,8 @@ export default function GradeView({
                                     {/* Action line */}
                                     <div className="flex items-center justify-between gap-3 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/60">
                                         <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold">
-                                            {studentQuizSubmissions.length > 0 ? (
+                                            {studentQuizSubmissions.length >
+                                            0 ? (
                                                 <>
                                                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-100/40 dark:border-emerald-900/30">
                                                         Max: {maxScore}
