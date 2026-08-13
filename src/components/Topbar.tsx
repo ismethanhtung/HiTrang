@@ -13,7 +13,7 @@ import {
 interface TopbarProps {
     user: User | null;
     selectedGrade: string | null;
-    onSelectGrade: (grade: string | null) => void;
+    onSelectGrade: (grade: string | null, category?: string | null) => void;
     onOpenAuth: (mode?: "login" | "register") => void;
     onLogout: () => void;
     onNavigateAdmin: () => void;
@@ -42,6 +42,27 @@ export default function Topbar({
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState("");
+    const [hoveredGradeId, setHoveredGradeId] = useState<string | null>(null);
+
+    const gradeCategories: Record<string, string[]> = {
+        "8": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "9": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi vào 10"],
+        "10": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "11": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "12": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi thử"],
+    };
+
+    const getCategoryFromPath = (path: string) => {
+        try {
+            const queryIdx = path.indexOf("?");
+            if (queryIdx === -1) return null;
+            const searchParams = new URLSearchParams(path.substring(queryIdx));
+            return searchParams.get("category");
+        } catch {
+            return null;
+        }
+    };
+    const currentCategory = getCategoryFromPath(currentPath);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -147,18 +168,82 @@ export default function Topbar({
                     {/* NAV LINKS - CLASS/GRADE SELECTION */}
                     <nav className="hidden md:flex items-center gap-1.5">
                         {grades.map((grade) => (
-                            <button
+                            <div
                                 key={grade.id}
-                                onClick={() => {
-                                    onSelectGrade(grade.id);
-                                }}
-                                className={navButtonClass(
-                                    selectedGrade === grade.id &&
-                                        currentPath === "/",
-                                )}
+                                className="relative py-2"
+                                onMouseEnter={() => setHoveredGradeId(grade.id)}
+                                onMouseLeave={() => setHoveredGradeId(null)}
                             >
-                                {grade.label}
-                            </button>
+                                <button
+                                    onClick={() => {
+                                        onSelectGrade(grade.id, null);
+                                    }}
+                                    className={navButtonClass(false)}
+                                >
+                                    <span>{grade.label}</span>
+                                    <ChevronDown
+                                        className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
+                                            hoveredGradeId === grade.id
+                                                ? "rotate-180"
+                                                : ""
+                                        }`}
+                                    />
+                                </button>
+
+                                {/* HOVER DROPDOWN MENU */}
+                                {hoveredGradeId === grade.id && (
+                                    <div className="absolute top-full left-0 pt-1 z-50">
+                                        <div className="w-44 bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                                            <button
+                                                onClick={() => {
+                                                    onSelectGrade(
+                                                        grade.id,
+                                                        null,
+                                                    );
+                                                    setHoveredGradeId(null);
+                                                }}
+                                                className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                    !currentCategory
+                                                        ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"
+                                                        : "text-text-secondary"
+                                                }`}
+                                            >
+                                                <span>Tất cả</span>
+                                                {!currentCategory && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
+                                                )}
+                                            </button>
+
+                                            {(
+                                                gradeCategories[grade.id] || []
+                                            ).map((category) => (
+                                                <button
+                                                    key={category}
+                                                    onClick={() => {
+                                                        onSelectGrade(
+                                                            grade.id,
+                                                            category,
+                                                        );
+                                                        setHoveredGradeId(null);
+                                                    }}
+                                                    className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                        currentCategory ===
+                                                        category
+                                                            ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"
+                                                            : "text-text-secondary"
+                                                    }`}
+                                                >
+                                                    <span>{category}</span>
+                                                    {currentCategory ===
+                                                        category && (
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         ))}
                         {user && (
                             <button
@@ -355,11 +440,7 @@ export default function Topbar({
                         onClick={() => {
                             onSelectGrade(grade.id);
                         }}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-all ${
-                            selectedGrade === grade.id && currentPath === "/"
-                                ? "bg-brand-100 dark:bg-brand-500/25 text-brand-600 dark:text-brand-300 font-bold shadow-2xs"
-                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
-                        }`}
+                        className="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-all text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
                     >
                         {grade.label}
                     </button>

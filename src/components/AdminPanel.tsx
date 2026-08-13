@@ -46,6 +46,14 @@ import {
     ArrowDown,
 } from "lucide-react";
 
+const GRADE_CATEGORIES: Record<string, string[]> = {
+    "8": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+    "9": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi vào 10"],
+    "10": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+    "11": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+    "12": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi thử"],
+};
+
 interface AdminPanelProps {
     quizzes: Quiz[];
     submissions: Submission[];
@@ -863,7 +871,7 @@ export default function AdminPanel({
     // New Quiz Form state
     const [quizTitle, setQuizTitle] = useState("");
     const [quizDescription, setQuizDescription] = useState("");
-    const [quizSubject, setQuizSubject] = useState("Giải Tích");
+    const [quizSubject, setQuizSubject] = useState("Giữa kì 1");
     const [quizGrade, setQuizGrade] = useState("10");
     const [quizDuration, setQuizDuration] = useState(45);
     const [importedQuestions, setImportedQuestions] = useState<any[]>([]);
@@ -5072,6 +5080,30 @@ export default function AdminPanel({
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                            Khối lớp:
+                                        </label>
+                                        <select
+                                            value={quizGrade}
+                                            onChange={(e) => {
+                                                const newGrade = e.target.value;
+                                                setQuizGrade(newGrade);
+                                                const cats = GRADE_CATEGORIES[newGrade] || [];
+                                                if (cats.length > 0 && !cats.includes(quizSubject)) {
+                                                    setQuizSubject(cats[0]);
+                                                }
+                                            }}
+                                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
+                                        >
+                                            <option value="8">Lớp 8</option>
+                                            <option value="9">Lớp 9</option>
+                                            <option value="10">Lớp 10</option>
+                                            <option value="11">Lớp 11</option>
+                                            <option value="12">Lớp 12</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                                             Phân loại (Danh mục):
                                         </label>
                                         <select
@@ -5081,37 +5113,11 @@ export default function AdminPanel({
                                             }
                                             className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
                                         >
-                                            <option value="Giải Tích">
-                                                Giải Tích
-                                            </option>
-                                            <option value="Đại Số">
-                                                Đại Số
-                                            </option>
-                                            <option value="Hình Học">
-                                                Hình Học
-                                            </option>
-                                            <option value="Thi Thử">
-                                                Thi Thử
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                            Khối lớp:
-                                        </label>
-                                        <select
-                                            value={quizGrade}
-                                            onChange={(e) =>
-                                                setQuizGrade(e.target.value)
-                                            }
-                                            className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
-                                        >
-                                            <option value="8">Lớp 8</option>
-                                            <option value="9">Lớp 9</option>
-                                            <option value="10">Lớp 10</option>
-                                            <option value="11">Lớp 11</option>
-                                            <option value="12">Lớp 12</option>
+                                            {(GRADE_CATEGORIES[quizGrade] || []).map((cat) => (
+                                                <option key={cat} value={cat}>
+                                                    {cat}
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                 </div>
@@ -5981,27 +5987,18 @@ export default function AdminPanel({
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                                Phân loại (Danh mục):
-                                            </label>
-                                            <select
-                                                value={editSubject}
-                                                onChange={(e) => setEditSubject(e.target.value)}
-                                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
-                                            >
-                                                <option value="Giải Tích">Giải Tích</option>
-                                                <option value="Đại Số">Đại Số</option>
-                                                <option value="Hình Học">Hình Học</option>
-                                                <option value="Thi Thử">Thi Thử</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
                                                 Khối lớp:
                                             </label>
                                             <select
                                                 value={editGrade}
-                                                onChange={(e) => setEditGrade(e.target.value)}
+                                                onChange={(e) => {
+                                                    const newGrade = e.target.value;
+                                                    setEditGrade(newGrade);
+                                                    const cats = GRADE_CATEGORIES[newGrade] || [];
+                                                    if (cats.length > 0 && !cats.includes(editSubject)) {
+                                                        setEditSubject(cats[0]);
+                                                    }
+                                                }}
                                                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
                                             >
                                                 <option value="8">Lớp 8</option>
@@ -6009,6 +6006,30 @@ export default function AdminPanel({
                                                 <option value="10">Lớp 10</option>
                                                 <option value="11">Lớp 11</option>
                                                 <option value="12">Lớp 12</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                                Phân loại (Danh mục):
+                                            </label>
+                                            <select
+                                                value={editSubject}
+                                                onChange={(e) => setEditSubject(e.target.value)}
+                                                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 focus:bg-white transition-all cursor-pointer"
+                                            >
+                                                {(() => {
+                                                    const cats = GRADE_CATEGORIES[editGrade] || [];
+                                                    const options = [...cats];
+                                                    if (editSubject && !cats.includes(editSubject)) {
+                                                        options.unshift(editSubject);
+                                                    }
+                                                    return options.map((cat) => (
+                                                        <option key={cat} value={cat}>
+                                                            {cat}
+                                                        </option>
+                                                    ));
+                                                })()}
                                             </select>
                                         </div>
                                     </div>

@@ -101,6 +101,7 @@ interface StudentDashboardProps {
     navigateReplace?: (path: string) => void;
     ongoingAttempt?: any | null;
     loading?: boolean;
+    currentPath?: string;
 }
 
 export default function StudentDashboard({
@@ -118,9 +119,11 @@ export default function StudentDashboard({
     navigateReplace,
     ongoingAttempt,
     loading,
+    currentPath,
 }: StudentDashboardProps) {
     // Quiz Active State
     const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+
     const isGradeMismatch =
         user.role === "student" &&
         !!user.grade &&
@@ -452,10 +455,7 @@ export default function StudentDashboard({
 
     // Start taking a quiz
     const handleStartQuiz = (quiz: Quiz) => {
-        if (
-            user.role !== "admin" &&
-            (!user.plan || user.plan === "nothing")
-        ) {
+        if (user.role !== "admin" && (!user.plan || user.plan === "nothing")) {
             setShowUpgradeModal(true);
             return;
         }
@@ -2528,6 +2528,8 @@ export default function StudentDashboard({
                         onStartQuiz={handleStartQuiz}
                         ongoingAttempt={ongoingAttempt}
                         loading={loading}
+                        currentPath={currentPath}
+                        onSelectGrade={onSelectGrade}
                     />
                 ) : (
                     /* STANDARD STUDENT DASHBOARD TABS */
@@ -2584,8 +2586,8 @@ export default function StudentDashboard({
                                                     {user.name} 👋
                                                 </h1>
                                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                                                    Có Công Mài Sắt, Có Ngày Nên
-                                                    Kim! Tiếp tục cố gắng nhé.
+                                                    Đối thủ của bạn đang cày đề,
+                                                    còn bạn làm gì?
                                                 </p>
                                             </div>
 
@@ -2984,7 +2986,7 @@ export default function StudentDashboard({
                                                                                             quiz,
                                                                                         )
                                                                                     }
-                                                                                    className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
+                                                                                    className="px-4 py-1.5 bg-[#3B6D85] hover:bg-slate-700 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
                                                                                 >
                                                                                     <span>
                                                                                         Làm
@@ -3016,15 +3018,17 @@ export default function StudentDashboard({
                                                     {(() => {
                                                         const sorted = [
                                                             ...studentSubmissions,
-                                                        ].sort(
-                                                            (a, b) =>
-                                                                safeParseDate(
-                                                                    b.submittedAt,
-                                                                ).getTime() -
-                                                                safeParseDate(
-                                                                    a.submittedAt,
-                                                                ).getTime(),
-                                                        );
+                                                        ]
+                                                            .sort(
+                                                                (a, b) =>
+                                                                    safeParseDate(
+                                                                        b.submittedAt,
+                                                                    ).getTime() -
+                                                                    safeParseDate(
+                                                                        a.submittedAt,
+                                                                    ).getTime(),
+                                                            )
+                                                            .slice(0, 20);
                                                         const historyPoints =
                                                             sorted
                                                                 .reverse()

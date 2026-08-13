@@ -48,25 +48,26 @@ export default function App() {
 
     // 2. Navigation & Route States
     const [currentPath, setCurrentPath] = useState<string>(() => {
-        return window.location.pathname;
+        return window.location.pathname + window.location.search;
     });
 
     const matchRoute = (path: string) => {
-        if (path === "/") return { route: "home" };
-        if (path === "/settings") return { route: "settings", tab: "profile" };
-        if (path === "/history") return { route: "settings", tab: "history" };
-        if (path === "/trang" || path === "/teacher")
+        const cleanPath = path.split("?")[0];
+        if (cleanPath === "/") return { route: "home" };
+        if (cleanPath === "/settings") return { route: "settings", tab: "profile" };
+        if (cleanPath === "/history") return { route: "settings", tab: "history" };
+        if (cleanPath === "/trang" || cleanPath === "/teacher")
             return { route: "teacher" };
-        if (path === "/admin") return { route: "admin" };
-        if (path === "/leaderboard") return { route: "leaderboard" };
+        if (cleanPath === "/admin") return { route: "admin" };
+        if (cleanPath === "/leaderboard") return { route: "leaderboard" };
 
-        const gradeMatch = path.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
+        const gradeMatch = cleanPath.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
         if (gradeMatch) return { route: "grade", gradeId: gradeMatch[1] };
 
-        const quizMatch = path.match(/^\/quiz\/([a-zA-Z0-9_-]+)$/);
+        const quizMatch = cleanPath.match(/^\/quiz\/([a-zA-Z0-9_-]+)$/);
         if (quizMatch) return { route: "quiz", quizId: quizMatch[1] };
 
-        const resultMatch = path.match(/^\/result\/([a-zA-Z0-9_-]+)$/);
+        const resultMatch = cleanPath.match(/^\/result\/([a-zA-Z0-9_-]+)$/);
         if (resultMatch) return { route: "result", subId: resultMatch[1] };
 
         return { route: "home" };
@@ -87,7 +88,9 @@ export default function App() {
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
-    const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<any[] | null>(null);
+    const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<
+        any[] | null
+    >(null);
     const [loading, setLoading] = useState(true);
 
     // User Session State
@@ -166,14 +169,22 @@ export default function App() {
 
                     // Pre-fetch submissions & leaderboard in parallel to optimize load speed
                     try {
-                        const userGrade = currentUser.role === "student" ? currentUser.grade || "10" : "10";
-                        const isLeaderboardPath = window.location.pathname === "/leaderboard";
-                        
+                        const userGrade =
+                            currentUser.role === "student"
+                                ? currentUser.grade || "10"
+                                : "10";
+                        const isLeaderboardPath =
+                            window.location.pathname === "/leaderboard";
+
                         if (isLeaderboardPath) {
-                            const [dbSubmissions, dbLeaderboard] = await Promise.all([
-                                getSubmissions(currentUser.role, currentUser.id),
-                                getOverallLeaderboard(userGrade)
-                            ]);
+                            const [dbSubmissions, dbLeaderboard] =
+                                await Promise.all([
+                                    getSubmissions(
+                                        currentUser.role,
+                                        currentUser.id,
+                                    ),
+                                    getOverallLeaderboard(userGrade),
+                                ]);
                             if (dbSubmissions && dbSubmissions.length > 0) {
                                 setSubmissions(dbSubmissions);
                             }
@@ -209,7 +220,7 @@ export default function App() {
     // Sync URL popstate events
     useEffect(() => {
         const handleUrlChange = () => {
-            setCurrentPath(window.location.pathname);
+            setCurrentPath(window.location.pathname + window.location.search);
         };
 
         window.addEventListener("popstate", handleUrlChange);
@@ -273,7 +284,9 @@ export default function App() {
     };
 
     const handleUpdateQuiz = (updatedQuiz: Quiz) => {
-        setQuizzes((prev) => prev.map((q) => q.id === updatedQuiz.id ? updatedQuiz : q));
+        setQuizzes((prev) =>
+            prev.map((q) => (q.id === updatedQuiz.id ? updatedQuiz : q)),
+        );
     };
 
     const handleDeleteQuiz = async (quizId: string) => {
@@ -333,11 +346,15 @@ export default function App() {
                     user={user}
                     selectedGrade={selectedGrade}
                     quizzes={quizzes}
-                    onSelectGrade={(grade) => {
+                    onSelectGrade={(grade, category) => {
                         if (confirmNavigation()) {
                             setActiveTab("student-dashboard");
                             if (grade) {
-                                navigateTo("/grade/" + grade);
+                                let path = "/grade/" + grade;
+                                if (category) {
+                                    path += "?category=" + encodeURIComponent(category);
+                                }
+                                navigateTo(path);
                             } else {
                                 navigateTo("/");
                             }
@@ -357,7 +374,7 @@ export default function App() {
                     onNavigateAdmin={() => navigateTo("/admin")}
                     onNavigateHome={() => {
                         if (confirmNavigation()) {
-                             setActiveTab("student-dashboard");
+                            setActiveTab("student-dashboard");
                             navigateTo("/");
                         }
                     }}
@@ -415,12 +432,28 @@ export default function App() {
                     ) : (
                         <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
                             <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.5}
+                                    stroke="currentColor"
+                                    className="w-8 h-8"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                                    />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Không có quyền truy cập</h2>
-                            <p className="text-xs text-slate-500 max-w-sm">Bạn không có quyền truy cập vào trang quản trị. Vui lòng đăng nhập với tài khoản Admin.</p>
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                                Không có quyền truy cập
+                            </h2>
+                            <p className="text-xs text-slate-500 max-w-sm">
+                                Bạn không có quyền truy cập vào trang quản trị.
+                                Vui lòng đăng nhập với tài khoản Admin.
+                            </p>
                             <button
                                 onClick={() => navigateTo("/")}
                                 className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
@@ -501,11 +534,17 @@ export default function App() {
                                         onAddSubmission={handleAddSubmission}
                                         activeTab={activeTab}
                                         selectedGrade={selectedGrade}
-                                        onSelectGrade={(grade) => {
+                                        onSelectGrade={(grade, category) => {
                                             if (confirmNavigation()) {
-                                                if (grade)
-                                                    navigateTo("/grade/" + grade);
-                                                else navigateTo("/");
+                                                if (grade) {
+                                                    let path = "/grade/" + grade;
+                                                    if (category) {
+                                                        path += "?category=" + encodeURIComponent(category);
+                                                    }
+                                                    navigateTo(path);
+                                                } else {
+                                                    navigateTo("/");
+                                                }
                                             }
                                         }}
                                         onQuizStateChange={setIsTakingQuiz}
@@ -515,6 +554,7 @@ export default function App() {
                                         navigateReplace={navigateReplace}
                                         ongoingAttempt={ongoingAttempt}
                                         loading={loading}
+                                        currentPath={currentPath}
                                     />
                                 );
                             }
@@ -531,12 +571,10 @@ export default function App() {
                                 );
                             }
 
-
-
                             if (
                                 (user.role === "admin" ||
-                                currentPath === "/trang" ||
-                                currentPath === "/teacher") &&
+                                    currentPath === "/trang" ||
+                                    currentPath === "/teacher") &&
                                 activeTab !== "student-dashboard"
                             ) {
                                 return (
@@ -558,11 +596,17 @@ export default function App() {
                                     onAddSubmission={handleAddSubmission}
                                     activeTab={activeTab}
                                     selectedGrade={selectedGrade}
-                                    onSelectGrade={(grade) => {
+                                    onSelectGrade={(grade, category) => {
                                         if (confirmNavigation()) {
-                                            if (grade)
-                                                navigateTo("/grade/" + grade);
-                                            else navigateTo("/");
+                                            if (grade) {
+                                                let path = "/grade/" + grade;
+                                                if (category) {
+                                                    path += "?category=" + encodeURIComponent(category);
+                                                }
+                                                navigateTo(path);
+                                            } else {
+                                                navigateTo("/");
+                                            }
                                         }
                                     }}
                                     onQuizStateChange={setIsTakingQuiz}
@@ -572,6 +616,7 @@ export default function App() {
                                     navigateReplace={navigateReplace}
                                     ongoingAttempt={ongoingAttempt}
                                     loading={loading}
+                                    currentPath={currentPath}
                                 />
                             );
                         })()}
@@ -581,7 +626,7 @@ export default function App() {
 
             {/* Floating Support Card */}
             {!isSupportDismissed && (
-                <div className="fixed bottom-6 left-6 z-50 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                <div className="fixed bottom-6 left-6 z-50 w-44 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-300">
@@ -602,7 +647,7 @@ export default function App() {
                     </div>
 
                     {/* Text */}
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-medium">
+                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-normal font-medium">
                         Báo cáo sự cố hoặc đăng ký học cô Trang 🌸
                     </p>
 
@@ -613,7 +658,7 @@ export default function App() {
                             onClick={() => setGlobalContactModalOpen(true)}
                             className="flex-1 py-1.5 bg-emerald-50/80 hover:bg-emerald-100/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-md text-[10px] font-bold text-center block transition-colors duration-150 cursor-pointer"
                         >
-                            Đăng ký học
+                            Đăng ký
                         </button>
                         <button
                             type="button"
@@ -842,8 +887,8 @@ export default function App() {
                                 }}
                                 className="space-y-4"
                             >
-                                <div className="flex items-center gap-1.5 text-rose-400 dark:text-rose-400">
-                                    <span className="text-xs font-bold uppercase tracking-wider">
+                                <div className="flex items-center gap-1.5 text-rose-300 dark:text-rose-400">
+                                    <span className="text-xs font-bold uppercase">
                                         Báo cáo lỗi hệ thống 🌸
                                     </span>
                                 </div>
@@ -899,7 +944,7 @@ export default function App() {
                                 </div>
 
                                 {/* Lời cảm ơn */}
-                                <p className="text-[10px] text-slate-500 leading-normal italic text-left bg-slate-50 p-2.5 rounded-lg border border-slate-100 font-medium">
+                                <p className="text-[10px] text-slate-500 leading-normal italic text-left font-medium">
                                     🌸 Lời cảm ơn: Cảm ơn bạn rất nhiều!
                                 </p>
 

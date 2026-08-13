@@ -35,6 +35,8 @@ interface GradeViewProps {
     onStartQuiz: (quiz: Quiz) => void;
     ongoingAttempt?: any | null;
     loading?: boolean;
+    currentPath?: string;
+    onSelectGrade?: (grade: string | null, category?: string | null) => void;
 }
 
 export default function GradeView({
@@ -45,12 +47,44 @@ export default function GradeView({
     onStartQuiz,
     ongoingAttempt,
     loading,
+    currentPath,
+    onSelectGrade,
 }: GradeViewProps) {
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSubject, setSelectedSubject] = useState("Tất cả");
+    
+    // Parse category from URL query parameters initially
+    const getInitialCategory = () => {
+        try {
+            const searchParams = new URLSearchParams(window.location.search);
+            return searchParams.get("category") || "Tất cả";
+        } catch {
+            return "Tất cả";
+        }
+    };
+    
+    const [selectedSubject, setSelectedSubject] = useState(getInitialCategory);
     const [sortBy, setSortBy] = useState("newest");
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 12;
+
+    const handleClearFilters = () => {
+        setSearchQuery("");
+        setSelectedSubject("Tất cả");
+        if (onSelectGrade) {
+            onSelectGrade(grade, null);
+        }
+    };
+
+    // Synchronize category selection when currentPath or grade changes
+    React.useEffect(() => {
+        try {
+            const searchParams = new URLSearchParams(window.location.search);
+            const categoryParam = searchParams.get("category") || "Tất cả";
+            setSelectedSubject(categoryParam);
+        } catch {
+            setSelectedSubject("Tất cả");
+        }
+    }, [grade, currentPath]);
 
     // Reset pagination when grade, search, or filters change
     React.useEffect(() => {
@@ -70,11 +104,24 @@ export default function GradeView({
         return sub.split(" - ")[0].trim();
     };
 
+    const GRADE_CATEGORIES_MAP: Record<string, string[]> = {
+        "8": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "9": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi vào 10"],
+        "10": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "11": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
+        "12": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2", "Thi thử"],
+    };
+
+    const standardCats = GRADE_CATEGORIES_MAP[grade] || [];
+    const actualSubjects = Array.from(
+        new Set(rawGradeQuizzes.map((q) => getCleanSubjectName(q.subject))),
+    );
+    const extraSubjects = actualSubjects.filter(sub => !standardCats.includes(sub));
+
     const subjectOptions = [
         "Tất cả",
-        ...Array.from(
-            new Set(rawGradeQuizzes.map((q) => getCleanSubjectName(q.subject))),
-        ),
+        ...standardCats,
+        ...extraSubjects
     ];
 
     // Filter quizzes by search query and clean subject
@@ -183,7 +230,7 @@ export default function GradeView({
                     <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
                         <div className="flex items-center gap-1.5 text-xs">
                             <span className="text-slate-500 dark:text-slate-400 font-semibold">
-                                Môn:
+                                Phân loại:
                             </span>
                             <select
                                 value={selectedSubject}
@@ -232,10 +279,20 @@ export default function GradeView({
                         </div>
                     ) : processedQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-300">
-                            <p className="text-xs font-medium">
-                                {rawGradeQuizzes.length === 0
-                                    ? `Chưa có đề thi nào cho khối lớp ${grade} ở thời điểm hiện tại.`
-                                    : "Không tìm thấy đề thi nào khớp với bộ lọc của bạn."}
+                            <p className="text-xs font-medium inline-flex items-center justify-center gap-1.5 flex-wrap">
+                                <span>
+                                    {rawGradeQuizzes.length === 0
+                                        ? `Chưa có đề thi nào cho khối lớp ${grade} ở thời điểm hiện tại.`
+                                        : "Không tìm thấy đề thi nào khớp với bộ lọc của bạn."}
+                                </span>
+                                {rawGradeQuizzes.length > 0 && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="text-rose-500 hover:text-rose-600 dark:text-rose-450 dark:hover:text-rose-350 font-bold hover:underline cursor-pointer transition-colors bg-transparent border-0 p-0 inline-block align-baseline"
+                                    >
+                                        Xóa bộ lọc
+                                    </button>
+                                )}
                             </p>
                         </div>
                     ) : (
@@ -382,14 +439,11 @@ export default function GradeView({
                                             0 ? (
                                                 <>
                                                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-100/40 dark:border-emerald-900/30">
-                                                        Max: {maxScore}
-                                                    </span>
-                                                    <span className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-350 px-2 py-0.5 rounded-md border border-slate-200/50 dark:border-slate-700">
-                                                        Avg: {avgScore}
+                                                        Highest: {maxScore}
                                                     </span>
                                                 </>
                                             ) : (
-                                                <span className="bg-amber-50/50 text-amber-700 dark:bg-amber-950/10 dark:text-amber-400 px-2.5 py-0.5 rounded-md border border-amber-100/50 dark:border-amber-900/30">
+                                                <span className="bg-amber-50/50 text-amber-700 dark:bg-amber-950/10 dark:text-amber-400 px-2.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/30">
                                                     Chưa làm
                                                 </span>
                                             )}
