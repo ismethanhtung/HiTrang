@@ -39,6 +39,7 @@ import {
     getReviewQuestions,
     getActiveAttempt,
     getQuizLeaderboard,
+    getOverallLeaderboard,
 } from "../lib/supabaseService";
 
 const safeParseDate = (dateVal: any): Date => {
@@ -123,6 +124,36 @@ export default function StudentDashboard({
 }: StudentDashboardProps) {
     // Quiz Active State
     const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+
+    // User Ranking State
+    const [userRank, setUserRank] = useState<{
+        rankPosition: number;
+        totalUsers: number;
+    } | null>(null);
+
+    useEffect(() => {
+        const fetchUserRank = async () => {
+            if (!user) return;
+            try {
+                const grade = user.grade || "10";
+                const leaderboard = await getOverallLeaderboard(grade);
+                const userEntry = leaderboard.find(
+                    (entry) => entry.studentId === user.id,
+                );
+                if (userEntry) {
+                    setUserRank({
+                        rankPosition: userEntry.rankPosition,
+                        totalUsers: leaderboard.length,
+                    });
+                } else {
+                    setUserRank(null);
+                }
+            } catch (err) {
+                console.error("Error fetching user rank for dashboard:", err);
+            }
+        };
+        fetchUserRank();
+    }, [user, submissions]);
 
     const isGradeMismatch =
         user.role === "student" &&
@@ -3008,13 +3039,13 @@ export default function StudentDashboard({
                                         <div className="space-y-10 lg:pl-4 lg:border-l lg:border-slate-200/50">
                                             {/* Section 3: Lịch sử điểm số */}
                                             {/* Section 3: Lịch sử điểm số */}
-                                            <div className="space-y-4 text-left">
+                                            <div className="space-y-2 text-left">
                                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/60 pb-2">
                                                     Lịch sử điểm số
                                                 </h3>
 
                                                 {/* Render chart directly on the page bg */}
-                                                <div className="h-[160px] w-full relative">
+                                                <div className="h-[125px] w-full relative">
                                                     {(() => {
                                                         const sorted = [
                                                             ...studentSubmissions,
@@ -3059,14 +3090,25 @@ export default function StudentDashboard({
                                                             ) : (
                                                                 <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap">
                                                                     <span>
-                                                                        Ai cũng phải bắt đầu từ đâu đó 🌸
+                                                                        Ai cũng
+                                                                        phải bắt
+                                                                        đầu từ
+                                                                        đâu đó
+                                                                        🌸
                                                                     </span>
                                                                     <button
                                                                         onClick={() => {
-                                                                            if (user && user.grade) {
-                                                                                onSelectGrade(user.grade);
+                                                                            if (
+                                                                                user &&
+                                                                                user.grade
+                                                                            ) {
+                                                                                onSelectGrade(
+                                                                                    user.grade,
+                                                                                );
                                                                             } else {
-                                                                                onSelectGrade("10");
+                                                                                onSelectGrade(
+                                                                                    "10",
+                                                                                );
                                                                             }
                                                                         }}
                                                                         className="text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200 font-bold hover:underline cursor-pointer not-italic transition-colors bg-transparent border-0 p-0 inline-block align-baseline ml-1"
@@ -3502,190 +3544,237 @@ export default function StudentDashboard({
                                                 </div>
                                             </div>
 
-                                            {/* Section 3.5: Tần suất hoạt động */}
-                                            <div className="space-y-4 text-left">
-                                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/60 pb-2">
-                                                    Tần suất hoạt động (30 ngày
-                                                    gần đây)
-                                                </h3>
-                                                <div className="py-2">
-                                                    {(() => {
-                                                        const today =
-                                                            new Date();
-                                                        today.setHours(
-                                                            23,
-                                                            59,
-                                                            59,
-                                                            999,
+                                            {/* Section 3.5: Tần suất hoạt động & Xếp hạng */}
+                                            <div className="text-left -mt-4">
+                                                {(() => {
+                                                    const today = new Date();
+                                                    today.setHours(
+                                                        23,
+                                                        59,
+                                                        59,
+                                                        999,
+                                                    );
+                                                    const daysList = [];
+                                                    for (
+                                                        let k = 29;
+                                                        k >= 0;
+                                                        k--
+                                                    ) {
+                                                        const d = new Date(
+                                                            today,
                                                         );
-                                                        const daysList = [];
-                                                        for (
-                                                            let k = 29;
-                                                            k >= 0;
-                                                            k--
-                                                        ) {
-                                                            const d = new Date(
-                                                                today,
-                                                            );
-                                                            d.setDate(
-                                                                today.getDate() -
-                                                                    k,
-                                                            );
-                                                            const dStr =
-                                                                d.toDateString();
-                                                            const count =
-                                                                submissions.filter(
-                                                                    (s) => {
-                                                                        return (
-                                                                            s.studentId ===
-                                                                                user.id &&
-                                                                            safeParseDate(
-                                                                                s.submittedAt,
-                                                                            ).toDateString() ===
-                                                                                dStr
-                                                                        );
-                                                                    },
-                                                                ).length;
-                                                            daysList.push({
-                                                                date: d,
-                                                                count,
-                                                            });
-                                                        }
-
-                                                        const startDayOfWeek =
-                                                            (daysList[0].date.getDay() +
-                                                                6) %
-                                                            7;
-
-                                                        const formatDateLabel =
-                                                            (d) => {
-                                                                const day =
-                                                                    String(
-                                                                        d.getDate(),
-                                                                    ).padStart(
-                                                                        2,
-                                                                        "0",
+                                                        d.setDate(
+                                                            today.getDate() - k,
+                                                        );
+                                                        const dStr =
+                                                            d.toDateString();
+                                                        const count =
+                                                            submissions.filter(
+                                                                (s) => {
+                                                                    return (
+                                                                        s.studentId ===
+                                                                            user.id &&
+                                                                        safeParseDate(
+                                                                            s.submittedAt,
+                                                                        ).toDateString() ===
+                                                                            dStr
                                                                     );
-                                                                const month =
-                                                                    String(
-                                                                        d.getMonth() +
-                                                                            1,
-                                                                    ).padStart(
-                                                                        2,
-                                                                        "0",
-                                                                    );
-                                                                return `${day}/${month}`;
-                                                            };
+                                                                },
+                                                            ).length;
+                                                        daysList.push({
+                                                            date: d,
+                                                            count,
+                                                        });
+                                                    }
 
-                                                        const weekHeaders = [
-                                                            "T2",
-                                                            "T3",
-                                                            "T4",
-                                                            "T5",
-                                                            "T6",
-                                                            "T7",
-                                                            "CN",
-                                                        ];
+                                                    const startDayOfWeek =
+                                                        (daysList[0].date.getDay() +
+                                                            6) %
+                                                        7;
 
-                                                        return (
-                                                            <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100/80 w-fit text-left flex flex-col gap-2">
-                                                                {/* Headers */}
-                                                                <div className="grid grid-cols-7 gap-1.5 text-center text-[8px] font-bold text-slate-400 mb-1.5">
-                                                                    {weekHeaders.map(
-                                                                        (h) => (
-                                                                            <div
-                                                                                key={
-                                                                                    h
-                                                                                }
-                                                                                className="w-2.5"
-                                                                            >
-                                                                                {
-                                                                                    h
-                                                                                }
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                                </div>
-                                                                {/* Grid */}
-                                                                <div className="grid grid-cols-7 gap-1.5 w-fit">
-                                                                    {Array.from(
-                                                                        {
-                                                                            length: startDayOfWeek,
-                                                                        },
-                                                                    ).map(
-                                                                        (
-                                                                            _,
-                                                                            i,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={`empty-${i}`}
-                                                                                className="w-2.5 h-2.5"
-                                                                            />
-                                                                        ),
-                                                                    )}
-                                                                    {daysList.map(
-                                                                        (
-                                                                            dayInfo,
-                                                                            idx,
-                                                                        ) => {
-                                                                            let colorClass =
-                                                                                "bg-slate-200 text-slate-400";
-                                                                            if (
-                                                                                dayInfo.count ===
-                                                                                1
-                                                                            ) {
-                                                                                colorClass =
-                                                                                    "bg-[#A7F3D0] text-emerald-800";
-                                                                            } else if (
-                                                                                dayInfo.count ===
-                                                                                2
-                                                                            ) {
-                                                                                colorClass =
-                                                                                    "bg-[#34D399] text-emerald-950";
-                                                                            } else if (
-                                                                                dayInfo.count >=
-                                                                                3
-                                                                            ) {
-                                                                                colorClass =
-                                                                                    "bg-[#059669] text-white";
-                                                                            }
+                                                    const formatDateLabel = (
+                                                        d,
+                                                    ) => {
+                                                        const day = String(
+                                                            d.getDate(),
+                                                        ).padStart(2, "0");
+                                                        const month = String(
+                                                            d.getMonth() + 1,
+                                                        ).padStart(2, "0");
+                                                        return `${day}/${month}`;
+                                                    };
 
-                                                                            const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
+                                                    const weekHeaders = [
+                                                        "T2",
+                                                        "T3",
+                                                        "T4",
+                                                        "T5",
+                                                        "T6",
+                                                        "T7",
+                                                        "CN",
+                                                    ];
 
-                                                                            return (
+                                                    return (
+                                                        <div className="grid grid-cols-2 gap-x-4 w-full">
+                                                            {/* Left Box: Activity calendar */}
+                                                            <div className="w-full text-left flex flex-col gap-2.5">
+                                                                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
+                                                                    Tần suất hoạt động
+                                                                </h4>
+
+                                                                <div className="w-full max-w-[140px] flex flex-col gap-2">
+                                                                    {/* Headers */}
+                                                                    <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 mb-1 w-full">
+                                                                        {weekHeaders.map(
+                                                                            (h) => (
                                                                                 <div
                                                                                     key={
-                                                                                        idx
+                                                                                        h
                                                                                     }
-                                                                                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                    className="w-full text-center font-sans"
                                                                                 >
-                                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50">
-                                                                                        {
-                                                                                            tooltipText
-                                                                                        }
-                                                                                    </div>
+                                                                                    {
+                                                                                        h
+                                                                                    }
                                                                                 </div>
-                                                                            );
-                                                                        },
-                                                                    )}
-                                                                </div>
-                                                                {/* Legend */}
-                                                                <div className="flex items-center gap-1 text-[8px] text-slate-400 self-end mt-1">
-                                                                    <span>
-                                                                        Ít
-                                                                    </span>
-                                                                    <div className="w-2 h-2 rounded-full bg-slate-200" />
-                                                                    <div className="w-2 h-2 rounded-full bg-[#A7F3D0]" />
-                                                                    <div className="w-2 h-2 rounded-full bg-[#34D399]" />
-                                                                    <div className="w-2 h-2 rounded-full bg-[#059669]" />
-                                                                    <span>
-                                                                        Nhiều
-                                                                    </span>
+                                                                            ),
+                                                                        )}
+                                                                    </div>
+                                                                    {/* Grid */}
+                                                                    <div className="grid grid-cols-7 gap-1 w-full">
+                                                                        {Array.from(
+                                                                            {
+                                                                                length: startDayOfWeek,
+                                                                            },
+                                                                        ).map(
+                                                                            (
+                                                                                _,
+                                                                                i,
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={`empty-${i}`}
+                                                                                    className="w-full h-3 flex justify-center items-center"
+                                                                                />
+                                                                            ),
+                                                                        )}
+                                                                        {daysList.map(
+                                                                            (
+                                                                                dayInfo,
+                                                                                idx,
+                                                                            ) => {
+                                                                                let colorClass =
+                                                                                    "bg-slate-200 dark:bg-slate-800 text-slate-400";
+                                                                                if (
+                                                                                    dayInfo.count ===
+                                                                                    1
+                                                                                ) {
+                                                                                    colorClass =
+                                                                                        "bg-[#A7F3D0] dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300";
+                                                                                } else if (
+                                                                                    dayInfo.count ===
+                                                                                    2
+                                                                                ) {
+                                                                                    colorClass =
+                                                                                        "bg-[#34D399] dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200";
+                                                                                } else if (
+                                                                                    dayInfo.count >=
+                                                                                    3
+                                                                                ) {
+                                                                                    colorClass =
+                                                                                        "bg-[#059669] dark:bg-emerald-750 text-white";
+                                                                                }
+
+                                                                                const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
+
+                                                                                return (
+                                                                                    <div
+                                                                                        key={
+                                                                                            idx
+                                                                                        }
+                                                                                        className="w-full h-3 flex justify-center items-center"
+                                                                                    >
+                                                                                        <div
+                                                                                            className={`w-3 h-3 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                        >
+                                                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50">
+                                                                                                {
+                                                                                                    tooltipText
+                                                                                                }
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            },
+                                                                        )}
+                                                                    </div>
+                                                                    {/* Legend */}
+                                                                    <div className="flex items-center gap-1 text-[8px] text-slate-400 self-end mt-1">
+                                                                        <span>
+                                                                            Ít
+                                                                        </span>
+                                                                        <div className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-800" />
+                                                                        <div className="w-2 h-2 rounded-full bg-[#A7F3D0] dark:bg-emerald-950/40" />
+                                                                        <div className="w-2 h-2 rounded-full bg-[#34D399] dark:bg-emerald-900/60" />
+                                                                        <div className="w-2 h-2 rounded-full bg-[#059669] dark:bg-emerald-750" />
+                                                                        <span>
+                                                                            Nhiều
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        );
-                                                    })()}
-                                                </div>
+
+                                                            {/* Right Box: Ranking stats */}
+                                                            <div className="w-full text-left flex flex-col gap-2.5 pl-4 border-l border-slate-200/60 dark:border-slate-800">
+                                                                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
+                                                                    Xếp hạng
+                                                                </h4>
+
+                                                                <div className="flex-1 flex flex-col justify-center text-left py-1">
+                                                                    {userRank ? (
+                                                                        <div className="space-y-1">
+                                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                                                Khối
+                                                                                lớp{" "}
+                                                                                {user.grade ||
+                                                                                    "10"}
+                                                                            </span>
+                                                                            <span className="text-2xl font-black text-slate-800 dark:text-slate-200 block font-mono">
+                                                                                #
+                                                                                {
+                                                                                    userRank.rankPosition
+                                                                                }
+                                                                            </span>
+                                                                            <span className="text-[9px] font-bold text-slate-400 block">
+                                                                                trên{" "}
+                                                                                {
+                                                                                    userRank.totalUsers
+                                                                                }{" "}
+                                                                                học
+                                                                                sinh
+                                                                            </span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="space-y-1">
+                                                                            <span className="text-xs italic text-slate-450 block">
+                                                                                Chưa
+                                                                                xếp
+                                                                                hạng
+                                                                            </span>
+                                                                            <span className="text-[9px] text-slate-400 leading-tight block">
+                                                                                Làm
+                                                                                bài
+                                                                                thi
+                                                                                để
+                                                                                bắt
+                                                                                đầu!
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
 
                                             {/* Section 4: Chỉ số rèn luyện */}
