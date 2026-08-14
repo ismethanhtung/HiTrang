@@ -192,8 +192,8 @@ export default function Topbar({
 
                                 {/* HOVER DROPDOWN MENU */}
                                 {hoveredGradeId === grade.id && (
-                                    <div className="absolute top-full left-0 pt-1 z-50">
-                                        <div className="w-44 bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                                    <div className="absolute top-full left-0 pt-2 z-50">
+                                        <div className="w-44 bg-bg-card border border-border-primary rounded-2xl shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                                             <button
                                                 onClick={() => {
                                                     onSelectGrade(
@@ -202,7 +202,7 @@ export default function Topbar({
                                                     );
                                                     setHoveredGradeId(null);
                                                 }}
-                                                className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                     !currentCategory
                                                         ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"
                                                         : "text-text-secondary"
@@ -226,7 +226,7 @@ export default function Topbar({
                                                         );
                                                         setHoveredGradeId(null);
                                                     }}
-                                                    className={`w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                    className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                         currentCategory ===
                                                         category
                                                             ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"

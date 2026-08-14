@@ -51,7 +51,7 @@ export default function GradeView({
     onSelectGrade,
 }: GradeViewProps) {
     const [searchQuery, setSearchQuery] = useState("");
-    
+
     // Parse category from URL query parameters initially
     const getInitialCategory = () => {
         try {
@@ -61,7 +61,7 @@ export default function GradeView({
             return "Tất cả";
         }
     };
-    
+
     const [selectedSubject, setSelectedSubject] = useState(getInitialCategory);
     const [sortBy, setSortBy] = useState("newest");
     const [currentPage, setCurrentPage] = useState(1);
@@ -116,13 +116,11 @@ export default function GradeView({
     const actualSubjects = Array.from(
         new Set(rawGradeQuizzes.map((q) => getCleanSubjectName(q.subject))),
     );
-    const extraSubjects = actualSubjects.filter(sub => !standardCats.includes(sub));
+    const extraSubjects = actualSubjects.filter(
+        (sub) => !standardCats.includes(sub),
+    );
 
-    const subjectOptions = [
-        "Tất cả",
-        ...standardCats,
-        ...extraSubjects
-    ];
+    const subjectOptions = ["Tất cả", ...standardCats, ...extraSubjects];
 
     // Filter quizzes by search query and clean subject
     let processedQuizzes = rawGradeQuizzes.filter((q) => {

@@ -185,143 +185,7 @@ export default function LeaderboardView({
         }
     };
 
-    // Mix in mock data to let the user preview the design.
-    let displayData = overallData;
-    if (true) {
-        const currentUserId = user.id;
-        const currentUserEntry = overallData.find(
-            (u) => u.studentId === currentUserId,
-        ) || {
-            studentId: currentUserId,
-            studentName: user.name || "Tung Khách",
-            studentUsername: user.username || "tungkhach",
-            studentGrade: activeGrade,
-            totalPoints:
-                submissions.length > 0
-                    ? Number(
-                          submissions
-                              .reduce((acc, s) => acc + s.score, 0)
-                              .toFixed(1),
-                      )
-                    : 10.0,
-            testsCompleted: submissions.length,
-            rankPosition: 1,
-            previousRankPosition: null,
-        };
-
-        const surnames = [
-            "Nguyễn",
-            "Trần",
-            "Lê",
-            "Phạm",
-            "Hoàng",
-            "Phan",
-            "Vũ",
-            "Đặng",
-            "Bùi",
-            "Đỗ",
-            "Hồ",
-            "Ngô",
-        ];
-        const middles = [
-            "Thanh",
-            "Minh",
-            "Văn",
-            "Thị",
-            "Khánh",
-            "Anh",
-            "Đình",
-            "Hữu",
-            "Gia",
-            "Đức",
-        ];
-        const names = [
-            "Tùng",
-            "Triết",
-            "Đăng",
-            "Hồng",
-            "Nam",
-            "Ngọc",
-            "Hải",
-            "Sơn",
-            "Linh",
-            "Vy",
-            "Huy",
-            "Khoa",
-            "Phong",
-            "Chi",
-            "Trang",
-            "Long",
-            "Tuấn",
-            "Duy",
-            "Quân",
-            "Hà",
-            "Yến",
-            "Lan",
-        ];
-
-        const generateMockUsers = () => {
-            const list = [];
-            let seed = 42;
-            const random = () => {
-                const x = Math.sin(seed++) * 10000;
-                return x - Math.floor(x);
-            };
-
-            for (let i = 1; i <= 100; i++) {
-                const sIndex = Math.floor(random() * surnames.length);
-                const mIndex = Math.floor(random() * middles.length);
-                const nIndex = Math.floor(random() * names.length);
-                const studentName = `${surnames[sIndex]} ${middles[mIndex]} ${names[nIndex]}`;
-                const studentUsername = `user_${i}_${random().toString(36).substring(2, 5)}`;
-
-                const totalPoints = Number(
-                    (150 - i * 1.45 + random() * 4).toFixed(1),
-                );
-                const testsCompleted = Math.max(
-                    1,
-                    Math.floor(totalPoints / 8 + random() * 2),
-                );
-                const rankPosition = i;
-                const previousRankPosition = Math.max(
-                    1,
-                    i + Math.floor(random() * 5) - 2,
-                );
-
-                list.push({
-                    studentId: `mock-${i}`,
-                    studentName,
-                    studentUsername,
-                    studentGrade: activeGrade,
-                    totalPoints: totalPoints < 0 ? 0 : totalPoints,
-                    testsCompleted,
-                    rankPosition,
-                    previousRankPosition,
-                });
-            }
-            return list;
-        };
-
-        const mockUsers = generateMockUsers();
-
-        // Combine
-        const combined = [
-            currentUserEntry,
-            ...mockUsers.filter(
-                (mu) => mu.studentId !== currentUserEntry.studentId,
-            ),
-        ];
-
-        // Sort by totalPoints descending
-        combined.sort((a, b) => b.totalPoints - a.totalPoints);
-
-        // Recalculate rank position
-        displayData = combined.map((entry, index) => ({
-            ...entry,
-            rankPosition: index + 1,
-            previousRankPosition: entry.previousRankPosition || index + 2,
-        }));
-    }
+    const displayData = overallData;
 
     // Filter overall data based on search input
     const filteredOverall = displayData.filter(
@@ -399,16 +263,37 @@ export default function LeaderboardView({
                 </div>
 
                 {user.role === "admin" && (
-                    <button
-                        onClick={handleManualRefresh}
-                        disabled={refreshing || loading}
-                        className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-3xs transition-all cursor-pointer disabled:opacity-50"
-                    >
-                        <RefreshCw
-                            className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
-                        />
-                        <span>Đồng bộ điểm toàn khối</span>
-                    </button>
+                    <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
+                        {/* SELECT GRADE */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
+                                Lọc theo:
+                            </span>
+                            <select
+                                value={activeGrade}
+                                onChange={(e) => setActiveGrade(e.target.value)}
+                                className="px-3.5 py-2 bg-bg-surface border border-border-secondary text-text-primary text-xs font-bold rounded-xl outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                            >
+                                {grades.map((g) => (
+                                    <option key={g.id} value={g.id}>
+                                        {g.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* SYNC BUTTON */}
+                        <button
+                            onClick={handleManualRefresh}
+                            disabled={refreshing || loading}
+                            className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-3xs transition-all cursor-pointer disabled:opacity-50"
+                        >
+                            <RefreshCw
+                                className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
+                            />
+                            <span>Đồng bộ điểm toàn khối</span>
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -433,57 +318,53 @@ export default function LeaderboardView({
                             <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
                                 Học sinh hạng nhất trước kia:
                             </p>
-                            <div className="space-y-1">
-                                {[
-                                    {
-                                        period: "Tháng 07/2026",
-                                        name: "Nguyễn Thanh Tùng",
-                                        points: 285.4,
-                                        tests: 28,
-                                        initial: "T",
-                                    },
-                                    {
-                                        period: "Tháng 06/2026",
-                                        name: "Lê Minh Triết",
-                                        points: 262.0,
-                                        tests: 26,
-                                        initial: "T",
-                                    },
-                                    {
-                                        period: "Tháng 05/2026",
-                                        name: "Phạm Hải Đăng",
-                                        points: 245.8,
-                                        tests: 25,
-                                        initial: "Đ",
-                                    },
-                                ].map((champion, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="py-3 bg-transparent hover:bg-amber-500/5 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 flex items-center gap-3.5 transition-all duration-200 group"
-                                    >
-                                        {/* Small gold avatar */}
-                                        <div className="w-8.5 h-8.5 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform">
-                                            {champion.initial}
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600/85 dark:text-amber-400/85">
-                                                    {champion.period}
-                                                </span>
+                            {displayData.length > 0 ? (
+                                <div className="space-y-1">
+                                    {(() => {
+                                        const champion = displayData[0];
+                                        return (
+                                            <div
+                                                key={champion.studentId}
+                                                className="py-3 bg-transparent hover:bg-amber-500/5 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 flex items-center gap-3.5 transition-all duration-200 group"
+                                            >
+                                                {/* Small gold avatar */}
+                                                <div className="w-8.5 h-8.5 rounded-full border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform">
+                                                    {getAvatarInitial(
+                                                        champion.studentName,
+                                                    )}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600/85 dark:text-amber-400/85">
+                                                            Tháng 08/2026 (Hiện
+                                                            tại)
+                                                        </span>
+                                                    </div>
+                                                    <h4 className="text-xs font-black text-slate-750 dark:text-slate-200 truncate mt-0.5 group-hover:text-amber-500 transition-colors">
+                                                        {champion.studentName}
+                                                    </h4>
+                                                    <p className="text-[9px] text-slate-455 dark:text-slate-400 font-medium mt-0.5">
+                                                        {
+                                                            champion.testsCompleted
+                                                        }{" "}
+                                                        đề thi •{" "}
+                                                        {champion.totalPoints} đ
+                                                    </p>
+                                                </div>
+                                                {/* Trophy icon */}
+                                                <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-all shrink-0" />
                                             </div>
-                                            <h4 className="text-xs font-black text-slate-750 dark:text-slate-200 truncate mt-0.5 group-hover:text-amber-500 transition-colors">
-                                                {champion.name}
-                                            </h4>
-                                            <p className="text-[9px] text-slate-450 dark:text-slate-400 font-medium mt-0.5">
-                                                {champion.tests} đề thi •{" "}
-                                                {champion.points} đ
-                                            </p>
-                                        </div>
-                                        {/* Trophy icon */}
-                                        <Trophy className="w-3.5 h-3.5 text-amber-500/60 group-hover:text-amber-500 group-hover:scale-110 transition-all shrink-0" />
-                                    </div>
-                                ))}
-                            </div>
+                                        );
+                                    })()}
+                                </div>
+                            ) : (
+                                <div className="py-8 text-center border border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl space-y-2">
+                                    <Trophy className="w-6 h-6 text-amber-500/50 mx-auto" />
+                                    <p className="text-[11px] text-slate-450 dark:text-slate-500 italic">
+                                        Chưa ghi nhận lịch sử vinh danh
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -762,7 +643,7 @@ export default function LeaderboardView({
                     )}
 
                     {filteredOverall.length === 0 && (
-                        <div className="py-12 bg-transparent border-b border-slate-150/60 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic">
+                        <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic">
                             Chưa tìm thấy thông tin xếp hạng học sinh.
                         </div>
                     )}
@@ -892,7 +773,7 @@ export default function LeaderboardView({
                                         >
                                             <div className="space-y-1 min-w-0 pr-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 py-0.2 rounded">
                                                         {quiz.subject}
                                                     </span>
                                                 </div>
