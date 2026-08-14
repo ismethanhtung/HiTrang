@@ -5299,8 +5299,10 @@ export default function AdminPanel({
                                                                     : "text-rose-500"
                                                             }
                                                         >
-                                                            {Object.values(
-                                                                sectionPoints,
+                                                            {(
+                                                                Object.values(
+                                                                    sectionPoints,
+                                                                ) as number[]
                                                             )
                                                                 .reduce(
                                                                     (a, b) =>
@@ -5314,8 +5316,10 @@ export default function AdminPanel({
                                                         </span>
                                                     </div>
                                                     {Math.abs(
-                                                        Object.values(
-                                                            sectionPoints,
+                                                        (
+                                                            Object.values(
+                                                                sectionPoints,
+                                                            ) as number[]
                                                         ).reduce(
                                                             (a, b) => a + b,
                                                             0,
@@ -6108,7 +6112,7 @@ export default function AdminPanel({
                                                     Cấu hình điểm số cho từng phần:
                                                 </div>
                                                 {(() => {
-                                                    const sections = Array.from(new Set(editQuestions.map(q => q.sectionTitle).filter(Boolean)));
+                                                    const sections = Array.from(new Set(editQuestions.map(q => q.sectionTitle).filter(Boolean))) as string[];
                                                     if (sections.length === 0) {
                                                         return <p className="text-slate-450 italic text-[11px]">Cần phân loại sectionTitle cho câu hỏi để dùng chế độ này.</p>;
                                                     }

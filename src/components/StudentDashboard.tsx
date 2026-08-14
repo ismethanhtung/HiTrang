@@ -93,7 +93,7 @@ interface StudentDashboardProps {
     onAddSubmission: (newSub: Submission) => void;
     activeTab: string;
     selectedGrade: string | null;
-    onSelectGrade: (grade: string | null) => void;
+    onSelectGrade: (grade: string | null, category?: string) => void;
     onQuizStateChange?: (isTaking: boolean) => void;
     activeQuizId?: string | null;
     reviewSubmissionId?: string | null;

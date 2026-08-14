@@ -17,7 +17,9 @@ import {
     createSubmission,
     getAnyActiveAttempt,
     initializeSession,
+    getOverallLeaderboard,
 } from "./lib/supabaseService";
+import { supabase } from "./lib/supabase";
 import GradeView from "./components/GradeView";
 import LeaderboardView from "./components/LeaderboardView";
 import {
@@ -87,7 +89,10 @@ export default function App() {
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [submissions, setSubmissions] = useState<Submission[]>(() => {
+        const saved = localStorage.getItem("hvt_submissions");
+        return saved ? JSON.parse(saved) : [];
+    });
     const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<
         any[] | null
     >(null);
@@ -207,6 +212,10 @@ export default function App() {
                     // Turn off loading indicator immediately so visual elements render in ~200ms
                     setLoading(false);
                 } else {
+                    // Stale session (no Supabase session exists, but local state thought user was logged in)
+                    setUser(null);
+                    localStorage.removeItem("hvt_user");
+                    localStorage.removeItem("hvt_submissions");
                     setLoading(false);
                 }
             } catch (err) {
@@ -215,6 +224,42 @@ export default function App() {
             }
         };
         fetchInitialData();
+    }, []);
+
+    // Sync Supabase Auth State Change to handle Token Refresh & Session Restore
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log("Supabase Auth Event:", event, session ? "co session" : "khong co session");
+            
+            if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+                if (session && session.user) {
+                    try {
+                        const currentUser = await getCurrentUser();
+                        if (currentUser) {
+                            setUser(currentUser);
+                            const dbSubmissions = await getSubmissions(
+                                currentUser.role,
+                                currentUser.id
+                            );
+                            if (dbSubmissions && dbSubmissions.length > 0) {
+                                setSubmissions(dbSubmissions);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Lỗi đồng bộ dữ liệu qua AuthStateChange:", err);
+                    }
+                }
+            } else if (event === "SIGNED_OUT") {
+                setUser(null);
+                setSubmissions([]);
+                localStorage.removeItem("hvt_user");
+                localStorage.removeItem("hvt_submissions");
+            }
+        });
+
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     // Sync URL popstate events
