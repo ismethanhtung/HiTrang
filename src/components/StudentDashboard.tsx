@@ -3057,10 +3057,22 @@ export default function StudentDashboard({
                                                                     <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
                                                                 </div>
                                                             ) : (
-                                                                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic">
-                                                                    Hãy làm bài
-                                                                    thi để vẽ
-                                                                    biểu đồ
+                                                                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap">
+                                                                    <span>
+                                                                        Ai cũng phải bắt đầu từ đâu đó 🌸
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            if (user && user.grade) {
+                                                                                onSelectGrade(user.grade);
+                                                                            } else {
+                                                                                onSelectGrade("10");
+                                                                            }
+                                                                        }}
+                                                                        className="text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200 font-bold hover:underline cursor-pointer not-italic transition-colors bg-transparent border-0 p-0 inline-block align-baseline ml-1"
+                                                                    >
+                                                                        Làm ngay
+                                                                    </button>
                                                                 </div>
                                                             );
                                                         }
