@@ -186,6 +186,8 @@ export default function StudentDashboard({
     const [loadingQuizLeaderboard, setLoadingQuizLeaderboard] =
         useState<boolean>(false);
 
+
+
     // Prevent leaving page/tab changes & detect tab switching
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 12;
@@ -1456,254 +1458,7 @@ export default function StudentDashboard({
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
                     <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] overflow-y-auto">
                         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
-                            {/* Cột 1: Thông tin đề thi */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="w-full lg:w-[420px] shrink-0 bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-6"
-                            >
-                                <div className="space-y-6">
-                                    {/* Quiz info header */}
-                                    <div className="text-center space-y-3">
-                                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
-                                            {activeQuiz.title}
-                                        </h1>
-                                        {activeQuiz.description && (
-                                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                                                {activeQuiz.description}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Meta info inline simplified */}
-                                    <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock className="w-4 h-4 text-slate-400" />
-                                            <span>
-                                                Thời gian:{" "}
-                                                <strong className="text-slate-800 font-extrabold">
-                                                    {activeQuiz.duration} phút
-                                                </strong>
-                                            </span>
-                                        </div>
-                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
-                                        <div className="flex items-center gap-1.5">
-                                            <HelpCircle className="w-4 h-4 text-slate-400" />
-                                            <span>
-                                                Số câu hỏi:{" "}
-                                                <strong className="text-slate-800 font-extrabold">
-                                                    {activeQuiz.questions
-                                                        ?.length || 0}{" "}
-                                                    câu
-                                                </strong>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Attempts & History Section */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
-                                                Tiến trình làm bài (Tối đa 5
-                                                lượt)
-                                            </h3>
-                                            <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                                                Đã làm: {attemptsCount}/5 lượt
-                                            </span>
-                                        </div>
-
-                                        {/* Custom Attempts visual indicator circles */}
-                                        <div className="flex items-center gap-2">
-                                            {[1, 2, 3, 4, 5].map((idx) => {
-                                                const isUsed =
-                                                    idx <= attemptsCount;
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
-                                                            isUsed
-                                                                ? "bg-brand-500 shadow-xs"
-                                                                : "bg-slate-200/60 border border-dashed border-slate-350"
-                                                        }`}
-                                                        title={
-                                                            isUsed
-                                                                ? `Lượt thứ ${idx} đã dùng`
-                                                                : `Lượt thứ ${idx} chưa dùng`
-                                                        }
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Attempts List */}
-                                        {attemptsCount > 0 ? (
-                                            <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
-                                                {quizSubmissions.map(
-                                                    (sub, index) => (
-                                                        <div
-                                                            key={sub.id}
-                                                            className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
-                                                        >
-                                                            <div className="space-y-1">
-                                                                <span className="block text-[10px] font-bold text-brand-600 uppercase">
-                                                                    Lần làm thứ{" "}
-                                                                    {index + 1}
-                                                                </span>
-                                                                <span className="text-[11px] text-slate-400 block font-medium">
-                                                                    Ngày nộp:{" "}
-                                                                    {
-                                                                        sub.submittedAt
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="text-right">
-                                                                    <span className="text-sm font-extrabold text-slate-800">
-                                                                        {
-                                                                            sub.score
-                                                                        }{" "}
-                                                                        điểm
-                                                                    </span>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        onNavigate(
-                                                                            "/result/" +
-                                                                                sub.id,
-                                                                        )
-                                                                    }
-                                                                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                                                >
-                                                                    Xem lại
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ),
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-slate-400 text-xs italic">
-                                                🍀 Hãy chuẩn bị tinh thần và bấm
-                                                "Bắt đầu làm bài".
-                                            </div>
-                                        )}
-
-                                        {activeAttemptInProgress && (
-                                            <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
-                                                <RefreshCw
-                                                    className="w-3.5 h-3.5 animate-spin"
-                                                    style={{
-                                                        animationDuration: "3s",
-                                                    }}
-                                                />
-                                                <span>
-                                                    Bạn đang có lượt thi dang
-                                                    dở! Hãy tiếp tục làm bài.
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {hasOtherActiveAttempt && (
-                                            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
-                                                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                                <span>
-                                                    Bạn đang có bài thi khác
-                                                    chưa hoàn thành!
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {attemptsCount > 0 && (
-                                            <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
-                                                <Award className="w-4 h-4 text-emerald-600" />
-                                                <span className="text-[11px] font-bold">
-                                                    Điểm số cao nhất của bạn:{" "}
-                                                    {maxScore} điểm
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Buttons actions */}
-                                <div className="space-y-3 pt-4">
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (navigateReplace)
-                                                    navigateReplace("/");
-                                                else onNavigate("/");
-                                            }}
-                                            className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
-                                        >
-                                            <ChevronLeft className="w-4 h-4" />
-                                            <span>Quay lại Dashboard</span>
-                                        </button>
-
-                                        {isGradeMismatch ? (
-                                            <button
-                                                type="button"
-                                                disabled
-                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                            >
-                                                <span>Bắt đầu làm bài</span>
-                                                <ArrowRight className="w-4 h-4" />
-                                            </button>
-                                        ) : hasOtherActiveAttempt ? (
-                                            <button
-                                                type="button"
-                                                disabled
-                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                            >
-                                                <span>
-                                                    Đang làm đề thi khác
-                                                </span>
-                                                <AlertCircle className="w-4 h-4" />
-                                            </button>
-                                        ) : activeAttemptInProgress ? (
-                                            <button
-                                                type="button"
-                                                onClick={startQuizAttempt}
-                                                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
-                                            >
-                                                <span>Tiếp tục làm bài</span>
-                                                <RefreshCw
-                                                    className="w-4 h-4 animate-spin"
-                                                    style={{
-                                                        animationDuration: "3s",
-                                                    }}
-                                                />
-                                            </button>
-                                        ) : remainingAttempts > 0 ? (
-                                            <button
-                                                type="button"
-                                                onClick={startQuizAttempt}
-                                                className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
-                                            >
-                                                <span>Bắt đầu làm bài</span>
-                                                <ArrowRight className="w-4 h-4 animate-pulse" />
-                                            </button>
-                                        ) : (
-                                            <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
-                                                <span>
-                                                    Đã hết lượt thi (Tối đa 5)
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {isGradeMismatch && (
-                                        <div className="text-center text-xs text-rose-400 font-semibold">
-                                            Em đang là học sinh lớp {user.grade}{" "}
-                                            mà?
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-
-                            {/* Cột 2: Bảng xếp hạng của bài thi */}
+                            {/* Cột 1: Bảng xếp hạng của bài thi */}
                             <motion.div
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1712,7 +1467,7 @@ export default function StudentDashboard({
                                     delay: 0.1,
                                     ease: "easeOut",
                                 }}
-                                className="flex-1 bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-4"
+                                className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-4"
                             >
                                 <div className="space-y-4 flex-1 flex flex-col min-h-0">
                                     {/* Header BXH */}
@@ -1879,12 +1634,6 @@ export default function StudentDashboard({
                                                                                 entry.studentName
                                                                             }
                                                                         </p>
-                                                                        <p className="text-[9px] text-slate-400">
-                                                                            @
-                                                                            {
-                                                                                entry.studentUsername
-                                                                            }
-                                                                        </p>
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-right">
@@ -1921,6 +1670,253 @@ export default function StudentDashboard({
                                     💡 Điểm thi trên BXH được tính theo lượt thi
                                     ĐẦU TIÊN để đảm bảo sự khách quan.
                                 </p>
+                            </motion.div>
+
+                            {/* Cột 2: Thông tin đề thi */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-6"
+                            >
+                                <div className="space-y-6">
+                                    {/* Quiz info header */}
+                                    <div className="text-center space-y-3">
+                                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                                            {activeQuiz.title}
+                                        </h1>
+                                        {activeQuiz.description && (
+                                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                                {activeQuiz.description}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Meta info inline simplified */}
+                                    <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock className="w-4 h-4 text-slate-400" />
+                                            <span>
+                                                Thời gian:{" "}
+                                                <strong className="text-slate-800 font-extrabold">
+                                                    {activeQuiz.duration} phút
+                                                </strong>
+                                            </span>
+                                        </div>
+                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                                        <div className="flex items-center gap-1.5">
+                                            <HelpCircle className="w-4 h-4 text-slate-400" />
+                                            <span>
+                                                Số câu hỏi:{" "}
+                                                <strong className="text-slate-800 font-extrabold">
+                                                    {activeQuiz.questions
+                                                        ?.length || 0}{" "}
+                                                    câu
+                                                </strong>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Attempts & History Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between   pb-3">
+                                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
+                                                Tiến trình làm bài (Tối đa 5
+                                                lượt)
+                                            </h3>
+                                            <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                Đã làm: {attemptsCount}/5 lượt
+                                            </span>
+                                        </div>
+
+                                        {/* Custom Attempts visual indicator circles */}
+                                        <div className="flex items-center gap-2">
+                                            {[1, 2, 3, 4, 5].map((idx) => {
+                                                const isUsed =
+                                                    idx <= attemptsCount;
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
+                                                            isUsed
+                                                                ? "bg-brand-500 shadow-xs"
+                                                                : "bg-slate-200/60 border border-dashed border-slate-300"
+                                                        }`}
+                                                        title={
+                                                            isUsed
+                                                                ? `Lượt thứ ${idx} đã dùng`
+                                                                : `Lượt thứ ${idx} chưa dùng`
+                                                        }
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Attempts List */}
+                                        {attemptsCount > 0 ? (
+                                            <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
+                                                {quizSubmissions.map(
+                                                    (sub, index) => (
+                                                        <div
+                                                            key={sub.id}
+                                                            className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
+                                                        >
+                                                            <div className="space-y-1">
+                                                                <span className="block text-[10px] font-bold text-brand-600 uppercase">
+                                                                    Lần làm thứ{" "}
+                                                                    {index + 1}
+                                                                </span>
+                                                                <span className="text-[11px] text-slate-400 block font-medium">
+                                                                    Ngày nộp:{" "}
+                                                                    {
+                                                                        sub.submittedAt
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="text-right">
+                                                                    <span className="text-sm font-extrabold text-slate-800">
+                                                                        {
+                                                                            sub.score
+                                                                        }{" "}
+                                                                        điểm
+                                                                    </span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        onNavigate(
+                                                                            "/result/" +
+                                                                                sub.id,
+                                                                        )
+                                                                    }
+                                                                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                                                >
+                                                                    Xem lại
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ),
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-center py-6   rounded-xl   text-slate-400 text-xs italic">
+                                                🍀 Hãy chuẩn bị tinh thần và bấm
+                                                "Bắt đầu làm bài".
+                                            </div>
+                                        )}
+
+                                        {activeAttemptInProgress && (
+                                            <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
+                                                <RefreshCw
+                                                    className="w-3.5 h-3.5 animate-spin"
+                                                    style={{
+                                                        animationDuration: "3s",
+                                                    }}
+                                                />
+                                                <span>
+                                                    Bạn đang có lượt thi dang
+                                                    dở! Hãy tiếp tục làm bài.
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {hasOtherActiveAttempt && (
+                                            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
+                                                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                                <span>
+                                                    Bạn đang có bài thi khác
+                                                    chưa hoàn thành!
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {attemptsCount > 0 && (
+                                            <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
+                                                <Award className="w-4 h-4 text-emerald-600" />
+                                                <span className="text-[11px] font-bold">
+                                                    Điểm số cao nhất của bạn:{" "}
+                                                    {maxScore} điểm
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Buttons actions */}
+                                <div className="space-y-3 pt-4">
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (navigateReplace)
+                                                    navigateReplace("/");
+                                                else onNavigate("/");
+                                            }}
+                                            className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                            <span>Quay lại Dashboard</span>
+                                        </button>
+
+                                        {isGradeMismatch ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                            >
+                                                <span>Bắt đầu làm bài</span>
+                                                <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        ) : hasOtherActiveAttempt ? (
+                                            <button
+                                                type="button"
+                                                disabled
+                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                            >
+                                                <span>
+                                                    Đang làm đề thi khác
+                                                </span>
+                                                <AlertCircle className="w-4 h-4" />
+                                            </button>
+                                        ) : activeAttemptInProgress ? (
+                                            <button
+                                                type="button"
+                                                onClick={startQuizAttempt}
+                                                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
+                                            >
+                                                <span>Tiếp tục làm bài</span>
+                                                <RefreshCw
+                                                    className="w-4 h-4 animate-spin"
+                                                    style={{
+                                                        animationDuration: "3s",
+                                                    }}
+                                                />
+                                            </button>
+                                        ) : remainingAttempts > 0 ? (
+                                            <button
+                                                type="button"
+                                                onClick={startQuizAttempt}
+                                                className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
+                                            >
+                                                <span>Bắt đầu làm bài</span>
+                                                <ArrowRight className="w-4 h-4 animate-pulse" />
+                                            </button>
+                                        ) : (
+                                            <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                                <span>
+                                                    Đã hết lượt thi (Tối đa 5)
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isGradeMismatch && (
+                                        <div className="text-center text-xs text-rose-400 font-semibold">
+                                            Em đang là học sinh lớp {user.grade}{" "}
+                                            mà?
+                                        </div>
+                                    )}
+                                </div>
                             </motion.div>
                         </div>
                     </div>
@@ -3045,7 +3041,7 @@ export default function StudentDashboard({
                                                 </h3>
 
                                                 {/* Render chart directly on the page bg */}
-                                                <div className="h-[125px] w-full relative">
+                                                <div className="w-full relative">
                                                     {(() => {
                                                         const sorted = [
                                                             ...studentSubmissions,
@@ -3119,13 +3115,13 @@ export default function StudentDashboard({
                                                             );
                                                         }
 
-                                                        const width = 280;
-                                                        const height = 120;
+                                                        const width = 500;
+                                                        const height = 200;
                                                         const maxVal = 10;
-                                                        const paddingLeft = 12;
-                                                        const paddingRight = 12;
-                                                        const paddingTop = 12;
-                                                        const paddingBottom = 12;
+                                                        const paddingLeft = 4;
+                                                        const paddingRight = 4;
+                                                        const paddingTop = 16;
+                                                        const paddingBottom = 16;
 
                                                         const getBarPath = (
                                                             x: number,
@@ -3185,7 +3181,7 @@ export default function StudentDashboard({
                                                                         count;
                                                                     const barWidth =
                                                                         Math.min(
-                                                                            14,
+                                                                            22,
                                                                             colWidth *
                                                                                 0.6,
                                                                         );
@@ -3257,10 +3253,10 @@ export default function StudentDashboard({
                                                         };
 
                                                         return (
-                                                            <div className="w-full h-full relative">
+                                                            <div className="w-full relative">
                                                                 <svg
                                                                     viewBox={`0 0 ${width} ${height}`}
-                                                                    className="w-full h-full"
+                                                                    className="w-full h-auto"
                                                                 >
                                                                     <defs>
                                                                         {/* Green gradient (Score >= 8) */}
@@ -3619,14 +3615,17 @@ export default function StudentDashboard({
                                                             {/* Left Box: Activity calendar */}
                                                             <div className="w-full text-left flex flex-col gap-2.5">
                                                                 <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
-                                                                    Tần suất hoạt động
+                                                                    Tần suất
+                                                                    hoạt động
                                                                 </h4>
 
                                                                 <div className="w-full max-w-[140px] flex flex-col gap-2">
                                                                     {/* Headers */}
                                                                     <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 mb-1 w-full">
                                                                         {weekHeaders.map(
-                                                                            (h) => (
+                                                                            (
+                                                                                h,
+                                                                            ) => (
                                                                                 <div
                                                                                     key={
                                                                                         h

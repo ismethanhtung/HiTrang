@@ -56,8 +56,10 @@ export default function App() {
     const matchRoute = (path: string) => {
         const cleanPath = path.split("?")[0];
         if (cleanPath === "/") return { route: "home" };
-        if (cleanPath === "/settings") return { route: "settings", tab: "profile" };
-        if (cleanPath === "/history") return { route: "settings", tab: "history" };
+        if (cleanPath === "/settings")
+            return { route: "settings", tab: "profile" };
+        if (cleanPath === "/history")
+            return { route: "settings", tab: "history" };
         if (cleanPath === "/trang" || cleanPath === "/teacher")
             return { route: "teacher" };
         if (cleanPath === "/admin") return { route: "admin" };
@@ -228,10 +230,20 @@ export default function App() {
 
     // Sync Supabase Auth State Change to handle Token Refresh & Session Restore
     useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log("Supabase Auth Event:", event, session ? "co session" : "khong co session");
-            
-            if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log(
+                "Supabase Auth Event:",
+                event,
+                session ? "co session" : "khong co session",
+            );
+
+            if (
+                event === "SIGNED_IN" ||
+                event === "TOKEN_REFRESHED" ||
+                event === "USER_UPDATED"
+            ) {
                 if (session && session.user) {
                     try {
                         const currentUser = await getCurrentUser();
@@ -239,14 +251,17 @@ export default function App() {
                             setUser(currentUser);
                             const dbSubmissions = await getSubmissions(
                                 currentUser.role,
-                                currentUser.id
+                                currentUser.id,
                             );
                             if (dbSubmissions && dbSubmissions.length > 0) {
                                 setSubmissions(dbSubmissions);
                             }
                         }
                     } catch (err) {
-                        console.error("Lỗi đồng bộ dữ liệu qua AuthStateChange:", err);
+                        console.error(
+                            "Lỗi đồng bộ dữ liệu qua AuthStateChange:",
+                            err,
+                        );
                     }
                 }
             } else if (event === "SIGNED_OUT") {
@@ -397,7 +412,9 @@ export default function App() {
                             if (grade) {
                                 let path = "/grade/" + grade;
                                 if (category) {
-                                    path += "?category=" + encodeURIComponent(category);
+                                    path +=
+                                        "?category=" +
+                                        encodeURIComponent(category);
                                 }
                                 navigateTo(path);
                             } else {
@@ -582,9 +599,14 @@ export default function App() {
                                         onSelectGrade={(grade, category) => {
                                             if (confirmNavigation()) {
                                                 if (grade) {
-                                                    let path = "/grade/" + grade;
+                                                    let path =
+                                                        "/grade/" + grade;
                                                     if (category) {
-                                                        path += "?category=" + encodeURIComponent(category);
+                                                        path +=
+                                                            "?category=" +
+                                                            encodeURIComponent(
+                                                                category,
+                                                            );
                                                     }
                                                     navigateTo(path);
                                                 } else {
@@ -646,7 +668,11 @@ export default function App() {
                                             if (grade) {
                                                 let path = "/grade/" + grade;
                                                 if (category) {
-                                                    path += "?category=" + encodeURIComponent(category);
+                                                    path +=
+                                                        "?category=" +
+                                                        encodeURIComponent(
+                                                            category,
+                                                        );
                                                 }
                                                 navigateTo(path);
                                             } else {
@@ -671,7 +697,7 @@ export default function App() {
 
             {/* Floating Support Card */}
             {!isSupportDismissed && (
-                <div className="fixed bottom-6 left-6 z-50 w-44 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                <div className="fixed bottom-4 left-4 z-50 w-46 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-300">

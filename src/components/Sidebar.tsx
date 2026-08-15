@@ -72,7 +72,7 @@ export default function Sidebar({
     };
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-100/85 dark:border-slate-800/80 pt-6 pb-2.5 transition-colors duration-200">
+        <div className="flex flex-col h-full bg-bg-card dark:bg-slate-900 border-r border-border-primary dark:border-slate-800/80 pt-6 pb-2.5 transition-colors duration-200">
             {/* Brand Logo */}
             <div className="px-6 mb-5 select-none">
                 <h1 className="font-calligraphy text-4xl text-brand-300 tracking-wide">

@@ -319,7 +319,7 @@ export default function SettingsView({
                                         onClick={() =>
                                             setReviewSubmission(null)
                                         }
-                                        className="px-3.5 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold rounded-lg transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1 flex-shrink-0"
+                                        className="px-3.5 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white text-xs font-bold rounded-xl transition-all shadow-3xs cursor-pointer active:scale-95 flex items-center gap-1 flex-shrink-0"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
                                         <span>Quay lại</span>
@@ -516,10 +516,10 @@ export default function SettingsView({
                                                             return (
                                                                 <div
                                                                     key={oIdx}
-                                                                    className={`flex items-center gap-3 p-3 border rounded-lg text-xs font-medium ${cardStyle}`}
+                                                                    className={`flex items-center gap-3 p-3 border rounded-xl text-xs font-medium ${cardStyle}`}
                                                                 >
                                                                     <span
-                                                                        className={`w-5 h-5 rounded-lg flex items-center justify-center font-bold text-[10px] ${
+                                                                        className={`w-5 h-5 rounded-xl flex items-center justify-center font-bold text-[10px] ${
                                                                             isCorrectOpt
                                                                                 ? "bg-emerald-500 text-white"
                                                                                 : isChosen
@@ -573,7 +573,7 @@ export default function SettingsView({
                                                             return (
                                                                 <div
                                                                     key={oIdx}
-                                                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700/80 rounded-lg text-xs"
+                                                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700/80 rounded-xl text-xs"
                                                                 >
                                                                     <div className="font-medium text-slate-800 dark:text-slate-200 flex gap-2 [&_img]:mx-auto [&_img]:block [&_img]:my-2">
                                                                         <span className="font-extrabold text-slate-500">
@@ -625,7 +625,7 @@ export default function SettingsView({
 
                                             {/* 3. Short Answer Review */}
                                             {q.type === "short_answer" && (
-                                                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700 rounded-lg flex flex-wrap gap-4 text-xs font-semibold">
+                                                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-700 rounded-xl flex flex-wrap gap-4 text-xs font-semibold">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-slate-500">
                                                             Đáp án của bạn:
@@ -657,7 +657,7 @@ export default function SettingsView({
 
                                             {/* Rich HTML Explanation */}
                                             {q.explanation && (
-                                                <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/60 rounded-lg p-4 text-xs space-y-2 mt-4">
+                                                <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 text-xs space-y-2 mt-4">
                                                     <div className="flex items-center gap-1.5 text-[#3B6D85] dark:text-brand-400 font-extrabold">
                                                         <BookOpen className="w-4 h-4 text-[#3B6D85] dark:text-brand-400" />
                                                         <span>
@@ -704,11 +704,12 @@ export default function SettingsView({
             {/* Title Header with Tabs */}
             <div className="max-w-4xl mx-auto pt-8 pb-6 px-6   dark:border-slate-800/80">
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    Cài đặt cá nhân
+                    {activeSettingsTab === "profile" ? "Cài đặt cá nhân" : "Lịch sử làm bài"}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Cập nhật thông tin tài khoản và xem lại các đề thi đã hoàn
-                    thành.
+                    {activeSettingsTab === "profile"
+                        ? "Cập nhật thông tin tài khoản và cấu hình hệ thống."
+                        : "Xem lại danh sách và chi tiết các đề thi bạn đã hoàn thành."}
                 </p>
 
                 {/* Tabs navigation */}
@@ -731,7 +732,6 @@ export default function SettingsView({
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                         }`}
                     >
-                        <History className="w-3.5 h-3.5" />
                         <span>Lịch sử làm bài</span>
                     </button>
                 </div>
@@ -793,7 +793,7 @@ export default function SettingsView({
                                         onChange={(e) =>
                                             setFirstName(e.target.value)
                                         }
-                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
                                 <div className="flex-1 space-y-1">
@@ -807,7 +807,7 @@ export default function SettingsView({
                                         onChange={(e) =>
                                             setLastName(e.target.value)
                                         }
-                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
                             </div>
@@ -827,7 +827,7 @@ export default function SettingsView({
                                 type="button"
                                 onClick={handleUpdateName}
                                 disabled={updatingName}
-                                className="py-1.5 px-3.5 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                className="py-1.5 px-3.5 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                             >
                                 {updatingName && (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -851,17 +851,13 @@ export default function SettingsView({
                             <input
                                 type="text"
                                 readOnly
-                                value={
-                                    user.avatarUrl
-                                        ? "Đăng nhập Google"
-                                        : `${user.username}@hocvientinhte.edu.vn`
-                                }
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
+                                value={user.avatarUrl ? "Đăng nhập Google" : ``}
+                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
                             />
                             <button
                                 type="button"
                                 disabled
-                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-lg text-xs font-semibold cursor-not-allowed"
+                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-xl text-xs font-semibold cursor-not-allowed"
                             >
                                 Change email
                             </button>
@@ -883,7 +879,7 @@ export default function SettingsView({
                                 type="text"
                                 readOnly
                                 value={user.username}
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
+                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
                             />
                         </div>
                     </div>
@@ -903,7 +899,7 @@ export default function SettingsView({
                                 type="text"
                                 readOnly
                                 value="GMT+7 — Indochina Time"
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
+                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
                             />
                         </div>
                     </div>
@@ -976,7 +972,7 @@ export default function SettingsView({
                                         className="flex flex-col items-center gap-1"
                                     >
                                         <div
-                                            className={`w-full h-10 rounded-lg ${color.bg} border border-slate-100 dark:border-slate-800 shadow-2xs relative`}
+                                            className={`w-full h-10 rounded-xl ${color.bg} border border-slate-100 dark:border-slate-800 shadow-2xs relative`}
                                         >
                                             {color.active && (
                                                 <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold text-white uppercase tracking-wider drop-shadow-xs">
@@ -1037,7 +1033,7 @@ export default function SettingsView({
                                 ].map((item, idx) => (
                                     <div
                                         key={idx}
-                                        className={`p-3 rounded-lg text-center ${item.className} flex flex-col items-center justify-center gap-1 min-h-[70px]`}
+                                        className={`p-3 rounded-xl text-center ${item.className} flex flex-col items-center justify-center gap-1 min-h-[70px]`}
                                     >
                                         <span className="text-[9px] font-semibold leading-tight">
                                             {item.label}
@@ -1075,14 +1071,14 @@ export default function SettingsView({
                                         type="password"
                                         readOnly
                                         value="••••••••••••"
-                                        className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-450 dark:text-slate-550 select-none outline-none"
+                                        className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-550 select-none outline-none"
                                     />
                                     <button
                                         type="button"
                                         onClick={() =>
                                             setShowPasswordForm(true)
                                         }
-                                        className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
+                                        className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
                                     >
                                         Change password
                                     </button>
@@ -1103,7 +1099,7 @@ export default function SettingsView({
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
-                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
+                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
                                         />
                                     </div>
                                     <div className="space-y-1">
@@ -1119,7 +1115,7 @@ export default function SettingsView({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
+                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
                                         />
                                     </div>
 
@@ -1138,7 +1134,7 @@ export default function SettingsView({
                                         <button
                                             type="submit"
                                             disabled={updatingPassword}
-                                            className="py-1.5 px-3 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                                            className="py-1.5 px-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center gap-1"
                                         >
                                             {updatingPassword && (
                                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1152,7 +1148,7 @@ export default function SettingsView({
                                                 setPwdError("");
                                                 setPwdSuccess("");
                                             }}
-                                            className="py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-all"
+                                            className="py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all"
                                         >
                                             Hủy
                                         </button>
@@ -1176,7 +1172,7 @@ export default function SettingsView({
                         <div className="col-span-12 md:col-span-8">
                             <button
                                 type="button"
-                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-450 dark:text-slate-500 rounded-lg text-xs font-semibold cursor-not-allowed"
+                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-450 dark:text-slate-500 rounded-xl text-xs font-semibold cursor-not-allowed"
                             >
                                 Manage 2FA
                             </button>
@@ -1207,7 +1203,7 @@ export default function SettingsView({
                                     type="button"
                                     onClick={handleSignOutAll}
                                     disabled={loggingOutAll}
-                                    className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                                    className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                                 >
                                     {loggingOutAll && (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1221,26 +1217,21 @@ export default function SettingsView({
                                     {globalError}
                                 </div>
                             )}
-
-                            <div className="p-3.5 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-100 dark:border-slate-800/50 rounded-lg text-[10px] text-slate-400 dark:text-slate-500 font-medium max-w-md leading-relaxed">
-                                No session info yet. It will appear after you
-                                use the app.
-                            </div>
                         </div>
                     </div>
                 </div>
             ) : (
                 /* History tab content */
-                <div className="max-w-4xl mx-auto px-6 py-6 pb-20">
+                <div className="max-w-4xl mx-auto px-6 pb-20">
                     {userSubmissions.length === 0 ? (
-                        <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-805/40 rounded-xl space-y-3">
+                        <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
                             <BookOpenCheck className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
                             <p className="text-xs text-slate-400 dark:text-slate-500 italic">
                                 Bạn chưa thực hiện bài thi nào.
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-3.5">
+                        <div className="divide-y divide-slate-100/70 dark:divide-slate-800/80">
                             {userSubmissions.map((sub) => {
                                 // Determine pill color depending on score
                                 let scoreColor =
@@ -1250,38 +1241,37 @@ export default function SettingsView({
                                         "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50";
                                 } else if (sub.score >= 5) {
                                     scoreColor =
-                                        "bg-amber-50 text-amber-700 border border-amber-700 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50";
+                                        "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50";
                                 }
 
                                 return (
                                     <div
                                         key={sub.id}
-                                        className="bg-white dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800/80 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:border-slate-350 dark:hover:border-slate-700 shadow-3xs"
+                                        className="grid grid-cols-12 gap-6 py-6 items-center"
                                     >
-                                        <div className="space-y-1.5">
-                                            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                                        {/* Left Column (6 cols): Quiz Title & Time/Date */}
+                                        <div className="col-span-12 md:col-span-6 space-y-1">
+                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-200">
                                                 {sub.quizTitle}
                                             </h4>
-                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-450">
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="w-3.5 h-3.5 text-slate-450" />
+                                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5" />
                                                     Nộp: {sub.submittedAt}
                                                 </span>
-                                                {sub.timeSpent !==
-                                                    undefined && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Clock className="w-3.5 h-3.5 text-slate-450" />
-                                                        Thời gian:{" "}
-                                                        {formatTime(
-                                                            sub.timeSpent,
-                                                        )}
+                                                {sub.timeSpent !== undefined && (
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        Thời gian: {formatTime(sub.timeSpent)}
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4 self-stretch sm:self-auto justify-between border-t sm:border-t-0 border-slate-100 dark:border-slate-700 pt-3 sm:pt-0">
+
+                                        {/* Right Column (6 cols): Score Badge & View Details Action */}
+                                        <div className="col-span-12 md:col-span-6 flex items-center justify-between md:justify-end gap-6">
                                             <span
-                                                className={`px-2.5 py-1 rounded-lg text-xs font-extrabold ${scoreColor}`}
+                                                className={`px-3 py-1 rounded-xl text-xs font-extrabold ${scoreColor}`}
                                             >
                                                 {sub.score} / 10
                                             </span>
@@ -1289,11 +1279,9 @@ export default function SettingsView({
                                                 type="button"
                                                 onClick={() => {
                                                     if (onNavigate)
-                                                        onNavigate(
-                                                            "/result/" + sub.id,
-                                                        );
+                                                        onNavigate("/result/" + sub.id);
                                                 }}
-                                                className="px-3.5 py-1.5 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
+                                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
                                             >
                                                 Xem chi tiết
                                             </button>

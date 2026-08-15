@@ -1970,57 +1970,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
     };
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-            {/* HEADER */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                    <h3 className="text-base font-bold text-slate-950 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-brand-600" />
-                        Import Đề Thi 3 Phần & Đồ Họa + Math XML
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1">
-                        Giải mã trọn vẹn 22 câu hỏi (Phần 1, Phần 2, Phần 3),
-                        hình ảnh, bảng biểu và lời giải chi tiết.
-                    </p>
-                </div>
-
-                {/* TABS */}
-                <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
-                    <button
-                        onClick={() => setActiveTab("paste")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            activeTab === "paste"
-                                ? "bg-white text-slate-900 shadow-2xs"
-                                : "text-slate-600"
-                        }`}
-                    >
-                        1. Tải file / Dán chữ
-                    </button>
-                    <button
-                        disabled={parsedQuestions.length === 0}
-                        onClick={() => setActiveTab("preview")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            activeTab === "preview"
-                                ? "bg-white text-slate-900 shadow-2xs"
-                                : "text-slate-400"
-                        }`}
-                    >
-                        2. Xem & Chỉnh sửa ({parsedQuestions.length})
-                    </button>
-                    <button
-                        disabled={!rawText}
-                        onClick={() => setActiveTab("raw")}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                            activeTab === "raw"
-                                ? "bg-white text-slate-900 shadow-2xs"
-                                : "text-slate-400"
-                        }`}
-                    >
-                        3. Dữ liệu gốc sau đọc Word
-                    </button>
-                </div>
-            </div>
-
+        <div className="space-y-6">
             {/* TAB 1: PASTE OR FILE UPLOAD */}
             {activeTab === "paste" && (
                 <div className="space-y-4">

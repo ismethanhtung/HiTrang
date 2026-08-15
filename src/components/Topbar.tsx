@@ -8,6 +8,7 @@ import {
     History,
     Search,
     Trophy,
+    Crown,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -252,7 +253,7 @@ export default function Topbar({
                                     currentPath === "/leaderboard",
                                 )}
                             >
-                                <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                                <Crown className="w-3.5 h-3.5 text-amber-500" />
                                 <span>BXH</span>
                             </button>
                         )}
