@@ -25,8 +25,11 @@ export default function AdminStatsQuizzesTab({
 }: AdminStatsQuizzesTabProps) {
     const [search, setSearch] = useState("");
     const [filterGrade, setFilterGrade] = useState("all");
-    const [sortBy, setSortBy] = useState<"newest" | "oldest" | "submissions" | "avgScore" | "highestScore">("newest");
-    const [selectedQuizForDetails, setSelectedQuizForDetails] = useState<Quiz | null>(null);
+    const [sortBy, setSortBy] = useState<
+        "newest" | "oldest" | "submissions" | "avgScore" | "highestScore"
+    >("newest");
+    const [selectedQuizForDetails, setSelectedQuizForDetails] =
+        useState<Quiz | null>(null);
 
     const formatTime = (secs: number) => {
         const mins = Math.floor(secs / 60);
@@ -34,39 +37,50 @@ export default function AdminStatsQuizzesTab({
         return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
     };
 
-    const statsQuizzesData = useMemo(() =>
-        quizzes.map((quiz, idx) => {
-            const quizSubmissions = submissions.filter((s) => s.quizId === quiz.id);
-            const count = quizSubmissions.length;
-            const avg =
-                count > 0
-                    ? Number(
-                          (quizSubmissions.reduce((acc, curr) => acc + curr.score, 0) / count).toFixed(1),
-                      )
-                    : 0;
+    const statsQuizzesData = useMemo(
+        () =>
+            quizzes.map((quiz, idx) => {
+                const quizSubmissions = submissions.filter(
+                    (s) => s.quizId === quiz.id,
+                );
+                const count = quizSubmissions.length;
+                const avg =
+                    count > 0
+                        ? Number(
+                              (
+                                  quizSubmissions.reduce(
+                                      (acc, curr) => acc + curr.score,
+                                      0,
+                                  ) / count
+                              ).toFixed(1),
+                          )
+                        : 0;
 
-            let maxScore = 0;
-            let maxScorer = "-";
-            if (count > 0) {
-                const sortedSubs = [...quizSubmissions].sort((a, b) => b.score - a.score);
-                maxScore = sortedSubs[0].score;
-                maxScorer = sortedSubs[0].studentName;
-            }
+                let maxScore = 0;
+                let maxScorer = "-";
+                if (count > 0) {
+                    const sortedSubs = [...quizSubmissions].sort(
+                        (a, b) => b.score - a.score,
+                    );
+                    maxScore = sortedSubs[0].score;
+                    maxScorer = sortedSubs[0].studentName;
+                }
 
-            return {
-                id: quiz.id,
-                title: quiz.title,
-                subject: quiz.subject,
-                grade: quiz.grade || "-",
-                questionsCount: quiz.questions.length,
-                submissionsCount: count,
-                avgScore: avg,
-                highestScore: maxScore,
-                highestScorerName: maxScorer,
-                createdOrder: idx,
-            };
-        }),
-    [quizzes, submissions]);
+                return {
+                    id: quiz.id,
+                    title: quiz.title,
+                    subject: quiz.subject,
+                    grade: quiz.grade || "-",
+                    questionsCount: quiz.questions.length,
+                    submissionsCount: count,
+                    avgScore: avg,
+                    highestScore: maxScore,
+                    highestScorerName: maxScorer,
+                    createdOrder: idx,
+                };
+            }),
+        [quizzes, submissions],
+    );
 
     const filtered = useMemo(() => {
         let result = [...statsQuizzesData];
@@ -87,9 +101,11 @@ export default function AdminStatsQuizzesTab({
         result.sort((a, b) => {
             if (sortBy === "newest") return b.createdOrder - a.createdOrder;
             if (sortBy === "oldest") return a.createdOrder - b.createdOrder;
-            if (sortBy === "submissions") return b.submissionsCount - a.submissionsCount;
+            if (sortBy === "submissions")
+                return b.submissionsCount - a.submissionsCount;
             if (sortBy === "avgScore") return b.avgScore - a.avgScore;
-            if (sortBy === "highestScore") return b.highestScore - a.highestScore;
+            if (sortBy === "highestScore")
+                return b.highestScore - a.highestScore;
             return 0;
         });
 
@@ -102,11 +118,11 @@ export default function AdminStatsQuizzesTab({
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-border-primary/60">
                 <div>
                     <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-brand-500" />
                         Thống Kê Đề Thi
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                        Thống kê điểm số trung bình, cao nhất và số lượng người tham gia từng đề thi.
+                        Thống kê điểm số trung bình, cao nhất và số lượng người
+                        tham gia từng đề thi.
                     </p>
                 </div>
             </div>
@@ -174,19 +190,34 @@ export default function AdminStatsQuizzesTab({
                                 <th className="px-4 py-3">Đề thi</th>
                                 <th className="px-4 py-3">Môn học</th>
                                 <th className="px-4 py-3 text-center">Lớp</th>
-                                <th className="px-4 py-3 text-center">Số câu</th>
-                                <th className="px-4 py-3 text-center">Lượt làm</th>
-                                <th className="px-4 py-3 text-center">Điểm TB</th>
-                                <th className="px-4 py-3 text-center">Điểm cao nhất</th>
+                                <th className="px-4 py-3 text-center">
+                                    Số câu
+                                </th>
+                                <th className="px-4 py-3 text-center">
+                                    Lượt làm
+                                </th>
+                                <th className="px-4 py-3 text-center">
+                                    Điểm TB
+                                </th>
+                                <th className="px-4 py-3 text-center">
+                                    Điểm cao nhất
+                                </th>
                                 <th className="px-4 py-3">Người cao nhất</th>
-                                <th className="px-4 py-3 text-center">Hành động</th>
+                                <th className="px-4 py-3 text-center">
+                                    Hành động
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
                             {filtered.map((quizData) => (
-                                <tr key={quizData.id} className="hover:bg-slate-50/50 transition-colors">
+                                <tr
+                                    key={quizData.id}
+                                    className="hover:bg-slate-50/50 transition-colors"
+                                >
                                     <td className="px-4 py-3 font-bold text-text-primary max-w-[220px]">
-                                        <span className="line-clamp-2">{quizData.title}</span>
+                                        <span className="line-clamp-2">
+                                            {quizData.title}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-semibold">
@@ -199,15 +230,21 @@ export default function AdminStatsQuizzesTab({
                                                 Lớp {quizData.grade}
                                             </span>
                                         ) : (
-                                            <span className="text-slate-400">—</span>
+                                            <span className="text-slate-400">
+                                                —
+                                            </span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-center text-slate-600">
                                         {quizData.questionsCount}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={`font-bold ${quizData.submissionsCount > 0 ? "text-text-primary" : "text-slate-400"}`}>
-                                            {quizData.submissionsCount > 0 ? quizData.submissionsCount : "—"}
+                                        <span
+                                            className={`font-bold ${quizData.submissionsCount > 0 ? "text-text-primary" : "text-slate-400"}`}
+                                        >
+                                            {quizData.submissionsCount > 0
+                                                ? quizData.submissionsCount
+                                                : "—"}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
@@ -217,26 +254,41 @@ export default function AdminStatsQuizzesTab({
                                                     ? "bg-emerald-50 text-emerald-700"
                                                     : quizData.avgScore >= 5
                                                       ? "bg-amber-50 text-amber-700"
-                                                      : quizData.submissionsCount > 0
+                                                      : quizData.submissionsCount >
+                                                          0
                                                         ? "bg-rose-50 text-rose-700"
                                                         : "text-slate-400"
                                             }`}
                                         >
-                                            {quizData.avgScore > 0 ? quizData.avgScore : "—"}
+                                            {quizData.avgScore > 0
+                                                ? quizData.avgScore
+                                                : "—"}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center font-bold text-text-primary">
-                                        {quizData.submissionsCount > 0 ? quizData.highestScore : "—"}
+                                        {quizData.submissionsCount > 0
+                                            ? quizData.highestScore
+                                            : "—"}
                                     </td>
                                     <td className="px-4 py-3 text-slate-500 font-medium">
-                                        {quizData.submissionsCount > 0 ? quizData.highestScorerName : "—"}
+                                        {quizData.submissionsCount > 0
+                                            ? quizData.highestScorerName
+                                            : "—"}
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                const originalQuiz = quizzes.find((q) => q.id === quizData.id);
-                                                if (originalQuiz) setSelectedQuizForDetails(originalQuiz);
+                                                const originalQuiz =
+                                                    quizzes.find(
+                                                        (q) =>
+                                                            q.id ===
+                                                            quizData.id,
+                                                    );
+                                                if (originalQuiz)
+                                                    setSelectedQuizForDetails(
+                                                        originalQuiz,
+                                                    );
                                             }}
                                             className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold transition-all active:scale-[0.98] cursor-pointer"
                                         >
@@ -247,7 +299,10 @@ export default function AdminStatsQuizzesTab({
                             ))}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={9} className="px-4 py-10 text-center text-slate-400 italic">
+                                    <td
+                                        colSpan={9}
+                                        className="px-4 py-10 text-center text-slate-400 italic"
+                                    >
                                         {search || filterGrade !== "all"
                                             ? "Không tìm thấy đề thi nào phù hợp với bộ lọc."
                                             : "Chưa có dữ liệu đề thi."}
@@ -285,13 +340,18 @@ export default function AdminStatsQuizzesTab({
                         <div className="p-6 overflow-y-auto min-h-0 flex-1">
                             {(() => {
                                 const quizSubs = submissions
-                                    .filter((s) => s.quizId === selectedQuizForDetails.id)
+                                    .filter(
+                                        (s) =>
+                                            s.quizId ===
+                                            selectedQuizForDetails.id,
+                                    )
                                     .sort((a, b) => b.score - a.score);
 
                                 if (quizSubs.length === 0) {
                                     return (
                                         <div className="text-center py-12 text-slate-400 italic text-sm">
-                                            Chưa có học sinh nào thực hiện bài thi này.
+                                            Chưa có học sinh nào thực hiện bài
+                                            thi này.
                                         </div>
                                     );
                                 }
@@ -302,62 +362,103 @@ export default function AdminStatsQuizzesTab({
                                             <table className="w-full text-left border-collapse text-xs">
                                                 <thead>
                                                     <tr className="border-b border-border-primary/50 bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                                                        <th className="px-3.5 py-3 text-center w-12">Hạng</th>
-                                                        <th className="px-3.5 py-3">Học sinh</th>
-                                                        <th className="px-3.5 py-3 text-center">Điểm số</th>
-                                                        <th className="px-3.5 py-3 text-center">Thời gian làm</th>
-                                                        <th className="px-3.5 py-3">Thời điểm nộp</th>
-                                                        <th className="px-3.5 py-3 text-center">Hành động</th>
+                                                        <th className="px-3.5 py-3 text-center w-12">
+                                                            Hạng
+                                                        </th>
+                                                        <th className="px-3.5 py-3">
+                                                            Học sinh
+                                                        </th>
+                                                        <th className="px-3.5 py-3 text-center">
+                                                            Điểm số
+                                                        </th>
+                                                        <th className="px-3.5 py-3 text-center">
+                                                            Thời gian làm
+                                                        </th>
+                                                        <th className="px-3.5 py-3">
+                                                            Thời điểm nộp
+                                                        </th>
+                                                        <th className="px-3.5 py-3 text-center">
+                                                            Hành động
+                                                        </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
-                                                    {quizSubs.map((sub, index) => {
-                                                        const scoreColor =
-                                                            sub.score >= 8
-                                                                ? "bg-emerald-50 text-emerald-700"
-                                                                : sub.score >= 5
-                                                                  ? "bg-amber-50 text-amber-700"
-                                                                  : "bg-rose-50 text-rose-700";
+                                                    {quizSubs.map(
+                                                        (sub, index) => {
+                                                            const scoreColor =
+                                                                sub.score >= 8
+                                                                    ? "bg-emerald-50 text-emerald-700"
+                                                                    : sub.score >=
+                                                                        5
+                                                                      ? "bg-amber-50 text-amber-700"
+                                                                      : "bg-rose-50 text-rose-700";
 
-                                                        return (
-                                                            <tr key={sub.id} className="hover:bg-slate-50/50 transition-colors">
-                                                                <td className="px-3.5 py-3 text-center font-extrabold text-slate-400">
-                                                                    #{index + 1}
-                                                                </td>
-                                                                <td className="px-3.5 py-3">
-                                                                    <div className="font-bold text-text-primary">
-                                                                        {sub.studentName}
-                                                                    </div>
-                                                                    <div className="text-[10px] text-slate-400 font-medium">
-                                                                        @{sub.studentUsername || "unknown"}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-3.5 py-3 text-center">
-                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${scoreColor}`}>
-                                                                        {sub.score} / 10
-                                                                    </span>
-                                                                </td>
-                                                                <td className="px-3.5 py-3 text-center text-slate-500">
-                                                                    {sub.timeSpent !== undefined ? formatTime(sub.timeSpent) : "—"}
-                                                                </td>
-                                                                <td className="px-3.5 py-3 text-slate-500 font-medium">
-                                                                    {sub.submittedAt}
-                                                                </td>
-                                                                <td className="px-3.5 py-3 text-center">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            setSelectedQuizForDetails(null);
-                                                                            onReviewSubmission(sub);
-                                                                        }}
-                                                                        className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-[10px] font-bold transition-all active:scale-[0.98] cursor-pointer"
-                                                                    >
-                                                                        Xem bài
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
+                                                            return (
+                                                                <tr
+                                                                    key={sub.id}
+                                                                    className="hover:bg-slate-50/50 transition-colors"
+                                                                >
+                                                                    <td className="px-3.5 py-3 text-center font-extrabold text-slate-400">
+                                                                        #
+                                                                        {index +
+                                                                            1}
+                                                                    </td>
+                                                                    <td className="px-3.5 py-3">
+                                                                        <div className="font-bold text-text-primary">
+                                                                            {
+                                                                                sub.studentName
+                                                                            }
+                                                                        </div>
+                                                                        <div className="text-[10px] text-slate-400 font-medium">
+                                                                            @
+                                                                            {sub.studentUsername ||
+                                                                                "unknown"}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="px-3.5 py-3 text-center">
+                                                                        <span
+                                                                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${scoreColor}`}
+                                                                        >
+                                                                            {
+                                                                                sub.score
+                                                                            }{" "}
+                                                                            / 10
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="px-3.5 py-3 text-center text-slate-500">
+                                                                        {sub.timeSpent !==
+                                                                        undefined
+                                                                            ? formatTime(
+                                                                                  sub.timeSpent,
+                                                                              )
+                                                                            : "—"}
+                                                                    </td>
+                                                                    <td className="px-3.5 py-3 text-slate-500 font-medium">
+                                                                        {
+                                                                            sub.submittedAt
+                                                                        }
+                                                                    </td>
+                                                                    <td className="px-3.5 py-3 text-center">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setSelectedQuizForDetails(
+                                                                                    null,
+                                                                                );
+                                                                                onReviewSubmission(
+                                                                                    sub,
+                                                                                );
+                                                                            }}
+                                                                            className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-[10px] font-bold transition-all active:scale-[0.98] cursor-pointer"
+                                                                        >
+                                                                            Xem
+                                                                            bài
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        },
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -381,4 +482,3 @@ export default function AdminStatsQuizzesTab({
         </div>
     );
 }
-

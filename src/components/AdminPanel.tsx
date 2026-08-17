@@ -416,7 +416,7 @@ export default function AdminPanel({
             </aside>
 
             {/* MAIN CONTENT AREA */}
-            <section className="flex-1 p-6 overflow-y-auto">
+            <section className="flex-1 p-6 overflow-y-auto relative">
                 {adminReviewSubmission ? (
                     <AdminSubmissionReviewer
                         submission={adminReviewSubmission}
@@ -461,6 +461,7 @@ export default function AdminPanel({
 
                         {activeTab === "stats-students" && (
                             <AdminStatsStudentsTab
+                                quizzes={quizzes}
                                 userProfiles={userProfiles}
                                 submissions={submissions}
                                 onReviewSubmission={setAdminReviewSubmission}
