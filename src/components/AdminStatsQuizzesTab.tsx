@@ -347,120 +347,338 @@ export default function AdminStatsQuizzesTab({
                                     )
                                     .sort((a, b) => b.score - a.score);
 
-                                if (quizSubs.length === 0) {
-                                    return (
-                                        <div className="text-center py-12 text-slate-400 italic text-sm">
-                                            Chưa có học sinh nào thực hiện bài
-                                            thi này.
-                                        </div>
-                                    );
-                                }
+                                // --------------------------------------------
+                                // CALCULATIONS FOR DETAILED ANALYTICS
+                                // --------------------------------------------
+                                const scores = quizSubs.map((s) => s.score);
+                                const total = scores.length;
+                                const sum = scores.reduce((acc, curr) => acc + curr, 0);
+                                const average = Number((sum / total).toFixed(2));
+
+                                // Median
+                                const sortedScores = [...scores].sort((a, b) => a - b);
+                                const median =
+                                    total % 2 !== 0
+                                        ? sortedScores[Math.floor(total / 2)]
+                                        : Number(
+                                              (
+                                                  (sortedScores[total / 2 - 1] +
+                                                      sortedScores[total / 2]) /
+                                                  2
+                                              ).toFixed(2),
+                                          );
+
+                                // Min / Max
+                                const max = Math.max(...scores);
+                                const min = Math.min(...scores);
+
+                                // Pass rate (score >= 5.0)
+                                const passCount = scores.filter((s) => s >= 5.0).length;
+                                const passRate = Number(((passCount / total) * 100).toFixed(1));
+
+                                // Average time spent
+                                const validTimes = quizSubs.filter((s) => s.timeSpent !== undefined).map((s) => s.timeSpent as number);
+                                const avgTimeSpent =
+                                    validTimes.length > 0
+                                        ? Math.round(
+                                              validTimes.reduce((acc, curr) => acc + curr, 0) /
+                                                  validTimes.length,
+                                          )
+                                        : 0;
+
+                                 // 21 Score brackets (from 0 to 10 with step 0.5) representing exact distribution like official exams
+                                 const distribution = Array.from({ length: 21 }, (_, i) => {
+                                     const scoreVal = i * 0.5;
+                                     // Filter submissions matching this score (using rounding to nearest 0.5)
+                                     const count = scores.filter((s) => Math.round(s * 2) / 2 === scoreVal).length;
+                                     const pct = Number(((count / total) * 100).toFixed(1));
+                                     return {
+                                         label: `${scoreVal}đ`,
+                                         shortLabel: scoreVal % 1 === 0 ? `${scoreVal}` : "",
+                                         scoreVal,
+                                         count,
+                                         pct,
+                                     };
+                                 });
 
                                 return (
-                                    <div className="bg-bg-card rounded-lg overflow-hidden shadow-2xs">
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse text-xs">
-                                                <thead>
-                                                    <tr className="border-b border-border-primary/50 bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                                                        <th className="px-3.5 py-3 text-center w-12">
-                                                            Hạng
-                                                        </th>
-                                                        <th className="px-3.5 py-3">
-                                                            Học sinh
-                                                        </th>
-                                                        <th className="px-3.5 py-3 text-center">
-                                                            Điểm số
-                                                        </th>
-                                                        <th className="px-3.5 py-3 text-center">
-                                                            Thời gian làm
-                                                        </th>
-                                                        <th className="px-3.5 py-3">
-                                                            Thời điểm nộp
-                                                        </th>
-                                                        <th className="px-3.5 py-3 text-center">
-                                                            Hành động
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
-                                                    {quizSubs.map(
-                                                        (sub, index) => {
-                                                            const scoreColor =
-                                                                sub.score >= 8
-                                                                    ? "bg-emerald-50 text-emerald-700"
-                                                                    : sub.score >=
-                                                                        5
-                                                                      ? "bg-amber-50 text-amber-700"
-                                                                      : "bg-rose-50 text-rose-700";
+                                    <div className="space-y-6">
+                                        {/* Combined Grid: Chart on Left, Indicators on Right */}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch border-b border-border-primary/40 pb-6">
+                                            {/* Left Column (2/3 width on desktop): Chart */}
+                                            <div className="md:col-span-2 space-y-3 flex flex-col justify-between">
+                                                <h4 className="text-[10px] font-extrabold uppercase text-slate-400 dark:text-slate-550 tracking-wider">
+                                                    Biểu đồ phổ điểm
+                                                </h4>
+                                                {(() => {
+                                                    const maxPct = Math.max(...distribution.map(d => d.pct)) || 1;
+                                                    const maxCount = Math.max(...distribution.map(d => d.count)) || 1;
+                                                    const chartWidth = 500;
+                                                    const chartHeight = 185;
+                                                    const padLeft = 30;
+                                                    const padRight = 10;
+                                                    const padTop = 25;
+                                                    const padBot = 30;
+                                                    const useW = chartWidth - padLeft - padRight;
+                                                    const useH = chartHeight - padTop - padBot;
+                                                    const colW = useW / 21;
+                                                    const barW = Math.min(16, colW * 0.85);
 
-                                                            return (
-                                                                <tr
-                                                                    key={sub.id}
-                                                                    className="hover:bg-slate-50/50 transition-colors"
-                                                                >
-                                                                    <td className="px-3.5 py-3 text-center font-extrabold text-slate-400">
-                                                                        #
-                                                                        {index +
-                                                                            1}
-                                                                    </td>
-                                                                    <td className="px-3.5 py-3">
-                                                                        <div className="font-bold text-text-primary">
-                                                                            {
-                                                                                sub.studentName
-                                                                            }
-                                                                        </div>
-                                                                        <div className="text-[10px] text-slate-400 font-medium">
-                                                                            @
-                                                                            {sub.studentUsername ||
-                                                                                "unknown"}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="px-3.5 py-3 text-center">
-                                                                        <span
-                                                                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${scoreColor}`}
+                                                    const getBarPath = (x: number, y: number, w: number, h: number, r: number) => {
+                                                        const realR = Math.min(r, h, w / 2);
+                                                        if (realR <= 0) {
+                                                            return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
+                                                        }
+                                                        return `M ${x} ${y + h} L ${x} ${y + realR} A ${realR} ${realR} 0 0 1 ${x + realR} ${y} L ${x + w - realR} ${y} A ${realR} ${realR} 0 0 1 ${x + w} ${y + realR} L ${x + w} ${y + h} Z`;
+                                                    };
+
+                                                    return (
+                                                        <div className="w-full relative">
+                                                            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto">
+                                                                <defs>
+                                                                    <linearGradient id="dist-grad-emerald" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.85" />
+                                                                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.15" />
+                                                                    </linearGradient>
+                                                                    <linearGradient id="dist-grad-blue" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.85" />
+                                                                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.15" />
+                                                                    </linearGradient>
+                                                                    <linearGradient id="dist-grad-amber" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.85" />
+                                                                        <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.15" />
+                                                                    </linearGradient>
+                                                                    <linearGradient id="dist-grad-red" x1="0" y1="0" x2="0" y2="1">
+                                                                        <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
+                                                                        <stop offset="100%" stopColor="#EF4444" stopOpacity="0.15" />
+                                                                    </linearGradient>
+                                                                </defs>
+
+                                                                {/* Gridlines */}
+                                                                <line x1={padLeft} y1={padTop} x2={chartWidth - padRight} y2={padTop} stroke="currentColor" className="text-slate-100 dark:text-slate-800/40" strokeWidth="0.8" strokeDasharray="3,3" />
+                                                                <line x1={padLeft} y1={padTop + useH/2} x2={chartWidth - padRight} y2={padTop + useH/2} stroke="currentColor" className="text-slate-100 dark:text-slate-800/40" strokeWidth="0.8" strokeDasharray="3,3" />
+                                                                <line x1={padLeft} y1={padTop + useH} x2={chartWidth - padRight} y2={padTop + useH} stroke="currentColor" className="text-slate-200 dark:text-slate-705" strokeWidth="1" />
+
+                                                                {/* Bars */}
+                                                                {distribution.map((dist, i) => {
+                                                                    const barX = padLeft + i * colW + (colW - barW) / 2;
+                                                                    const barHeight = dist.count > 0 ? (dist.count / maxCount) * (useH - 15) : 0;
+                                                                    const y = padTop + useH - barHeight;
+                                                                    const centerX = barX + barW / 2;
+
+                                                                    let grad = "url(#dist-grad-red)";
+                                                                    let color = "#EF4444";
+                                                                    if (dist.scoreVal >= 9.0) {
+                                                                        grad = "url(#dist-grad-emerald)";
+                                                                        color = "#10B981";
+                                                                    } else if (dist.scoreVal >= 6.5) {
+                                                                        grad = "url(#dist-grad-blue)";
+                                                                        color = "#3B82F6";
+                                                                    } else if (dist.scoreVal >= 5.0) {
+                                                                        grad = "url(#dist-grad-amber)";
+                                                                        color = "#F59E0B";
+                                                                    }
+
+                                                                    return (
+                                                                        <g key={i}>
+                                                                            <path
+                                                                                d={getBarPath(barX, padTop, barW, useH, 2)}
+                                                                                fill="currentColor"
+                                                                                className="text-slate-50/50 dark:text-slate-850/20"
+                                                                            />
+                                                                            {barHeight > 0 && (
+                                                                                <path
+                                                                                    d={getBarPath(barX, y, barW, barHeight, 2)}
+                                                                                    fill={grad}
+                                                                                    className="transition-all duration-300"
+                                                                                />
+                                                                            )}
+
+                                                                            {dist.count > 0 && (
+                                                                                <text
+                                                                                    x={centerX}
+                                                                                    y={y - 5}
+                                                                                    textAnchor="middle"
+                                                                                    fill={color}
+                                                                                    fontSize="7.5"
+                                                                                    fontWeight="bold"
+                                                                                >
+                                                                                    {dist.count}
+                                                                                </text>
+                                                                            )}
+
+                                                                            <text
+                                                                                x={centerX}
+                                                                                y={padTop + useH + 14}
+                                                                                textAnchor="middle"
+                                                                                fill="currentColor"
+                                                                                fontSize="8.5"
+                                                                                fontWeight="bold"
+                                                                                className="text-slate-700 dark:text-slate-400"
+                                                                            >
+                                                                                {dist.shortLabel}
+                                                                            </text>
+                                                                        </g>
+                                                                    );
+                                                                })}
+                                                            </svg>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+
+                                            {/* Right Column (1/3 width on desktop): 4 Indicators in 2x2 grid */}
+                                            <div className="space-y-4 text-left border-t md:border-t-0 md:border-l border-slate-200/60 dark:border-slate-800/60 pt-6 md:pt-0 md:pl-6 flex flex-col justify-between">
+                                                <h3 className="text-xs font-black text-slate-400 dark:text-slate-550 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/60 pb-2">
+                                                    Chỉ số đề thi
+                                                </h3>
+
+                                                <div className="grid grid-cols-2 gap-y-6 gap-x-4 pt-2 flex-1 content-center">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                                                            Lượt làm
+                                                        </span>
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-200 block">
+                                                            {total}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60 dark:border-slate-800/60">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                                                            Thời gian TB
+                                                        </span>
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-200 block">
+                                                            {avgTimeSpent > 0 ? formatTime(avgTimeSpent) : "—"}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1 border-t border-slate-200/60 dark:border-slate-800/60 pt-4">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                                                            Điểm trung bình
+                                                        </span>
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-200 block">
+                                                            {average}
+                                                        </span>
+                                                    </div>
+                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60 border-t border-slate-200/60 dark:border-slate-800/60 dark:border-t-slate-800/60 pt-4">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                                                            Điểm cao nhất
+                                                        </span>
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-200 block">
+                                                            {max}/10
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 3. Submissions Table Title */}
+                                        <div className="pt-2">
+                                            <h4 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-wider mb-3">Danh sách chi tiết xếp hạng</h4>
+                                            <div className="bg-bg-card border border-border-primary/50 rounded-2xl overflow-hidden shadow-2xs">
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-left border-collapse text-xs">
+                                                        <thead>
+                                                            <tr className="border-b border-border-primary/50 bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                                                                <th className="px-3.5 py-3 text-center w-12">
+                                                                    Hạng
+                                                                </th>
+                                                                <th className="px-3.5 py-3">
+                                                                    Học sinh
+                                                                </th>
+                                                                <th className="px-3.5 py-3 text-center">
+                                                                    Điểm số
+                                                                </th>
+                                                                <th className="px-3.5 py-3 text-center">
+                                                                    Thời gian làm
+                                                                </th>
+                                                                <th className="px-3.5 py-3">
+                                                                    Thời điểm nộp
+                                                                </th>
+                                                                <th className="px-3.5 py-3 text-center">
+                                                                    Hành động
+                                                                </th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
+                                                            {quizSubs.map(
+                                                                (sub, index) => {
+                                                                    const scoreColor =
+                                                                        sub.score >= 8
+                                                                            ? "bg-emerald-50 text-emerald-700"
+                                                                            : sub.score >=
+                                                                                5
+                                                                              ? "bg-amber-50 text-amber-700"
+                                                                              : "bg-rose-50 text-rose-700";
+
+                                                                    return (
+                                                                        <tr
+                                                                            key={sub.id}
+                                                                            className="hover:bg-slate-50/50 transition-colors"
                                                                         >
-                                                                            {
-                                                                                sub.score
-                                                                            }{" "}
-                                                                            / 10
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="px-3.5 py-3 text-center text-slate-500">
-                                                                        {sub.timeSpent !==
-                                                                        undefined
-                                                                            ? formatTime(
-                                                                                  sub.timeSpent,
-                                                                              )
-                                                                            : "—"}
-                                                                    </td>
-                                                                    <td className="px-3.5 py-3 text-slate-500 font-medium">
-                                                                        {
-                                                                            sub.submittedAt
-                                                                        }
-                                                                    </td>
-                                                                    <td className="px-3.5 py-3 text-center">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setSelectedQuizForDetails(
-                                                                                    null,
-                                                                                );
-                                                                                onReviewSubmission(
-                                                                                    sub,
-                                                                                );
-                                                                            }}
-                                                                            className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-[10px] font-bold transition-all active:scale-[0.98] cursor-pointer"
-                                                                        >
-                                                                            Xem
-                                                                            bài
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        },
-                                                    )}
-                                                </tbody>
-                                            </table>
+                                                                            <td className="px-3.5 py-3 text-center font-extrabold text-slate-400">
+                                                                                #
+                                                                                {index +
+                                                                                    1}
+                                                                            </td>
+                                                                            <td className="px-3.5 py-3">
+                                                                                <div className="font-bold text-text-primary">
+                                                                                    {
+                                                                                        sub.studentName
+                                                                                    }
+                                                                                </div>
+                                                                                <div className="text-[10px] text-slate-400 font-medium">
+                                                                                    @
+                                                                                    {sub.studentUsername ||
+                                                                                        "unknown"}
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="px-3.5 py-3 text-center">
+                                                                                <span
+                                                                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${scoreColor}`}
+                                                                                >
+                                                                                    {
+                                                                                        sub.score
+                                                                                    }{" "}
+                                                                                    / 10
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="px-3.5 py-3 text-center text-slate-500">
+                                                                                {sub.timeSpent !==
+                                                                                undefined
+                                                                                    ? formatTime(
+                                                                                          sub.timeSpent,
+                                                                                      )
+                                                                                    : "—"}
+                                                                            </td>
+                                                                            <td className="px-3.5 py-3 text-slate-500 font-medium">
+                                                                                {
+                                                                                    sub.submittedAt
+                                                                                }
+                                                                            </td>
+                                                                            <td className="px-3.5 py-3 text-center">
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setSelectedQuizForDetails(
+                                                                                            null,
+                                                                                        );
+                                                                                        onReviewSubmission(
+                                                                                            sub,
+                                                                                        );
+                                                                                    }}
+                                                                                    className="px-2.5 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 rounded-lg text-[10px] font-bold transition-all active:scale-[0.98] cursor-pointer"
+                                                                                >
+                                                                                    Xem
+                                                                                    bài
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 );

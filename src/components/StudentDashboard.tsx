@@ -1666,7 +1666,7 @@ export default function StudentDashboard({
                                 </div>
                                 <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3">
                                     💡 Điểm thi trên BXH được tính theo lượt thi
-                                    ĐẦU TIÊN để đảm bảo sự khách quan.
+                                    ĐẦU TIÊN.
                                 </p>
                             </motion.div>
 

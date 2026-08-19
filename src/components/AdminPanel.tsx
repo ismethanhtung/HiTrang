@@ -146,15 +146,23 @@ export default function AdminPanel({
     };
 
     const handleDownloadBackup = async () => {
+        const pass = prompt("Nhập mật khẩu cấp 2 để tải bản sao lưu:");
+        if (!pass) return;
+
         try {
             const token = localStorage.getItem("hitrang_token");
             const apiUrl = import.meta.env.VITE_API_URL || "/api";
-            const response = await fetch(`${apiUrl}/admin/backup`, {
+            const response = await fetch(`${apiUrl}/admin/backup?passkey=${encodeURIComponent(pass)}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            if (!response.ok) throw new Error("Không thể tải file backup");
+            if (!response.ok) {
+                if (response.status === 403) {
+                    throw new Error("Mật khẩu cấp 2 không chính xác!");
+                }
+                throw new Error("Không thể tải file backup");
+            }
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");

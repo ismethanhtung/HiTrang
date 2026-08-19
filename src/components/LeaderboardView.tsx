@@ -743,8 +743,8 @@ export default function LeaderboardView({
                         ) : (
                             <div className="text-center py-4 space-y-3">
                                 <p className="text-xs text-slate-400 italic">
-                                    Học bạ của bạn chưa được ghi nhận trên bảng
-                                    xếp hạng khối {activeGrade}.
+                                    Bạn chưa được ghi nhận trên BXH khối{" "}
+                                    {activeGrade}.
                                 </p>
                             </div>
                         )}

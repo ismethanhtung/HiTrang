@@ -399,15 +399,22 @@ func HandleGetOrCreateAttempt(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// 3. Create a new attempt
+		// 3. Fetch quiz to get official duration
+		var quiz Quiz
+		if err := db.Where("id = ?", req.QuizID).First(&quiz).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đề thi"})
+			return
+		}
+
+		// 4. Create a new attempt
 		now := time.Now()
-		expiresAt := now.Add(time.Duration(req.DurationMinutes) * time.Minute)
+		expiresAt := now.Add(time.Duration(quiz.Duration) * time.Minute)
 		newAttempt := ExamAttempt{
 			ID:              uuid.New().String(),
 			QuizID:          req.QuizID,
 			UserID:          userID.(string),
 			StartedAt:       now,
-			DurationMinutes: req.DurationMinutes,
+			DurationMinutes: quiz.Duration,
 			ExpiresAt:       expiresAt,
 			Status:          "inprogress",
 			Answers:         make(map[string]interface{}),
@@ -502,6 +509,12 @@ func HandleFinalizeAndSubmitAttempt(db *gorm.DB) gin.HandlerFunc {
 
 		if attempt.Status != "inprogress" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Lượt thi này đã được nộp trước đó"})
+			return
+		}
+
+		// Grace period 15 seconds for slow network latency when submitting
+		if time.Now().After(attempt.ExpiresAt.Add(15 * time.Second)) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Thời gian làm bài thi đã kết thúc"})
 			return
 		}
 
@@ -651,10 +664,33 @@ func HandleGetSubmissions(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Fetch duration/timeSpent from exam_attempts in seconds
+		timeMap := make(map[string]int)
+		if len(submissions) > 0 {
+			ids := make([]string, len(submissions))
+			for i, s := range submissions {
+				ids[i] = s.ID
+			}
+			type AttemptTime struct {
+				ID        string `gorm:"column:id"`
+				TimeSpent int    `gorm:"column:time_spent"`
+			}
+			var attemptTimes []AttemptTime
+			db.Table("exam_attempts").
+				Select("id, TIMESTAMPDIFF(SECOND, started_at, submitted_at) as time_spent").
+				Where("id IN ?", ids).
+				Scan(&attemptTimes)
+
+			for _, at := range attemptTimes {
+				timeMap[at.ID] = at.TimeSpent
+			}
+		}
+
 		// Map to match frontend interface
 		response := make([]gin.H, len(submissions))
 		for i, s := range submissions {
-			response[i] = gin.H{
+			tSpent, hasTime := timeMap[s.ID]
+			resObj := gin.H{
 				"id":             s.ID,
 				"quizId":         s.QuizID,
 				"quizTitle":      s.QuizTitle,
@@ -665,6 +701,12 @@ func HandleGetSubmissions(db *gorm.DB) gin.HandlerFunc {
 				"answers":        s.Answers,
 				"submittedAt":    s.SubmittedAt.Format("2006-01-02 15:04:05"),
 			}
+			if hasTime {
+				resObj["timeSpent"] = tSpent
+			} else {
+				resObj["timeSpent"] = 0
+			}
+			response[i] = resObj
 		}
 
 		c.JSON(http.StatusOK, response)

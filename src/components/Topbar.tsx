@@ -390,7 +390,7 @@ export default function Topbar({
                                             className="w-full px-4 py-2 text-left text-xs text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-semibold border-b border-border-primary pb-2 mb-1 cursor-pointer"
                                         >
                                             <Shield className="w-4 h-4 text-brand-500" />
-                                            Quản lý đề thi (Admin)
+                                            Quản lý (Admin)
                                         </button>
                                     )}
 

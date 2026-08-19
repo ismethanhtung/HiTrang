@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -255,6 +256,17 @@ func HandleDownloadBackup(db *gorm.DB) gin.HandlerFunc {
 		roleVal, _ := c.Get("role")
 		if roleVal.(string) != "teacher" && roleVal.(string) != "admin" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ giáo viên hoặc admin mới có quyền sao lưu dữ liệu"})
+			return
+		}
+
+		passkey := c.Query("passkey")
+		h := sha256.New()
+		h.Write([]byte(passkey))
+		hashed := fmt.Sprintf("%x", h.Sum(nil))
+
+		// SHA256 of "tungtung"
+		if hashed != "5ed86e11c8a58fcfab5b6d9c6f2df3fb30469b8c6e26cf8d4b3cf49cf9ef7b5a" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Mật khẩu cấp 2 không chính xác"})
 			return
 		}
 
