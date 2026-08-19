@@ -23,6 +23,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: hitrang-app:latest
     container_name: hitrang_app
     restart: always
     ports:
