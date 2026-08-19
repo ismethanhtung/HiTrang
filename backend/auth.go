@@ -237,7 +237,11 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 
 		var profile Profile
 		if err := db.Where("id = ?", userID).First(&profile).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Hồ sơ người dùng không tồn tại"})
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Hồ sơ người dùng không tồn tại"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi hệ thống khi tải hồ sơ: " + err.Error()})
+			}
 			return
 		}
 

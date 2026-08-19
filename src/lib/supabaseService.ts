@@ -10,6 +10,15 @@ function getAuthHeader(): Record<string, string> {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = 'ApiError';
+  }
+}
+
 /**
  * Standard fetch wrapper
  */
@@ -26,7 +35,7 @@ async function apiRequest<T = any>(path: string, options: RequestInit = {}): Pro
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
-    throw new Error(errBody.error || `Lỗi API (${res.status})`);
+    throw new ApiError(errBody.error || `Lỗi API (${res.status})`, res.status);
   }
 
   return res.json().catch(() => null) as Promise<T>;
@@ -74,9 +83,12 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const data = await apiRequest<User>('/auth/me');
     return data;
-  } catch (err) {
-    console.warn('Lỗi đồng bộ session cũ. Xóa token.', err);
-    localStorage.removeItem('hitrang_token');
+  } catch (err: any) {
+    console.warn('Lỗi đồng bộ session cũ:', err);
+    if (err.status === 401) {
+      console.warn('Mã xác thực hết hạn hoặc không hợp lệ. Xóa token.');
+      localStorage.removeItem('hitrang_token');
+    }
     return null;
   }
 }
