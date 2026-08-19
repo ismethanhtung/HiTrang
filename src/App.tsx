@@ -8,6 +8,7 @@ import StudentDashboard from "./components/StudentDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminPanel from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
+import Footer from "./components/Footer";
 import {
     getCurrentUser,
     signOutUser,
@@ -238,6 +239,11 @@ export default function App() {
         return () => window.removeEventListener("popstate", handleUrlChange);
     }, []);
 
+    // Scroll to top on navigation/path change
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [currentPath]);
+
     // Periodic check for any ongoing/unfinished attempt
     useEffect(() => {
         if (!user || user.role === "admin") {
@@ -432,113 +438,181 @@ export default function App() {
             <main
                 className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
             >
-                {/* 1. ADMIN PANEL ROUTE */}
-                {currentPath === "/admin" ? (
-                    user && user.role === "admin" ? (
-                        <AdminPanel
-                            quizzes={quizzes}
-                            submissions={submissions}
-                            onAddQuiz={handleAddQuiz}
-                            onDeleteQuiz={handleDeleteQuiz}
-                            onUpdateQuiz={handleUpdateQuiz}
+                <div className={isTakingOrReviewing ? "flex-1 flex flex-col min-h-0" : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"}>
+                    {/* 1. ADMIN PANEL ROUTE */}
+                    {currentPath === "/admin" ? (
+                        user && user.role === "admin" ? (
+                            <AdminPanel
+                                quizzes={quizzes}
+                                submissions={submissions}
+                                onAddQuiz={handleAddQuiz}
+                                onDeleteQuiz={handleDeleteQuiz}
+                                onUpdateQuiz={handleUpdateQuiz}
+                            />
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
+                                <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.5}
+                                        stroke="currentColor"
+                                        className="w-8 h-8"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
+                                        />
+                                    </svg>
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                                    Không có quyền truy cập
+                                </h2>
+                                <p className="text-xs text-slate-500 max-w-sm">
+                                    Bạn không có quyền truy cập vào trang quản trị.
+                                    Vui lòng đăng nhập với tài khoản Admin.
+                                </p>
+                                <button
+                                    onClick={() => navigateTo("/")}
+                                    className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                >
+                                    Quay lại Trang chủ
+                                </button>
+                            </div>
+                        )
+                    ) : !user ? (
+                        /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
+                        <LandingPage
+                            quizzes={filteredQuizzes}
+                            selectedGrade={selectedGrade}
+                            onSelectGrade={(grade) => {
+                                if (grade) navigateTo("/grade/" + grade);
+                                else navigateTo("/");
+                            }}
+                            onOpenAuth={(mode = "login") => {
+                                setAuthMode(mode);
+                                setAuthModalOpen(true);
+                            }}
+                            onSelectQuizToPreview={(quiz) => {
+                                setAuthMode("register");
+                                setAuthModalOpen(true);
+                            }}
+                            loading={loading}
                         />
                     ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
-                            <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto">
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    strokeWidth={1.5}
-                                    stroke="currentColor"
-                                    className="w-8 h-8"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z"
-                                    />
-                                </svg>
-                            </div>
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
-                                Không có quyền truy cập
-                            </h2>
-                            <p className="text-xs text-slate-500 max-w-sm">
-                                Bạn không có quyền truy cập vào trang quản trị.
-                                Vui lòng đăng nhập với tài khoản Admin.
-                            </p>
-                            <button
-                                onClick={() => navigateTo("/")}
-                                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
-                            >
-                                Quay lại Trang chủ
-                            </button>
-                        </div>
-                    )
-                ) : !user ? (
-                    /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
-                    <LandingPage
-                        quizzes={filteredQuizzes}
-                        selectedGrade={selectedGrade}
-                        onSelectGrade={(grade) => {
-                            if (grade) navigateTo("/grade/" + grade);
-                            else navigateTo("/");
-                        }}
-                        onOpenAuth={(mode = "login") => {
-                            setAuthMode(mode);
-                            setAuthModalOpen(true);
-                        }}
-                        onSelectQuizToPreview={(quiz) => {
-                            setAuthMode("register");
-                            setAuthModalOpen(true);
-                        }}
-                        loading={loading}
-                    />
-                ) : (
-                    /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */
-                    <div
-                        className={`flex-1 bg-transparent flex flex-col ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
-                    >
-                        {(() => {
-                            if (
-                                currentPath === "/settings" ||
-                                currentPath === "/history"
-                            ) {
-                                return (
-                                    <SettingsView
-                                        user={user}
-                                        onUpdateUser={(updatedUser) =>
-                                            setUser(updatedUser)
-                                        }
-                                        onLogout={handleLogout}
-                                        theme={theme}
-                                        submissions={submissions}
-                                        quizzes={quizzes}
-                                        initialTab={
-                                            currentPath === "/history"
-                                                ? "history"
-                                                : "profile"
-                                        }
-                                        onTabChange={(tab) => {
-                                            window.history.pushState(
-                                                null,
-                                                "",
-                                                tab === "history"
-                                                    ? "/history"
-                                                    : "/settings",
-                                            );
-                                            setCurrentPath(
-                                                tab === "history"
-                                                    ? "/history"
-                                                    : "/settings",
-                                            );
-                                        }}
-                                        onNavigate={navigateTo}
-                                    />
-                                );
-                            }
+                        /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */
+                        <div
+                            className={`flex-1 bg-transparent flex flex-col ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
+                        >
+                            {(() => {
+                                if (
+                                    currentPath === "/settings" ||
+                                    currentPath === "/history"
+                                ) {
+                                    return (
+                                        <SettingsView
+                                            user={user}
+                                            onUpdateUser={(updatedUser) =>
+                                                setUser(updatedUser)
+                                            }
+                                            onLogout={handleLogout}
+                                            theme={theme}
+                                            submissions={submissions}
+                                            quizzes={quizzes}
+                                            initialTab={
+                                                currentPath === "/history"
+                                                    ? "history"
+                                                    : "profile"
+                                            }
+                                            onTabChange={(tab) => {
+                                                window.history.pushState(
+                                                    null,
+                                                    "",
+                                                    tab === "history"
+                                                        ? "/history"
+                                                        : "/settings",
+                                                );
+                                                setCurrentPath(
+                                                    tab === "history"
+                                                        ? "/history"
+                                                        : "/settings",
+                                                );
+                                            }}
+                                            onNavigate={navigateTo}
+                                        />
+                                    );
+                                }
 
-                            if (isTakingOrReviewing) {
+                                if (isTakingOrReviewing) {
+                                    return (
+                                        <StudentDashboard
+                                            user={user}
+                                            quizzes={filteredQuizzes}
+                                            submissions={submissions}
+                                            onAddSubmission={handleAddSubmission}
+                                            activeTab={activeTab}
+                                            selectedGrade={selectedGrade}
+                                            onSelectGrade={(grade, category) => {
+                                                if (confirmNavigation()) {
+                                                    if (grade) {
+                                                        let path =
+                                                            "/grade/" + grade;
+                                                        if (category) {
+                                                            path +=
+                                                                "?category=" +
+                                                                encodeURIComponent(
+                                                                    category,
+                                                                );
+                                                        }
+                                                        navigateTo(path);
+                                                    } else {
+                                                        navigateTo("/");
+                                                    }
+                                                }
+                                            }}
+                                            onQuizStateChange={setIsTakingQuiz}
+                                            activeQuizId={activeQuizId}
+                                            reviewSubmissionId={reviewSubmissionId}
+                                            onNavigate={navigateTo}
+                                            navigateReplace={navigateReplace}
+                                            ongoingAttempt={ongoingAttempt}
+                                            loading={loading}
+                                            currentPath={currentPath}
+                                        />
+                                    );
+                                }
+
+                                if (currentPath === "/leaderboard") {
+                                    return (
+                                        <LeaderboardView
+                                            user={user}
+                                            quizzes={quizzes}
+                                            submissions={submissions}
+                                            onNavigate={navigateTo}
+                                            initialData={prefetchedLeaderboard}
+                                        />
+                                    );
+                                }
+
+                                if (
+                                    (user.role === "admin" ||
+                                        currentPath === "/trang" ||
+                                        currentPath === "/teacher") &&
+                                    activeTab !== "student-dashboard"
+                                ) {
+                                    return (
+                                        <AdminDashboard
+                                            quizzes={quizzes}
+                                            submissions={submissions}
+                                            onAddQuiz={handleAddQuiz}
+                                            onDeleteQuiz={handleDeleteQuiz}
+                                            activeTab={activeTab}
+                                        />
+                                    );
+                                }
+
                                 return (
                                     <StudentDashboard
                                         user={user}
@@ -550,8 +624,7 @@ export default function App() {
                                         onSelectGrade={(grade, category) => {
                                             if (confirmNavigation()) {
                                                 if (grade) {
-                                                    let path =
-                                                        "/grade/" + grade;
+                                                    let path = "/grade/" + grade;
                                                     if (category) {
                                                         path +=
                                                             "?category=" +
@@ -575,74 +648,31 @@ export default function App() {
                                         currentPath={currentPath}
                                     />
                                 );
+                            })()}
+                        </div>
+                    )}
+                </div>
+                {!isTakingOrReviewing && (
+                    <Footer
+                        onSelectGrade={(grade, category) => {
+                            setActiveTab("student-dashboard");
+                            if (grade) {
+                                let path = "/grade/" + grade;
+                                if (category) {
+                                    path +=
+                                        "?category=" +
+                                        encodeURIComponent(category);
+                                }
+                                navigateTo(path);
+                            } else {
+                                navigateTo("/");
                             }
-
-                            if (currentPath === "/leaderboard") {
-                                return (
-                                    <LeaderboardView
-                                        user={user}
-                                        quizzes={quizzes}
-                                        submissions={submissions}
-                                        onNavigate={navigateTo}
-                                        initialData={prefetchedLeaderboard}
-                                    />
-                                );
-                            }
-
-                            if (
-                                (user.role === "admin" ||
-                                    currentPath === "/trang" ||
-                                    currentPath === "/teacher") &&
-                                activeTab !== "student-dashboard"
-                            ) {
-                                return (
-                                    <AdminDashboard
-                                        quizzes={quizzes}
-                                        submissions={submissions}
-                                        onAddQuiz={handleAddQuiz}
-                                        onDeleteQuiz={handleDeleteQuiz}
-                                        activeTab={activeTab}
-                                    />
-                                );
-                            }
-
-                            return (
-                                <StudentDashboard
-                                    user={user}
-                                    quizzes={filteredQuizzes}
-                                    submissions={submissions}
-                                    onAddSubmission={handleAddSubmission}
-                                    activeTab={activeTab}
-                                    selectedGrade={selectedGrade}
-                                    onSelectGrade={(grade, category) => {
-                                        if (confirmNavigation()) {
-                                            if (grade) {
-                                                let path = "/grade/" + grade;
-                                                if (category) {
-                                                    path +=
-                                                        "?category=" +
-                                                        encodeURIComponent(
-                                                            category,
-                                                        );
-                                                }
-                                                navigateTo(path);
-                                            } else {
-                                                navigateTo("/");
-                                            }
-                                        }
-                                    }}
-                                    onQuizStateChange={setIsTakingQuiz}
-                                    activeQuizId={activeQuizId}
-                                    reviewSubmissionId={reviewSubmissionId}
-                                    onNavigate={navigateTo}
-                                    navigateReplace={navigateReplace}
-                                    ongoingAttempt={ongoingAttempt}
-                                    loading={loading}
-                                    currentPath={currentPath}
-                                />
-                            );
-                        })()}
-                    </div>
+                        }}
+                        onNavigate={navigateTo}
+                        onOpenContactModal={() => setGlobalContactModalOpen(true)}
+                        onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                        userLoggedIn={!!user}
+                    />
                 )}
             </main>
 

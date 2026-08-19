@@ -107,7 +107,8 @@ export default function AdminCreateQuizTab({
             id: crypto.randomUUID(),
             title: quizTitle.trim(),
             description:
-                quizDescription.trim() || "Bài kiểm tra chất lượng cao HiTrang",
+                quizDescription.trim() ||
+                `Đề thi môn ${quizSubject} Lớp ${quizGrade} ${quizDuration} phút.`,
             subject: quizSubject,
             grade: quizGrade,
             duration: quizDuration,

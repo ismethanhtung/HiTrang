@@ -296,7 +296,9 @@ export default function AdminQuizzesTab({
 
         const updated: Partial<Quiz> = {
             title: editTitle.trim(),
-            description: editDescription.trim() || "Bài kiểm tra chất lượng cao HiTrang",
+            description:
+                editDescription.trim() ||
+                `Đề thi môn ${editSubject} Lớp ${editGrade} ${editDuration} phút.`,
             subject: editSubject,
             grade: editGrade,
             duration: Number(editDuration),

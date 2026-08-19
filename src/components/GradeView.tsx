@@ -51,6 +51,12 @@ export default function GradeView({
     onSelectGrade,
 }: GradeViewProps) {
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+
+    // Filter student submissions
+    const studentSubmissions = submissions.filter(
+        (s) => s.studentId === user.id,
+    );
 
     // Parse category from URL query parameters initially
     const getInitialCategory = () => {
@@ -70,6 +76,7 @@ export default function GradeView({
     const handleClearFilters = () => {
         setSearchQuery("");
         setSelectedSubject("Tất cả");
+        setStatusFilter("all");
         if (onSelectGrade) {
             onSelectGrade(grade, null);
         }
@@ -89,7 +96,7 @@ export default function GradeView({
     // Reset pagination when grade, search, or filters change
     React.useEffect(() => {
         setCurrentPage(1);
-    }, [grade, searchQuery, selectedSubject, sortBy]);
+    }, [grade, searchQuery, selectedSubject, statusFilter, sortBy]);
 
     // Get raw quizzes belonging to this grade
     const rawGradeQuizzes = quizzes.filter(
@@ -122,7 +129,7 @@ export default function GradeView({
 
     const subjectOptions = ["Tất cả", ...standardCats, ...extraSubjects];
 
-    // Filter quizzes by search query and clean subject
+    // Filter quizzes by search query, clean subject, and submission status
     let processedQuizzes = rawGradeQuizzes.filter((q) => {
         const matchesSearch =
             q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -132,7 +139,14 @@ export default function GradeView({
         const matchesSubject =
             selectedSubject === "Tất cả" ||
             getCleanSubjectName(q.subject) === selectedSubject;
-        return matchesSearch && matchesSubject;
+        
+        const isDone = studentSubmissions.some((s) => s.quizId === q.id);
+        const matchesStatus =
+            statusFilter === "all" ||
+            (statusFilter === "done" && isDone) ||
+            (statusFilter === "not_done" && !isDone);
+
+        return matchesSearch && matchesSubject && matchesStatus;
     });
 
     // Sort quizzes
@@ -160,11 +174,6 @@ export default function GradeView({
         currentPage * pageSize,
     );
 
-    // Filter student submissions
-    const studentSubmissions = submissions.filter(
-        (s) => s.studentId === user.id,
-    );
-
     // Grid column border and padding classes for borderless line-separated columns
     const getColClasses = (index: number) => {
         let classes =
@@ -173,22 +182,22 @@ export default function GradeView({
         // Tablet (2 columns on md)
         const mdCol = index % 2;
         if (mdCol === 0) {
-            classes += "md:border-l-0 md:pl-0 md:pr-6 ";
+            classes += "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
         } else {
             classes +=
-                "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-0 ";
+                "md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
         }
 
         // Desktop (3 columns on lg)
         const lgCol = index % 3;
         if (lgCol === 0) {
-            classes += "lg:border-l-0 lg:pl-0 lg:pr-6 ";
+            classes += "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         } else if (lgCol === 1) {
             classes +=
-                "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+                "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         } else {
             classes +=
-                "lg:border-l lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-0 ";
+                "lg:border-l lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         }
 
         // Mobile reset
@@ -198,7 +207,7 @@ export default function GradeView({
 
     return (
         <div className="bg-transparent text-text-primary animate-in fade-in duration-200">
-            <div className="max-w-5xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-8">
                 {/* Banner Header */}
                 <div className="pb-6 border-b border-slate-100 space-y-2 text-left">
                     <h1 className="text-2xl font-bold text-slate-900 font-serif">
@@ -242,6 +251,23 @@ export default function GradeView({
                                         {sub}
                                     </option>
                                 ))}
+                            </select>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-xs">
+                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                                Trạng thái:
+                            </span>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) =>
+                                    setStatusFilter(e.target.value)
+                                }
+                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
+                            >
+                                <option value="all">Tất cả</option>
+                                <option value="not_done">Chưa làm</option>
+                                <option value="done">Đã làm</option>
                             </select>
                         </div>
 
