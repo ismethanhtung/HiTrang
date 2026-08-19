@@ -46,7 +46,7 @@ type Profile struct {
 	Plan      string    `json:"plan" gorm:"type:enum('nothing', 'basic', 'vip');default:'nothing';not null"`
 	Grade     *string   `json:"grade" gorm:"type:varchar(10)"`
 	CreatedAt time.Time `json:"created_at"`
-	User      User      `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	User      User      `json:"-" gorm:"foreignKey:ID;references:ID;constraint:OnDelete:CASCADE"`
 }
 
 // Quiz represents quizzes table
