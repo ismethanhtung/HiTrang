@@ -61,7 +61,7 @@ type Quiz struct {
 	Grade         *string        `json:"grade" gorm:"type:varchar(10)"`
 	IsPublic      bool           `json:"isPublic" gorm:"column:is_public;default:true"`
 	CreatedBy     *string        `json:"createdBy" gorm:"column:created_by;type:varchar(36)"`
-	CreatedAt     time.Time      `json:"createdAt" gorm:"column:created_at"`
+	CreatedAt     time.Time      `json:"-" gorm:"column:created_at"`
 	User          *User          `json:"-" gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL"`
 }
 
