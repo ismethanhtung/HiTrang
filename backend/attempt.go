@@ -471,7 +471,7 @@ func HandleUpdateAttemptAnswers(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		attempt.Answers = req.Answers
-		if err := db.Model(&attempt).Update("answers", req.Answers).Error; err != nil {
+		if err := db.Save(&attempt).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu nháp đáp án"})
 			return
 		}
@@ -756,7 +756,7 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			TestsCompleted       int     `json:"testsCompleted"`
 		}
 
-		var rows []OverallRow
+		rows := []OverallRow{}
 		query := `
 			SELECT 
 				uos.current_rank as rank_position,
@@ -811,7 +811,7 @@ func HandleGetRecentSubmissionsByGrade(db *gorm.DB) gin.HandlerFunc {
 			SubmittedAt time.Time `json:"submitted_at"`
 		}
 
-		var rows []RecentRow
+		rows := []RecentRow{}
 		query := `
 			SELECT s.id, s.quiz_title, s.student_name, s.score, s.submitted_at
 			FROM submissions s
