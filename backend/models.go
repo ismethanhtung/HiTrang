@@ -58,6 +58,7 @@ type Quiz struct {
 	Duration      int            `json:"duration" gorm:"not null"`
 	Questions     []Question     `json:"questions" gorm:"type:json;serializer:json;not null"`
 	ScoringConfig *ScoringConfig `json:"scoringConfig" gorm:"column:scoring_config;type:json;serializer:json"`
+	Grade         *string        `json:"grade" gorm:"type:varchar(10)"`
 	IsPublic      bool           `json:"isPublic" gorm:"column:is_public;default:true"`
 	CreatedBy     *string        `json:"createdBy" gorm:"column:created_by;type:varchar(36)"`
 	CreatedAt     time.Time      `json:"createdAt" gorm:"column:created_at"`
