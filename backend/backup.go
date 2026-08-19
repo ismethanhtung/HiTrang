@@ -265,7 +265,7 @@ func HandleDownloadBackup(db *gorm.DB) gin.HandlerFunc {
 		hashed := fmt.Sprintf("%x", h.Sum(nil))
 
 		// SHA256 of "tungtung"
-		if hashed != "5ed86e11c8a58fcfab5b6d9c6f2df3fb30469b8c6e26cf8d4b3cf49cf9ef7b5a" {
+		if hashed != "56dd3c1a83d4b388e6c43b8f1ce465e747edacc0c4faf8c4525be19bc0adc56d" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Mật khẩu cấp 2 không chính xác"})
 			return
 		}
