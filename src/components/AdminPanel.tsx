@@ -15,6 +15,8 @@ import {
     BarChart3,
     UserCheck,
     User as UserIcon,
+    Download,
+    Upload,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -137,6 +139,63 @@ export default function AdminPanel({
             console.error("Lỗi khi tải danh sách hồ sơ:", err);
         } finally {
             setLoadingProfiles(false);
+        }
+    };
+
+    const handleDownloadBackup = async () => {
+        try {
+            const token = localStorage.getItem("hitrang_token");
+            const apiUrl = import.meta.env.VITE_API_URL || "/api";
+            const response = await fetch(`${apiUrl}/admin/backup`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) throw new Error("Không thể tải file backup");
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `hitrang_backup_${new Date().toISOString().slice(0, 10)}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch (err: any) {
+            alert("Lỗi khi tải file backup: " + err.message);
+        }
+    };
+
+    const handleUploadRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        if (
+            !window.confirm(
+                `Bạn có chắc chắn muốn phục hồi cơ sở dữ liệu từ file "${file.name}" không?\nHÀNH ĐỘNG NÀY SẼ XÓA TOÀN BỘ dữ liệu hiện tại trên database mới và thay thế bằng dữ liệu trong file backup!`,
+            )
+        ) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("backup_file", file);
+
+        try {
+            const token = localStorage.getItem("hitrang_token");
+            const apiUrl = import.meta.env.VITE_API_URL || "/api";
+            const response = await fetch(`${apiUrl}/admin/restore`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Lỗi khôi phục dữ liệu");
+            alert("Phục hồi dữ liệu thành công!");
+            fetchProfiles();
+        } catch (err: any) {
+            alert("Lỗi khi khôi phục dữ liệu: " + err.message);
         }
     };
 
@@ -400,6 +459,42 @@ export default function AdminPanel({
                                         <span>Thống kê học sinh</span>
                                     </button>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Group 4: System Administration (Backup/Restore) */}
+                        {(!sidebarSearchQuery ||
+                            "sao lưu dữ liệu".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
+                            "phục hồi dữ liệu".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            )) && (
+                            <div className="space-y-0.5 mb-4">
+                                <div className="flex items-center justify-between px-6 py-2">
+                                    <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                        QUẢN TRỊ HỆ THỐNG
+                                    </span>
+                                </div>
+
+                                <button
+                                    onClick={handleDownloadBackup}
+                                    className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left"
+                                >
+                                    <Download className="w-4 h-4 shrink-0 text-[#70757A]" />
+                                    <span>Tải bản sao lưu (Backup)</span>
+                                </button>
+
+                                <label className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left">
+                                    <Upload className="w-4 h-4 shrink-0 text-[#70757A]" />
+                                    <span>Phục hồi dữ liệu (Restore)</span>
+                                    <input
+                                        type="file"
+                                        accept=".zip"
+                                        onChange={handleUploadRestore}
+                                        className="hidden"
+                                    />
+                                </label>
                             </div>
                         )}
                     </div>

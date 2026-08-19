@@ -19,7 +19,6 @@ import {
     initializeSession,
     getOverallLeaderboard,
 } from "./lib/supabaseService";
-import { supabase } from "./lib/supabase";
 import GradeView from "./components/GradeView";
 import LeaderboardView from "./components/LeaderboardView";
 import {
@@ -227,56 +226,6 @@ export default function App() {
         };
         fetchInitialData();
     }, []);
-
-    // Sync Supabase Auth State Change to handle Token Refresh & Session Restore
-    useEffect(() => {
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log(
-                "Supabase Auth Event:",
-                event,
-                session ? "co session" : "khong co session",
-            );
-
-            if (
-                event === "SIGNED_IN" ||
-                event === "TOKEN_REFRESHED" ||
-                event === "USER_UPDATED"
-            ) {
-                if (session && session.user) {
-                    try {
-                        const currentUser = await getCurrentUser();
-                        if (currentUser) {
-                            setUser(currentUser);
-                            const dbSubmissions = await getSubmissions(
-                                currentUser.role,
-                                currentUser.id,
-                            );
-                            if (dbSubmissions && dbSubmissions.length > 0) {
-                                setSubmissions(dbSubmissions);
-                            }
-                        }
-                    } catch (err) {
-                        console.error(
-                            "Lỗi đồng bộ dữ liệu qua AuthStateChange:",
-                            err,
-                        );
-                    }
-                }
-            } else if (event === "SIGNED_OUT") {
-                setUser(null);
-                setSubmissions([]);
-                localStorage.removeItem("hvt_user");
-                localStorage.removeItem("hvt_submissions");
-            }
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, []);
-
     // Sync URL popstate events
     useEffect(() => {
         const handleUrlChange = () => {
