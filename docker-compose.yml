@@ -4,6 +4,7 @@ services:
   db:
     image: mysql:8.0
     container_name: hitrang_db
+    command: --sort-buffer-size=16M --max-allowed-packet=64M
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: hitrang_root_pass

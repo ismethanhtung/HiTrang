@@ -61,7 +61,7 @@ type Quiz struct {
 	Grade         *string        `json:"grade" gorm:"type:varchar(10)"`
 	IsPublic      bool           `json:"isPublic" gorm:"column:is_public;default:true"`
 	CreatedBy     *string        `json:"createdBy" gorm:"column:created_by;type:varchar(36)"`
-	CreatedAt     time.Time      `json:"-" gorm:"column:created_at"`
+	CreatedAt     time.Time      `json:"-" gorm:"column:created_at;index"`
 	User          *User          `json:"-" gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL"`
 }
 
@@ -70,7 +70,7 @@ type ExamAttempt struct {
 	ID              string                 `json:"id" gorm:"primaryKey;type:varchar(36)"`
 	QuizID          string                 `json:"quiz_id" gorm:"type:varchar(100);not null"`
 	UserID          string                 `json:"user_id" gorm:"type:varchar(36);not null"`
-	StartedAt       time.Time              `json:"started_at" gorm:"not null"`
+	StartedAt       time.Time              `json:"started_at" gorm:"column:started_at;index;not null"`
 	DurationMinutes int                    `json:"duration_minutes" gorm:"not null"`
 	ExpiresAt       time.Time              `json:"expires_at" gorm:"not null"`
 	Status          string                 `json:"status" gorm:"type:enum('inprogress', 'submitted');default:'inprogress';not null"`
@@ -92,7 +92,7 @@ type Submission struct {
 	Score          float64                `json:"score" gorm:"not null"`
 	TotalQuestions int                    `json:"totalQuestions" gorm:"column:total_questions;not null"`
 	Answers        map[string]interface{} `json:"answers" gorm:"type:json;serializer:json;not null"`
-	SubmittedAt    time.Time              `json:"submittedAt" gorm:"column:submitted_at;not null"`
+	SubmittedAt    time.Time              `json:"submittedAt" gorm:"column:submitted_at;index;not null"`
 	User           User                   `json:"-" gorm:"foreignKey:StudentID;constraint:OnDelete:CASCADE"`
 }
 
