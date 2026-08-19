@@ -44,15 +44,20 @@ func HandleGetQuizzes(db *gorm.DB) gin.HandlerFunc {
 			role = roleVal.(string)
 		}
 
-		// If user is a teacher, return full quizzes.
-		// Otherwise (student or public guest), strip the answers.
+		// If user is a teacher or admin, return full quizzes with questions.
+		// Otherwise (student or public guest), return empty object placeholders to preserve question count (.length)
+		// without sending massive JSON question data over the network.
 		responseQuizzes := make([]gin.H, len(quizzes))
 		for i, q := range quizzes {
-			var questions []Question
+			var questions interface{}
 			if role == "teacher" || role == "admin" {
 				questions = q.Questions
 			} else {
-				questions = StripAnswers(q.Questions)
+				dummyQs := make([]gin.H, len(q.Questions))
+				for j := range dummyQs {
+					dummyQs[j] = gin.H{}
+				}
+				questions = dummyQs
 			}
 
 			// In supabaseService.ts: getQuizzes() does some fallback to parse grade from title/metadata.

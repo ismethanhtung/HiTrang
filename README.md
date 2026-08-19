@@ -19,3 +19,11 @@ View your app in AI Studio: https://ai.studio/apps/adb032dd-9592-4588-99ad-0fc61
 3. Run the app:
    `npm run dev`
 # HiTrang
+
+
+
+
+
+git pull
+docker build -t hitrang-app:latest ./backend
+docker compose up -d

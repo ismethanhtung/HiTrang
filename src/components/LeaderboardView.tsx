@@ -375,7 +375,7 @@ export default function LeaderboardView({
                     {top3.length > 0 && (
                         <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-6 pt-10 pb-4 relative select-none">
                             {/* HẠNG 2 (Bên trái) */}
-                            {podiumOrder[0] && (
+                            {podiumOrder[0] ? (
                                 <motion.div
                                     initial={{ opacity: 0, y: 15 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -407,6 +407,8 @@ export default function LeaderboardView({
                                         </span>
                                     </div>
                                 </motion.div>
+                            ) : (
+                                <div />
                             )}
 
                             {/* HẠNG 1 (Giữa - Cao nhất & Phát sáng nhẹ) */}
@@ -452,7 +454,7 @@ export default function LeaderboardView({
                             )}
 
                             {/* HẠNG 3 (Bên phải) */}
-                            {podiumOrder[2] && (
+                            {podiumOrder[2] ? (
                                 <motion.div
                                     initial={{ opacity: 0, y: 15 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -484,6 +486,8 @@ export default function LeaderboardView({
                                         </span>
                                     </div>
                                 </motion.div>
+                            ) : (
+                                <div />
                             )}
                         </div>
                     )}

@@ -213,10 +213,12 @@ export default function App() {
                     // Turn off loading indicator immediately so visual elements render in ~200ms
                     setLoading(false);
                 } else {
-                    // Stale session (no Supabase session exists, but local state thought user was logged in)
-                    setUser(null);
-                    localStorage.removeItem("hvt_user");
-                    localStorage.removeItem("hvt_submissions");
+                    // Stale session (only clear if the token itself is actually missing/invalidated)
+                    if (!localStorage.getItem("hitrang_token")) {
+                        setUser(null);
+                        localStorage.removeItem("hvt_user");
+                        localStorage.removeItem("hvt_submissions");
+                    }
                     setLoading(false);
                 }
             } catch (err) {
@@ -695,14 +697,10 @@ export default function App() {
             {ongoingAttempt &&
                 !isOngoingAttemptDismissed &&
                 currentPath !== `/quiz/${ongoingAttempt.quiz_id}` && (
-                    <div className="fixed bottom-6 right-6 z-50 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200 dark:border-blue-900 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                    <div className="fixed bottom-6 right-6 z-50 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-100 dark:border-blue-900 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                         {/* Header */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-extrabold">
-                                <RefreshCw
-                                    className="w-3.5 h-3.5 animate-spin"
-                                    style={{ animationDuration: "4s" }}
-                                />
+                            <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-400 font-extrabold">
                                 <span className="text-[10px] font-bold uppercase tracking-wider">
                                     Bài thi chưa nộp!
                                 </span>
@@ -737,7 +735,7 @@ export default function App() {
                             onClick={() => {
                                 navigateTo(`/quiz/${ongoingAttempt.quiz_id}`);
                             }}
-                            className="w-full py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white rounded-md text-[10px] font-extrabold text-center flex items-center justify-center gap-1 transition-all duration-150 cursor-pointer shadow-sm shadow-blue-500/10 active:scale-98"
+                            className="w-full py-2 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-700 hover:to-blue-800 text-white rounded-md text-[10px] font-extrabold text-center flex items-center justify-center gap-1 transition-all duration-150 cursor-pointer shadow-sm shadow-blue-500/10 active:scale-98"
                         >
                             <span>Tiếp tục làm bài</span>
                             <ArrowRight className="w-3 h-3 animate-pulse" />

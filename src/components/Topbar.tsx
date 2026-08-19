@@ -347,7 +347,7 @@ export default function Topbar({
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl   transition-all cursor-pointer"
+                                className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer"
                             >
                                 <div className="hidden sm:flex flex-col text-right">
                                     <span className="text-xs font-bold text-text-primary leading-tight">

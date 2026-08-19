@@ -44,6 +44,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [grade, setGrade] = useState("10");
     const [showPassword, setShowPassword] = useState(false);
 
     const [error, setError] = useState("");
@@ -85,6 +86,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     username.trim(),
                     password,
                     role,
+                    grade,
                 );
                 setSuccess(
                     "Đăng ký tài khoản thành công! Đang tự động đăng nhập...",
@@ -215,30 +217,59 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     </div>
 
                     {isRegister && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            className="space-y-1.5"
-                        >
-                            <label className="text-xs font-medium text-gray-600">
-                                Xác nhận mật khẩu
-                            </label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                    <Lock className="w-4 h-4" />
-                                </span>
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="reg-confirm-password-input"
-                                    placeholder="Nhập lại mật khẩu"
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)
-                                    }
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
-                                />
-                            </div>
-                        </motion.div>
+                        <div className="space-y-4">
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="space-y-1.5"
+                            >
+                                <label className="text-xs font-medium text-gray-600">
+                                    Xác nhận mật khẩu
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+                                        <Lock className="w-4 h-4" />
+                                    </span>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        id="reg-confirm-password-input"
+                                        placeholder="Nhập lại mật khẩu"
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)
+                                        }
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                    />
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                className="space-y-1.5"
+                            >
+                                <label className="text-xs font-medium text-gray-600">
+                                    Khối lớp học
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+                                        <BookOpen className="w-4 h-4" />
+                                    </span>
+                                    <select
+                                        id="reg-grade-select"
+                                        value={grade}
+                                        onChange={(e) => setGrade(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors text-gray-700 cursor-pointer"
+                                    >
+                                        <option value="10">Khối 10</option>
+                                        <option value="11">Khối 11</option>
+                                        <option value="12">Khối 12</option>
+                                        <option value="9">Khối 9</option>
+                                        <option value="8">Khối 8</option>
+                                    </select>
+                                </div>
+                            </motion.div>
+                        </div>
                     )}
 
                     {error && (

@@ -17,6 +17,7 @@ import {
     User as UserIcon,
     Download,
     Upload,
+    Activity,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -25,6 +26,7 @@ import AdminQuizzesTab from "./AdminQuizzesTab";
 import AdminStatsQuizzesTab from "./AdminStatsQuizzesTab";
 import AdminStatsStudentsTab from "./AdminStatsStudentsTab";
 import AdminSubmissionReviewer from "./AdminSubmissionReviewer";
+import AdminApiTab from "./AdminApiTab";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -50,7 +52,7 @@ export default function AdminPanel({
     const [verifying, setVerifying] = useState(false);
 
     const [activeTab, setActiveTab] = useState<
-        "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students"
+        "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students" | "api-monitor"
     >("plans");
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
@@ -71,7 +73,8 @@ export default function AdminPanel({
             | "create-quiz"
             | "quizzes"
             | "stats-quizzes"
-            | "stats-students",
+            | "stats-students"
+            | "api-monitor",
     ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
@@ -462,12 +465,18 @@ export default function AdminPanel({
                             </div>
                         )}
 
-                        {/* Group 4: System Administration (Backup/Restore) */}
+                        {/* Group 4: System Administration (Backup/Restore/API) */}
                         {(!sidebarSearchQuery ||
                             "sao lưu dữ liệu".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             ) ||
                             "phục hồi dữ liệu".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
+                            "giám sát api".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
+                            "api".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             )) && (
                             <div className="space-y-0.5 mb-4">
@@ -477,24 +486,56 @@ export default function AdminPanel({
                                     </span>
                                 </div>
 
-                                <button
-                                    onClick={handleDownloadBackup}
-                                    className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left"
-                                >
-                                    <Download className="w-4 h-4 shrink-0 text-[#70757A]" />
-                                    <span>Tải bản sao lưu (Backup)</span>
-                                </button>
+                                {(!sidebarSearchQuery ||
+                                    "giám sát api".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    ) ||
+                                    "api".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    )) && (
+                                    <button
+                                        onClick={() =>
+                                            handleTabClick("api-monitor")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "api-monitor"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <Activity className="w-4 h-4 shrink-0" />
+                                        <span>Giám sát hệ thống API</span>
+                                    </button>
+                                )}
 
-                                <label className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left">
-                                    <Upload className="w-4 h-4 shrink-0 text-[#70757A]" />
-                                    <span>Phục hồi dữ liệu (Restore)</span>
-                                    <input
-                                        type="file"
-                                        accept=".zip"
-                                        onChange={handleUploadRestore}
-                                        className="hidden"
-                                    />
-                                </label>
+                                {(!sidebarSearchQuery ||
+                                    "sao lưu dữ liệu".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    )) && (
+                                    <button
+                                        onClick={handleDownloadBackup}
+                                        className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left"
+                                    >
+                                        <Download className="w-4 h-4 shrink-0 text-[#70757A]" />
+                                        <span>Tải bản sao lưu (Backup)</span>
+                                    </button>
+                                )}
+
+                                {(!sidebarSearchQuery ||
+                                    "phục hồi dữ liệu".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    )) && (
+                                    <label className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left">
+                                        <Upload className="w-4 h-4 shrink-0 text-[#70757A]" />
+                                        <span>Phục hồi dữ liệu (Restore)</span>
+                                        <input
+                                            type="file"
+                                            accept=".zip"
+                                            onChange={handleUploadRestore}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                )}
                             </div>
                         )}
                     </div>
@@ -561,6 +602,10 @@ export default function AdminPanel({
                                 submissions={submissions}
                                 onReviewSubmission={setAdminReviewSubmission}
                             />
+                        )}
+
+                        {activeTab === "api-monitor" && (
+                            <AdminApiTab />
                         )}
                     </>
                 )}

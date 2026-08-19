@@ -186,8 +186,6 @@ export default function StudentDashboard({
     const [loadingQuizLeaderboard, setLoadingQuizLeaderboard] =
         useState<boolean>(false);
 
-
-
     // Prevent leaving page/tab changes & detect tab switching
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 12;
@@ -1806,21 +1804,6 @@ export default function StudentDashboard({
                                             </div>
                                         )}
 
-                                        {activeAttemptInProgress && (
-                                            <div className="p-3 bg-blue-50 border border-blue-150 text-blue-700 rounded-xl text-xs font-semibold text-center animate-pulse flex items-center justify-center gap-1.5 shadow-3xs">
-                                                <RefreshCw
-                                                    className="w-3.5 h-3.5 animate-spin"
-                                                    style={{
-                                                        animationDuration: "3s",
-                                                    }}
-                                                />
-                                                <span>
-                                                    Bạn đang có lượt thi dang
-                                                    dở! Hãy tiếp tục làm bài.
-                                                </span>
-                                            </div>
-                                        )}
-
                                         {hasOtherActiveAttempt && (
                                             <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
                                                 <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
@@ -2652,36 +2635,6 @@ export default function StudentDashboard({
 
                                 {/* ULTRA-CLEAN FLAT SAGE-WHITE DASHBOARD */}
                                 <div className="space-y-12 pt-8">
-                                    {/* Ongoing Attempt Alert Banner */}
-                                    {ongoingAttempt && (
-                                        <div className="bg-[#3B6D85]/5 border border-[#3B6D85]/15 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
-                                            <div className="space-y-1">
-                                                <span className="text-[9px] font-black uppercase tracking-wider text-[#3B6D85] bg-[#3B6D85]/10 px-2 py-0.5 rounded">
-                                                    Đang làm dở
-                                                </span>
-                                                <h4 className="text-sm font-bold text-slate-800">
-                                                    Bạn đang có một bài thi chưa
-                                                    hoàn thành
-                                                </h4>
-                                                <p className="text-xs text-slate-400 font-medium">
-                                                    Hãy tiếp tục làm để nộp bài
-                                                    và nhận điểm đánh giá chi
-                                                    tiết.
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={handleResumeOngoing}
-                                                className="px-5 py-2 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
-                                            >
-                                                <span>
-                                                    Làm tiếp đề đang thi
-                                                </span>
-                                                <ArrowRight className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    )}
-
                                     {/* 2-Column Split Layout */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                                         {/* Left Column: Continue Learning & Quizzes Feed (2/3 width) */}
@@ -3080,11 +3033,11 @@ export default function StudentDashboard({
                                                             0
                                                         ) {
                                                             return loading ? (
-                                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                                <div className="flex items-center justify-center min-h-[120px] w-full">
                                                                     <Loader2 className="w-4 h-4 text-slate-300 animate-spin" />
                                                                 </div>
                                                             ) : (
-                                                                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap">
+                                                                <div className="flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap min-h-[120px] w-full py-4">
                                                                     <span>
                                                                         Ai cũng
                                                                         phải bắt
