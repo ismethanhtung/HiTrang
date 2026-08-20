@@ -177,25 +177,32 @@ export default function App() {
 
                     // Fetch everything in parallel to eliminate network latency bottlenecks
                     if (isLeaderboardPath) {
-                        const [dbQuizzes, currentUser, dbSubmissions, dbLeaderboard] =
-                            await Promise.all([
-                                getQuizzes().catch((e) => {
-                                    console.warn("Lỗi tải đề thi:", e);
-                                    return [] as Quiz[];
-                                }),
-                                getCurrentUser().catch((e) => {
-                                    console.warn("Lỗi đồng bộ user:", e);
-                                    return null;
-                                }),
-                                getSubmissions(parsedUser.role, parsedUser.id).catch((e) => {
-                                    console.warn("Lỗi tải bài nộp:", e);
-                                    return [] as Submission[];
-                                }),
-                                getOverallLeaderboard(userGrade).catch((e) => {
-                                    console.warn("Lỗi tải BXH:", e);
-                                    return null;
-                                }),
-                            ]);
+                        const [
+                            dbQuizzes,
+                            currentUser,
+                            dbSubmissions,
+                            dbLeaderboard,
+                        ] = await Promise.all([
+                            getQuizzes().catch((e) => {
+                                console.warn("Lỗi tải đề thi:", e);
+                                return [] as Quiz[];
+                            }),
+                            getCurrentUser().catch((e) => {
+                                console.warn("Lỗi đồng bộ user:", e);
+                                return null;
+                            }),
+                            getSubmissions(
+                                parsedUser.role,
+                                parsedUser.id,
+                            ).catch((e) => {
+                                console.warn("Lỗi tải bài nộp:", e);
+                                return [] as Submission[];
+                            }),
+                            getOverallLeaderboard(userGrade).catch((e) => {
+                                console.warn("Lỗi tải BXH:", e);
+                                return null;
+                            }),
+                        ]);
 
                         if (dbQuizzes && dbQuizzes.length > 0) {
                             setQuizzes(dbQuizzes);
@@ -208,7 +215,10 @@ export default function App() {
                         }
                         if (currentUser) {
                             setUser(currentUser);
-                            localStorage.setItem("hvt_user", JSON.stringify(currentUser));
+                            localStorage.setItem(
+                                "hvt_user",
+                                JSON.stringify(currentUser),
+                            );
                             if (currentUser.role === "admin") {
                                 setActiveTab("student-dashboard");
                             } else {
@@ -226,7 +236,10 @@ export default function App() {
                                     console.warn("Lỗi đồng bộ user:", e);
                                     return null;
                                 }),
-                                getSubmissions(parsedUser.role, parsedUser.id).catch((e) => {
+                                getSubmissions(
+                                    parsedUser.role,
+                                    parsedUser.id,
+                                ).catch((e) => {
                                     console.warn("Lỗi tải bài nộp:", e);
                                     return [] as Submission[];
                                 }),
@@ -240,7 +253,10 @@ export default function App() {
                         }
                         if (currentUser) {
                             setUser(currentUser);
-                            localStorage.setItem("hvt_user", JSON.stringify(currentUser));
+                            localStorage.setItem(
+                                "hvt_user",
+                                JSON.stringify(currentUser),
+                            );
                             if (currentUser.role === "admin") {
                                 setActiveTab("student-dashboard");
                             } else {
@@ -268,7 +284,10 @@ export default function App() {
 
                     if (currentUser) {
                         setUser(currentUser);
-                        localStorage.setItem("hvt_user", JSON.stringify(currentUser));
+                        localStorage.setItem(
+                            "hvt_user",
+                            JSON.stringify(currentUser),
+                        );
                         if (currentUser.role === "admin") {
                             setActiveTab("student-dashboard");
                         } else {
@@ -397,10 +416,7 @@ export default function App() {
             setLoading(true);
             const [dbQuizzes, dbSubmissions] = await Promise.all([
                 getQuizzes(),
-                getSubmissions(
-                    loggedInUser.role,
-                    loggedInUser.id,
-                ),
+                getSubmissions(loggedInUser.role, loggedInUser.id),
             ]);
             if (dbQuizzes && dbQuizzes.length > 0) {
                 setQuizzes(dbQuizzes);
@@ -511,7 +527,13 @@ export default function App() {
             <main
                 className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing || currentPath === "/admin" ? "min-h-0 overflow-hidden" : ""}`}
             >
-                <div className={isTakingOrReviewing || currentPath === "/admin" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"}>
+                <div
+                    className={
+                        isTakingOrReviewing || currentPath === "/admin"
+                            ? "flex-1 flex flex-col min-h-0 overflow-hidden"
+                            : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"
+                    }
+                >
                     {/* 1. ADMIN PANEL ROUTE */}
                     {currentPath === "/admin" ? (
                         user && user.role === "admin" ? (
@@ -544,8 +566,8 @@ export default function App() {
                                     Không có quyền truy cập
                                 </h2>
                                 <p className="text-xs text-slate-500 max-w-sm">
-                                    Bạn không có quyền truy cập vào trang quản trị.
-                                    Vui lòng đăng nhập với tài khoản Admin.
+                                    Bạn không có quyền truy cập vào trang quản
+                                    trị. Vui lòng đăng nhập với tài khoản Admin.
                                 </p>
                                 <button
                                     onClick={() => navigateTo("/")}
@@ -629,10 +651,15 @@ export default function App() {
                                             user={user}
                                             quizzes={filteredQuizzes}
                                             submissions={submissions}
-                                            onAddSubmission={handleAddSubmission}
+                                            onAddSubmission={
+                                                handleAddSubmission
+                                            }
                                             activeTab={activeTab}
                                             selectedGrade={selectedGrade}
-                                            onSelectGrade={(grade, category) => {
+                                            onSelectGrade={(
+                                                grade,
+                                                category,
+                                            ) => {
                                                 if (confirmNavigation()) {
                                                     if (grade) {
                                                         let path =
@@ -652,7 +679,9 @@ export default function App() {
                                             }}
                                             onQuizStateChange={setIsTakingQuiz}
                                             activeQuizId={activeQuizId}
-                                            reviewSubmissionId={reviewSubmissionId}
+                                            reviewSubmissionId={
+                                                reviewSubmissionId
+                                            }
                                             onNavigate={navigateTo}
                                             navigateReplace={navigateReplace}
                                             ongoingAttempt={ongoingAttempt}
@@ -702,7 +731,8 @@ export default function App() {
                                         onSelectGrade={(grade, category) => {
                                             if (confirmNavigation()) {
                                                 if (grade) {
-                                                    let path = "/grade/" + grade;
+                                                    let path =
+                                                        "/grade/" + grade;
                                                     if (category) {
                                                         path +=
                                                             "?category=" +
@@ -735,26 +765,28 @@ export default function App() {
                     currentPath !== "/trang" &&
                     currentPath !== "/teacher" && (
                         <Footer
-                        onSelectGrade={(grade, category) => {
-                            setActiveTab("student-dashboard");
-                            if (grade) {
-                                let path = "/grade/" + grade;
-                                if (category) {
-                                    path +=
-                                        "?category=" +
-                                        encodeURIComponent(category);
+                            onSelectGrade={(grade, category) => {
+                                setActiveTab("student-dashboard");
+                                if (grade) {
+                                    let path = "/grade/" + grade;
+                                    if (category) {
+                                        path +=
+                                            "?category=" +
+                                            encodeURIComponent(category);
+                                    }
+                                    navigateTo(path);
+                                } else {
+                                    navigateTo("/");
                                 }
-                                navigateTo(path);
-                            } else {
-                                navigateTo("/");
+                            }}
+                            onNavigate={navigateTo}
+                            onOpenContactModal={() =>
+                                setGlobalContactModalOpen(true)
                             }
-                        }}
-                        onNavigate={navigateTo}
-                        onOpenContactModal={() => setGlobalContactModalOpen(true)}
-                        onOpenBugModal={() => setGlobalBugModalOpen(true)}
-                        userLoggedIn={!!user}
-                    />
-                )}
+                            onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                            userLoggedIn={!!user}
+                        />
+                    )}
             </main>
 
             {/* Floating Support Card */}
@@ -1093,15 +1125,17 @@ export default function App() {
 
             {/* Performance / Latency Indicator */}
             {loadTimeMs !== null && (
-                <div className="fixed bottom-1.5 left-4 z-40 flex items-center gap-1 bg-white/75 dark:bg-slate-900/75 border border-slate-200/50 dark:border-slate-800/50 rounded-md px-1.5 py-0.5 text-[9px] font-mono text-slate-400 dark:text-slate-500 shadow-2xs select-none pointer-events-none">
-                    <span className={`w-1 h-1 rounded-full ${
-                        loadTimeMs < 300 
-                            ? "bg-emerald-500" 
-                            : loadTimeMs < 800 
-                                ? "bg-amber-500" 
-                                : "bg-rose-500"
-                    }`} />
-                    <span>Load: {loadTimeMs}ms</span>
+                <div className="fixed bottom-1.5 right-4 z-40 flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 dark:text-slate-500 select-none pointer-events-none">
+                    <span
+                        className={`w-1 h-1 rounded-full ${
+                            loadTimeMs < 300
+                                ? "bg-emerald-500"
+                                : loadTimeMs < 800
+                                  ? "bg-amber-500"
+                                  : "bg-rose-500"
+                        }`}
+                    />
+                    <span>{loadTimeMs}ms</span>
                 </div>
             )}
         </div>
