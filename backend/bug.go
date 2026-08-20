@@ -65,8 +65,8 @@ func HandleGetBugReports(db *gorm.DB) gin.HandlerFunc {
 
 		var reports []BugReportItem
 		err := db.Model(&BugReport{}).
-			Select("bug_reports.*, users.username as username, users.role as user_role").
-			Joins("left join users on users.id = bug_reports.user_id").
+			Select("bug_reports.*, profiles.username as username, profiles.role as user_role").
+			Joins("left join profiles on profiles.id = bug_reports.user_id").
 			Order("bug_reports.created_at desc").
 			Scan(&reports).Error
 
