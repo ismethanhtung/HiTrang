@@ -34,6 +34,7 @@ import {
     updateProfileName,
     updatePassword,
     signOutAllDevices,
+    uploadAvatar,
 } from "../lib/supabaseService";
 import { renderMathHtml } from "../lib/math";
 
@@ -82,6 +83,8 @@ export default function SettingsView({
     const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [updatingPassword, setUpdatingPassword] = useState(false);
     const [loggingOutAll, setLoggingOutAll] = useState(false);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [avatarError, setAvatarError] = useState<string | null>(null);
     const [activeSettingsTab, setActiveSettingsTab] = useState<
         "profile" | "history"
     >(initialTab || "profile");
@@ -94,6 +97,30 @@ export default function SettingsView({
             setActiveSettingsTab(initialTab);
         }
     }, [initialTab]);
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024) {
+            setAvatarError("Kích thước ảnh vượt quá giới hạn 2MB");
+            return;
+        }
+
+        setAvatarError(null);
+        setUploadingAvatar(true);
+        try {
+            const avatarUrl = await uploadAvatar(file);
+            const updatedUser = { ...user, avatarUrl };
+            onUpdateUser(updatedUser);
+            localStorage.setItem("hvt_user", JSON.stringify(updatedUser));
+        } catch (err: any) {
+            console.error("Lỗi khi tải ảnh lên:", err);
+            setAvatarError(err.message || "Không thể tải ảnh lên, vui lòng thử lại");
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     const handleTabClick = (tab: "profile" | "history") => {
         setActiveSettingsTab(tab);
@@ -808,8 +835,8 @@ export default function SettingsView({
                                 Your avatar shown across the app.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-brand-50 dark:bg-brand-500/10 text-brand-500 dark:text-brand-400 flex items-center justify-center font-bold text-lg border border-brand-100/30 dark:border-brand-500/20">
+                        <div className="col-span-12 md:col-span-8 flex items-center gap-5">
+                            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-brand-50 dark:bg-brand-500/10 text-brand-500 dark:text-brand-400 flex items-center justify-center font-bold text-xl border border-brand-100/30 dark:border-brand-500/20 shadow-2xs">
                                 {user.avatarUrl ? (
                                     <img
                                         src={user.avatarUrl}
@@ -817,13 +844,49 @@ export default function SettingsView({
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <User className="w-5 h-5" />
+                                    <User className="w-6 h-6" />
+                                )}
+                                {uploadingAvatar && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white z-10">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    </div>
                                 )}
                             </div>
-                            <div className="text-xs text-slate-400 dark:text-slate-550 font-medium">
-                                {user.avatarUrl
-                                    ? "Liên kết qua tài khoản Google"
-                                    : "Đăng nhập thủ công (Mặc định)"}
+                            <div className="flex flex-col gap-1.5">
+                                <div className="flex items-center gap-3">
+                                    <label className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 active:scale-97 text-white text-[11px] font-bold rounded-xl cursor-pointer transition-all shadow-xs flex items-center gap-1.5">
+                                        {uploadingAvatar ? (
+                                            <>
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                Đang tải...
+                                            </>
+                                        ) : (
+                                            "Tải ảnh lên"
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleAvatarChange}
+                                            disabled={uploadingAvatar}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                        JPG, PNG, WEBP (Tối đa 2MB)
+                                    </span>
+                                </div>
+                                {avatarError && (
+                                    <p className="text-[10px] text-rose-500 font-semibold mt-0.5">
+                                        {avatarError}
+                                    </p>
+                                )}
+                                <div className="text-[10px] text-slate-400 dark:text-slate-550 font-medium mt-0.5">
+                                    {user.avatarUrl && user.avatarUrl.includes("googleusercontent.com")
+                                        ? "Ảnh đại diện đồng bộ từ Google"
+                                        : user.avatarUrl
+                                          ? "Ảnh đại diện tự tải lên"
+                                          : "Chưa có ảnh đại diện (Đang dùng mặc định)"}
+                                </div>
                             </div>
                         </div>
                     </div>

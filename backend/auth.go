@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -726,5 +727,65 @@ func GenerateUniqueUsername(db *gorm.DB, base string) string {
 		suffix++
 	}
 	return finalUsername
+}
+
+func HandleUploadAvatar(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDVal, exists := c.Get("userID")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Không tìm thấy thông tin đăng nhập"})
+			return
+		}
+		userID := userIDVal.(string)
+
+		file, err := c.FormFile("avatar")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không nhận được file ảnh upload"})
+			return
+		}
+
+		if file.Size > 2*1024*1024 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Kích thước ảnh vượt quá giới hạn 2MB"})
+			return
+		}
+
+		ext := strings.ToLower(filepath.Ext(file.Filename))
+		allowedExts := map[string]bool{
+			".jpg":  true,
+			".jpeg": true,
+			".png":  true,
+			".webp": true,
+			".gif":  true,
+		}
+		if !allowedExts[ext] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Định dạng file không được hỗ trợ (chỉ nhận JPG, JPEG, PNG, WEBP, GIF)"})
+			return
+		}
+
+		filename := fmt.Sprintf("%s_%d%s", userID, time.Now().UnixNano(), ext)
+		savePath := filepath.Join("./uploads", filename)
+
+		if err := c.SaveUploadedFile(file, savePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lưu file ảnh: " + err.Error()})
+			return
+		}
+
+		scheme := "http"
+		if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
+			scheme = "https"
+		}
+		host := c.Request.Host
+		avatarURL := fmt.Sprintf("%s://%s/uploads/%s", scheme, host, filename)
+
+		if err := db.Model(&Profile{}).Where("id = ?", userID).Update("avatar_url", avatarURL).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật ảnh đại diện: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Tải ảnh đại diện lên thành công",
+			"avatarUrl": avatarURL,
+		})
+	}
 }
 

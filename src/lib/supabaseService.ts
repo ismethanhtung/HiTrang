@@ -23,11 +23,13 @@ export class ApiError extends Error {
  * Standard fetch wrapper
  */
 async function apiRequest<T = any>(path: string, options: RequestInit = {}): Promise<T> {
-  const headers = {
-    'Content-Type': 'application/json',
+  const headers: Record<string, string> = {
     ...getAuthHeader(),
-    ...options.headers,
+    ...(options.headers as Record<string, string>),
   };
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
@@ -346,4 +348,16 @@ export async function getBackendVersion(): Promise<string> {
     console.error('Lỗi khi lấy version backend:', err);
     return 'unknown';
   }
+}
+
+export async function uploadAvatar(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const data = await apiRequest<{ avatarUrl: string }>('/auth/me/avatar', {
+    method: 'POST',
+    body: formData,
+  });
+
+  return data.avatarUrl;
 }

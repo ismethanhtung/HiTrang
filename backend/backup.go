@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -86,6 +87,28 @@ func GenerateBackupZip(db *gorm.DB) ([]byte, error) {
 	}
 	if err := addJSONFile("user_overall_stats.json", data.UserOverallStats); err != nil {
 		return nil, err
+	}
+
+	// Walk ./uploads and add to zip to support full avatar backups
+	uploadsDir := "./uploads"
+	if entries, err := os.ReadDir(uploadsDir); err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			filePath := filepath.Join(uploadsDir, entry.Name())
+			fileBytes, err := os.ReadFile(filePath)
+			if err != nil {
+				continue
+			}
+			f, err := zipWriter.Create("uploads/" + entry.Name())
+			if err != nil {
+				return nil, err
+			}
+			if _, err := f.Write(fileBytes); err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	if err := zipWriter.Close(); err != nil {
@@ -205,6 +228,40 @@ func PerformRestore(db *gorm.DB, zipReader *zip.Reader) error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	// Restore uploaded avatars files from zip
+	if err := os.MkdirAll("./uploads", 0755); err != nil {
+		return fmt.Errorf("không thể tạo thư mục uploads: %w", err)
+	}
+
+	for _, file := range zipReader.File {
+		if strings.HasPrefix(file.Name, "uploads/") {
+			filename := strings.TrimPrefix(file.Name, "uploads/")
+			if filename == "" {
+				continue
+			}
+			if err := func() error {
+				f, err := file.Open()
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				content, err := io.ReadAll(f)
+				if err != nil {
+					return err
+				}
+				outPath := filepath.Join("./uploads", filename)
+				return os.WriteFile(outPath, content, 0644)
+			}(); err != nil {
+				return fmt.Errorf("không thể phục hồi file ảnh %s: %w", filename, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // AutoRestoreIfEmpty checks for backup restore.zip at startup

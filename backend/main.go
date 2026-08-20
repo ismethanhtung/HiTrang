@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.4"
+const AppVersion = "1.0.6"
 
 func main() {
 	// 1. Configuration
@@ -103,6 +103,11 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
+	if err := os.MkdirAll("./uploads", 0755); err != nil {
+		log.Printf("Lỗi tạo thư mục uploads: %v", err)
+	}
+	r.Static("/uploads", "./uploads")
+
 	// CORS Middleware
 	r.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
@@ -157,6 +162,7 @@ func main() {
 			protected.GET("/auth/me", HandleMe(db))
 			protected.PUT("/auth/me/name", HandleUpdateProfileName(db))
 			protected.PUT("/auth/me/password", HandleUpdatePassword(db))
+			protected.POST("/auth/me/avatar", HandleUploadAvatar(db))
 
 			// User Management (Admin/Teacher)
 			protected.GET("/admin/users", HandleGetAllProfiles(db))
