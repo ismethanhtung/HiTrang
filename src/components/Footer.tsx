@@ -40,22 +40,22 @@ export default function Footer({
                             <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
                                 <div>
                                     <span>
-                                        Địa chỉ: Phạm Văn Đồng, PleiKu, Gia Lai
+                                        Địa chỉ: Hẻm 111 Phùng Hưng, PleiKu, Gia Lai
                                     </span>
                                 </div>
                                 <div>
                                     <span>Điện thoại: </span>
                                     <a
-                                        href="tel:0926550470"
+                                        href="tel:0914765601"
                                         className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline"
                                     >
-                                        0926 550 470
+                                        0914 765 601
                                     </a>
                                 </div>
                                 <div>
                                     <span>Email: </span>
                                     <a
-                                        href="ismethanhtung@gmail.com"
+                                        href="mailto:ismethanhtung@gmail.com"
                                         className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline"
                                     >
                                         ismethanhtung@gmail.com
@@ -67,7 +67,7 @@ export default function Footer({
                         {/* Social Links (Plain text links instead of buttons with icons) */}
                         <div className="flex items-center gap-2.5 pt-1 text-xs font-semibold text-slate-400 dark:text-slate-500">
                             <a
-                                href="https://zalo.me/0926550470"
+                                href="https://zalo.me/0914765601"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline"

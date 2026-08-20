@@ -26,6 +26,7 @@ type BackupData struct {
 	Submissions      []Submission       `json:"submissions"`
 	ExamAttempts     []ExamAttempt      `json:"exam_attempts"`
 	UserOverallStats []UserOverallStats `json:"user_overall_stats"`
+	BugReports       []BugReport        `json:"bug_reports"`
 }
 
 // GenerateBackupZip runs queries and bundles table outputs to a zip file in memory
@@ -48,6 +49,9 @@ func GenerateBackupZip(db *gorm.DB) ([]byte, error) {
 		return nil, err
 	}
 	if err := db.Find(&data.UserOverallStats).Error; err != nil {
+		return nil, err
+	}
+	if err := db.Find(&data.BugReports).Error; err != nil {
 		return nil, err
 	}
 
@@ -86,6 +90,9 @@ func GenerateBackupZip(db *gorm.DB) ([]byte, error) {
 		return nil, err
 	}
 	if err := addJSONFile("user_overall_stats.json", data.UserOverallStats); err != nil {
+		return nil, err
+	}
+	if err := addJSONFile("bug_reports.json", data.BugReports); err != nil {
 		return nil, err
 	}
 
@@ -160,6 +167,10 @@ func PerformRestore(db *gorm.DB, zipReader *zip.Reader) error {
 	if err := readJSONFile("user_overall_stats.json", &backup.UserOverallStats); err != nil {
 		return err
 	}
+	if err := readJSONFile("bug_reports.json", &backup.BugReports); err != nil {
+		// Log and ignore error for backwards compatibility with older backup files
+		log.Printf("Cảnh báo: Không tìm thấy bug_reports.json trong file backup (Bỏ qua): %v", err)
+	}
 
 	// Execute restoring inside a transaction
 	err := db.Transaction(func(tx *gorm.DB) error {
@@ -169,6 +180,9 @@ func PerformRestore(db *gorm.DB, zipReader *zip.Reader) error {
 		}
 		defer tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
 
+		if err := tx.Exec("TRUNCATE TABLE bug_reports").Error; err != nil {
+			return err
+		}
 		if err := tx.Exec("TRUNCATE TABLE user_overall_stats").Error; err != nil {
 			return err
 		}
@@ -223,6 +237,12 @@ func PerformRestore(db *gorm.DB, zipReader *zip.Reader) error {
 		if len(backup.UserOverallStats) > 0 {
 			if err := tx.Create(&backup.UserOverallStats).Error; err != nil {
 				return fmt.Errorf("khôi phục user_overall_stats thất bại: %w", err)
+			}
+		}
+		// 7. Bug Reports
+		if len(backup.BugReports) > 0 {
+			if err := tx.Create(&backup.BugReports).Error; err != nil {
+				return fmt.Errorf("khôi phục bug_reports thất bại: %w", err)
 			}
 		}
 

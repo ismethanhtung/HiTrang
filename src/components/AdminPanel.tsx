@@ -4,6 +4,8 @@ import {
     getAllProfiles,
     verifyAdminPasswordWithEdgeFunction,
     getBackendVersion,
+    getBugReports,
+    BugReport,
 } from "../lib/supabaseService";
 import { FRONTEND_VERSION } from "../version";
 import {
@@ -20,6 +22,7 @@ import {
     Download,
     Upload,
     Activity,
+    Bug,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -29,6 +32,7 @@ import AdminStatsQuizzesTab from "./AdminStatsQuizzesTab";
 import AdminStatsStudentsTab from "./AdminStatsStudentsTab";
 import AdminSubmissionReviewer from "./AdminSubmissionReviewer";
 import AdminApiTab from "./AdminApiTab";
+import AdminBugsTab from "./AdminBugsTab";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -54,7 +58,13 @@ export default function AdminPanel({
     const [verifying, setVerifying] = useState(false);
 
     const [activeTab, setActiveTab] = useState<
-        "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students" | "api-monitor"
+        | "plans"
+        | "create-quiz"
+        | "quizzes"
+        | "stats-quizzes"
+        | "stats-students"
+        | "api-monitor"
+        | "bugs"
     >("plans");
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
@@ -69,6 +79,21 @@ export default function AdminPanel({
         );
     };
 
+    const [bugReports, setBugReports] = useState<BugReport[]>([]);
+    const [loadingBugs, setLoadingBugs] = useState(false);
+
+    const fetchBugs = async () => {
+        setLoadingBugs(true);
+        try {
+            const data = await getBugReports();
+            setBugReports(data);
+        } catch (err) {
+            console.error("Lỗi khi tải danh sách báo cáo lỗi:", err);
+        } finally {
+            setLoadingBugs(false);
+        }
+    };
+
     const handleTabClick = (
         tab:
             | "plans"
@@ -76,10 +101,14 @@ export default function AdminPanel({
             | "quizzes"
             | "stats-quizzes"
             | "stats-students"
-            | "api-monitor",
+            | "api-monitor"
+            | "bugs",
     ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
+        if (tab === "bugs") {
+            fetchBugs();
+        }
     };
 
     const [userProfiles, setUserProfiles] = useState<User[]>([]);
@@ -501,6 +530,31 @@ export default function AdminPanel({
                                 </div>
 
                                 {(!sidebarSearchQuery ||
+                                    "báo cáo lỗi hệ thống".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    ) ||
+                                    "báo cáo lỗi".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    ) ||
+                                    "lỗi".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    )) && (
+                                    <button
+                                        onClick={() =>
+                                            handleTabClick("bugs")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "bugs"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <Bug className="w-4 h-4 shrink-0" />
+                                        <span>Báo cáo lỗi hệ thống</span>
+                                    </button>
+                                )}
+
+                                {(!sidebarSearchQuery ||
                                     "giám sát api".includes(
                                         sidebarSearchQuery.toLowerCase(),
                                     ) ||
@@ -625,6 +679,13 @@ export default function AdminPanel({
 
                         {activeTab === "api-monitor" && (
                             <AdminApiTab />
+                        )}
+
+                        {activeTab === "bugs" && (
+                            <AdminBugsTab
+                                bugReports={bugReports}
+                                loading={loadingBugs}
+                            />
                         )}
                     </>
                 )}

@@ -365,3 +365,29 @@ export async function uploadAvatar(file: File): Promise<string> {
 
   return data.avatarUrl;
 }
+
+export interface BugReport {
+  id: string;
+  userId: string | null;
+  reporterName: string;
+  description: string;
+  createdAt: string;
+  username: string | null;
+  userRole: string | null;
+}
+
+export async function submitBugReport(reporterName: string, description: string): Promise<void> {
+  await apiRequest('/bugs', {
+    method: 'POST',
+    body: JSON.stringify({ reporterName, description })
+  });
+}
+
+export async function getBugReports(): Promise<BugReport[]> {
+  try {
+    return await apiRequest<BugReport[]>('/admin/bugs');
+  } catch (err) {
+    console.error('Lỗi khi tải danh sách báo cáo lỗi:', err);
+    return [];
+  }
+}

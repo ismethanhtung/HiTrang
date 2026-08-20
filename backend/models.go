@@ -107,3 +107,13 @@ type UserOverallStats struct {
 	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 	Profile        Profile   `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
+
+// BugReport represents bug_reports table
+type BugReport struct {
+	ID           string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	UserID       *string   `json:"userId" gorm:"column:user_id;type:varchar(36)"`
+	ReporterName string    `json:"reporterName" gorm:"column:reporter_name;type:varchar(255);not null"`
+	Description  string    `json:"description" gorm:"column:description;type:text;not null"`
+	CreatedAt    time.Time `json:"createdAt" gorm:"column:created_at;index"`
+	User         *User     `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:SET NULL"`
+}

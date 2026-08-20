@@ -20,6 +20,7 @@ import {
     getAnyActiveAttempt,
     initializeSession,
     getOverallLeaderboard,
+    submitBugReport,
 } from "./lib/supabaseService";
 import GradeView from "./components/GradeView";
 import LeaderboardView from "./components/LeaderboardView";
@@ -927,7 +928,7 @@ export default function App() {
 
                         <div className="flex flex-col gap-2 pt-1 text-left">
                             <a
-                                href="https://zalo.me/0926550470"
+                                href="https://zalo.me/0914765601"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
@@ -938,7 +939,7 @@ export default function App() {
                                 </span>
                             </a>
                             <a
-                                href="https://m.me/"
+                                href="https://m.me/nguyen.trang.724265"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
@@ -960,7 +961,7 @@ export default function App() {
                                 </span>
                             </a>
                             <a
-                                href="tel:0926550470"
+                                href="tel:0914765601"
                                 className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
                             >
                                 <span>Hotline / SĐT</span>
@@ -1031,7 +1032,7 @@ export default function App() {
                             </div>
                         ) : (
                             <form
-                                onSubmit={(e) => {
+                                onSubmit={async (e) => {
                                     e.preventDefault();
                                     if (
                                         !bugTitle.trim() ||
@@ -1039,12 +1040,13 @@ export default function App() {
                                     ) {
                                         return;
                                     }
-                                    console.log("Bug submitted:", {
-                                        title: bugTitle,
-                                        sender: bugSenderName,
-                                        content: bugContent,
-                                    });
-                                    setBugSubmitted(true);
+                                    try {
+                                        const fullDesc = `Tiêu đề: ${bugTitle.trim()}\n\nChi tiết: ${bugContent.trim()}`;
+                                        await submitBugReport(bugSenderName.trim() || "Ẩn danh", fullDesc);
+                                        setBugSubmitted(true);
+                                    } catch (err: any) {
+                                        alert("Lỗi khi gửi báo cáo: " + (err.message || err));
+                                    }
                                 }}
                                 className="space-y-4"
                             >

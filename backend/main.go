@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.14"
+const AppVersion = "1.0.16"
 
 func main() {
 	// 1. Configuration
@@ -87,6 +87,7 @@ func main() {
 		&ExamAttempt{},
 		&Submission{},
 		&UserOverallStats{},
+		&BugReport{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -194,7 +195,9 @@ func main() {
 			protected.GET("/leaderboard/quiz", HandleGetQuizLeaderboard(db))
 			protected.GET("/leaderboard/overall", HandleGetOverallLeaderboard(db))
 			protected.POST("/leaderboard/refresh", HandleRefreshOverallLeaderboard(db))
-			protected.GET("/leaderboard/recent", HandleGetRecentSubmissionsByGrade(db))
+			// Bug Reports
+			protected.POST("/bugs", HandleCreateBugReport(db))
+			protected.GET("/admin/bugs", HandleGetBugReports(db))
 
 			// Backups
 			protected.GET("/admin/backup", HandleDownloadBackup(db))
