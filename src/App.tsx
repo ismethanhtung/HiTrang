@@ -678,8 +678,15 @@ export default function App() {
                         </div>
                     )}
                 </div>
-                {!isTakingOrReviewing && (
-                    <Footer
+                {!isTakingOrReviewing &&
+                    !(
+                        user &&
+                        (user.role === "admin" ||
+                            currentPath === "/trang" ||
+                            currentPath === "/teacher") &&
+                        activeTab !== "student-dashboard"
+                    ) && (
+                        <Footer
                         onSelectGrade={(grade, category) => {
                             setActiveTab("student-dashboard");
                             if (grade) {
