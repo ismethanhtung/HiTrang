@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.7"
+const AppVersion = "1.0.8"
 
 func main() {
 	// 1. Configuration
