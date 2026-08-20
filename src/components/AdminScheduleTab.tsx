@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { getSchedule, updateSchedule, ScheduleSlot } from "../lib/supabaseService";
-import { Save, RotateCcw, AlertTriangle, Check, X, RefreshCw } from "lucide-react";
+import {
+    getSchedule,
+    updateSchedule,
+    ScheduleSlot,
+} from "../lib/supabaseService";
+import { RotateCcw, AlertTriangle, Check, X, RefreshCw } from "lucide-react";
 
 export default function AdminScheduleTab() {
     const [slots, setSlots] = useState<ScheduleSlot[]>([]);
@@ -46,11 +50,17 @@ export default function AdminScheduleTab() {
         8: "Chủ Nhật",
     };
 
-    const getSlot = (timeSlot: string, dayOfWeek: number): ScheduleSlot | undefined => {
-        return slots.find((s) => s.timeSlot === timeSlot && s.dayOfWeek === dayOfWeek);
+    const getSlot = (
+        timeSlot: string,
+        dayOfWeek: number,
+    ): ScheduleSlot | undefined => {
+        return slots.find(
+            (s) => s.timeSlot === timeSlot && s.dayOfWeek === dayOfWeek,
+        );
     };
 
     const handleCellClick = (timeSlot: string, dayOfWeek: number) => {
+        if (saving) return; // Prevent editing while saving
         const slot = getSlot(timeSlot, dayOfWeek);
         setEditingCell({
             timeSlot,
@@ -59,14 +69,16 @@ export default function AdminScheduleTab() {
         });
     };
 
-    const handleSaveCell = (e: React.FormEvent) => {
+    const handleSaveCell = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingCell) return;
 
         // Find or create slot index
         const updatedSlots = [...slots];
         const existingIdx = updatedSlots.findIndex(
-            (s) => s.timeSlot === editingCell.timeSlot && s.dayOfWeek === editingCell.dayOfWeek
+            (s) =>
+                s.timeSlot === editingCell.timeSlot &&
+                s.dayOfWeek === editingCell.dayOfWeek,
         );
 
         const rowIdx = timeRows.indexOf(editingCell.timeSlot);
@@ -86,25 +98,29 @@ export default function AdminScheduleTab() {
             updatedSlots.push(newSlot);
         }
 
-        setSlots(updatedSlots);
+        // Close editor first and start saving immediately
         setEditingCell(null);
-    };
-
-    const handleSaveAll = async () => {
         setSaving(true);
+
         try {
-            await updateSchedule(slots);
-            alert("Lưu lịch học thành công!");
-            fetchScheduleData();
+            // Optimistic update
+            setSlots(updatedSlots);
+            await updateSchedule(updatedSlots);
         } catch (err: any) {
-            alert("Lỗi khi lưu lịch học: " + err.message);
+            alert("Lỗi khi cập nhật lịch học: " + err.message);
+            // Revert state by fetching fresh data
+            fetchScheduleData();
         } finally {
             setSaving(false);
         }
     };
 
     const handleResetToDefault = async () => {
-        if (!window.confirm("Bạn có chắc chắn muốn đặt lại lịch học về mặc định ban đầu không? Mọi thay đổi hiện tại sẽ bị xóa.")) {
+        if (
+            !window.confirm(
+                "Bạn có chắc chắn muốn đặt lại lịch học về mặc định ban đầu không? Mọi thay đổi hiện tại sẽ bị xóa.",
+            )
+        ) {
             return;
         }
         setSaving(true);
@@ -190,7 +206,9 @@ export default function AdminScheduleTab() {
         return (
             <div className="py-24 text-center">
                 <RefreshCw className="w-8 h-8 text-brand-500 animate-spin mx-auto" />
-                <p className="text-xs text-slate-500 mt-2 font-medium">Đang tải lịch học...</p>
+                <p className="text-xs text-slate-500 mt-2 font-medium">
+                    Đang tải lịch học...
+                </p>
             </div>
         );
     }
@@ -200,11 +218,15 @@ export default function AdminScheduleTab() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+                    <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                         Quản Lý Lịch Học
+                        {saving && (
+                            <RefreshCw className="w-4 h-4 text-brand-500 animate-spin" />
+                        )}
                     </h2>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                        Cập nhật các lớp học trên thời khóa biểu. Các thông tin tiêu đề, địa chỉ được thiết lập mặc định trong mã nguồn.
+                    <p className="text-xs text-slate-400 dark:text-slate-505 mt-0.5 font-medium">
+                        Cập nhật các lớp học trên thời khóa biểu. Các thông tin
+                        tiêu đề, địa chỉ được thiết lập mặc định trong mã nguồn.
                     </p>
                 </div>
 
@@ -212,18 +234,10 @@ export default function AdminScheduleTab() {
                     <button
                         onClick={handleResetToDefault}
                         disabled={saving}
-                        className="px-3.5 py-1.8 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
                         Đặt lại mặc định
-                    </button>
-                    <button
-                        onClick={handleSaveAll}
-                        disabled={saving}
-                        className="px-4 py-1.8 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
-                    >
-                        <Save className="w-3.5 h-3.5" />
-                        Lưu lịch học
                     </button>
                 </div>
             </div>
@@ -232,16 +246,24 @@ export default function AdminScheduleTab() {
             <div className="space-y-2">
                 <div className="flex items-center gap-1.5 text-slate-400">
                     <AlertTriangle className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-medium italic">Nhấp vào một ô trên thời khóa biểu bên dưới để cập nhật nội dung.</span>
+                    <span className="text-[11px] font-medium italic">
+                        Nhấp vào một ô trên thời khóa biểu bên dưới để cập nhật
+                        nội dung.
+                    </span>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-150 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
+                <div className="overflow-x-auto border border-slate-150 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950">
                     <table className="w-full min-w-[800px] border-collapse text-center">
                         <thead>
                             <tr className="bg-slate-50/40 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 text-xs">
-                                <th className="py-3 px-4 w-[120px] font-bold text-slate-500">Khung giờ</th>
+                                <th className="py-3 px-4 w-[120px] font-bold text-slate-505">
+                                    Khung giờ
+                                </th>
                                 {days.map((day) => (
-                                    <th key={day} className="py-3 px-4 font-bold text-[#8B7355] dark:text-[#8B7355] uppercase">
+                                    <th
+                                        key={day}
+                                        className="py-3 px-4 font-bold text-[#8B7355] dark:text-[#8B7355] uppercase"
+                                    >
                                         {dayLabels[day]}
                                     </th>
                                 ))}
@@ -249,24 +271,38 @@ export default function AdminScheduleTab() {
                         </thead>
                         <tbody className="text-xs">
                             {timeRows.map((timeRow) => (
-                                <tr key={timeRow} className="border-b border-slate-100 dark:border-slate-900/50">
+                                <tr
+                                    key={timeRow}
+                                    className="border-b border-slate-100 dark:border-slate-900/50"
+                                >
                                     <td className="py-4 px-3 bg-[#FCFAF7] dark:bg-slate-900/40 text-[11px] font-black text-slate-700 dark:text-slate-350 font-mono border-r border-slate-150 dark:border-slate-850">
                                         {timeRow}
                                     </td>
                                     {days.map((day) => {
                                         const slot = getSlot(timeRow, day);
                                         return (
-                                            <td key={day} className="p-1 border-r border-slate-100 dark:border-slate-900/50">
+                                            <td
+                                                key={day}
+                                                className="p-1 border-r border-slate-100 dark:border-slate-900/50"
+                                            >
                                                 <button
-                                                    onClick={() => handleCellClick(timeRow, day)}
-                                                    className={`w-full py-3 px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center cursor-pointer border ${getCellColorClass(slot ? slot.content : "")}`}
+                                                    onClick={() =>
+                                                        handleCellClick(
+                                                            timeRow,
+                                                            day,
+                                                        )
+                                                    }
+                                                    disabled={saving}
+                                                    className={`w-full py-3 px-2 rounded-xl transition-all flex flex-col items-center justify-center text-center cursor-pointer border ${getCellColorClass(slot ? slot.content : "")} ${saving ? "opacity-50 cursor-not-allowed" : ""}`}
                                                 >
                                                     {slot && slot.content ? (
                                                         <span className="font-bold tracking-tight line-clamp-2">
                                                             {slot.content}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-[10px] font-semibold opacity-30 hover:opacity-100">+ Đặt lớp</span>
+                                                        <span className="text-[10px] font-semibold opacity-30 hover:opacity-100">
+                                                            + Đặt lớp
+                                                        </span>
                                                     )}
                                                 </button>
                                             </td>
@@ -297,17 +333,28 @@ export default function AdminScheduleTab() {
                                 Cập nhật lịch học ô
                             </h3>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                {dayLabels[editingCell.dayOfWeek]} • Khung giờ: {editingCell.timeSlot}
+                                {dayLabels[editingCell.dayOfWeek]} • Khung giờ:{" "}
+                                {editingCell.timeSlot}
                             </p>
                         </div>
 
-                        <form onSubmit={handleSaveCell} className="space-y-4 text-left">
+                        <form
+                            onSubmit={handleSaveCell}
+                            className="space-y-4 text-left"
+                        >
                             <div className="space-y-1">
-                                <label className="text-[10px] font-bold text-slate-455 uppercase">Nội dung lớp học</label>
+                                <label className="text-[10px] font-bold text-slate-455 uppercase">
+                                    Nội dung lớp học
+                                </label>
                                 <input
                                     type="text"
                                     value={editingCell.content}
-                                    onChange={(e) => setEditingCell({ ...editingCell, content: e.target.value })}
+                                    onChange={(e) =>
+                                        setEditingCell({
+                                            ...editingCell,
+                                            content: e.target.value,
+                                        })
+                                    }
                                     placeholder="Ví dụ: 8 buổi 1, Lớp VIP 9..."
                                     className="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none bg-slate-50/20"
                                     autoFocus

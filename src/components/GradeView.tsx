@@ -139,7 +139,7 @@ export default function GradeView({
         const matchesSubject =
             selectedSubject === "Tất cả" ||
             getCleanSubjectName(q.subject) === selectedSubject;
-        
+
         const isDone = studentSubmissions.some((s) => s.quizId === q.id);
         const matchesStatus =
             statusFilter === "all" ||
@@ -182,7 +182,8 @@ export default function GradeView({
         // Tablet (2 columns on md)
         const mdCol = index % 2;
         if (mdCol === 0) {
-            classes += "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
+            classes +=
+                "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
         } else {
             classes +=
                 "md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
@@ -191,7 +192,8 @@ export default function GradeView({
         // Desktop (3 columns on lg)
         const lgCol = index % 3;
         if (lgCol === 0) {
-            classes += "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+            classes +=
+                "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         } else if (lgCol === 1) {
             classes +=
                 "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
@@ -302,7 +304,7 @@ export default function GradeView({
                             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-300">
+                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-100">
                             <p className="text-xs font-medium inline-flex items-center justify-center gap-1.5 flex-wrap">
                                 <span>
                                     {rawGradeQuizzes.length === 0

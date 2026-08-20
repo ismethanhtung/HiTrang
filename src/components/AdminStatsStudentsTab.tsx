@@ -855,26 +855,60 @@ export default function AdminStatsStudentsTab({
                                                 {(() => {
                                                     const streak = (() => {
                                                         let count = 0;
-                                                        const checkDate = new Date();
-                                                        checkDate.setHours(0, 0, 0, 0);
-
-                                                        const studentSubDateStrings = new Set(
-                                                            studentSubs.map((s) => safeParseDate(s.submittedAt).toDateString())
+                                                        const checkDate =
+                                                            new Date();
+                                                        checkDate.setHours(
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
                                                         );
 
-                                                        const hasToday = studentSubDateStrings.has(checkDate.toDateString());
-                                                        const yesterday = new Date(checkDate);
-                                                        yesterday.setDate(checkDate.getDate() - 1);
-                                                        const hasYesterday = studentSubDateStrings.has(yesterday.toDateString());
+                                                        const studentSubDateStrings =
+                                                            new Set(
+                                                                studentSubs.map(
+                                                                    (s) =>
+                                                                        safeParseDate(
+                                                                            s.submittedAt,
+                                                                        ).toDateString(),
+                                                                ),
+                                                            );
 
-                                                        if (!hasToday && !hasYesterday) {
+                                                        const hasToday =
+                                                            studentSubDateStrings.has(
+                                                                checkDate.toDateString(),
+                                                            );
+                                                        const yesterday =
+                                                            new Date(checkDate);
+                                                        yesterday.setDate(
+                                                            checkDate.getDate() -
+                                                                1,
+                                                        );
+                                                        const hasYesterday =
+                                                            studentSubDateStrings.has(
+                                                                yesterday.toDateString(),
+                                                            );
+
+                                                        if (
+                                                            !hasToday &&
+                                                            !hasYesterday
+                                                        ) {
                                                             return 0;
                                                         }
 
-                                                        let current = hasToday ? checkDate : yesterday;
-                                                        while (studentSubDateStrings.has(current.toDateString())) {
+                                                        let current = hasToday
+                                                            ? checkDate
+                                                            : yesterday;
+                                                        while (
+                                                            studentSubDateStrings.has(
+                                                                current.toDateString(),
+                                                            )
+                                                        ) {
                                                             count++;
-                                                            current.setDate(current.getDate() - 1);
+                                                            current.setDate(
+                                                                current.getDate() -
+                                                                    1,
+                                                            );
                                                         }
                                                         return count;
                                                     })();
@@ -946,12 +980,6 @@ export default function AdminStatsStudentsTab({
 
                                                     return (
                                                         <div className="w-full max-w-[140px] flex flex-col gap-2">
-                                                            {streak > 0 && (
-                                                                <div className="flex items-center gap-1 text-[9px] text-orange-600 dark:text-orange-400 font-bold mb-1">
-                                                                    <span>🔥 Chuỗi:</span>
-                                                                    <span className="font-extrabold font-mono">{streak} ngày</span>
-                                                                </div>
-                                                            )}
                                                             {/* Headers */}
                                                             <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 mb-1 w-full">
                                                                 {weekHeaders.map(

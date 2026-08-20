@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Quiz, Submission } from "../types";
-import { BarChart3, Search, X } from "lucide-react";
+import { BarChart3, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface AdminStatsQuizzesTabProps {
     quizzes: Quiz[];
@@ -30,6 +30,18 @@ export default function AdminStatsQuizzesTab({
     >("newest");
     const [selectedQuizForDetails, setSelectedQuizForDetails] =
         useState<Quiz | null>(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [subPage, setSubPage] = useState(1);
+    const pageSize = 10;
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, filterGrade, sortBy]);
+
+    useEffect(() => {
+        setSubPage(1);
+    }, [selectedQuizForDetails]);
 
     const formatTime = (secs: number) => {
         const mins = Math.floor(secs / 60);
@@ -112,6 +124,12 @@ export default function AdminStatsQuizzesTab({
         return result;
     }, [statsQuizzesData, search, filterGrade, sortBy]);
 
+    const totalPages = Math.ceil(filtered.length / pageSize);
+    const paginatedQuizzes = useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        return filtered.slice(start, start + pageSize);
+    }, [filtered, currentPage, pageSize]);
+
     return (
         <div className="space-y-5 animate-in fade-in duration-200">
             {/* Header */}
@@ -182,7 +200,7 @@ export default function AdminStatsQuizzesTab({
             </div>
 
             {/* Table */}
-            <div className="bg-bg-card rounded-lg overflow-hidden shadow-2xs">
+            <div className="bg-bg-card overflow-hidden shadow-2xs">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse text-xs">
                         <thead>
@@ -209,7 +227,7 @@ export default function AdminStatsQuizzesTab({
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
-                            {filtered.map((quizData) => (
+                            {paginatedQuizzes.map((quizData) => (
                                 <tr
                                     key={quizData.id}
                                     className="hover:bg-slate-50/50 transition-colors"
@@ -314,6 +332,42 @@ export default function AdminStatsQuizzesTab({
                 </div>
             </div>
 
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-border-primary/60">
+                    <span className="text-[11px] text-slate-400">
+                        Hiển thị {(currentPage - 1) * pageSize + 1} -{" "}
+                        {Math.min(currentPage * pageSize, filtered.length)} /{" "}
+                        {filtered.length} đề thi
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) => Math.max(1, p - 1))
+                            }
+                            disabled={currentPage === 1}
+                            className="p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-500 rounded-lg transition-colors cursor-pointer border-0"
+                        >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-[11px] font-semibold text-slate-600 px-2">
+                            {currentPage} / {totalPages}
+                        </span>
+                        <button
+                            onClick={() =>
+                                setCurrentPage((p) =>
+                                    Math.min(totalPages, p + 1),
+                                )
+                            }
+                            disabled={currentPage === totalPages}
+                            className="p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-500 rounded-lg transition-colors cursor-pointer border-0"
+                        >
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Quiz Submissions Detail Modal */}
             {selectedQuizForDetails && (
                 <div className="fixed inset-0 bg-slate-955/20 backdrop-blur-xs flex items-center justify-center z-45 p-4 select-none animate-in fade-in duration-200">
@@ -347,16 +401,32 @@ export default function AdminStatsQuizzesTab({
                                     )
                                     .sort((a, b) => b.score - a.score);
 
+                                const subPageSize = 10;
+                                const totalSubPages = Math.ceil(
+                                    quizSubs.length / subPageSize,
+                                );
+                                const paginatedSubs = quizSubs.slice(
+                                    (subPage - 1) * subPageSize,
+                                    subPage * subPageSize,
+                                );
+
                                 // --------------------------------------------
                                 // CALCULATIONS FOR DETAILED ANALYTICS
                                 // --------------------------------------------
                                 const scores = quizSubs.map((s) => s.score);
                                 const total = scores.length;
-                                const sum = scores.reduce((acc, curr) => acc + curr, 0);
-                                const average = Number((sum / total).toFixed(2));
+                                const sum = scores.reduce(
+                                    (acc, curr) => acc + curr,
+                                    0,
+                                );
+                                const average = Number(
+                                    (sum / total).toFixed(2),
+                                );
 
                                 // Median
-                                const sortedScores = [...scores].sort((a, b) => a - b);
+                                const sortedScores = [...scores].sort(
+                                    (a, b) => a - b,
+                                );
                                 const median =
                                     total % 2 !== 0
                                         ? sortedScores[Math.floor(total / 2)]
@@ -373,33 +443,53 @@ export default function AdminStatsQuizzesTab({
                                 const min = Math.min(...scores);
 
                                 // Pass rate (score >= 5.0)
-                                const passCount = scores.filter((s) => s >= 5.0).length;
-                                const passRate = Number(((passCount / total) * 100).toFixed(1));
+                                const passCount = scores.filter(
+                                    (s) => s >= 5.0,
+                                ).length;
+                                const passRate = Number(
+                                    ((passCount / total) * 100).toFixed(1),
+                                );
 
                                 // Average time spent
-                                const validTimes = quizSubs.filter((s) => s.timeSpent !== undefined).map((s) => s.timeSpent as number);
+                                const validTimes = quizSubs
+                                    .filter((s) => s.timeSpent !== undefined)
+                                    .map((s) => s.timeSpent as number);
                                 const avgTimeSpent =
                                     validTimes.length > 0
                                         ? Math.round(
-                                              validTimes.reduce((acc, curr) => acc + curr, 0) /
-                                                  validTimes.length,
+                                              validTimes.reduce(
+                                                  (acc, curr) => acc + curr,
+                                                  0,
+                                              ) / validTimes.length,
                                           )
                                         : 0;
 
-                                 // 21 Score brackets (from 0 to 10 with step 0.5) representing exact distribution like official exams
-                                 const distribution = Array.from({ length: 21 }, (_, i) => {
-                                     const scoreVal = i * 0.5;
-                                     // Filter submissions matching this score (using rounding to nearest 0.5)
-                                     const count = scores.filter((s) => Math.round(s * 2) / 2 === scoreVal).length;
-                                     const pct = Number(((count / total) * 100).toFixed(1));
-                                     return {
-                                         label: `${scoreVal}đ`,
-                                         shortLabel: scoreVal % 1 === 0 ? `${scoreVal}` : "",
-                                         scoreVal,
-                                         count,
-                                         pct,
-                                     };
-                                 });
+                                // 21 Score brackets (from 0 to 10 with step 0.5) representing exact distribution like official exams
+                                const distribution = Array.from(
+                                    { length: 21 },
+                                    (_, i) => {
+                                        const scoreVal = i * 0.5;
+                                        // Filter submissions matching this score (using rounding to nearest 0.5)
+                                        const count = scores.filter(
+                                            (s) =>
+                                                Math.round(s * 2) / 2 ===
+                                                scoreVal,
+                                        ).length;
+                                        const pct = Number(
+                                            ((count / total) * 100).toFixed(1),
+                                        );
+                                        return {
+                                            label: `${scoreVal}đ`,
+                                            shortLabel:
+                                                scoreVal % 1 === 0
+                                                    ? `${scoreVal}`
+                                                    : "",
+                                            scoreVal,
+                                            count,
+                                            pct,
+                                        };
+                                    },
+                                );
 
                                 return (
                                     <div className="space-y-6">
@@ -411,21 +501,50 @@ export default function AdminStatsQuizzesTab({
                                                     Biểu đồ phổ điểm
                                                 </h4>
                                                 {(() => {
-                                                    const maxPct = Math.max(...distribution.map(d => d.pct)) || 1;
-                                                    const maxCount = Math.max(...distribution.map(d => d.count)) || 1;
+                                                    const maxPct =
+                                                        Math.max(
+                                                            ...distribution.map(
+                                                                (d) => d.pct,
+                                                            ),
+                                                        ) || 1;
+                                                    const maxCount =
+                                                        Math.max(
+                                                            ...distribution.map(
+                                                                (d) => d.count,
+                                                            ),
+                                                        ) || 1;
                                                     const chartWidth = 500;
                                                     const chartHeight = 185;
                                                     const padLeft = 30;
                                                     const padRight = 10;
                                                     const padTop = 25;
                                                     const padBot = 30;
-                                                    const useW = chartWidth - padLeft - padRight;
-                                                    const useH = chartHeight - padTop - padBot;
+                                                    const useW =
+                                                        chartWidth -
+                                                        padLeft -
+                                                        padRight;
+                                                    const useH =
+                                                        chartHeight -
+                                                        padTop -
+                                                        padBot;
                                                     const colW = useW / 21;
-                                                    const barW = Math.min(16, colW * 0.85);
+                                                    const barW = Math.min(
+                                                        16,
+                                                        colW * 0.85,
+                                                    );
 
-                                                    const getBarPath = (x: number, y: number, w: number, h: number, r: number) => {
-                                                        const realR = Math.min(r, h, w / 2);
+                                                    const getBarPath = (
+                                                        x: number,
+                                                        y: number,
+                                                        w: number,
+                                                        h: number,
+                                                        r: number,
+                                                    ) => {
+                                                        const realR = Math.min(
+                                                            r,
+                                                            h,
+                                                            w / 2,
+                                                        );
                                                         if (realR <= 0) {
                                                             return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
                                                         }
@@ -434,93 +553,277 @@ export default function AdminStatsQuizzesTab({
 
                                                     return (
                                                         <div className="w-full relative">
-                                                            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto">
+                                                            <svg
+                                                                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                                                                className="w-full h-auto"
+                                                            >
                                                                 <defs>
-                                                                    <linearGradient id="dist-grad-emerald" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.85" />
-                                                                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.15" />
+                                                                    <linearGradient
+                                                                        id="dist-grad-emerald"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#10B981"
+                                                                            stopOpacity="0.85"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#10B981"
+                                                                            stopOpacity="0.15"
+                                                                        />
                                                                     </linearGradient>
-                                                                    <linearGradient id="dist-grad-blue" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.85" />
-                                                                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.15" />
+                                                                    <linearGradient
+                                                                        id="dist-grad-blue"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#3B82F6"
+                                                                            stopOpacity="0.85"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#3B82F6"
+                                                                            stopOpacity="0.15"
+                                                                        />
                                                                     </linearGradient>
-                                                                    <linearGradient id="dist-grad-amber" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.85" />
-                                                                        <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.15" />
+                                                                    <linearGradient
+                                                                        id="dist-grad-amber"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#F59E0B"
+                                                                            stopOpacity="0.85"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#F59E0B"
+                                                                            stopOpacity="0.15"
+                                                                        />
                                                                     </linearGradient>
-                                                                    <linearGradient id="dist-grad-red" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#EF4444" stopOpacity="0.85" />
-                                                                        <stop offset="100%" stopColor="#EF4444" stopOpacity="0.15" />
+                                                                    <linearGradient
+                                                                        id="dist-grad-red"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#EF4444"
+                                                                            stopOpacity="0.85"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#EF4444"
+                                                                            stopOpacity="0.15"
+                                                                        />
                                                                     </linearGradient>
                                                                 </defs>
 
                                                                 {/* Gridlines */}
-                                                                <line x1={padLeft} y1={padTop} x2={chartWidth - padRight} y2={padTop} stroke="currentColor" className="text-slate-100 dark:text-slate-800/40" strokeWidth="0.8" strokeDasharray="3,3" />
-                                                                <line x1={padLeft} y1={padTop + useH/2} x2={chartWidth - padRight} y2={padTop + useH/2} stroke="currentColor" className="text-slate-100 dark:text-slate-800/40" strokeWidth="0.8" strokeDasharray="3,3" />
-                                                                <line x1={padLeft} y1={padTop + useH} x2={chartWidth - padRight} y2={padTop + useH} stroke="currentColor" className="text-slate-200 dark:text-slate-705" strokeWidth="1" />
+                                                                <line
+                                                                    x1={padLeft}
+                                                                    y1={padTop}
+                                                                    x2={
+                                                                        chartWidth -
+                                                                        padRight
+                                                                    }
+                                                                    y2={padTop}
+                                                                    stroke="currentColor"
+                                                                    className="text-slate-100 dark:text-slate-800/40"
+                                                                    strokeWidth="0.8"
+                                                                    strokeDasharray="3,3"
+                                                                />
+                                                                <line
+                                                                    x1={padLeft}
+                                                                    y1={
+                                                                        padTop +
+                                                                        useH / 2
+                                                                    }
+                                                                    x2={
+                                                                        chartWidth -
+                                                                        padRight
+                                                                    }
+                                                                    y2={
+                                                                        padTop +
+                                                                        useH / 2
+                                                                    }
+                                                                    stroke="currentColor"
+                                                                    className="text-slate-100 dark:text-slate-800/40"
+                                                                    strokeWidth="0.8"
+                                                                    strokeDasharray="3,3"
+                                                                />
+                                                                <line
+                                                                    x1={padLeft}
+                                                                    y1={
+                                                                        padTop +
+                                                                        useH
+                                                                    }
+                                                                    x2={
+                                                                        chartWidth -
+                                                                        padRight
+                                                                    }
+                                                                    y2={
+                                                                        padTop +
+                                                                        useH
+                                                                    }
+                                                                    stroke="currentColor"
+                                                                    className="text-slate-200 dark:text-slate-705"
+                                                                    strokeWidth="1"
+                                                                />
 
                                                                 {/* Bars */}
-                                                                {distribution.map((dist, i) => {
-                                                                    const barX = padLeft + i * colW + (colW - barW) / 2;
-                                                                    const barHeight = dist.count > 0 ? (dist.count / maxCount) * (useH - 15) : 0;
-                                                                    const y = padTop + useH - barHeight;
-                                                                    const centerX = barX + barW / 2;
+                                                                {distribution.map(
+                                                                    (
+                                                                        dist,
+                                                                        i,
+                                                                    ) => {
+                                                                        const barX =
+                                                                            padLeft +
+                                                                            i *
+                                                                                colW +
+                                                                            (colW -
+                                                                                barW) /
+                                                                                2;
+                                                                        const barHeight =
+                                                                            dist.count >
+                                                                            0
+                                                                                ? (dist.count /
+                                                                                      maxCount) *
+                                                                                  (useH -
+                                                                                      15)
+                                                                                : 0;
+                                                                        const y =
+                                                                            padTop +
+                                                                            useH -
+                                                                            barHeight;
+                                                                        const centerX =
+                                                                            barX +
+                                                                            barW /
+                                                                                2;
 
-                                                                    let grad = "url(#dist-grad-red)";
-                                                                    let color = "#EF4444";
-                                                                    if (dist.scoreVal >= 9.0) {
-                                                                        grad = "url(#dist-grad-emerald)";
-                                                                        color = "#10B981";
-                                                                    } else if (dist.scoreVal >= 6.5) {
-                                                                        grad = "url(#dist-grad-blue)";
-                                                                        color = "#3B82F6";
-                                                                    } else if (dist.scoreVal >= 5.0) {
-                                                                        grad = "url(#dist-grad-amber)";
-                                                                        color = "#F59E0B";
-                                                                    }
+                                                                        let grad =
+                                                                            "url(#dist-grad-red)";
+                                                                        let color =
+                                                                            "#EF4444";
+                                                                        if (
+                                                                            dist.scoreVal >=
+                                                                            9.0
+                                                                        ) {
+                                                                            grad =
+                                                                                "url(#dist-grad-emerald)";
+                                                                            color =
+                                                                                "#10B981";
+                                                                        } else if (
+                                                                            dist.scoreVal >=
+                                                                            6.5
+                                                                        ) {
+                                                                            grad =
+                                                                                "url(#dist-grad-blue)";
+                                                                            color =
+                                                                                "#3B82F6";
+                                                                        } else if (
+                                                                            dist.scoreVal >=
+                                                                            5.0
+                                                                        ) {
+                                                                            grad =
+                                                                                "url(#dist-grad-amber)";
+                                                                            color =
+                                                                                "#F59E0B";
+                                                                        }
 
-                                                                    return (
-                                                                        <g key={i}>
-                                                                            <path
-                                                                                d={getBarPath(barX, padTop, barW, useH, 2)}
-                                                                                fill="currentColor"
-                                                                                className="text-slate-50/50 dark:text-slate-850/20"
-                                                                            />
-                                                                            {barHeight > 0 && (
-                                                                                <path
-                                                                                    d={getBarPath(barX, y, barW, barHeight, 2)}
-                                                                                    fill={grad}
-                                                                                    className="transition-all duration-300"
-                                                                                />
-                                                                            )}
-
-                                                                            {dist.count > 0 && (
-                                                                                <text
-                                                                                    x={centerX}
-                                                                                    y={y - 5}
-                                                                                    textAnchor="middle"
-                                                                                    fill={color}
-                                                                                    fontSize="7.5"
-                                                                                    fontWeight="bold"
-                                                                                >
-                                                                                    {dist.count}
-                                                                                </text>
-                                                                            )}
-
-                                                                            <text
-                                                                                x={centerX}
-                                                                                y={padTop + useH + 14}
-                                                                                textAnchor="middle"
-                                                                                fill="currentColor"
-                                                                                fontSize="8.5"
-                                                                                fontWeight="bold"
-                                                                                className="text-slate-700 dark:text-slate-400"
+                                                                        return (
+                                                                            <g
+                                                                                key={
+                                                                                    i
+                                                                                }
                                                                             >
-                                                                                {dist.shortLabel}
-                                                                            </text>
-                                                                        </g>
-                                                                    );
-                                                                })}
+                                                                                <path
+                                                                                    d={getBarPath(
+                                                                                        barX,
+                                                                                        padTop,
+                                                                                        barW,
+                                                                                        useH,
+                                                                                        2,
+                                                                                    )}
+                                                                                    fill="currentColor"
+                                                                                    className="text-slate-50/50 dark:text-slate-850/20"
+                                                                                />
+                                                                                {barHeight >
+                                                                                    0 && (
+                                                                                    <path
+                                                                                        d={getBarPath(
+                                                                                            barX,
+                                                                                            y,
+                                                                                            barW,
+                                                                                            barHeight,
+                                                                                            2,
+                                                                                        )}
+                                                                                        fill={
+                                                                                            grad
+                                                                                        }
+                                                                                        className="transition-all duration-300"
+                                                                                    />
+                                                                                )}
+
+                                                                                {dist.count >
+                                                                                    0 && (
+                                                                                    <text
+                                                                                        x={
+                                                                                            centerX
+                                                                                        }
+                                                                                        y={
+                                                                                            y -
+                                                                                            5
+                                                                                        }
+                                                                                        textAnchor="middle"
+                                                                                        fill={
+                                                                                            color
+                                                                                        }
+                                                                                        fontSize="7.5"
+                                                                                        fontWeight="bold"
+                                                                                    >
+                                                                                        {
+                                                                                            dist.count
+                                                                                        }
+                                                                                    </text>
+                                                                                )}
+
+                                                                                <text
+                                                                                    x={
+                                                                                        centerX
+                                                                                    }
+                                                                                    y={
+                                                                                        padTop +
+                                                                                        useH +
+                                                                                        14
+                                                                                    }
+                                                                                    textAnchor="middle"
+                                                                                    fill="currentColor"
+                                                                                    fontSize="8.5"
+                                                                                    fontWeight="bold"
+                                                                                    className="text-slate-700 dark:text-slate-400"
+                                                                                >
+                                                                                    {
+                                                                                        dist.shortLabel
+                                                                                    }
+                                                                                </text>
+                                                                            </g>
+                                                                        );
+                                                                    },
+                                                                )}
                                                             </svg>
                                                         </div>
                                                     );
@@ -547,7 +850,11 @@ export default function AdminStatsQuizzesTab({
                                                             Thời gian TB
                                                         </span>
                                                         <span className="text-xl font-black text-slate-800 dark:text-slate-200 block">
-                                                            {avgTimeSpent > 0 ? formatTime(avgTimeSpent) : "—"}
+                                                            {avgTimeSpent > 0
+                                                                ? formatTime(
+                                                                      avgTimeSpent,
+                                                                  )
+                                                                : "—"}
                                                         </span>
                                                     </div>
                                                     <div className="space-y-1 border-t border-slate-200/60 dark:border-slate-800/60 pt-4">
@@ -572,7 +879,9 @@ export default function AdminStatsQuizzesTab({
 
                                         {/* 3. Submissions Table Title */}
                                         <div className="pt-2">
-                                            <h4 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-wider mb-3">Danh sách chi tiết xếp hạng</h4>
+                                            <h4 className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-550 tracking-wider mb-3">
+                                                Danh sách chi tiết xếp hạng
+                                            </h4>
                                             <div className="bg-bg-card border border-border-primary/50 rounded-2xl overflow-hidden shadow-2xs">
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full text-left border-collapse text-xs">
@@ -588,10 +897,12 @@ export default function AdminStatsQuizzesTab({
                                                                     Điểm số
                                                                 </th>
                                                                 <th className="px-3.5 py-3 text-center">
-                                                                    Thời gian làm
+                                                                    Thời gian
+                                                                    làm
                                                                 </th>
                                                                 <th className="px-3.5 py-3">
-                                                                    Thời điểm nộp
+                                                                    Thời điểm
+                                                                    nộp
                                                                 </th>
                                                                 <th className="px-3.5 py-3 text-center">
                                                                     Hành động
@@ -599,10 +910,14 @@ export default function AdminStatsQuizzesTab({
                                                             </tr>
                                                         </thead>
                                                         <tbody className="divide-y divide-border-primary/40 font-semibold text-text-secondary">
-                                                            {quizSubs.map(
-                                                                (sub, index) => {
+                                                            {paginatedSubs.map(
+                                                                (
+                                                                    sub,
+                                                                    index,
+                                                                ) => {
                                                                     const scoreColor =
-                                                                        sub.score >= 8
+                                                                        sub.score >=
+                                                                        8
                                                                             ? "bg-emerald-50 text-emerald-700"
                                                                             : sub.score >=
                                                                                 5
@@ -611,12 +926,17 @@ export default function AdminStatsQuizzesTab({
 
                                                                     return (
                                                                         <tr
-                                                                            key={sub.id}
+                                                                            key={
+                                                                                sub.id
+                                                                            }
                                                                             className="hover:bg-slate-50/50 transition-colors"
                                                                         >
                                                                             <td className="px-3.5 py-3 text-center font-extrabold text-slate-400">
                                                                                 #
-                                                                                {index +
+                                                                                {(subPage -
+                                                                                    1) *
+                                                                                    subPageSize +
+                                                                                    index +
                                                                                     1}
                                                                             </td>
                                                                             <td className="px-3.5 py-3">
@@ -638,7 +958,8 @@ export default function AdminStatsQuizzesTab({
                                                                                     {
                                                                                         sub.score
                                                                                     }{" "}
-                                                                                    / 10
+                                                                                    /
+                                                                                    10
                                                                                 </span>
                                                                             </td>
                                                                             <td className="px-3.5 py-3 text-center text-slate-500">
@@ -679,6 +1000,69 @@ export default function AdminStatsQuizzesTab({
                                                     </table>
                                                 </div>
                                             </div>
+
+                                            {/* Submissions Pagination Controls */}
+                                            {totalSubPages > 1 && (
+                                                <div className="flex items-center justify-between pt-4">
+                                                    <span className="text-[11px] text-slate-400">
+                                                        Hiển thị{" "}
+                                                        {(subPage - 1) *
+                                                            subPageSize +
+                                                            1}{" "}
+                                                        -{" "}
+                                                        {Math.min(
+                                                            subPage *
+                                                                subPageSize,
+                                                            quizSubs.length,
+                                                        )}{" "}
+                                                        / {quizSubs.length} lượt
+                                                        làm
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() =>
+                                                                setSubPage(
+                                                                    (p) =>
+                                                                        Math.max(
+                                                                            1,
+                                                                            p -
+                                                                                1,
+                                                                        ),
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                subPage === 1
+                                                            }
+                                                            className="p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-500 rounded-lg transition-colors cursor-pointer border-0"
+                                                        >
+                                                            <ChevronLeft className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <span className="text-[11px] font-semibold text-slate-600 px-2">
+                                                            {subPage} /{" "}
+                                                            {totalSubPages}
+                                                        </span>
+                                                        <button
+                                                            onClick={() =>
+                                                                setSubPage(
+                                                                    (p) =>
+                                                                        Math.min(
+                                                                            totalSubPages,
+                                                                            p +
+                                                                                1,
+                                                                        ),
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                subPage ===
+                                                                totalSubPages
+                                                            }
+                                                            className="p-1 bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-500 rounded-lg transition-colors cursor-pointer border-0"
+                                                        >
+                                                            <ChevronRight className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
