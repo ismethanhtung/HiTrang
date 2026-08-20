@@ -592,7 +592,12 @@ export default function App() {
                             navigateTo={navigateTo}
                         />
                     ) : routeInfo.route === "schedule" ? (
-                        <ScheduleView user={user} onNavigate={navigateTo} />
+                        <ScheduleView
+                            user={user}
+                            onNavigate={navigateTo}
+                            onOpenContactModal={() => setGlobalContactModalOpen(true)}
+                            onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                        />
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                         <LandingPage
