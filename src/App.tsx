@@ -159,14 +159,12 @@ export default function App() {
                 // Wait for local session token recovery to load auth headers
                 await initializeSession();
 
-                // Fetch quizzes and current user in parallel to eliminate network latency bottlenecks
-                const [dbQuizzes, currentUser] = await Promise.all([
-                    getQuizzes(),
-                    getCurrentUser(),
-                ]);
-
-                if (dbQuizzes && dbQuizzes.length > 0) {
-                    setQuizzes(dbQuizzes);
+                // Fetch current user first to see if they are logged in
+                let currentUser: User | null = null;
+                try {
+                    currentUser = await getCurrentUser();
+                } catch (uErr) {
+                    console.warn("Chưa đăng nhập:", uErr);
                 }
 
                 if (currentUser) {
@@ -177,7 +175,7 @@ export default function App() {
                         setActiveTab("student-dashboard");
                     }
 
-                    // Pre-fetch submissions & leaderboard in parallel to optimize load speed
+                    // Pre-fetch quizzes, submissions & leaderboard in parallel to optimize load speed
                     try {
                         const userGrade =
                             currentUser.role === "student"
@@ -187,14 +185,18 @@ export default function App() {
                             window.location.pathname === "/leaderboard";
 
                         if (isLeaderboardPath) {
-                            const [dbSubmissions, dbLeaderboard] =
+                            const [dbQuizzes, dbSubmissions, dbLeaderboard] =
                                 await Promise.all([
+                                    getQuizzes(),
                                     getSubmissions(
                                         currentUser.role,
                                         currentUser.id,
                                     ),
                                     getOverallLeaderboard(userGrade),
                                 ]);
+                            if (dbQuizzes && dbQuizzes.length > 0) {
+                                setQuizzes(dbQuizzes);
+                            }
                             if (dbSubmissions && dbSubmissions.length > 0) {
                                 setSubmissions(dbSubmissions);
                             }
@@ -202,10 +204,16 @@ export default function App() {
                                 setPrefetchedLeaderboard(dbLeaderboard);
                             }
                         } else {
-                            const dbSubmissions = await getSubmissions(
-                                currentUser.role,
-                                currentUser.id,
-                            );
+                            const [dbQuizzes, dbSubmissions] = await Promise.all([
+                                getQuizzes(),
+                                getSubmissions(
+                                    currentUser.role,
+                                    currentUser.id,
+                                ),
+                            ]);
+                            if (dbQuizzes && dbQuizzes.length > 0) {
+                                setQuizzes(dbQuizzes);
+                            }
                             if (dbSubmissions && dbSubmissions.length > 0) {
                                 setSubmissions(dbSubmissions);
                             }
@@ -214,10 +222,9 @@ export default function App() {
                         console.error("Lỗi tải ngầm dữ liệu ban đầu:", subErr);
                     }
 
-                    // Turn off loading indicator immediately so visual elements render in ~200ms
                     setLoading(false);
                 } else {
-                    // Stale session (only clear if the token itself is actually missing/invalidated)
+                    // Stale/Empty session (only clear if the token itself is actually missing/invalidated)
                     if (!localStorage.getItem("hitrang_token")) {
                         setUser(null);
                         localStorage.removeItem("hvt_user");
@@ -335,13 +342,24 @@ export default function App() {
             navigateTo("/");
         }
         try {
-            const dbSubmissions = await getSubmissions(
-                loggedInUser.role,
-                loggedInUser.id,
-            );
-            setSubmissions(dbSubmissions);
+            setLoading(true);
+            const [dbQuizzes, dbSubmissions] = await Promise.all([
+                getQuizzes(),
+                getSubmissions(
+                    loggedInUser.role,
+                    loggedInUser.id,
+                ),
+            ]);
+            if (dbQuizzes && dbQuizzes.length > 0) {
+                setQuizzes(dbQuizzes);
+            }
+            if (dbSubmissions && dbSubmissions.length > 0) {
+                setSubmissions(dbSubmissions);
+            }
         } catch (err) {
-            console.error("Lỗi khi tải bài nộp sau đăng nhập:", err);
+            console.error("Lỗi khi tải dữ liệu sau đăng nhập:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
