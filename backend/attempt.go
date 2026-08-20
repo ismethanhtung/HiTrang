@@ -719,13 +719,14 @@ func HandleGetQuizLeaderboard(db *gorm.DB) gin.HandlerFunc {
 
 		// Query earliest submitted attempts for each student on this quiz (first attempt BXH)
 		type LeaderboardRow struct {
-			StudentID       string    `json:"studentId"`
-			StudentName     string    `json:"studentName"`
-			StudentUsername string    `json:"studentUsername"`
-			StudentGrade    *string   `json:"studentGrade"`
-			Score           float64   `json:"score"`
-			DurationSeconds int       `json:"durationSeconds"`
-			SubmittedAt     time.Time `json:"submittedAt"`
+			StudentID        string    `json:"studentId"`
+			StudentName      string    `json:"studentName"`
+			StudentUsername  string    `json:"studentUsername"`
+			StudentGrade     *string   `json:"studentGrade"`
+			StudentAvatarURL *string   `json:"studentAvatarUrl"`
+			Score            float64   `json:"score"`
+			DurationSeconds  int       `json:"durationSeconds"`
+			SubmittedAt      time.Time `json:"submittedAt"`
 		}
 
 		var rows []LeaderboardRow
@@ -735,6 +736,7 @@ func HandleGetQuizLeaderboard(db *gorm.DB) gin.HandlerFunc {
 				p.name as student_name,
 				p.username as student_username,
 				p.grade as student_grade,
+				p.avatar_url as student_avatar_url,
 				ea.score as score,
 				TIMESTAMPDIFF(SECOND, ea.started_at, ea.submitted_at) as duration_seconds,
 				ea.submitted_at as submitted_at
@@ -767,14 +769,15 @@ func HandleGetQuizLeaderboard(db *gorm.DB) gin.HandlerFunc {
 				lastDur = r.DurationSeconds
 			}
 			rankedResponse[i] = gin.H{
-				"rankPosition":    rank,
-				"studentId":       r.StudentID,
-				"studentName":     r.StudentName,
-				"studentUsername": r.StudentUsername,
-				"studentGrade":    r.StudentGrade,
-				"score":           r.Score,
-				"durationSeconds": r.DurationSeconds,
-				"submittedAt":     r.SubmittedAt.Format("2006-01-02 15:04:05"),
+				"rankPosition":     rank,
+				"studentId":        r.StudentID,
+				"studentName":      r.StudentName,
+				"studentUsername":  r.StudentUsername,
+				"studentGrade":     r.StudentGrade,
+				"studentAvatarUrl": r.StudentAvatarURL,
+				"score":            r.Score,
+				"durationSeconds":  r.DurationSeconds,
+				"submittedAt":      r.SubmittedAt.Format("2006-01-02 15:04:05"),
 			}
 		}
 
@@ -794,6 +797,7 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			StudentName          string  `json:"studentName"`
 			StudentUsername       string  `json:"studentUsername"`
 			StudentGrade         *string `json:"studentGrade"`
+			StudentAvatarURL     *string `json:"studentAvatarUrl"`
 			TotalPoints          float64 `json:"totalPoints"`
 			TestsCompleted       int     `json:"testsCompleted"`
 		}
@@ -807,6 +811,7 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 				p.name as student_name,
 				p.username as student_username,
 				p.grade as student_grade,
+				p.avatar_url as student_avatar_url,
 				uos.total_exp as total_points,
 				uos.tests_completed as tests_completed
 			FROM user_overall_stats uos

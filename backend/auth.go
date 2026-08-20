@@ -168,12 +168,13 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusCreated, gin.H{
 			"token": token,
 			"user": gin.H{
-				"id":       userID,
-				"name":     profile.Name,
-				"username": profile.Username,
-				"role":     profile.Role,
-				"grade":    profile.Grade,
-				"plan":     profile.Plan,
+				"id":        userID,
+				"name":      profile.Name,
+				"username":  profile.Username,
+				"role":      profile.Role,
+				"grade":     profile.Grade,
+				"plan":      profile.Plan,
+				"avatarUrl": profile.AvatarURL,
 			},
 		})
 	}
@@ -225,12 +226,13 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
 			"user": gin.H{
-				"id":       user.ID,
-				"name":     profile.Name,
-				"username": profile.Username,
-				"role":     profile.Role,
-				"grade":    profile.Grade,
-				"plan":     profile.Plan,
+				"id":        user.ID,
+				"name":      profile.Name,
+				"username":  profile.Username,
+				"role":      profile.Role,
+				"grade":     profile.Grade,
+				"plan":      profile.Plan,
+				"avatarUrl": profile.AvatarURL,
 			},
 		})
 	}
@@ -251,12 +253,13 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":       profile.ID,
-			"name":     profile.Name,
-			"username": profile.Username,
-			"role":     profile.Role,
-			"grade":    profile.Grade,
-			"plan":     profile.Plan,
+			"id":        profile.ID,
+			"name":      profile.Name,
+			"username":  profile.Username,
+			"role":      profile.Role,
+			"grade":     profile.Grade,
+			"plan":      profile.Plan,
+			"avatarUrl": profile.AvatarURL,
 		})
 	}
 }
@@ -282,6 +285,7 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			Role      string  `json:"role"`
 			Plan      string  `json:"plan"`
 			Grade     *string `json:"grade"`
+			AvatarURL *string `json:"avatarUrl"`
 			CreatedAt string  `json:"createdAt"`
 		}
 
@@ -294,6 +298,7 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 				Role:      p.Role,
 				Plan:      p.Plan,
 				Grade:     p.Grade,
+				AvatarURL: p.AvatarURL,
 				CreatedAt: p.CreatedAt.Format("2006-01-02"),
 			}
 		}
@@ -573,9 +578,10 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var googleUser struct {
-			Sub   string `json:"sub"`
-			Email string `json:"email"`
-			Name  string `json:"name"`
+			Sub     string `json:"sub"`
+			Email   string `json:"email"`
+			Name    string `json:"name"`
+			Picture string `json:"picture"`
 		}
 		if err := json.NewDecoder(infoResp.Body).Decode(&googleUser); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi đọc dữ liệu profile từ Google"})
@@ -629,12 +635,14 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 					nameClean = uniqueUsername
 				}
 
+				avatarVal := googleUser.Picture
 				profile := Profile{
-					ID:       userID,
-					Name:     nameClean,
-					Username: uniqueUsername,
-					Role:     "student",
-					Plan:     "nothing",
+					ID:        userID,
+					Name:      nameClean,
+					Username:  uniqueUsername,
+					Role:      "student",
+					Plan:      "nothing",
+					AvatarURL: &avatarVal,
 				}
 				if err := tx.Create(&profile).Error; err != nil {
 					tx.Rollback()
@@ -664,6 +672,13 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
+		// Update profile's avatar url if it changed
+		if googleUser.Picture != "" && (user.Profile.AvatarURL == nil || *user.Profile.AvatarURL != googleUser.Picture) {
+			avatarVal := googleUser.Picture
+			user.Profile.AvatarURL = &avatarVal
+			db.Model(&Profile{}).Where("id = ?", user.ID).Update("avatar_url", avatarVal)
+		}
+
 		token, err := GenerateJWT(user.ID, user.Username, user.Profile.Role)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo mã thông báo đăng nhập JWT"})
@@ -680,6 +695,7 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 				"role":      user.Profile.Role,
 				"plan":      user.Profile.Plan,
 				"grade":     user.Profile.Grade,
+				"avatarUrl": user.Profile.AvatarURL,
 				"createdAt": user.Profile.CreatedAt.Format("2006-01-02"),
 			},
 		})

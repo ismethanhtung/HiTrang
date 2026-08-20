@@ -63,6 +63,7 @@ export interface QuizLeaderboardEntry {
   studentName: string;
   studentUsername: string;
   studentGrade: string | null;
+  studentAvatarUrl?: string;
   score: number;
   durationSeconds: number;
   submittedAt: string;
@@ -75,6 +76,7 @@ export interface OverallLeaderboardEntry {
   studentName: string;
   studentUsername: string;
   studentGrade: string | null;
+  studentAvatarUrl?: string;
   totalPoints: number;
   testsCompleted: number;
 }
