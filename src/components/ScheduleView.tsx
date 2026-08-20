@@ -251,7 +251,7 @@ export default function ScheduleView({
                     <img
                         src="/lich/1.jpeg"
                         alt="Ảnh Lịch học"
-                        className="w-full max-w-none rounded-xl border border-slate-200/60 dark:border-slate-800 shadow-xs"
+                        className="w-full max-w-none"
                     />
                 </div>
             )}

@@ -2651,7 +2651,7 @@ export default function StudentDashboard({
                                                 </div>
 
                                                 {/* Wide aspect ratio image spanning fully across the layout */}
-                                                <div className="relative rounded-2xl overflow-hidden aspect-[21/9] bg-slate-100 border border-slate-200/50">
+                                                <div className="relative rounded-xl overflow-hidden aspect-[21/9] bg-slate-100 border border-slate-200/50">
                                                     <img
                                                         src="/images/landing.png"
                                                         alt="Learning banner"

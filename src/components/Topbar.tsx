@@ -361,19 +361,18 @@ export default function Topbar({
                             </button>
                         </div>
                     ) : (
-                        /* AUTHENTICATED USER DROPDOWN */
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer"
+                                className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer flex-shrink-0"
                             >
-                                <div className="hidden sm:flex flex-col text-right">
-                                    <span className="text-xs font-bold text-text-primary leading-tight">
+                                <div className="hidden sm:flex flex-col text-right flex-shrink-0">
+                                    <span className="text-xs font-bold text-text-primary leading-tight whitespace-nowrap truncate max-w-[120px]">
                                         {user.name}
                                     </span>
-                                    <span className="text-[10px] text-text-tertiary">
+                                    <span className="text-[10px] text-text-tertiary whitespace-nowrap truncate max-w-[120px]">
                                         @{user.username}
                                     </span>
                                 </div>
