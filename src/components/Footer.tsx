@@ -141,13 +141,13 @@ export default function Footer({
                                 onClick={() => onSelectGrade("9", "Thi vào 10")}
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold"
                             >
-                                Thi vào 10 🌟
+                                Thi vào 10 🌸
                             </button>
                             <button
                                 onClick={() => onSelectGrade("12", "Thi thử")}
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2"
                             >
-                                Thi thử TN THPT 🎓
+                                Thi thử TN THPT 🌸
                             </button>
                         </div>
                     </div>
