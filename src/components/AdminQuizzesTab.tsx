@@ -43,8 +43,12 @@ export default function AdminQuizzesTab({
     const [quizSearchQuery, setQuizSearchQuery] = useState("");
     const [quizFilterSubject, setQuizFilterSubject] = useState<string>("all");
     const [quizFilterGrade, setQuizFilterGrade] = useState<string>("all");
-    const [quizFilterVisibility, setQuizFilterVisibility] = useState<"all" | "public" | "private">("all");
-    const [quizSortBy, setQuizSortBy] = useState<"newest" | "oldest" | "title" | "questions" | "duration">("newest");
+    const [quizFilterVisibility, setQuizFilterVisibility] = useState<
+        "all" | "public" | "private"
+    >("all");
+    const [quizSortBy, setQuizSortBy] = useState<
+        "newest" | "oldest" | "title" | "questions" | "duration"
+    >("newest");
     const [quizPage, setQuizPage] = useState(1);
     const [quizPageSize] = useState(10);
 
@@ -57,28 +61,43 @@ export default function AdminQuizzesTab({
     const [editGrade, setEditGrade] = useState("");
     const [editDuration, setEditDuration] = useState(45);
     const [editQuestions, setEditQuestions] = useState<Question[]>([]);
-    const [editScoringMode, setEditScoringMode] = useState<"EQUAL_WEIGHT" | "SECTION_BASED" | "THPT_QG">("EQUAL_WEIGHT");
-    const [editSectionPoints, setEditSectionPoints] = useState<Record<string, number>>({});
+    const [editScoringMode, setEditScoringMode] = useState<
+        "EQUAL_WEIGHT" | "SECTION_BASED" | "THPT_QG"
+    >("EQUAL_WEIGHT");
+    const [editSectionPoints, setEditSectionPoints] = useState<
+        Record<string, number>
+    >({});
     const [editDurationOption, setEditDurationOption] = useState<string>("45");
 
     // Quiz visibility toggle state & helper
     const [togglingQuizId, setTogglingQuizId] = useState<string | null>(null);
 
     // Question player state inside edit modal
-    const [editModalTab, setEditModalTab] = useState<"questions" | "settings">("questions");
+    const [editModalTab, setEditModalTab] = useState<"questions" | "settings">(
+        "questions",
+    );
     const [editCurrentQuestionIdx, setEditCurrentQuestionIdx] = useState(0);
-    const [editExpandedHtmlQuestions, setEditExpandedHtmlQuestions] = useState<Record<string, boolean>>({});
+    const [editExpandedHtmlQuestions, setEditExpandedHtmlQuestions] = useState<
+        Record<string, boolean>
+    >({});
     const [editFontSize, setEditFontSize] = useState(14);
 
     // Helper functions
     const cleanTrueFalseQuestionText = (html: string) => {
         if (!html) return "";
-        let clean = html.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
-            if (match.includes("Khẳng định") || match.includes("Đúng") || match.includes("Sai")) {
-                return "";
-            }
-            return match;
-        });
+        let clean = html.replace(
+            /<table[^>]*>([\s\S]*?)<\/table>/gi,
+            (match) => {
+                if (
+                    match.includes("Khẳng định") ||
+                    match.includes("Đúng") ||
+                    match.includes("Sai")
+                ) {
+                    return "";
+                }
+                return match;
+            },
+        );
 
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = clean;
@@ -94,7 +113,10 @@ export default function AdminQuizzesTab({
         return tempDiv.innerHTML;
     };
 
-    const handleToggleQuizVisibility = async (quizId: string, makePublic: boolean) => {
+    const handleToggleQuizVisibility = async (
+        quizId: string,
+        makePublic: boolean,
+    ) => {
         const quizObj = quizzes.find((q) => q.id === quizId);
         if (!quizObj) return;
         setTogglingQuizId(quizId);
@@ -150,7 +172,11 @@ export default function AdminQuizzesTab({
         setEditQuestions(updated);
     };
 
-    const handleUpdateOption = (qIndex: number, oIndex: number, val: string) => {
+    const handleUpdateOption = (
+        qIndex: number,
+        oIndex: number,
+        val: string,
+    ) => {
         const updated = [...editQuestions];
         const opts = [...(updated[qIndex].options || [])];
         while (opts.length <= oIndex) {
@@ -219,18 +245,34 @@ export default function AdminQuizzesTab({
             ...currentQ,
             type,
             options: opts,
-            correctAnswerIndex: type === "single_choice" ? 0 : currentQ.correctAnswerIndex || 0,
-            correctAnswers: type === "true_false" ? currentQ.correctAnswers || [false, false, false, false] : undefined,
-            shortAnswerKey: type === "short_answer" ? currentQ.shortAnswerKey || "" : undefined,
+            correctAnswerIndex:
+                type === "single_choice" ? 0 : currentQ.correctAnswerIndex || 0,
+            correctAnswers:
+                type === "true_false"
+                    ? currentQ.correctAnswers || [false, false, false, false]
+                    : undefined,
+            shortAnswerKey:
+                type === "short_answer"
+                    ? currentQ.shortAnswerKey || ""
+                    : undefined,
         };
         setEditQuestions(updated);
     };
 
     const handleAddNewQuestionToEdit = () => {
         const newQ: Question = {
-            id: "question_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+            id:
+                "question_" +
+                Date.now() +
+                "_" +
+                Math.random().toString(36).substr(2, 9),
             text: "Nhập nội dung câu hỏi mới...",
-            options: ["Phương án A", "Phương án B", "Phương án C", "Phương án D"],
+            options: [
+                "Phương án A",
+                "Phương án B",
+                "Phương án C",
+                "Phương án D",
+            ],
             correctAnswerIndex: 0,
             type: "single_choice",
             sectionTitle: "Phần I",
@@ -244,7 +286,9 @@ export default function AdminQuizzesTab({
     const handleDeleteQuestionFromEdit = (index: number) => {
         const updated = editQuestions.filter((_, idx) => idx !== index);
         setEditQuestions(updated);
-        setEditCurrentQuestionIdx((prev) => Math.max(0, Math.min(updated.length - 2, prev)));
+        setEditCurrentQuestionIdx((prev) =>
+            Math.max(0, Math.min(updated.length - 2, prev)),
+        );
     };
 
     const handleMoveQuestionUp = (index: number) => {
@@ -276,10 +320,12 @@ export default function AdminQuizzesTab({
 
         let scoringConfigObj: any = { type: editScoringMode };
         if (editScoringMode === "SECTION_BASED") {
-            scoringConfigObj.sections = Object.keys(editSectionPoints).map((sec) => ({
-                section_id: sec,
-                total_points: editSectionPoints[sec] || 0,
-            }));
+            scoringConfigObj.sections = Object.keys(editSectionPoints).map(
+                (sec) => ({
+                    section_id: sec,
+                    total_points: editSectionPoints[sec] || 0,
+                }),
+            );
         } else if (editScoringMode === "THPT_QG") {
             scoringConfigObj.sections = [
                 { section_id: "Phần I", total_points: 3.0 },
@@ -298,7 +344,7 @@ export default function AdminQuizzesTab({
             title: editTitle.trim(),
             description:
                 editDescription.trim() ||
-                `Đề thi môn ${editSubject} Lớp ${editGrade} ${editDuration} phút.`,
+                `Đề thi ${editSubject} Lớp ${editGrade} ${editDuration} phút.`,
             subject: editSubject,
             grade: editGrade,
             duration: Number(editDuration),
@@ -332,25 +378,41 @@ export default function AdminQuizzesTab({
             const matchesSearch =
                 q.title.toLowerCase().includes(quizSearchQuery.toLowerCase()) ||
                 q.subject.toLowerCase().includes(quizSearchQuery.toLowerCase());
-            const matchesSubject = quizFilterSubject === "all" || q.subject === quizFilterSubject;
-            const matchesGrade = quizFilterGrade === "all" || q.grade === quizFilterGrade;
+            const matchesSubject =
+                quizFilterSubject === "all" || q.subject === quizFilterSubject;
+            const matchesGrade =
+                quizFilterGrade === "all" || q.grade === quizFilterGrade;
             const matchesVis =
                 quizFilterVisibility === "all" ||
                 (quizFilterVisibility === "public" && q.isPublic !== false) ||
                 (quizFilterVisibility === "private" && q.isPublic === false);
-            return matchesSearch && matchesSubject && matchesGrade && matchesVis;
+            return (
+                matchesSearch && matchesSubject && matchesGrade && matchesVis
+            );
         })
         .sort((a, b) => {
-            if (quizSortBy === "newest") return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-            if (quizSortBy === "oldest") return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+            if (quizSortBy === "newest")
+                return (
+                    new Date(b.createdAt || 0).getTime() -
+                    new Date(a.createdAt || 0).getTime()
+                );
+            if (quizSortBy === "oldest")
+                return (
+                    new Date(a.createdAt || 0).getTime() -
+                    new Date(b.createdAt || 0).getTime()
+                );
             if (quizSortBy === "title") return a.title.localeCompare(b.title);
-            if (quizSortBy === "questions") return b.questions.length - a.questions.length;
+            if (quizSortBy === "questions")
+                return b.questions.length - a.questions.length;
             if (quizSortBy === "duration") return b.duration - a.duration;
             return 0;
         });
 
     const quizTotalPages = Math.ceil(filteredQuizzes.length / quizPageSize);
-    const paginatedQuizzes = filteredQuizzes.slice((quizPage - 1) * quizPageSize, quizPage * quizPageSize);
+    const paginatedQuizzes = filteredQuizzes.slice(
+        (quizPage - 1) * quizPageSize,
+        quizPage * quizPageSize,
+    );
 
     // Sync default subject when editing grade changes
     useEffect(() => {
@@ -367,9 +429,12 @@ export default function AdminQuizzesTab({
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800">Danh Sách Đề Thi</h2>
+                    <h2 className="text-lg font-bold text-slate-800">
+                        Danh Sách Đề Thi
+                    </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                        Xem danh sách, tìm kiếm, lọc và quản lý trạng thái công khai/riêng tư các đề thi hiện có.
+                        Xem danh sách, tìm kiếm, lọc và quản lý trạng thái công
+                        khai/riêng tư các đề thi hiện có.
                     </p>
                 </div>
             </div>
@@ -438,7 +503,9 @@ export default function AdminQuizzesTab({
                     </select>
 
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] text-slate-450 font-bold whitespace-nowrap">Sắp xếp:</span>
+                        <span className="text-[11px] text-slate-450 font-bold whitespace-nowrap">
+                            Sắp xếp:
+                        </span>
                         <select
                             value={quizSortBy}
                             onChange={(e) => {
@@ -450,7 +517,9 @@ export default function AdminQuizzesTab({
                             <option value="newest">Mới đăng trước</option>
                             <option value="oldest">Cũ đăng trước</option>
                             <option value="title">Tên A-Z</option>
-                            <option value="questions">Số câu hỏi giảm dần</option>
+                            <option value="questions">
+                                Số câu hỏi giảm dần
+                            </option>
                             <option value="duration">Thời gian giảm dần</option>
                         </select>
                     </div>
@@ -462,30 +531,50 @@ export default function AdminQuizzesTab({
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
-                            <th className="py-2.5 px-4 w-1/3">Tiêu đề đề thi</th>
+                            <th className="py-2.5 px-4 w-1/3">
+                                Tiêu đề đề thi
+                            </th>
                             <th className="py-2.5 px-4">Môn Học</th>
-                            <th className="py-2.5 px-4 text-center">Khối Lớp</th>
-                            <th className="py-2.5 px-4 text-center">Số câu hỏi</th>
-                            <th className="py-2.5 px-4 text-center">Thời gian</th>
-                            <th className="py-2.5 px-4 text-center">Ngày đăng</th>
-                            <th className="py-2.5 px-4 text-center">Hiển thị</th>
+                            <th className="py-2.5 px-4 text-center">
+                                Khối Lớp
+                            </th>
+                            <th className="py-2.5 px-4 text-center">
+                                Số câu hỏi
+                            </th>
+                            <th className="py-2.5 px-4 text-center">
+                                Thời gian
+                            </th>
+                            <th className="py-2.5 px-4 text-center">
+                                Ngày đăng
+                            </th>
+                            <th className="py-2.5 px-4 text-center">
+                                Hiển thị
+                            </th>
                             <th className="py-2.5 px-4 text-right">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100/50 text-xs text-slate-655">
                         {paginatedQuizzes.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="py-8 text-center text-slate-450 font-bold">
+                                <td
+                                    colSpan={8}
+                                    className="py-8 text-center text-slate-450 font-bold"
+                                >
                                     Không tìm thấy đề thi nào.
                                 </td>
                             </tr>
                         ) : (
                             paginatedQuizzes.map((q) => (
-                                <tr key={q.id} className="hover:bg-slate-50/30 transition-colors">
+                                <tr
+                                    key={q.id}
+                                    className="hover:bg-slate-50/30 transition-colors"
+                                >
                                     <td className="py-3 px-4 font-bold text-slate-800 max-w-xs truncate">
                                         {q.title}
                                     </td>
-                                    <td className="py-3 px-4 text-slate-500 font-semibold">{q.subject}</td>
+                                    <td className="py-3 px-4 text-slate-500 font-semibold">
+                                        {q.subject}
+                                    </td>
                                     <td className="py-3 px-4 text-center text-slate-500 font-semibold">
                                         Lớp {q.grade || "10"}
                                     </td>
@@ -498,7 +587,8 @@ export default function AdminQuizzesTab({
                                     <td className="py-3 px-4 text-center text-slate-400 font-medium">
                                         {q.createdAt
                                             ? (() => {
-                                                  const dateParts = q.createdAt.split("-");
+                                                  const dateParts =
+                                                      q.createdAt.split("-");
                                                   if (dateParts.length === 3) {
                                                       return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
                                                   }
@@ -509,9 +599,16 @@ export default function AdminQuizzesTab({
                                     <td className="py-3 px-4 text-center">
                                         <select
                                             disabled={togglingQuizId === q.id}
-                                            value={q.isPublic !== false ? "public" : "private"}
+                                            value={
+                                                q.isPublic !== false
+                                                    ? "public"
+                                                    : "private"
+                                            }
                                             onChange={(e) =>
-                                                handleToggleQuizVisibility(q.id, e.target.value === "public")
+                                                handleToggleQuizVisibility(
+                                                    q.id,
+                                                    e.target.value === "public",
+                                                )
                                             }
                                             className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border-0 focus:outline-none cursor-pointer transition-colors ${
                                                 q.isPublic !== false
@@ -519,8 +616,12 @@ export default function AdminQuizzesTab({
                                                     : "bg-rose-50 text-rose-800"
                                             }`}
                                         >
-                                            <option value="public">Công khai</option>
-                                            <option value="private">Riêng tư</option>
+                                            <option value="public">
+                                                Công khai
+                                            </option>
+                                            <option value="private">
+                                                Riêng tư
+                                            </option>
                                         </select>
                                     </td>
                                     <td className="py-3 px-4">
@@ -534,7 +635,11 @@ export default function AdminQuizzesTab({
                                             </button>
                                             <button
                                                 onClick={() => {
-                                                    if (confirm(`Bạn chắc chắn muốn xóa đề thi: ${q.title}?`)) {
+                                                    if (
+                                                        confirm(
+                                                            `Bạn chắc chắn muốn xóa đề thi: ${q.title}?`,
+                                                        )
+                                                    ) {
                                                         handleDeleteQuiz(q.id);
                                                     }
                                                 }}
@@ -556,7 +661,8 @@ export default function AdminQuizzesTab({
             {quizTotalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border-primary/60">
                     <span className="text-[11px] text-slate-400 font-semibold">
-                        Trang {quizPage} / {quizTotalPages} (Tổng số {filteredQuizzes.length} đề thi)
+                        Trang {quizPage} / {quizTotalPages} (Tổng số{" "}
+                        {filteredQuizzes.length} đề thi)
                     </span>
                     <div className="flex items-center gap-1">
                         <button
@@ -582,7 +688,9 @@ export default function AdminQuizzesTab({
                 <div className="fixed inset-0 bg-slate-955/20 backdrop-blur-xs flex items-center justify-center p-4 z-[9999] animate-in fade-in duration-200">
                     <div
                         className={`bg-bg-card rounded-2xl w-full shadow-xl overflow-hidden border-0 flex flex-col max-h-[90vh] transition-all duration-300 ${
-                            editModalTab === "questions" ? "max-w-5xl" : "max-w-lg"
+                            editModalTab === "questions"
+                                ? "max-w-5xl"
+                                : "max-w-lg"
                         }`}
                     >
                         {/* Modal Header */}
@@ -592,12 +700,16 @@ export default function AdminQuizzesTab({
                                     {editModalTab === "questions" ? (
                                         <>
                                             <BookOpen className="w-5 h-5 text-brand-500" />
-                                            <span>Xem Trước & Chỉnh Sửa Câu Hỏi</span>
+                                            <span>
+                                                Xem Trước & Chỉnh Sửa Câu Hỏi
+                                            </span>
                                         </>
                                     ) : (
                                         <>
                                             <CheckCircle2 className="w-5 h-5 text-brand-500" />
-                                            <span>Cấu Hình Chi Tiết Đề Thi</span>
+                                            <span>
+                                                Cấu Hình Chi Tiết Đề Thi
+                                            </span>
                                         </>
                                     )}
                                 </h3>
@@ -635,10 +747,15 @@ export default function AdminQuizzesTab({
                                     {/* Question navigation sidebar list */}
                                     <div className="flex-1 overflow-y-auto p-2 space-y-1 max-h-[25vh] lg:max-h-none">
                                         {editQuestions.map((q, qIndex) => {
-                                            const isSelected = editCurrentQuestionIdx === qIndex;
-                                            const displayTxt = cleanTrueFalseQuestionText(q.text)
-                                                .replace(/<[^>]*>/g, "")
-                                                .trim();
+                                            const isSelected =
+                                                editCurrentQuestionIdx ===
+                                                qIndex;
+                                            const displayTxt =
+                                                cleanTrueFalseQuestionText(
+                                                    q.text,
+                                                )
+                                                    .replace(/<[^>]*>/g, "")
+                                                    .trim();
 
                                             return (
                                                 <div
@@ -650,34 +767,60 @@ export default function AdminQuizzesTab({
                                                     }`}
                                                 >
                                                     <button
-                                                        onClick={() => setEditCurrentQuestionIdx(qIndex)}
+                                                        onClick={() =>
+                                                            setEditCurrentQuestionIdx(
+                                                                qIndex,
+                                                            )
+                                                        }
                                                         className="flex-1 text-left truncate mr-2 cursor-pointer"
                                                     >
                                                         <span className="font-bold mr-1.5 text-[10px] bg-slate-200/60 dark:bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-500">
                                                             C{qIndex + 1}
                                                         </span>
                                                         <span className="text-[11px] font-medium">
-                                                            {displayTxt || "(Câu hỏi trống)"}
+                                                            {displayTxt ||
+                                                                "(Câu hỏi trống)"}
                                                         </span>
                                                     </button>
                                                     <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity gap-0.5">
                                                         <button
-                                                            disabled={qIndex === 0}
-                                                            onClick={() => handleMoveQuestionUp(qIndex)}
+                                                            disabled={
+                                                                qIndex === 0
+                                                            }
+                                                            onClick={() =>
+                                                                handleMoveQuestionUp(
+                                                                    qIndex,
+                                                                )
+                                                            }
                                                             className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30"
                                                         >
                                                             <ArrowUp className="w-3 h-3" />
                                                         </button>
                                                         <button
-                                                            disabled={qIndex === editQuestions.length - 1}
-                                                            onClick={() => handleMoveQuestionDown(qIndex)}
+                                                            disabled={
+                                                                qIndex ===
+                                                                editQuestions.length -
+                                                                    1
+                                                            }
+                                                            onClick={() =>
+                                                                handleMoveQuestionDown(
+                                                                    qIndex,
+                                                                )
+                                                            }
                                                             className="p-0.5 text-slate-400 hover:text-slate-700 disabled:opacity-30"
                                                         >
                                                             <ArrowDown className="w-3 h-3" />
                                                         </button>
                                                         <button
-                                                            disabled={editQuestions.length <= 1}
-                                                            onClick={() => handleDeleteQuestionFromEdit(qIndex)}
+                                                            disabled={
+                                                                editQuestions.length <=
+                                                                1
+                                                            }
+                                                            onClick={() =>
+                                                                handleDeleteQuestionFromEdit(
+                                                                    qIndex,
+                                                                )
+                                                            }
                                                             className="p-0.5 text-slate-400 hover:text-rose-600 disabled:opacity-30"
                                                         >
                                                             <Trash2 className="w-3 h-3" />
@@ -690,47 +833,80 @@ export default function AdminQuizzesTab({
                                 </div>
 
                                 {/* Right Side: Question Detail and Editor */}
-                                {editQuestions.length > 0 && editCurrentQuestionIdx < editQuestions.length ? (
+                                {editQuestions.length > 0 &&
+                                editCurrentQuestionIdx <
+                                    editQuestions.length ? (
                                     <div className="flex-1 flex flex-col overflow-hidden bg-white">
                                         <div className="flex-1 overflow-y-auto p-6 space-y-5 text-left">
                                             {/* Preview header */}
                                             <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100 p-3 rounded-lg border-0 text-xs">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-bold text-slate-700">
-                                                        Câu hỏi {editCurrentQuestionIdx + 1} / {editQuestions.length}
+                                                        Câu hỏi{" "}
+                                                        {editCurrentQuestionIdx +
+                                                            1}{" "}
+                                                        / {editQuestions.length}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                                                        ({editQuestions[editCurrentQuestionIdx].type || "single_choice"})
+                                                        (
+                                                        {editQuestions[
+                                                            editCurrentQuestionIdx
+                                                        ].type ||
+                                                            "single_choice"}
+                                                        )
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Loại câu:</span>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                                            Loại câu:
+                                                        </span>
                                                         <select
-                                                            value={editQuestions[editCurrentQuestionIdx].type || "single_choice"}
+                                                            value={
+                                                                editQuestions[
+                                                                    editCurrentQuestionIdx
+                                                                ].type ||
+                                                                "single_choice"
+                                                            }
                                                             onChange={(e) =>
                                                                 handleUpdateQuestionType(
                                                                     editCurrentQuestionIdx,
-                                                                    e.target.value as QuestionType,
+                                                                    e.target
+                                                                        .value as QuestionType,
                                                                 )
                                                             }
                                                             className="px-2.5 py-1 bg-slate-100 border-0 rounded-lg text-[11px] font-bold focus:outline-none cursor-pointer"
                                                         >
-                                                            <option value="single_choice">Trắc nghiệm</option>
-                                                            <option value="true_false">Đúng / Sai</option>
-                                                            <option value="short_answer">Điền đáp án</option>
+                                                            <option value="single_choice">
+                                                                Trắc nghiệm
+                                                            </option>
+                                                            <option value="true_false">
+                                                                Đúng / Sai
+                                                            </option>
+                                                            <option value="short_answer">
+                                                                Điền đáp án
+                                                            </option>
                                                         </select>
                                                     </div>
 
                                                     <div className="flex items-center gap-1">
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">Phần:</span>
+                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                                            Phần:
+                                                        </span>
                                                         <input
                                                             type="text"
-                                                            value={editQuestions[editCurrentQuestionIdx].sectionTitle || ""}
+                                                            value={
+                                                                editQuestions[
+                                                                    editCurrentQuestionIdx
+                                                                ]
+                                                                    .sectionTitle ||
+                                                                ""
+                                                            }
                                                             onChange={(e) =>
                                                                 handleUpdateSectionTitle(
                                                                     editCurrentQuestionIdx,
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             placeholder="Phần I..."
@@ -738,17 +914,29 @@ export default function AdminQuizzesTab({
                                                         />
                                                     </div>
 
-                                                    {editScoringMode === "SECTION_BASED" && (
+                                                    {editScoringMode ===
+                                                        "SECTION_BASED" && (
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">Điểm:</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">
+                                                                Điểm:
+                                                            </span>
                                                             <input
                                                                 type="number"
                                                                 step="0.1"
-                                                                value={editQuestions[editCurrentQuestionIdx].points || 0}
+                                                                value={
+                                                                    editQuestions[
+                                                                        editCurrentQuestionIdx
+                                                                    ].points ||
+                                                                    0
+                                                                }
                                                                 onChange={(e) =>
                                                                     handleUpdateQuestionPoints(
                                                                         editCurrentQuestionIdx,
-                                                                        Number(e.target.value),
+                                                                        Number(
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        ),
                                                                     )
                                                                 }
                                                                 className="w-12 px-2 py-0.5 bg-slate-100 border-0 rounded-lg text-[11px] text-center font-bold focus:outline-none"
@@ -762,19 +950,32 @@ export default function AdminQuizzesTab({
                                             <div className="space-y-1.5">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
-                                                        Xem trước câu hỏi (Hiển thị thực tế)
+                                                        Xem trước câu hỏi (Hiển
+                                                        thị thực tế)
                                                     </span>
                                                     <button
                                                         onClick={() =>
-                                                            setEditExpandedHtmlQuestions((prev) => ({
-                                                                ...prev,
-                                                                [editQuestions[editCurrentQuestionIdx].id]:
-                                                                    !prev[editQuestions[editCurrentQuestionIdx].id],
-                                                            }))
+                                                            setEditExpandedHtmlQuestions(
+                                                                (prev) => ({
+                                                                    ...prev,
+                                                                    [editQuestions[
+                                                                        editCurrentQuestionIdx
+                                                                    ].id]:
+                                                                        !prev[
+                                                                            editQuestions[
+                                                                                editCurrentQuestionIdx
+                                                                            ].id
+                                                                        ],
+                                                                }),
+                                                            )
                                                         }
                                                         className="text-[10px] text-blue-500 font-bold hover:underline cursor-pointer"
                                                     >
-                                                        {editExpandedHtmlQuestions[editQuestions[editCurrentQuestionIdx].id]
+                                                        {editExpandedHtmlQuestions[
+                                                            editQuestions[
+                                                                editCurrentQuestionIdx
+                                                            ].id
+                                                        ]
                                                             ? "Thu nhỏ code HTML"
                                                             : "Chỉnh sửa HTML trực tiếp"}
                                                     </button>
@@ -782,28 +983,45 @@ export default function AdminQuizzesTab({
 
                                                 <div
                                                     className="p-4 border-0 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-800 dark:text-slate-100 overflow-x-auto leading-relaxed select-none [&_img]:mx-auto [&_img]:block [&_img]:my-3"
-                                                    style={{ fontSize: `${editFontSize}px` }}
+                                                    style={{
+                                                        fontSize: `${editFontSize}px`,
+                                                    }}
                                                     dangerouslySetInnerHTML={{
                                                         __html: renderMathHtml(
-                                                            editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                            editQuestions[
+                                                                editCurrentQuestionIdx
+                                                            ].type ===
+                                                                "true_false"
                                                                 ? cleanTrueFalseQuestionText(
-                                                                      editQuestions[editCurrentQuestionIdx].text,
-                                                                    )
-                                                                : editQuestions[editCurrentQuestionIdx].text,
+                                                                      editQuestions[
+                                                                          editCurrentQuestionIdx
+                                                                      ].text,
+                                                                  )
+                                                                : editQuestions[
+                                                                      editCurrentQuestionIdx
+                                                                  ].text,
                                                         ),
                                                     }}
                                                 />
                                             </div>
 
                                             {/* HTML text editor */}
-                                            {editExpandedHtmlQuestions[editQuestions[editCurrentQuestionIdx].id] && (
+                                            {editExpandedHtmlQuestions[
+                                                editQuestions[
+                                                    editCurrentQuestionIdx
+                                                ].id
+                                            ] && (
                                                 <div className="space-y-1.5 animate-in fade-in duration-150">
                                                     <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
                                                         Mã nguồn HTML câu hỏi:
                                                     </span>
                                                     <textarea
                                                         rows={4}
-                                                        value={editQuestions[editCurrentQuestionIdx].text}
+                                                        value={
+                                                            editQuestions[
+                                                                editCurrentQuestionIdx
+                                                            ].text
+                                                        }
                                                         onChange={(e) =>
                                                             handleUpdateQuestionText(
                                                                 editCurrentQuestionIdx,
@@ -816,99 +1034,133 @@ export default function AdminQuizzesTab({
                                             )}
 
                                             {/* Type 1 & 2: Single Choice and True/False Options Edit */}
-                                            {(editQuestions[editCurrentQuestionIdx].type === "single_choice" ||
-                                                !editQuestions[editCurrentQuestionIdx].type ||
-                                                editQuestions[editCurrentQuestionIdx].type === "true_false") && (
+                                            {(editQuestions[
+                                                editCurrentQuestionIdx
+                                            ].type === "single_choice" ||
+                                                !editQuestions[
+                                                    editCurrentQuestionIdx
+                                                ].type ||
+                                                editQuestions[
+                                                    editCurrentQuestionIdx
+                                                ].type === "true_false") && (
                                                 <div className="space-y-3.5 border-t border-gray-100 pt-4">
                                                     <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                        Các phương án lựa chọn và đáp án đúng:
+                                                        Các phương án lựa chọn
+                                                        và đáp án đúng:
                                                     </span>
                                                     <div className="space-y-3">
-                                                        {(editQuestions[editCurrentQuestionIdx].options || []).map(
-                                                            (opt, oIdx) => {
-                                                                const isCorrect =
-                                                                    editQuestions[editCurrentQuestionIdx].type ===
-                                                                    "true_false"
-                                                                        ? editQuestions[editCurrentQuestionIdx]
-                                                                              .correctAnswers?.[oIdx] === true
-                                                                        : editQuestions[editCurrentQuestionIdx]
-                                                                              .correctAnswerIndex === oIdx;
+                                                        {(
+                                                            editQuestions[
+                                                                editCurrentQuestionIdx
+                                                            ].options || []
+                                                        ).map((opt, oIdx) => {
+                                                            const isCorrect =
+                                                                editQuestions[
+                                                                    editCurrentQuestionIdx
+                                                                ].type ===
+                                                                "true_false"
+                                                                    ? editQuestions[
+                                                                          editCurrentQuestionIdx
+                                                                      ]
+                                                                          .correctAnswers?.[
+                                                                          oIdx
+                                                                      ] === true
+                                                                    : editQuestions[
+                                                                          editCurrentQuestionIdx
+                                                                      ]
+                                                                          .correctAnswerIndex ===
+                                                                      oIdx;
 
-                                                                return (
-                                                                    <div
-                                                                        key={oIdx}
-                                                                        className="flex items-start gap-3 bg-slate-100 dark:bg-slate-850 p-2.5 rounded-lg border-0"
-                                                                    >
-                                                                        {/* Mark Correct Trigger */}
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                if (
-                                                                                    editQuestions[
-                                                                                        editCurrentQuestionIdx
-                                                                                    ].type === "true_false"
-                                                                                ) {
-                                                                                    handleToggleTF(
-                                                                                        editCurrentQuestionIdx,
-                                                                                        oIdx,
-                                                                                        !isCorrect,
-                                                                                    );
-                                                                                } else {
-                                                                                    handleUpdateCorrectAnswer(
-                                                                                        editCurrentQuestionIdx,
-                                                                                        oIdx,
-                                                                                    );
-                                                                                }
-                                                                            }}
-                                                                            className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-0 flex-shrink-0 cursor-pointer ${
-                                                                                isCorrect
-                                                                                    ? "bg-emerald-500 text-white shadow-2xs"
-                                                                                    : "bg-slate-200 text-slate-500 hover:bg-slate-350"
-                                                                            }`}
-                                                                        >
-                                                                            {editQuestions[editCurrentQuestionIdx]
-                                                                                .type === "true_false" ? (
-                                                                                isCorrect ? (
-                                                                                    "Đ"
-                                                                                ) : (
-                                                                                    "S"
-                                                                                )
-                                                                            ) : (
-                                                                                String.fromCharCode(65 + oIdx)
-                                                                            )}
-                                                                        </button>
-
-                                                                        {/* Text area for option */}
-                                                                        <textarea
-                                                                            rows={1}
-                                                                            value={opt}
-                                                                            onChange={(e) =>
-                                                                                handleUpdateOption(
+                                                            return (
+                                                                <div
+                                                                    key={oIdx}
+                                                                    className="flex items-start gap-3 bg-slate-100 dark:bg-slate-850 p-2.5 rounded-lg border-0"
+                                                                >
+                                                                    {/* Mark Correct Trigger */}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            if (
+                                                                                editQuestions[
+                                                                                    editCurrentQuestionIdx
+                                                                                ]
+                                                                                    .type ===
+                                                                                "true_false"
+                                                                            ) {
+                                                                                handleToggleTF(
                                                                                     editCurrentQuestionIdx,
                                                                                     oIdx,
-                                                                                    e.target.value,
-                                                                                )
+                                                                                    !isCorrect,
+                                                                                );
+                                                                            } else {
+                                                                                handleUpdateCorrectAnswer(
+                                                                                    editCurrentQuestionIdx,
+                                                                                    oIdx,
+                                                                                );
                                                                             }
-                                                                            className="flex-1 px-3 py-1 bg-white dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none resize-none"
-                                                                        />
-                                                                    </div>
-                                                                );
-                                                            },
-                                                        )}
+                                                                        }}
+                                                                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-0 flex-shrink-0 cursor-pointer ${
+                                                                            isCorrect
+                                                                                ? "bg-emerald-500 text-white shadow-2xs"
+                                                                                : "bg-slate-200 text-slate-500 hover:bg-slate-350"
+                                                                        }`}
+                                                                    >
+                                                                        {editQuestions[
+                                                                            editCurrentQuestionIdx
+                                                                        ]
+                                                                            .type ===
+                                                                        "true_false"
+                                                                            ? isCorrect
+                                                                                ? "Đ"
+                                                                                : "S"
+                                                                            : String.fromCharCode(
+                                                                                  65 +
+                                                                                      oIdx,
+                                                                              )}
+                                                                    </button>
+
+                                                                    {/* Text area for option */}
+                                                                    <textarea
+                                                                        rows={1}
+                                                                        value={
+                                                                            opt
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) =>
+                                                                            handleUpdateOption(
+                                                                                editCurrentQuestionIdx,
+                                                                                oIdx,
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            )
+                                                                        }
+                                                                        className="flex-1 px-3 py-1 bg-white dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none resize-none"
+                                                                    />
+                                                                </div>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* Type 3: Short Answer Edit */}
-                                            {editQuestions[editCurrentQuestionIdx].type === "short_answer" && (
+                                            {editQuestions[
+                                                editCurrentQuestionIdx
+                                            ].type === "short_answer" && (
                                                 <div className="space-y-2 border-t border-gray-100 pt-4">
                                                     <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                        Đáp án đúng (Kết quả số / chuỗi ngắn):
+                                                        Đáp án đúng (Kết quả số
+                                                        / chuỗi ngắn):
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={
-                                                            editQuestions[editCurrentQuestionIdx].shortAnswerKey || ""
+                                                            editQuestions[
+                                                                editCurrentQuestionIdx
+                                                            ].shortAnswerKey ||
+                                                            ""
                                                         }
                                                         onChange={(e) =>
                                                             handleUpdateShortAnswer(
@@ -925,11 +1177,16 @@ export default function AdminQuizzesTab({
                                             {/* Question Explanation */}
                                             <div className="space-y-1.5 border-t border-gray-100 pt-4">
                                                 <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                    Lời giải chi tiết (Giải thích đáp án):
+                                                    Lời giải chi tiết (Giải
+                                                    thích đáp án):
                                                 </span>
                                                 <textarea
                                                     rows={3}
-                                                    value={editQuestions[editCurrentQuestionIdx].explanation || ""}
+                                                    value={
+                                                        editQuestions[
+                                                            editCurrentQuestionIdx
+                                                        ].explanation || ""
+                                                    }
                                                     onChange={(e) =>
                                                         handleUpdateExplanation(
                                                             editCurrentQuestionIdx,
@@ -946,22 +1203,38 @@ export default function AdminQuizzesTab({
                                         <div className="px-6 py-4.5 border-t border-border-primary/60 bg-slate-50/30 flex items-center justify-between flex-shrink-0">
                                             <div className="flex items-center gap-1.5">
                                                 <button
-                                                    disabled={editCurrentQuestionIdx === 0}
-                                                    onClick={() => setEditCurrentQuestionIdx((prev) => prev - 1)}
+                                                    disabled={
+                                                        editCurrentQuestionIdx ===
+                                                        0
+                                                    }
+                                                    onClick={() =>
+                                                        setEditCurrentQuestionIdx(
+                                                            (prev) => prev - 1,
+                                                        )
+                                                    }
                                                     className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border-0 rounded-lg text-xs font-semibold text-slate-600 disabled:opacity-40 cursor-pointer"
                                                 >
                                                     Câu trước
                                                 </button>
                                                 <button
-                                                    disabled={editCurrentQuestionIdx === editQuestions.length - 1}
-                                                    onClick={() => setEditCurrentQuestionIdx((prev) => prev + 1)}
+                                                    disabled={
+                                                        editCurrentQuestionIdx ===
+                                                        editQuestions.length - 1
+                                                    }
+                                                    onClick={() =>
+                                                        setEditCurrentQuestionIdx(
+                                                            (prev) => prev + 1,
+                                                        )
+                                                    }
                                                     className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border-0 rounded-lg text-xs font-semibold text-slate-600 disabled:opacity-40 cursor-pointer"
                                                 >
                                                     Câu sau
                                                 </button>
                                             </div>
                                             <button
-                                                onClick={() => setEditModalTab("settings")}
+                                                onClick={() =>
+                                                    setEditModalTab("settings")
+                                                }
                                                 className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
                                             >
                                                 Tiếp tục cấu hình đề thi ➜
@@ -980,12 +1253,15 @@ export default function AdminQuizzesTab({
                                 {/* Title */}
                                 <div>
                                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                        Tên bài kiểm tra / Đề thi: <span className="text-rose-500">*</span>
+                                        Tên bài kiểm tra / Đề thi:{" "}
+                                        <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={editTitle}
-                                        onChange={(e) => setEditTitle(e.target.value)}
+                                        onChange={(e) =>
+                                            setEditTitle(e.target.value)
+                                        }
                                         placeholder="VD: Kiểm tra cuối kì I Giải Tích lớp 11"
                                         className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none"
                                     />
@@ -999,7 +1275,9 @@ export default function AdminQuizzesTab({
                                     <textarea
                                         rows={2}
                                         value={editDescription}
-                                        onChange={(e) => setEditDescription(e.target.value)}
+                                        onChange={(e) =>
+                                            setEditDescription(e.target.value)
+                                        }
                                         placeholder="VD: Đề thi thử tự luyện tập giúp củng cố kiến thức..."
                                         className="w-full px-3.5 py-2 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none resize-none"
                                     />
@@ -1013,7 +1291,9 @@ export default function AdminQuizzesTab({
                                         </label>
                                         <select
                                             value={editGrade}
-                                            onChange={(e) => setEditGrade(e.target.value)}
+                                            onChange={(e) =>
+                                                setEditGrade(e.target.value)
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                         >
                                             <option value="8">Lớp 8</option>
@@ -1030,10 +1310,15 @@ export default function AdminQuizzesTab({
                                         </label>
                                         <select
                                             value={editSubject}
-                                            onChange={(e) => setEditSubject(e.target.value)}
+                                            onChange={(e) =>
+                                                setEditSubject(e.target.value)
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                         >
-                                            {(GRADE_CATEGORIES[editGrade] || []).map((cat) => (
+                                            {(
+                                                GRADE_CATEGORIES[editGrade] ||
+                                                []
+                                            ).map((cat) => (
                                                 <option key={cat} value={cat}>
                                                     {cat}
                                                 </option>
@@ -1048,26 +1333,35 @@ export default function AdminQuizzesTab({
                                         Thời gian làm bài (Phút):
                                     </label>
                                     <div className="flex flex-wrap gap-2 mb-2">
-                                        {["15", "30", "45", "60", "90"].map((time) => (
-                                            <button
-                                                key={time}
-                                                type="button"
-                                                onClick={() => {
-                                                    setEditDurationOption(time);
-                                                    setEditDuration(Number(time));
-                                                }}
-                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                                    editDurationOption === time
-                                                        ? "bg-brand-50 text-brand-600"
-                                                        : "bg-slate-100 border-0 text-slate-650 hover:bg-slate-200/60"
-                                                }`}
-                                            >
-                                                {time} phút
-                                            </button>
-                                        ))}
+                                        {["15", "30", "45", "60", "90"].map(
+                                            (time) => (
+                                                <button
+                                                    key={time}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditDurationOption(
+                                                            time,
+                                                        );
+                                                        setEditDuration(
+                                                            Number(time),
+                                                        );
+                                                    }}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                        editDurationOption ===
+                                                        time
+                                                            ? "bg-brand-50 text-brand-600"
+                                                            : "bg-slate-100 border-0 text-slate-650 hover:bg-slate-200/60"
+                                                    }`}
+                                                >
+                                                    {time} phút
+                                                </button>
+                                            ),
+                                        )}
                                         <button
                                             type="button"
-                                            onClick={() => setEditDurationOption("other")}
+                                            onClick={() =>
+                                                setEditDurationOption("other")
+                                            }
                                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                                 editDurationOption === "other"
                                                     ? "bg-brand-50 text-brand-600"
@@ -1083,12 +1377,18 @@ export default function AdminQuizzesTab({
                                             <input
                                                 type="number"
                                                 value={editDuration}
-                                                onChange={(e) => setEditDuration(Number(e.target.value))}
+                                                onChange={(e) =>
+                                                    setEditDuration(
+                                                        Number(e.target.value),
+                                                    )
+                                                }
                                                 placeholder="Nhập số phút..."
                                                 min={5}
                                                 className="w-32 px-3 py-2 bg-slate-100 border-0 rounded-lg text-xs font-bold focus:outline-none"
                                             />
-                                            <span className="text-xs text-slate-500 font-semibold">phút</span>
+                                            <span className="text-xs text-slate-500 font-semibold">
+                                                phút
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -1101,17 +1401,24 @@ export default function AdminQuizzesTab({
                                         </label>
                                         <select
                                             value={editScoringMode}
-                                            onChange={(e) => setEditScoringMode(e.target.value as any)}
+                                            onChange={(e) =>
+                                                setEditScoringMode(
+                                                    e.target.value as any,
+                                                )
+                                            }
                                             className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                         >
                                             <option value="EQUAL_WEIGHT">
-                                                Chia đều điểm (Tổng 10đ cho tất cả câu)
+                                                Chia đều điểm (Tổng 10đ cho tất
+                                                cả câu)
                                             </option>
                                             <option value="SECTION_BASED">
-                                                Chia điểm theo Phần (Tự cấu hình điểm mỗi phần)
+                                                Chia điểm theo Phần (Tự cấu hình
+                                                điểm mỗi phần)
                                             </option>
                                             <option value="THPT_QG">
-                                                Thang điểm chuẩn thi THPT Quốc Gia (3 - 4 - 3)
+                                                Thang điểm chuẩn thi THPT Quốc
+                                                Gia (3 - 4 - 3)
                                             </option>
                                         </select>
                                     </div>
@@ -1123,19 +1430,32 @@ export default function AdminQuizzesTab({
                                             </div>
                                             {(() => {
                                                 const sections = Array.from(
-                                                    new Set(editQuestions.map((q) => q.sectionTitle).filter(Boolean)),
+                                                    new Set(
+                                                        editQuestions
+                                                            .map(
+                                                                (q) =>
+                                                                    q.sectionTitle,
+                                                            )
+                                                            .filter(Boolean),
+                                                    ),
                                                 ) as string[];
                                                 if (sections.length === 0) {
                                                     return (
                                                         <p className="text-slate-450 italic text-[11px]">
-                                                            Cần phân loại sectionTitle cho câu hỏi để dùng chế độ này.
+                                                            Cần phân loại
+                                                            sectionTitle cho câu
+                                                            hỏi để dùng chế độ
+                                                            này.
                                                         </p>
                                                     );
                                                 }
                                                 return (
                                                     <div className="space-y-2">
                                                         {sections.map((sec) => (
-                                                            <div key={sec} className="flex items-center justify-between gap-3">
+                                                            <div
+                                                                key={sec}
+                                                                className="flex items-center justify-between gap-3"
+                                                            >
                                                                 <span className="font-semibold text-slate-600 truncate max-w-[200px]">
                                                                     {sec}:
                                                                 </span>
@@ -1145,17 +1465,35 @@ export default function AdminQuizzesTab({
                                                                         step="0.1"
                                                                         min="0"
                                                                         max="10"
-                                                                        value={editSectionPoints[sec] || 0}
-                                                                        onChange={(e) => {
-                                                                            const val = Number(e.target.value);
-                                                                            setEditSectionPoints((prev) => ({
-                                                                                ...prev,
-                                                                                [sec]: val,
-                                                                            }));
+                                                                        value={
+                                                                            editSectionPoints[
+                                                                                sec
+                                                                            ] ||
+                                                                            0
+                                                                        }
+                                                                        onChange={(
+                                                                            e,
+                                                                        ) => {
+                                                                            const val =
+                                                                                Number(
+                                                                                    e
+                                                                                        .target
+                                                                                        .value,
+                                                                                );
+                                                                            setEditSectionPoints(
+                                                                                (
+                                                                                    prev,
+                                                                                ) => ({
+                                                                                    ...prev,
+                                                                                    [sec]: val,
+                                                                                }),
+                                                                            );
                                                                         }}
                                                                         className="w-20 px-2 py-1 bg-slate-100 border-0 rounded-lg text-xs font-bold text-center"
                                                                     />
-                                                                    <span className="text-slate-400">điểm</span>
+                                                                    <span className="text-slate-400">
+                                                                        điểm
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1168,12 +1506,23 @@ export default function AdminQuizzesTab({
                                     {editScoringMode === "THPT_QG" && (
                                         <div className="bg-brand-50/40 rounded-xl p-3 border-0 text-[11px] text-slate-655 leading-normal space-y-1.5 animate-in fade-in duration-150">
                                             <div className="font-bold text-slate-700 uppercase tracking-wide text-[10px]">
-                                                Cấu hình chuẩn THPT Quốc Gia (Bộ Giáo Dục):
+                                                Cấu hình chuẩn THPT Quốc Gia (Bộ
+                                                Giáo Dục):
                                             </div>
                                             <ul className="list-disc pl-4 space-y-0.5 font-medium">
-                                                <li>Phần I: 3.0 điểm (12 câu, mỗi câu 0.25đ)</li>
-                                                <li>Phần II: 4.0 điểm (4 câu. Đúng 1 ý được 0.1đ, 2 ý 0.25đ, 3 ý 0.5đ, 4 ý 1.0đ)</li>
-                                                <li>Phần III: 3.0 điểm (6 câu, mỗi câu 0.5đ)</li>
+                                                <li>
+                                                    Phần I: 3.0 điểm (12 câu,
+                                                    mỗi câu 0.25đ)
+                                                </li>
+                                                <li>
+                                                    Phần II: 4.0 điểm (4 câu.
+                                                    Đúng 1 ý được 0.1đ, 2 ý
+                                                    0.25đ, 3 ý 0.5đ, 4 ý 1.0đ)
+                                                </li>
+                                                <li>
+                                                    Phần III: 3.0 điểm (6 câu,
+                                                    mỗi câu 0.5đ)
+                                                </li>
                                             </ul>
                                         </div>
                                     )}
@@ -1185,14 +1534,17 @@ export default function AdminQuizzesTab({
                                         type="checkbox"
                                         id="edit-modal-checkbox-is-public"
                                         checked={editIsPublic}
-                                        onChange={(e) => setEditIsPublic(e.target.checked)}
+                                        onChange={(e) =>
+                                            setEditIsPublic(e.target.checked)
+                                        }
                                         className="h-4 w-4 text-brand-600 border-border-secondary rounded focus:ring-brand-500 cursor-pointer"
                                     />
                                     <label
                                         htmlFor="edit-modal-checkbox-is-public"
                                         className="text-xs font-semibold text-slate-700 cursor-pointer"
                                     >
-                                        Công khai đề thi này (Học sinh có thể thi ngay)
+                                        Công khai đề thi này (Học sinh có thể
+                                        thi ngay)
                                     </label>
                                 </div>
                             </div>

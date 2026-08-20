@@ -15,7 +15,12 @@ const GRADE_CATEGORIES: Record<string, string[]> = {
 interface AdminCreateQuizTabProps {
     onAddQuiz: (newQuiz: Quiz) => void;
     setActiveTab: (
-        tab: "plans" | "create-quiz" | "quizzes" | "stats-quizzes" | "stats-students",
+        tab:
+            | "plans"
+            | "create-quiz"
+            | "quizzes"
+            | "stats-quizzes"
+            | "stats-students",
     ) => void;
 }
 
@@ -37,7 +42,9 @@ export default function AdminCreateQuizTab({
 
     // Scoring config
     const [scoringMode, setScoringMode] = useState<string>("EQUAL_WEIGHT");
-    const [sectionPoints, setSectionPoints] = useState<Record<string, number>>({});
+    const [sectionPoints, setSectionPoints] = useState<Record<string, number>>(
+        {},
+    );
     const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
     // Sync section titles on questions load
@@ -45,7 +52,9 @@ export default function AdminCreateQuizTab({
         if (isSaveQuizModalOpen && importedQuestions.length > 0) {
             const sections = Array.from(
                 new Set(
-                    importedQuestions.map((q) => q.sectionTitle).filter(Boolean),
+                    importedQuestions
+                        .map((q) => q.sectionTitle)
+                        .filter(Boolean),
                 ),
             ) as string[];
             const initPts: Record<string, number> = {};
@@ -85,10 +94,12 @@ export default function AdminCreateQuizTab({
 
         let scoringConfigObj: any = { type: scoringMode };
         if (scoringMode === "SECTION_BASED") {
-            scoringConfigObj.sections = Object.keys(sectionPoints).map((sec) => ({
-                section_id: sec,
-                total_points: sectionPoints[sec] || 0,
-            }));
+            scoringConfigObj.sections = Object.keys(sectionPoints).map(
+                (sec) => ({
+                    section_id: sec,
+                    total_points: sectionPoints[sec] || 0,
+                }),
+            );
         } else if (scoringMode === "THPT_QG") {
             scoringConfigObj.sections = [
                 { section_id: "Phần I", total_points: 3.0 },
@@ -108,7 +119,7 @@ export default function AdminCreateQuizTab({
             title: quizTitle.trim(),
             description:
                 quizDescription.trim() ||
-                `Đề thi môn ${quizSubject} Lớp ${quizGrade} ${quizDuration} phút.`,
+                `Đề thi ${quizSubject} Lớp ${quizGrade} ${quizDuration} phút.`,
             subject: quizSubject,
             grade: quizGrade,
             duration: quizDuration,
@@ -139,9 +150,12 @@ export default function AdminCreateQuizTab({
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-800">Import Đề Thi</h2>
+                    <h2 className="text-lg font-bold text-slate-800">
+                        Import Đề Thi
+                    </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                        Trích xuất câu hỏi trắc nghiệm 3 Phần, hình vẽ đồ thị và công thức MathType/Math XML từ file Word (.docx).
+                        Trích xuất câu hỏi trắc nghiệm 3 Phần, hình vẽ đồ thị và
+                        công thức MathType/Math XML từ file Word (.docx).
                     </p>
                 </div>
             </div>
@@ -161,7 +175,8 @@ export default function AdminCreateQuizTab({
                                     <span>Thiết Lập Đề Thi Mới</span>
                                 </h3>
                                 <p className="text-[11px] text-slate-400 mt-0.5">
-                                    Đã nhận {importedQuestions.length} câu hỏi. Vui lòng cấu hình các thông số dưới đây.
+                                    Đã nhận {importedQuestions.length} câu hỏi.
+                                    Vui lòng cấu hình các thông số dưới đây.
                                 </p>
                             </div>
                             <button
@@ -177,12 +192,15 @@ export default function AdminCreateQuizTab({
                             {/* Title */}
                             <div>
                                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-                                    Tên bài kiểm tra / Đề thi: <span className="text-rose-500">*</span>
+                                    Tên bài kiểm tra / Đề thi:{" "}
+                                    <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                     type="text"
                                     value={quizTitle}
-                                    onChange={(e) => setQuizTitle(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuizTitle(e.target.value)
+                                    }
                                     placeholder="VD: Kiểm tra cuối kì I Giải Tích lớp 11"
                                     className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none transition-all placeholder:text-slate-400"
                                 />
@@ -196,7 +214,9 @@ export default function AdminCreateQuizTab({
                                 <textarea
                                     rows={2}
                                     value={quizDescription}
-                                    onChange={(e) => setQuizDescription(e.target.value)}
+                                    onChange={(e) =>
+                                        setQuizDescription(e.target.value)
+                                    }
                                     placeholder="VD: Đề thi thử tự luyện tập giúp củng cố kiến thức nâng cao..."
                                     className="w-full px-3.5 py-2 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none resize-none"
                                 />
@@ -210,7 +230,9 @@ export default function AdminCreateQuizTab({
                                     </label>
                                     <select
                                         value={quizGrade}
-                                        onChange={(e) => setQuizGrade(e.target.value)}
+                                        onChange={(e) =>
+                                            setQuizGrade(e.target.value)
+                                        }
                                         className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                     >
                                         <option value="8">Lớp 8</option>
@@ -227,10 +249,14 @@ export default function AdminCreateQuizTab({
                                     </label>
                                     <select
                                         value={quizSubject}
-                                        onChange={(e) => setQuizSubject(e.target.value)}
+                                        onChange={(e) =>
+                                            setQuizSubject(e.target.value)
+                                        }
                                         className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                     >
-                                        {(GRADE_CATEGORIES[quizGrade] || []).map((cat) => (
+                                        {(
+                                            GRADE_CATEGORIES[quizGrade] || []
+                                        ).map((cat) => (
                                             <option key={cat} value={cat}>
                                                 {cat}
                                             </option>
@@ -245,26 +271,32 @@ export default function AdminCreateQuizTab({
                                     Thời gian làm bài (Phút):
                                 </label>
                                 <div className="flex flex-wrap gap-2 mb-2">
-                                    {["15", "30", "45", "60", "90"].map((time) => (
-                                        <button
-                                            key={time}
-                                            type="button"
-                                            onClick={() => {
-                                                setDurationOption(time);
-                                                setQuizDuration(Number(time));
-                                            }}
-                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                                durationOption === time
-                                                    ? "bg-brand-50 text-brand-600"
-                                                    : "bg-slate-100 border-0 text-slate-650 hover:bg-slate-200/60"
-                                            }`}
-                                        >
-                                            {time} phút
-                                        </button>
-                                    ))}
+                                    {["15", "30", "45", "60", "90"].map(
+                                        (time) => (
+                                            <button
+                                                key={time}
+                                                type="button"
+                                                onClick={() => {
+                                                    setDurationOption(time);
+                                                    setQuizDuration(
+                                                        Number(time),
+                                                    );
+                                                }}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                    durationOption === time
+                                                        ? "bg-brand-50 text-brand-600"
+                                                        : "bg-slate-100 border-0 text-slate-650 hover:bg-slate-200/60"
+                                                }`}
+                                            >
+                                                {time} phút
+                                            </button>
+                                        ),
+                                    )}
                                     <button
                                         type="button"
-                                        onClick={() => setDurationOption("other")}
+                                        onClick={() =>
+                                            setDurationOption("other")
+                                        }
                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                             durationOption === "other"
                                                 ? "bg-brand-50 text-brand-600"
@@ -280,12 +312,18 @@ export default function AdminCreateQuizTab({
                                         <input
                                             type="number"
                                             value={quizDuration}
-                                            onChange={(e) => setQuizDuration(Number(e.target.value))}
+                                            onChange={(e) =>
+                                                setQuizDuration(
+                                                    Number(e.target.value),
+                                                )
+                                            }
                                             placeholder="Nhập số phút..."
                                             min={5}
                                             className="w-32 px-3 py-2 bg-slate-100 border-0 rounded-lg text-xs font-bold focus:outline-none"
                                         />
-                                        <span className="text-xs text-slate-500 font-semibold">phút</span>
+                                        <span className="text-xs text-slate-500 font-semibold">
+                                            phút
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -298,17 +336,22 @@ export default function AdminCreateQuizTab({
                                     </label>
                                     <select
                                         value={scoringMode}
-                                        onChange={(e) => setScoringMode(e.target.value)}
+                                        onChange={(e) =>
+                                            setScoringMode(e.target.value)
+                                        }
                                         className="w-full px-3.5 py-2.5 bg-slate-100 border-0 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
                                     >
                                         <option value="EQUAL_WEIGHT">
-                                            Mode 1: Chia đều điểm (Tổng 10đ cho tất cả câu)
+                                            Mode 1: Chia đều điểm (Tổng 10đ cho
+                                            tất cả câu)
                                         </option>
                                         <option value="SECTION_BASED">
-                                            Mode 2: Chia điểm theo Phần (Tự cấu hình điểm mỗi phần)
+                                            Mode 2: Chia điểm theo Phần (Tự cấu
+                                            hình điểm mỗi phần)
                                         </option>
                                         <option value="THPT_QG">
-                                            Mode 3: Thang điểm chuẩn thi THPT Quốc Gia (3 - 4 - 3)
+                                            Mode 3: Thang điểm chuẩn thi THPT
+                                            Quốc Gia (3 - 4 - 3)
                                         </option>
                                     </select>
                                 </div>
@@ -318,44 +361,74 @@ export default function AdminCreateQuizTab({
                                         <div className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
                                             Cấu hình điểm số cho từng phần:
                                         </div>
-                                        {Object.keys(sectionPoints).length === 0 ? (
+                                        {Object.keys(sectionPoints).length ===
+                                        0 ? (
                                             <p className="text-slate-450 italic text-[11px]">
-                                                Không tìm thấy phân chia phần trong câu hỏi đã tải lên (Cần có trường sectionTitle).
+                                                Không tìm thấy phân chia phần
+                                                trong câu hỏi đã tải lên (Cần có
+                                                trường sectionTitle).
                                             </p>
                                         ) : (
                                             <div className="space-y-2">
-                                                {Object.keys(sectionPoints).map((sec) => (
-                                                    <div key={sec} className="flex items-center justify-between gap-3">
-                                                        <span className="font-semibold text-slate-600 truncate max-w-[200px]">
-                                                            {sec}:
-                                                        </span>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <input
-                                                                type="number"
-                                                                step="0.1"
-                                                                min="0"
-                                                                max="10"
-                                                                value={sectionPoints[sec] ?? ""}
-                                                                onChange={(e) => {
-                                                                    const val = Number(e.target.value);
-                                                                    setSectionPoints((prev) => ({
-                                                                        ...prev,
-                                                                        [sec]: val,
-                                                                    }));
-                                                                }}
-                                                                className="w-20 px-2 py-1 bg-slate-100 border-0 rounded-lg text-xs font-bold focus:outline-none text-center"
-                                                            />
-                                                            <span className="text-slate-400 font-medium">điểm</span>
+                                                {Object.keys(sectionPoints).map(
+                                                    (sec) => (
+                                                        <div
+                                                            key={sec}
+                                                            className="flex items-center justify-between gap-3"
+                                                        >
+                                                            <span className="font-semibold text-slate-600 truncate max-w-[200px]">
+                                                                {sec}:
+                                                            </span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.1"
+                                                                    min="0"
+                                                                    max="10"
+                                                                    value={
+                                                                        sectionPoints[
+                                                                            sec
+                                                                        ] ?? ""
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) => {
+                                                                        const val =
+                                                                            Number(
+                                                                                e
+                                                                                    .target
+                                                                                    .value,
+                                                                            );
+                                                                        setSectionPoints(
+                                                                            (
+                                                                                prev,
+                                                                            ) => ({
+                                                                                ...prev,
+                                                                                [sec]: val,
+                                                                            }),
+                                                                        );
+                                                                    }}
+                                                                    className="w-20 px-2 py-1 bg-slate-100 border-0 rounded-lg text-xs font-bold focus:outline-none text-center"
+                                                                />
+                                                                <span className="text-slate-400 font-medium">
+                                                                    điểm
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ),
+                                                )}
                                                 <div className="pt-1.5 border-t border-border-primary/40 flex justify-between font-bold text-slate-700 text-[11px]">
                                                     <span>TỔNG ĐIỂM:</span>
                                                     <span
                                                         className={
                                                             Math.abs(
-                                                                (Object.values(sectionPoints) as number[]).reduce(
-                                                                    (a, b) => a + b,
+                                                                (
+                                                                    Object.values(
+                                                                        sectionPoints,
+                                                                    ) as number[]
+                                                                ).reduce(
+                                                                    (a, b) =>
+                                                                        a + b,
                                                                     0,
                                                                 ) - 10,
                                                             ) < 0.01
@@ -363,20 +436,33 @@ export default function AdminCreateQuizTab({
                                                                 : "text-rose-500"
                                                         }
                                                     >
-                                                        {(Object.values(sectionPoints) as number[])
-                                                            .reduce((a, b) => a + b, 0)
+                                                        {(
+                                                            Object.values(
+                                                                sectionPoints,
+                                                            ) as number[]
+                                                        )
+                                                            .reduce(
+                                                                (a, b) => a + b,
+                                                                0,
+                                                            )
                                                             .toFixed(1)}{" "}
                                                         / 10.0đ
                                                     </span>
                                                 </div>
                                                 {Math.abs(
-                                                    (Object.values(sectionPoints) as number[]).reduce(
+                                                    (
+                                                        Object.values(
+                                                            sectionPoints,
+                                                        ) as number[]
+                                                    ).reduce(
                                                         (a, b) => a + b,
                                                         0,
                                                     ) - 10,
                                                 ) > 0.01 && (
                                                     <p className="text-rose-550 text-[10px] italic leading-normal">
-                                                        * Lưu ý: Tổng điểm các phần nên bằng 10.0 để khớp thang điểm chuẩn.
+                                                        * Lưu ý: Tổng điểm các
+                                                        phần nên bằng 10.0 để
+                                                        khớp thang điểm chuẩn.
                                                     </p>
                                                 )}
                                             </div>
@@ -387,31 +473,41 @@ export default function AdminCreateQuizTab({
                                 {scoringMode === "THPT_QG" && (
                                     <div className="bg-brand-50/40 rounded-xl p-3 border-0 text-[11px] text-slate-650 leading-normal space-y-1.5 animate-in fade-in duration-150">
                                         <div className="font-bold text-slate-700 uppercase tracking-wide text-[10px]">
-                                            Cấu hình chuẩn THPT Quốc Gia (Bộ Giáo Dục):
+                                            Cấu hình chuẩn THPT Quốc Gia (Bộ
+                                            Giáo Dục):
                                         </div>
                                         <ul className="list-disc pl-4 space-y-0.5 font-medium">
                                             <li>
                                                 <strong className="text-slate-805">
-                                                    Phần I (Trắc nghiệm nhiều lựa chọn):
+                                                    Phần I (Trắc nghiệm nhiều
+                                                    lựa chọn):
                                                 </strong>{" "}
                                                 3.0 điểm (12 câu, mỗi câu 0.25đ)
                                             </li>
                                             <li>
                                                 <strong className="text-slate-805">
-                                                    Phần II (Trắc nghiệm Đúng/Sai):
+                                                    Phần II (Trắc nghiệm
+                                                    Đúng/Sai):
                                                 </strong>{" "}
-                                                4.0 điểm (4 câu. Đúng 1 ý được 0.1đ, 2 ý 0.25đ, 3 ý 0.5đ, 4 ý 1.0đ)
+                                                4.0 điểm (4 câu. Đúng 1 ý được
+                                                0.1đ, 2 ý 0.25đ, 3 ý 0.5đ, 4 ý
+                                                1.0đ)
                                             </li>
                                             <li>
                                                 <strong className="text-slate-805">
-                                                    Phần III (Trắc nghiệm trả lời ngắn):
+                                                    Phần III (Trắc nghiệm trả
+                                                    lời ngắn):
                                                 </strong>{" "}
                                                 3.0 điểm (6 câu, mỗi câu 0.5đ)
                                             </li>
                                         </ul>
                                         <p className="text-[10px] text-slate-400 italic font-medium pt-1">
-                                            * Hệ thống tự nhận diện các câu hỏi dựa theo trường{" "}
-                                            <code className="bg-slate-100 px-1 rounded">sectionTitle</code> (Phần I, II, III).
+                                            * Hệ thống tự nhận diện các câu hỏi
+                                            dựa theo trường{" "}
+                                            <code className="bg-slate-100 px-1 rounded">
+                                                sectionTitle
+                                            </code>{" "}
+                                            (Phần I, II, III).
                                         </p>
                                     </div>
                                 )}
@@ -423,14 +519,17 @@ export default function AdminCreateQuizTab({
                                     type="checkbox"
                                     id="modal-checkbox-is-public"
                                     checked={quizIsPublic}
-                                    onChange={(e) => setQuizIsPublic(e.target.checked)}
+                                    onChange={(e) =>
+                                        setQuizIsPublic(e.target.checked)
+                                    }
                                     className="h-4 w-4 text-brand-600 border-border-secondary rounded focus:ring-brand-500 cursor-pointer"
                                 />
                                 <label
                                     htmlFor="modal-checkbox-is-public"
                                     className="text-xs font-semibold text-slate-700 cursor-pointer"
                                 >
-                                    Công khai đề thi này (Học sinh có thể thi ngay)
+                                    Công khai đề thi này (Học sinh có thể thi
+                                    ngay)
                                 </label>
                             </div>
                         </div>
@@ -446,12 +545,14 @@ export default function AdminCreateQuizTab({
                             <button
                                 onClick={async () => {
                                     if (!quizTitle.trim()) {
-                                        alert("Vui lòng nhập tên bài kiểm tra.");
+                                        alert(
+                                            "Vui lòng nhập tên bài kiểm tra.",
+                                        );
                                         return;
-                                     }
-                                     await handleSaveNewQuiz();
-                                     setIsSaveQuizModalOpen(false);
-                                     setActiveTab("quizzes");
+                                    }
+                                    await handleSaveNewQuiz();
+                                    setIsSaveQuizModalOpen(false);
+                                    setActiveTab("quizzes");
                                 }}
                                 className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex items-center gap-1.5 cursor-pointer"
                             >
