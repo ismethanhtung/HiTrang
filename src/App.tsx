@@ -159,73 +159,120 @@ export default function App() {
                 // Wait for local session token recovery to load auth headers
                 await initializeSession();
 
-                // Fetch current user first to see if they are logged in
-                let currentUser: User | null = null;
-                try {
-                    currentUser = await getCurrentUser();
-                } catch (uErr) {
-                    console.warn("Chưa đăng nhập:", uErr);
+                const hasToken = !!localStorage.getItem("hitrang_token");
+                const savedUserStr = localStorage.getItem("hvt_user");
+                let parsedUser: User | null = null;
+                if (savedUserStr) {
+                    try {
+                        parsedUser = JSON.parse(savedUserStr);
+                    } catch (e) {}
                 }
 
-                if (currentUser) {
-                    setUser(currentUser);
-                    if (currentUser.role === "admin") {
-                        setActiveTab("student-dashboard");
-                    } else {
-                        setActiveTab("student-dashboard");
-                    }
+                if (hasToken && parsedUser) {
+                    const userGrade =
+                        parsedUser.role === "student"
+                            ? parsedUser.grade || "10"
+                            : "10";
+                    const isLeaderboardPath =
+                        window.location.pathname === "/leaderboard";
 
-                    // Pre-fetch quizzes, submissions & leaderboard in parallel to optimize load speed
-                    try {
-                        const userGrade =
-                            currentUser.role === "student"
-                                ? currentUser.grade || "10"
-                                : "10";
-                        const isLeaderboardPath =
-                            window.location.pathname === "/leaderboard";
-
-                        if (isLeaderboardPath) {
-                            const [dbQuizzes, dbSubmissions, dbLeaderboard] =
-                                await Promise.all([
-                                    getQuizzes(),
-                                    getSubmissions(
-                                        currentUser.role,
-                                        currentUser.id,
-                                    ),
-                                    getOverallLeaderboard(userGrade),
-                                ]);
-                            if (dbQuizzes && dbQuizzes.length > 0) {
-                                setQuizzes(dbQuizzes);
-                            }
-                            if (dbSubmissions && dbSubmissions.length > 0) {
-                                setSubmissions(dbSubmissions);
-                            }
-                            if (dbLeaderboard) {
-                                setPrefetchedLeaderboard(dbLeaderboard);
-                            }
-                        } else {
-                            const [dbQuizzes, dbSubmissions] = await Promise.all([
-                                getQuizzes(),
-                                getSubmissions(
-                                    currentUser.role,
-                                    currentUser.id,
-                                ),
+                    // Fetch everything in parallel to eliminate network latency bottlenecks
+                    if (isLeaderboardPath) {
+                        const [dbQuizzes, currentUser, dbSubmissions, dbLeaderboard] =
+                            await Promise.all([
+                                getQuizzes().catch((e) => {
+                                    console.warn("Lỗi tải đề thi:", e);
+                                    return [] as Quiz[];
+                                }),
+                                getCurrentUser().catch((e) => {
+                                    console.warn("Lỗi đồng bộ user:", e);
+                                    return null;
+                                }),
+                                getSubmissions(parsedUser.role, parsedUser.id).catch((e) => {
+                                    console.warn("Lỗi tải bài nộp:", e);
+                                    return [] as Submission[];
+                                }),
+                                getOverallLeaderboard(userGrade).catch((e) => {
+                                    console.warn("Lỗi tải BXH:", e);
+                                    return null;
+                                }),
                             ]);
-                            if (dbQuizzes && dbQuizzes.length > 0) {
-                                setQuizzes(dbQuizzes);
-                            }
-                            if (dbSubmissions && dbSubmissions.length > 0) {
-                                setSubmissions(dbSubmissions);
+
+                        if (dbQuizzes && dbQuizzes.length > 0) {
+                            setQuizzes(dbQuizzes);
+                        }
+                        if (dbSubmissions && dbSubmissions.length > 0) {
+                            setSubmissions(dbSubmissions);
+                        }
+                        if (dbLeaderboard) {
+                            setPrefetchedLeaderboard(dbLeaderboard);
+                        }
+                        if (currentUser) {
+                            setUser(currentUser);
+                            if (currentUser.role === "admin") {
+                                setActiveTab("student-dashboard");
+                            } else {
+                                setActiveTab("student-dashboard");
                             }
                         }
-                    } catch (subErr) {
-                        console.error("Lỗi tải ngầm dữ liệu ban đầu:", subErr);
-                    }
+                    } else {
+                        const [dbQuizzes, currentUser, dbSubmissions] =
+                            await Promise.all([
+                                getQuizzes().catch((e) => {
+                                    console.warn("Lỗi tải đề thi:", e);
+                                    return [] as Quiz[];
+                                }),
+                                getCurrentUser().catch((e) => {
+                                    console.warn("Lỗi đồng bộ user:", e);
+                                    return null;
+                                }),
+                                getSubmissions(parsedUser.role, parsedUser.id).catch((e) => {
+                                    console.warn("Lỗi tải bài nộp:", e);
+                                    return [] as Submission[];
+                                }),
+                            ]);
 
+                        if (dbQuizzes && dbQuizzes.length > 0) {
+                            setQuizzes(dbQuizzes);
+                        }
+                        if (dbSubmissions && dbSubmissions.length > 0) {
+                            setSubmissions(dbSubmissions);
+                        }
+                        if (currentUser) {
+                            setUser(currentUser);
+                            if (currentUser.role === "admin") {
+                                setActiveTab("student-dashboard");
+                            } else {
+                                setActiveTab("student-dashboard");
+                            }
+                        }
+                    }
                     setLoading(false);
                 } else {
-                    // Stale/Empty session (only clear if the token itself is actually missing/invalidated)
-                    if (!localStorage.getItem("hitrang_token")) {
+                    // Guest user or no session cache: check session and fetch quizzes in parallel
+                    const [dbQuizzes, currentUser] = await Promise.all([
+                        getQuizzes().catch((e) => {
+                            console.warn("Lỗi tải đề thi:", e);
+                            return [] as Quiz[];
+                        }),
+                        getCurrentUser().catch((e) => {
+                            console.warn("Lỗi đồng bộ user:", e);
+                            return null;
+                        }),
+                    ]);
+
+                    if (dbQuizzes && dbQuizzes.length > 0) {
+                        setQuizzes(dbQuizzes);
+                    }
+
+                    if (currentUser) {
+                        setUser(currentUser);
+                        if (currentUser.role === "admin") {
+                            setActiveTab("student-dashboard");
+                        } else {
+                            setActiveTab("student-dashboard");
+                        }
+                    } else {
                         setUser(null);
                         localStorage.removeItem("hvt_user");
                         localStorage.removeItem("hvt_submissions");
@@ -457,9 +504,9 @@ export default function App() {
 
             {/* MAIN CONTENT CANVAS */}
             <main
-                className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
+                className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing || currentPath === "/admin" ? "min-h-0 overflow-hidden" : ""}`}
             >
-                <div className={isTakingOrReviewing ? "flex-1 flex flex-col min-h-0" : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"}>
+                <div className={isTakingOrReviewing || currentPath === "/admin" ? "flex-1 flex flex-col min-h-0 overflow-hidden" : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"}>
                     {/* 1. ADMIN PANEL ROUTE */}
                     {currentPath === "/admin" ? (
                         user && user.role === "admin" ? (

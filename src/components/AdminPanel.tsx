@@ -266,7 +266,7 @@ export default function AdminPanel({
     }
 
     return (
-        <div className="flex h-[calc(100vh-64px)] w-full overflow-hidden bg-[#FDFDFD]">
+        <div className="flex h-[calc(100vh-61px)] w-full overflow-hidden bg-[#FDFDFD]">
             {/* LEFT SIDEBAR */}
             <aside className="w-64 bg-bg-card border-r border-border-primary flex flex-col justify-between h-full select-none shrink-0">
                 <div className="flex flex-col min-h-0">
