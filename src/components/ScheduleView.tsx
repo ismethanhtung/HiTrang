@@ -69,7 +69,7 @@ export default function ScheduleView({
     const title = "Lịch học năm học 2026 - 2027";
     const subtext = "Môn Toán - Lớp cô Trang (Ms Carlie)";
     const applyDate = "Bắt đầu áp dụng từ 01/07";
-    const quote = "Mối tình đẹp nhất là mối tình với tri thức";
+    const quote = "Mối tình đẹp nhất là mối tình với tri thức 🌸";
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 pb-32 bg-transparent">
@@ -195,7 +195,7 @@ export default function ScheduleView({
                 </div>
             ) : viewMode === "grid" ? (
                 /* VIEW MODE: TABLE GRID (Clean Flat Table, transparent background, outer border, rounded corners) */
-                <div className="overflow-x-auto bg-transparent border border-slate-200 dark:border-slate-800 rounded-xl shadow-3xs">
+                <div className="overflow-x-auto bg-transparent border border-slate-200 dark:border-slate-800 shadow-3xs">
                     <table className="w-full min-w-[850px] border-collapse text-center">
                         <thead>
                             <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 text-[11px] font-bold text-slate-455 uppercase">
