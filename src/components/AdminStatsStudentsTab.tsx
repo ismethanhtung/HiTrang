@@ -29,9 +29,13 @@ export default function AdminStatsStudentsTab({
     onReviewSubmission,
 }: AdminStatsStudentsTabProps) {
     const [studentSearchQuery, setStudentSearchQuery] = useState("");
-    const [selectedGradeFilter, setSelectedGradeFilter] = useState<string>("all"); // "all", "10", "11", "12"
-    const [selectedStatsStudentId, setSelectedStatsStudentId] = useState<string | null>(null);
-    const [adminStudentHoveredPointIdx, setAdminStudentHoveredPointIdx] = useState<number | null>(null);
+    const [selectedGradeFilter, setSelectedGradeFilter] =
+        useState<string>("all"); // "all", "10", "11", "12"
+    const [selectedStatsStudentId, setSelectedStatsStudentId] = useState<
+        string | null
+    >(null);
+    const [adminStudentHoveredPointIdx, setAdminStudentHoveredPointIdx] =
+        useState<number | null>(null);
     const [studentRank, setStudentRank] = useState<{
         rankPosition: number;
         totalUsers: number;
@@ -72,7 +76,9 @@ export default function AdminStatsStudentsTab({
                 setStudentRank(null);
                 return;
             }
-            const student = userProfiles.find((u) => u.id === selectedStatsStudentId);
+            const student = userProfiles.find(
+                (u) => u.id === selectedStatsStudentId,
+            );
             if (!student) return;
             try {
                 const grade = student.grade || "10";
@@ -104,8 +110,9 @@ export default function AdminStatsStudentsTab({
     // Filter students by grade and search query
     const studentsList = userProfiles.filter((u) => {
         // Filter by grade
-        if (selectedGradeFilter !== "all" && u.grade !== selectedGradeFilter) return false;
-        
+        if (selectedGradeFilter !== "all" && u.grade !== selectedGradeFilter)
+            return false;
+
         // Filter by search query
         return (
             u.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
@@ -116,7 +123,10 @@ export default function AdminStatsStudentsTab({
     // Handle lazy load infinite scrolling on list scroll
     const handleStudentListScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const target = e.currentTarget;
-        if (target.scrollHeight - target.scrollTop <= target.clientHeight + 50) {
+        if (
+            target.scrollHeight - target.scrollTop <=
+            target.clientHeight + 50
+        ) {
             setVisibleCount((prev) => Math.min(prev + 25, studentsList.length));
         }
     };
@@ -125,7 +135,9 @@ export default function AdminStatsStudentsTab({
 
     return (
         <div className="absolute inset-6 flex flex-col overflow-hidden space-y-6 animate-in fade-in duration-200">
-            <style dangerouslySetInnerHTML={{__html: `
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
                 .custom-admin-scrollbar::-webkit-scrollbar {
                     width: 5px !important;
                     height: 5px !important;
@@ -146,20 +158,24 @@ export default function AdminStatsStudentsTab({
                     scrollbar-width: thin !important;
                     scrollbar-color: rgba(156, 163, 175, 0.4) transparent !important;
                 }
-            `}} />
+            `,
+                }}
+            />
             {/* Header */}
             <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/60">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-900">Thống Kê Học Sinh</h2>
+                    <h2 className="text-lg font-bold text-slate-900">
+                        Thống Kê Học Sinh
+                    </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                        Xem tiến trình học tập, lịch sử điểm số, tần suất làm bài và xem chi tiết bài làm của từng học sinh.
+                        Xem tiến trình học tập, lịch sử điểm số, tần suất làm
+                        bài và xem chi tiết bài làm của từng học sinh.
                     </p>
                 </div>
             </div>
 
             {/* Flat 3-Column Layout (Borderless & Scroll Locked) */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch flex-1 min-h-0 overflow-hidden">
-                
                 {/* Column 1 (col-span-3): Student Navigation List with Lazy Load */}
                 <div className="md:col-span-3 flex flex-col h-full border-r border-slate-200/60 dark:border-slate-800/60 pr-6 space-y-4 min-h-0 overflow-hidden">
                     {/* Grade Filters */}
@@ -187,13 +203,15 @@ export default function AdminStatsStudentsTab({
                             type="text"
                             placeholder="Tìm học sinh..."
                             value={studentSearchQuery}
-                            onChange={(e) => setStudentSearchQuery(e.target.value)}
+                            onChange={(e) =>
+                                setStudentSearchQuery(e.target.value)
+                            }
                             className="w-full pl-9 pr-3 py-2 bg-slate-200/40 dark:bg-slate-800/40 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-brand-300/30 border-0"
                         />
                     </div>
 
                     {/* Students List with Infinite Scroll handler */}
-                    <div 
+                    <div
                         onScroll={handleStudentListScroll}
                         className="flex-1 overflow-y-auto space-y-1 pr-1 min-h-0 custom-admin-scrollbar"
                     >
@@ -203,15 +221,22 @@ export default function AdminStatsStudentsTab({
                             </p>
                         ) : (
                             visibleStudents.map((student) => {
-                                const isSelected = selectedStatsStudentId === student.id;
-                                const studentSubs = submissions.filter((s) => s.studentId === student.id);
+                                const isSelected =
+                                    selectedStatsStudentId === student.id;
+                                const studentSubs = submissions.filter(
+                                    (s) => s.studentId === student.id,
+                                );
 
                                 return (
                                     <button
                                         key={student.id}
                                         onClick={() => {
-                                            setSelectedStatsStudentId(student.id);
-                                            setAdminStudentHoveredPointIdx(null);
+                                            setSelectedStatsStudentId(
+                                                student.id,
+                                            );
+                                            setAdminStudentHoveredPointIdx(
+                                                null,
+                                            );
                                         }}
                                         className={`w-full text-left p-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-3 border-0 ${
                                             isSelected
@@ -226,14 +251,22 @@ export default function AdminStatsStudentsTab({
                                                     : "bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                                             }`}
                                         >
-                                            {(student.name || "U").charAt(0).toUpperCase()}
+                                            {(student.name || "U")
+                                                .charAt(0)
+                                                .toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className={`text-xs font-bold truncate ${isSelected ? "text-brand-800 dark:text-brand-300" : "text-slate-900"}`}>
+                                            <div
+                                                className={`text-xs font-bold truncate ${isSelected ? "text-brand-800 dark:text-brand-300" : "text-slate-900"}`}
+                                            >
                                                 {student.name}
                                             </div>
                                             <div className="text-[10px] truncate text-slate-400">
-                                                {student.role === "admin" ? "Admin" : `Lớp ${student.grade || "10"}`} • @{student.username} • {studentSubs.length} bài
+                                                {student.role === "admin"
+                                                    ? "Admin"
+                                                    : `Lớp ${student.grade || "10"}`}{" "}
+                                                • @{student.username} •{" "}
+                                                {studentSubs.length} bài
                                             </div>
                                         </div>
                                     </button>
@@ -253,39 +286,61 @@ export default function AdminStatsStudentsTab({
                     <div className="md:col-span-9 h-full flex flex-col items-center justify-center text-center text-slate-400 italic space-y-2 py-12">
                         <Users className="w-8 h-8 text-slate-305" />
                         <p className="text-xs font-medium">
-                            Hãy chọn một học sinh từ danh sách bên trái để quan sát kết quả chi tiết.
+                            Hãy chọn một học sinh từ danh sách bên trái để quan
+                            sát kết quả chi tiết.
                         </p>
                     </div>
                 ) : (
                     (() => {
-                        const student = userProfiles.find((u) => u.id === selectedStatsStudentId);
+                        const student = userProfiles.find(
+                            (u) => u.id === selectedStatsStudentId,
+                        );
                         if (!student) return null;
 
                         const studentSubs = submissions
                             .filter((s) => s.studentId === student.id)
-                            .sort((a, b) => safeParseDate(b.submittedAt).getTime() - safeParseDate(a.submittedAt).getTime());
+                            .sort(
+                                (a, b) =>
+                                    safeParseDate(b.submittedAt).getTime() -
+                                    safeParseDate(a.submittedAt).getTime(),
+                            );
 
                         const completedCount = studentSubs.length;
 
                         // Calculate training statistics
                         const gradeQuizzes = student.grade
-                            ? quizzes.filter((q) => !q.grade || q.grade === student.grade)
+                            ? quizzes.filter(
+                                  (q) => !q.grade || q.grade === student.grade,
+                              )
                             : quizzes;
-                        
+
                         const totalQuizzes = gradeQuizzes.length;
 
-                        const averageScore = completedCount > 0
-                            ? (studentSubs.reduce((acc, curr) => acc + curr.score, 0) / completedCount).toFixed(1)
-                            : "0.0";
+                        const averageScore =
+                            completedCount > 0
+                                ? (
+                                      studentSubs.reduce(
+                                          (acc, curr) => acc + curr.score,
+                                          0,
+                                      ) / completedCount
+                                  ).toFixed(1)
+                                : "0.0";
 
-                        const highestScore = completedCount > 0
-                            ? Math.max(...studentSubs.map((s) => s.score)).toFixed(1)
-                            : "0.0";
+                        const highestScore =
+                            completedCount > 0
+                                ? Math.max(
+                                      ...studentSubs.map((s) => s.score),
+                                  ).toFixed(1)
+                                : "0.0";
 
                         // Filter quizzes that are NOT started/completed by student
-                        const uncompletedQuizzes = gradeQuizzes.filter((quiz) => {
-                            return !studentSubs.some((sub) => sub.quizId === quiz.id);
-                        });
+                        const uncompletedQuizzes = gradeQuizzes.filter(
+                            (quiz) => {
+                                return !studentSubs.some(
+                                    (sub) => sub.quizId === quiz.id,
+                                );
+                            },
+                        );
 
                         return (
                             <>
@@ -294,21 +349,27 @@ export default function AdminStatsStudentsTab({
                                     {/* Student Header */}
                                     <div className="flex items-center gap-4 pb-6 border-b border-slate-200/60 dark:border-slate-800/60 flex-shrink-0">
                                         <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-200 dark:text-slate-900 flex items-center justify-center font-bold text-base flex-shrink-0">
-                                            {student.name.charAt(0).toUpperCase()}
+                                            {student.name
+                                                .charAt(0)
+                                                .toUpperCase()}
                                         </div>
                                         <div className="space-y-0.5 min-w-0">
                                             <h3 className="text-base font-black text-slate-900 truncate">
                                                 {student.name}
                                             </h3>
                                             <p className="text-[11px] text-slate-400 font-medium truncate">
-                                                {student.role === "admin" ? "Admin" : `Lớp ${student.grade || "10"}`} • @{student.username}
+                                                {student.role === "admin"
+                                                    ? "Admin"
+                                                    : `Lớp ${student.grade || "10"}`}{" "}
+                                                • @{student.username}
                                             </p>
                                             {student.plan && (
                                                 <span
                                                     className={`inline-block text-[8px] font-bold px-2 py-0.5 rounded-full mt-1 border uppercase tracking-wider ${
                                                         student.plan === "vip"
                                                             ? "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-50/10 dark:text-amber-300 dark:border-amber-100/20"
-                                                            : student.plan === "basic"
+                                                            : student.plan ===
+                                                                "basic"
                                                               ? "bg-brand-50 text-brand-700 border-brand-100 dark:bg-brand-50/10 dark:text-brand-300 dark:border-brand-100/20"
                                                               : "bg-slate-100 text-slate-500 border-slate-100"
                                                     }`}
@@ -326,14 +387,20 @@ export default function AdminStatsStudentsTab({
                                         </h3>
                                         <div className="w-full relative pt-2">
                                             {(() => {
-                                                const chartPointsData = [...studentSubs]
+                                                const chartPointsData = [
+                                                    ...studentSubs,
+                                                ]
                                                     .reverse()
                                                     .slice(-7)
                                                     .map((sub, i) => ({
                                                         day: `Đề ${i + 1}`,
-                                                        score: Number(sub.score),
-                                                        quizTitle: sub.quizTitle,
-                                                        submittedAt: sub.submittedAt,
+                                                        score: Number(
+                                                            sub.score,
+                                                        ),
+                                                        quizTitle:
+                                                            sub.quizTitle,
+                                                        submittedAt:
+                                                            sub.submittedAt,
                                                     }));
 
                                                 const width = 500;
@@ -351,54 +418,106 @@ export default function AdminStatsStudentsTab({
                                                     h: number,
                                                     r: number,
                                                 ) => {
-                                                    const realR = Math.min(r, h, w / 2);
+                                                    const realR = Math.min(
+                                                        r,
+                                                        h,
+                                                        w / 2,
+                                                    );
                                                     if (realR <= 0) {
                                                         return `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`;
                                                     }
                                                     return `M ${x} ${y + h} L ${x} ${y + realR} A ${realR} ${realR} 0 0 1 ${x + realR} ${y} L ${x + w - realR} ${y} A ${realR} ${realR} 0 0 1 ${x + w} ${y + realR} L ${x + w} ${y + h} Z`;
                                                 };
 
-                                                const getBarGradient = (score: number) => {
-                                                    if (score >= 8) return "url(#admin-chart-bar-grad-green)";
-                                                    if (score >= 5) return "url(#admin-chart-bar-grad-amber)";
+                                                const getBarGradient = (
+                                                    score: number,
+                                                ) => {
+                                                    if (score >= 8)
+                                                        return "url(#admin-chart-bar-grad-green)";
+                                                    if (score >= 5)
+                                                        return "url(#admin-chart-bar-grad-amber)";
                                                     return "url(#admin-chart-bar-grad-red)";
                                                 };
 
-                                                const getTextColor = (score: number) => {
-                                                    if (score >= 8) return "#10B981";
-                                                    if (score >= 5) return "#D97706";
+                                                const getTextColor = (
+                                                    score: number,
+                                                ) => {
+                                                    if (score >= 8)
+                                                        return "#10B981";
+                                                    if (score >= 5)
+                                                        return "#D97706";
                                                     return "#EF4444";
                                                 };
 
-                                                const usableWidth = width - paddingLeft - paddingRight;
-                                                const usableHeight = height - paddingTop - paddingBottom;
-                                                const count = chartPointsData.length;
+                                                const usableWidth =
+                                                    width -
+                                                    paddingLeft -
+                                                    paddingRight;
+                                                const usableHeight =
+                                                    height -
+                                                    paddingTop -
+                                                    paddingBottom;
+                                                const count =
+                                                    chartPointsData.length;
 
-                                                const points = chartPointsData.map((p, i) => {
-                                                    const colWidth = usableWidth / count;
-                                                    const barWidth = Math.min(22, colWidth * 0.6);
-                                                    const barX = paddingLeft + i * colWidth + (colWidth - barWidth) / 2;
-                                                    const barHeight = (p.score / maxVal) * usableHeight;
-                                                    const y = paddingTop + usableHeight - barHeight;
-                                                    const x = barX + barWidth / 2;
-                                                    return {
-                                                        x,
-                                                        y,
-                                                        barX,
-                                                        barWidth,
-                                                        barHeight,
-                                                        score: p.score,
-                                                        day: p.day,
-                                                    };
-                                                });
+                                                const points =
+                                                    chartPointsData.map(
+                                                        (p, i) => {
+                                                            const colWidth =
+                                                                usableWidth /
+                                                                count;
+                                                            const barWidth =
+                                                                Math.min(
+                                                                    22,
+                                                                    colWidth *
+                                                                        0.6,
+                                                                );
+                                                            const barX =
+                                                                paddingLeft +
+                                                                i * colWidth +
+                                                                (colWidth -
+                                                                    barWidth) /
+                                                                    2;
+                                                            const barHeight =
+                                                                (p.score /
+                                                                    maxVal) *
+                                                                usableHeight;
+                                                            const y =
+                                                                paddingTop +
+                                                                usableHeight -
+                                                                barHeight;
+                                                            const x =
+                                                                barX +
+                                                                barWidth / 2;
+                                                            return {
+                                                                x,
+                                                                y,
+                                                                barX,
+                                                                barWidth,
+                                                                barHeight,
+                                                                score: p.score,
+                                                                day: p.day,
+                                                            };
+                                                        },
+                                                    );
 
-                                                const formatDate = (dateStr?: string) => {
+                                                const formatDate = (
+                                                    dateStr?: string,
+                                                ) => {
                                                     if (!dateStr) return "";
                                                     try {
-                                                        const d = safeParseDate(dateStr);
-                                                        const day = String(d.getDate()).padStart(2, "0");
-                                                        const month = String(d.getMonth() + 1).padStart(2, "0");
-                                                        const year = d.getFullYear();
+                                                        const d =
+                                                            safeParseDate(
+                                                                dateStr,
+                                                            );
+                                                        const day = String(
+                                                            d.getDate(),
+                                                        ).padStart(2, "0");
+                                                        const month = String(
+                                                            d.getMonth() + 1,
+                                                        ).padStart(2, "0");
+                                                        const year =
+                                                            d.getFullYear();
                                                         return `${day}/${month}/${year}`;
                                                     } catch (e) {
                                                         return "";
@@ -407,113 +526,310 @@ export default function AdminStatsStudentsTab({
 
                                                 return (
                                                     <div className="w-full relative">
-                                                        {completedCount === 0 ? (
+                                                        {completedCount ===
+                                                        0 ? (
                                                             <div className="py-8 flex items-center justify-center text-slate-400 text-xs italic">
-                                                                Chưa có lịch sử điểm số 🌸
+                                                                Chưa có lịch sử
+                                                                điểm số 🌸
                                                             </div>
                                                         ) : (
-                                                            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+                                                            <svg
+                                                                viewBox={`0 0 ${width} ${height}`}
+                                                                className="w-full h-auto"
+                                                            >
                                                                 <defs>
-                                                                    <linearGradient id="admin-chart-bar-grad-green" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.7" />
-                                                                        <stop offset="100%" stopColor="#34D399" stopOpacity="0.2" />
+                                                                    <linearGradient
+                                                                        id="admin-chart-bar-grad-green"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#10B981"
+                                                                            stopOpacity="0.7"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#34D399"
+                                                                            stopOpacity="0.2"
+                                                                        />
                                                                     </linearGradient>
-                                                                    <linearGradient id="admin-chart-bar-grad-amber" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.7" />
-                                                                        <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.2" />
+                                                                    <linearGradient
+                                                                        id="admin-chart-bar-grad-amber"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#F59E0B"
+                                                                            stopOpacity="0.7"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#FBBF24"
+                                                                            stopOpacity="0.2"
+                                                                        />
                                                                     </linearGradient>
-                                                                    <linearGradient id="admin-chart-bar-grad-red" x1="0" y1="0" x2="0" y2="1">
-                                                                        <stop offset="0%" stopColor="#EF4444" stopOpacity="0.7" />
-                                                                        <stop offset="100%" stopColor="#F87171" stopOpacity="0.2" />
+                                                                    <linearGradient
+                                                                        id="admin-chart-bar-grad-red"
+                                                                        x1="0"
+                                                                        y1="0"
+                                                                        x2="0"
+                                                                        y2="1"
+                                                                    >
+                                                                        <stop
+                                                                            offset="0%"
+                                                                            stopColor="#EF4444"
+                                                                            stopOpacity="0.7"
+                                                                        />
+                                                                        <stop
+                                                                            offset="100%"
+                                                                            stopColor="#F87171"
+                                                                            stopOpacity="0.2"
+                                                                        />
                                                                     </linearGradient>
                                                                 </defs>
 
                                                                 {/* Horizontal guide lines */}
-                                                                <line x1={paddingLeft} y1={paddingTop} x2={width - paddingRight} y2={paddingTop} stroke="#E2E8F0" strokeWidth="0.8" strokeDasharray="3,3" className="dark:stroke-slate-800" />
-                                                                <line x1={paddingLeft} y1={paddingTop + usableHeight / 2} x2={width - paddingRight} y2={paddingTop + usableHeight / 2} stroke="#E2E8F0" strokeWidth="0.8" strokeDasharray="3,3" className="dark:stroke-slate-800" />
-                                                                <line x1={paddingLeft} y1={paddingTop + usableHeight} x2={width - paddingRight} y2={paddingTop + usableHeight} stroke="#CBD5E1" strokeWidth="1" className="dark:stroke-slate-700" />
+                                                                <line
+                                                                    x1={
+                                                                        paddingLeft
+                                                                    }
+                                                                    y1={
+                                                                        paddingTop
+                                                                    }
+                                                                    x2={
+                                                                        width -
+                                                                        paddingRight
+                                                                    }
+                                                                    y2={
+                                                                        paddingTop
+                                                                    }
+                                                                    stroke="#E2E8F0"
+                                                                    strokeWidth="0.8"
+                                                                    strokeDasharray="3,3"
+                                                                    className="dark:stroke-slate-800"
+                                                                />
+                                                                <line
+                                                                    x1={
+                                                                        paddingLeft
+                                                                    }
+                                                                    y1={
+                                                                        paddingTop +
+                                                                        usableHeight /
+                                                                            2
+                                                                    }
+                                                                    x2={
+                                                                        width -
+                                                                        paddingRight
+                                                                    }
+                                                                    y2={
+                                                                        paddingTop +
+                                                                        usableHeight /
+                                                                            2
+                                                                    }
+                                                                    stroke="#E2E8F0"
+                                                                    strokeWidth="0.8"
+                                                                    strokeDasharray="3,3"
+                                                                    className="dark:stroke-slate-800"
+                                                                />
+                                                                <line
+                                                                    x1={
+                                                                        paddingLeft
+                                                                    }
+                                                                    y1={
+                                                                        paddingTop +
+                                                                        usableHeight
+                                                                    }
+                                                                    x2={
+                                                                        width -
+                                                                        paddingRight
+                                                                    }
+                                                                    y2={
+                                                                        paddingTop +
+                                                                        usableHeight
+                                                                    }
+                                                                    stroke="#CBD5E1"
+                                                                    strokeWidth="1"
+                                                                    className="dark:stroke-slate-700"
+                                                                />
 
-                                                                {points.map((p, i) => {
-                                                                    const isHovered = adminStudentHoveredPointIdx === i;
-                                                                    const isLast = i === points.length - 1;
-                                                                    const showLabel = isHovered || (adminStudentHoveredPointIdx === null && isLast);
+                                                                {points.map(
+                                                                    (p, i) => {
+                                                                        const isHovered =
+                                                                            adminStudentHoveredPointIdx ===
+                                                                            i;
+                                                                        const isLast =
+                                                                            i ===
+                                                                            points.length -
+                                                                                1;
+                                                                        const showLabel =
+                                                                            isHovered ||
+                                                                            (adminStudentHoveredPointIdx ===
+                                                                                null &&
+                                                                                isLast);
 
-                                                                    return (
-                                                                        <g key={i}>
-                                                                            {/* Background track (full 10 points) */}
-                                                                            <path
-                                                                                d={getBarPath(p.barX, paddingTop, p.barWidth, usableHeight, 3)}
-                                                                                fill="currentColor"
-                                                                                className="text-slate-200/40 dark:text-slate-800/40 transition-colors duration-200"
-                                                                            />
-                                                                            {/* Active score bar */}
-                                                                            {p.barHeight > 0 && (
+                                                                        return (
+                                                                            <g
+                                                                                key={
+                                                                                    i
+                                                                                }
+                                                                            >
+                                                                                {/* Background track (full 10 points) */}
                                                                                 <path
-                                                                                    d={getBarPath(p.barX, p.y, p.barWidth, p.barHeight, 3)}
-                                                                                    fill={getBarGradient(p.score)}
-                                                                                    className="transition-all duration-150"
+                                                                                    d={getBarPath(
+                                                                                        p.barX,
+                                                                                        paddingTop,
+                                                                                        p.barWidth,
+                                                                                        usableHeight,
+                                                                                        3,
+                                                                                    )}
+                                                                                    fill="currentColor"
+                                                                                    className="text-slate-200/40 dark:text-slate-800/40 transition-colors duration-200"
                                                                                 />
-                                                                            )}
-                                                                            {/* Score label text on top of the bar */}
-                                                                            {showLabel && (
-                                                                                <text
-                                                                                    x={p.x}
-                                                                                    y={p.y - 4}
-                                                                                    textAnchor="middle"
-                                                                                    className="text-[9px] font-black font-mono select-none"
-                                                                                    fill={getTextColor(p.score)}
-                                                                                >
-                                                                                    {p.score}
-                                                                                </text>
-                                                                            )}
-                                                                            {/* Interactive hover area */}
-                                                                            <rect
-                                                                                x={p.barX - 4}
-                                                                                y={paddingTop}
-                                                                                width={p.barWidth + 8}
-                                                                                height={usableHeight}
-                                                                                fill="transparent"
-                                                                                className="cursor-pointer"
-                                                                                onMouseEnter={() => setAdminStudentHoveredPointIdx(i)}
-                                                                                onMouseLeave={() => setAdminStudentHoveredPointIdx(null)}
-                                                                            />
-                                                                        </g>
-                                                                    );
-                                                                })}
+                                                                                {/* Active score bar */}
+                                                                                {p.barHeight >
+                                                                                    0 && (
+                                                                                    <path
+                                                                                        d={getBarPath(
+                                                                                            p.barX,
+                                                                                            p.y,
+                                                                                            p.barWidth,
+                                                                                            p.barHeight,
+                                                                                            3,
+                                                                                        )}
+                                                                                        fill={getBarGradient(
+                                                                                            p.score,
+                                                                                        )}
+                                                                                        className="transition-all duration-150"
+                                                                                    />
+                                                                                )}
+                                                                                {/* Score label text on top of the bar */}
+                                                                                {showLabel && (
+                                                                                    <text
+                                                                                        x={
+                                                                                            p.x
+                                                                                        }
+                                                                                        y={
+                                                                                            p.y -
+                                                                                            4
+                                                                                        }
+                                                                                        textAnchor="middle"
+                                                                                        className="text-[9px] font-black font-mono select-none"
+                                                                                        fill={getTextColor(
+                                                                                            p.score,
+                                                                                        )}
+                                                                                    >
+                                                                                        {
+                                                                                            p.score
+                                                                                        }
+                                                                                    </text>
+                                                                                )}
+                                                                                {/* Interactive hover area */}
+                                                                                <rect
+                                                                                    x={
+                                                                                        p.barX -
+                                                                                        4
+                                                                                    }
+                                                                                    y={
+                                                                                        paddingTop
+                                                                                    }
+                                                                                    width={
+                                                                                        p.barWidth +
+                                                                                        8
+                                                                                    }
+                                                                                    height={
+                                                                                        usableHeight
+                                                                                    }
+                                                                                    fill="transparent"
+                                                                                    className="cursor-pointer"
+                                                                                    onMouseEnter={() =>
+                                                                                        setAdminStudentHoveredPointIdx(
+                                                                                            i,
+                                                                                        )
+                                                                                    }
+                                                                                    onMouseLeave={() =>
+                                                                                        setAdminStudentHoveredPointIdx(
+                                                                                            null,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            </g>
+                                                                        );
+                                                                    },
+                                                                )}
                                                             </svg>
                                                         )}
 
-                                                        {adminStudentHoveredPointIdx !== null &&
-                                                            points[adminStudentHoveredPointIdx] &&
-                                                            chartPointsData[adminStudentHoveredPointIdx] && (
+                                                        {adminStudentHoveredPointIdx !==
+                                                            null &&
+                                                            points[
+                                                                adminStudentHoveredPointIdx
+                                                            ] &&
+                                                            chartPointsData[
+                                                                adminStudentHoveredPointIdx
+                                                            ] && (
                                                                 <div
                                                                     className="absolute bg-white border border-slate-200/80 text-slate-800 p-2.5 rounded-xl shadow-lg pointer-events-none transition-all duration-150 animate-in fade-in-50 zoom-in-95 z-30 select-none text-left min-w-[140px] dark:bg-[#27374D] dark:border-slate-700 dark:text-slate-200"
                                                                     style={{
                                                                         left: `${(points[adminStudentHoveredPointIdx].x / width) * 100}%`,
                                                                         top: `${(points[adminStudentHoveredPointIdx].y / height) * 100}%`,
-                                                                        transform: "translate(-50%, -115%)",
+                                                                        transform:
+                                                                            "translate(-50%, -115%)",
                                                                     }}
                                                                 >
                                                                     <div className="text-[8px] font-bold text-slate-400 dark:text-slate-500 leading-none mb-1 font-mono">
-                                                                        {formatDate(chartPointsData[adminStudentHoveredPointIdx].submittedAt)}
+                                                                        {formatDate(
+                                                                            chartPointsData[
+                                                                                adminStudentHoveredPointIdx
+                                                                            ]
+                                                                                .submittedAt,
+                                                                        )}
                                                                     </div>
                                                                     <div className="text-[9px] font-black text-slate-800 dark:text-slate-100 truncate max-w-[130px] mb-1 font-sans">
-                                                                        {chartPointsData[adminStudentHoveredPointIdx].quizTitle}
+                                                                        {
+                                                                            chartPointsData[
+                                                                                adminStudentHoveredPointIdx
+                                                                            ]
+                                                                                .quizTitle
+                                                                        }
                                                                     </div>
                                                                     <div
                                                                         className="flex items-center gap-1 mt-0.5 text-[9px] font-bold font-mono"
                                                                         style={{
-                                                                            color: getTextColor(points[adminStudentHoveredPointIdx].score),
+                                                                            color: getTextColor(
+                                                                                points[
+                                                                                    adminStudentHoveredPointIdx
+                                                                                ]
+                                                                                    .score,
+                                                                            ),
                                                                         }}
                                                                     >
                                                                         <span
                                                                             className="w-1.5 h-1.5 rounded-full animate-pulse"
                                                                             style={{
-                                                                                backgroundColor: getTextColor(points[adminStudentHoveredPointIdx].score),
+                                                                                backgroundColor:
+                                                                                    getTextColor(
+                                                                                        points[
+                                                                                            adminStudentHoveredPointIdx
+                                                                                        ]
+                                                                                            .score,
+                                                                                    ),
                                                                             }}
                                                                         ></span>
                                                                         <span>
-                                                                            Điểm: {points[adminStudentHoveredPointIdx].score}/10đ
+                                                                            Điểm:{" "}
+                                                                            {
+                                                                                points[
+                                                                                    adminStudentHoveredPointIdx
+                                                                                ]
+                                                                                    .score
+                                                                            }
+                                                                            /10đ
                                                                         </span>
                                                                     </div>
                                                                     <div className="absolute top-[100%] left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white dark:bg-[#27374D] border-b border-r border-slate-200/80 dark:border-slate-700 rotate-45" />
@@ -533,75 +849,153 @@ export default function AdminStatsStudentsTab({
                                         {/* Left Box: Activity calendar */}
                                         <div className="w-full text-left flex flex-col gap-2.5">
                                             <h4 className="text-[10px] font-black text-slate-450 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5 font-sans">
-                                                Tần suất hoạt động
+                                                Tần suất làm bài
                                             </h4>
                                             <div className="py-1">
                                                 {(() => {
                                                     const today = new Date();
-                                                    today.setHours(23, 59, 59, 999);
+                                                    today.setHours(
+                                                        23,
+                                                        59,
+                                                        59,
+                                                        999,
+                                                    );
                                                     const daysList = [];
-                                                    for (let k = 29; k >= 0; k--) {
-                                                        const d = new Date(today);
-                                                        d.setDate(today.getDate() - k);
-                                                        const dStr = d.toDateString();
-                                                        const count = studentSubs.filter((s) => {
-                                                            return safeParseDate(s.submittedAt).toDateString() === dStr;
-                                                        }).length;
+                                                    for (
+                                                        let k = 29;
+                                                        k >= 0;
+                                                        k--
+                                                    ) {
+                                                        const d = new Date(
+                                                            today,
+                                                        );
+                                                        d.setDate(
+                                                            today.getDate() - k,
+                                                        );
+                                                        const dStr =
+                                                            d.toDateString();
+                                                        const count =
+                                                            studentSubs.filter(
+                                                                (s) => {
+                                                                    return (
+                                                                        safeParseDate(
+                                                                            s.submittedAt,
+                                                                        ).toDateString() ===
+                                                                        dStr
+                                                                    );
+                                                                },
+                                                            ).length;
                                                         daysList.push({
                                                             date: d,
                                                             count,
                                                         });
                                                     }
 
-                                                    const startDayOfWeek = (daysList[0].date.getDay() + 6) % 7;
+                                                    const startDayOfWeek =
+                                                        (daysList[0].date.getDay() +
+                                                            6) %
+                                                        7;
 
-                                                    const formatDateLabel = (d: Date) => {
-                                                        const day = String(d.getDate()).padStart(2, "0");
-                                                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                                                    const formatDateLabel = (
+                                                        d: Date,
+                                                    ) => {
+                                                        const day = String(
+                                                            d.getDate(),
+                                                        ).padStart(2, "0");
+                                                        const month = String(
+                                                            d.getMonth() + 1,
+                                                        ).padStart(2, "0");
                                                         return `${day}/${month}`;
                                                     };
 
-                                                    const weekHeaders = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+                                                    const weekHeaders = [
+                                                        "T2",
+                                                        "T3",
+                                                        "T4",
+                                                        "T5",
+                                                        "T6",
+                                                        "T7",
+                                                        "CN",
+                                                    ];
 
                                                     return (
                                                         <div className="w-full max-w-[140px] flex flex-col gap-2">
                                                             {/* Headers */}
                                                             <div className="grid grid-cols-7 gap-1 text-center text-[8px] font-bold text-slate-400 mb-1 w-full">
-                                                                {weekHeaders.map((h) => (
-                                                                    <div key={h} className="w-full text-center font-sans">
-                                                                        {h}
-                                                                    </div>
-                                                                ))}
+                                                                {weekHeaders.map(
+                                                                    (h) => (
+                                                                        <div
+                                                                            key={
+                                                                                h
+                                                                            }
+                                                                            className="w-full text-center font-sans"
+                                                                        >
+                                                                            {h}
+                                                                        </div>
+                                                                    ),
+                                                                )}
                                                             </div>
                                                             {/* Grid */}
                                                             <div className="grid grid-cols-7 gap-1 w-full">
-                                                                {Array.from({ length: startDayOfWeek }).map((_, i) => (
-                                                                    <div key={`empty-${i}`} className="w-full h-3 flex justify-center items-center" />
-                                                                ))}
-                                                                {daysList.map((dayInfo, idx) => {
-                                                                    let colorClass = "bg-slate-200 dark:bg-slate-800 text-slate-400";
-                                                                    if (dayInfo.count === 1) {
-                                                                        colorClass = "bg-[#A7F3D0] dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300";
-                                                                    } else if (dayInfo.count === 2) {
-                                                                        colorClass = "bg-[#34D399] dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200";
-                                                                    } else if (dayInfo.count >= 3) {
-                                                                        colorClass = "bg-[#059669] dark:bg-emerald-750 text-white";
-                                                                    }
+                                                                {Array.from({
+                                                                    length: startDayOfWeek,
+                                                                }).map(
+                                                                    (_, i) => (
+                                                                        <div
+                                                                            key={`empty-${i}`}
+                                                                            className="w-full h-3 flex justify-center items-center"
+                                                                        />
+                                                                    ),
+                                                                )}
+                                                                {daysList.map(
+                                                                    (
+                                                                        dayInfo,
+                                                                        idx,
+                                                                    ) => {
+                                                                        let colorClass =
+                                                                            "bg-slate-200 dark:bg-slate-800 text-slate-400";
+                                                                        if (
+                                                                            dayInfo.count ===
+                                                                            1
+                                                                        ) {
+                                                                            colorClass =
+                                                                                "bg-[#A7F3D0] dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300";
+                                                                        } else if (
+                                                                            dayInfo.count ===
+                                                                            2
+                                                                        ) {
+                                                                            colorClass =
+                                                                                "bg-[#34D399] dark:bg-emerald-900/60 text-emerald-950 dark:text-emerald-200";
+                                                                        } else if (
+                                                                            dayInfo.count >=
+                                                                            3
+                                                                        ) {
+                                                                            colorClass =
+                                                                                "bg-[#059669] dark:bg-emerald-750 text-white";
+                                                                        }
 
-                                                                    const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
+                                                                        const tooltipText = `${formatDateLabel(dayInfo.date)}: ${dayInfo.count} bài làm`;
 
-                                                                    return (
-                                                                        <div key={idx} className="w-full h-3 flex justify-center items-center">
+                                                                        return (
                                                                             <div
-                                                                                className={`w-3 h-3 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                key={
+                                                                                    idx
+                                                                                }
+                                                                                className="w-full h-3 flex justify-center items-center"
                                                                             >
-                                                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50 font-mono">
-                                                                                    {tooltipText}
+                                                                                <div
+                                                                                    className={`w-3 h-3 rounded-full transition-all cursor-pointer hover:scale-125 relative group ${colorClass}`}
+                                                                                >
+                                                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded shadow-lg whitespace-nowrap z-50 font-mono">
+                                                                                        {
+                                                                                            tooltipText
+                                                                                        }
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                                        );
+                                                                    },
+                                                                )}
                                                             </div>
                                                             {/* Legend */}
                                                             <div className="flex items-center gap-1 text-[8px] text-slate-400 self-start mt-1 font-sans">
@@ -610,7 +1004,9 @@ export default function AdminStatsStudentsTab({
                                                                 <div className="w-2 h-2 rounded-full bg-[#A7F3D0] dark:bg-emerald-950/40" />
                                                                 <div className="w-2 h-2 rounded-full bg-[#34D399] dark:bg-emerald-900/60" />
                                                                 <div className="w-2 h-2 rounded-full bg-[#059669] dark:bg-emerald-750" />
-                                                                <span>Nhiều</span>
+                                                                <span>
+                                                                    Nhiều
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     );
@@ -627,13 +1023,22 @@ export default function AdminStatsStudentsTab({
                                                 {studentRank ? (
                                                     <div className="space-y-1 font-sans">
                                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                                                            Khối lớp {student.grade || "10"}
+                                                            Khối lớp{" "}
+                                                            {student.grade ||
+                                                                "10"}
                                                         </span>
                                                         <span className="text-2xl font-black text-slate-800 dark:text-slate-200 block font-mono">
-                                                            #{studentRank.rankPosition}
+                                                            #
+                                                            {
+                                                                studentRank.rankPosition
+                                                            }
                                                         </span>
                                                         <span className="text-[9px] font-bold text-slate-400 block">
-                                                            trên {studentRank.totalUsers} học sinh
+                                                            trên{" "}
+                                                            {
+                                                                studentRank.totalUsers
+                                                            }{" "}
+                                                            học sinh
                                                         </span>
                                                     </div>
                                                 ) : (
@@ -642,7 +1047,8 @@ export default function AdminStatsStudentsTab({
                                                             Chưa xếp hạng
                                                         </span>
                                                         <span className="text-[9px] text-slate-400 leading-tight block">
-                                                            Làm bài thi để bắt đầu!
+                                                            Làm bài thi để bắt
+                                                            đầu!
                                                         </span>
                                                     </div>
                                                 )}
@@ -697,19 +1103,22 @@ export default function AdminStatsStudentsTab({
 
                                 {/* Column 3 (col-span-5): Quizzes & Submissions Feed (Split 50/50 vertically and scroll locked) */}
                                 <div className="md:col-span-5 flex flex-col h-full pl-2 min-h-0 overflow-hidden pb-4">
-                                    
                                     {/* 1. Nhật ký bài thi đã làm (Top half, 50% height) */}
                                     <div className="flex-1 flex flex-col min-h-0 pb-4">
                                         <h4 className="flex-shrink-0 text-xs font-black text-slate-450 uppercase tracking-wider border-b border-slate-200/60 pb-2 font-sans mb-3">
-                                            Nhật ký bài thi đã làm ({studentSubs.length})
+                                            Nhật ký bài thi đã làm (
+                                            {studentSubs.length})
                                         </h4>
                                         <div className="flex-1 overflow-y-auto space-y-5 pr-1.5 min-h-0 custom-admin-scrollbar">
                                             {studentSubs.map((sub) => {
-                                                let scoreColor = "bg-rose-50 text-rose-700 border border-rose-100";
+                                                let scoreColor =
+                                                    "bg-rose-50 text-rose-700 border border-rose-100";
                                                 if (sub.score >= 8) {
-                                                    scoreColor = "bg-emerald-50 text-emerald-700 border border-emerald-100";
+                                                    scoreColor =
+                                                        "bg-emerald-50 text-emerald-700 border border-emerald-100";
                                                 } else if (sub.score >= 5) {
-                                                    scoreColor = "bg-amber-50 text-amber-700 border border-amber-100";
+                                                    scoreColor =
+                                                        "bg-amber-50 text-amber-700 border border-amber-100";
                                                 }
 
                                                 return (
@@ -724,23 +1133,37 @@ export default function AdminStatsStudentsTab({
                                                             <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-slate-400 font-bold font-mono">
                                                                 <span className="flex items-center gap-1">
                                                                     <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                                    {formatDateTimeFriendly(sub.submittedAt)}
+                                                                    {formatDateTimeFriendly(
+                                                                        sub.submittedAt,
+                                                                    )}
                                                                 </span>
-                                                                {sub.timeSpent !== undefined && (
+                                                                {sub.timeSpent !==
+                                                                    undefined && (
                                                                     <span className="flex items-center gap-1">
                                                                         <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                                        Thời gian làm: {formatTimeFriendly(sub.timeSpent)}
+                                                                        Thời
+                                                                        gian
+                                                                        làm:{" "}
+                                                                        {formatTimeFriendly(
+                                                                            sub.timeSpent,
+                                                                        )}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100/50">
-                                                            <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold font-mono ${scoreColor}`}>
+                                                            <span
+                                                                className={`px-3 py-1 rounded-full text-[10px] font-extrabold font-mono ${scoreColor}`}
+                                                            >
                                                                 {sub.score} / 10
                                                             </span>
                                                             <button
                                                                 type="button"
-                                                                onClick={() => onReviewSubmission(sub)}
+                                                                onClick={() =>
+                                                                    onReviewSubmission(
+                                                                        sub,
+                                                                    )
+                                                                }
                                                                 className="px-4 py-1.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
                                                             >
                                                                 Xem chi tiết
@@ -752,7 +1175,8 @@ export default function AdminStatsStudentsTab({
 
                                             {completedCount === 0 && (
                                                 <p className="text-xs text-slate-400 italic py-4">
-                                                    Học sinh chưa thực hiện bài thi nào.
+                                                    Học sinh chưa thực hiện bài
+                                                    thi nào.
                                                 </p>
                                             )}
                                         </div>
@@ -761,19 +1185,34 @@ export default function AdminStatsStudentsTab({
                                     {/* 2. Đề thi chưa làm (Bottom half, 50% height) */}
                                     <div className="flex-1 flex flex-col min-h-0 pt-4 border-t border-slate-200/60 dark:border-slate-800/60">
                                         <h4 className="flex-shrink-0 text-xs font-black text-slate-450 uppercase tracking-wider border-b border-slate-200/60 pb-2 font-sans mb-3">
-                                            Đề thi chưa làm ({uncompletedQuizzes.length})
+                                            Đề thi chưa làm (
+                                            {uncompletedQuizzes.length})
                                         </h4>
                                         <div className="flex-1 overflow-y-auto space-y-5 pr-1.5 min-h-0 custom-admin-scrollbar">
                                             {uncompletedQuizzes.map((quiz) => {
                                                 const sectionCount =
-                                                    quiz.scoringConfig?.sections?.length ||
-                                                    new Set(quiz.questions.map((q) => q.sectionTitle).filter(Boolean)).size ||
+                                                    quiz.scoringConfig?.sections
+                                                        ?.length ||
+                                                    new Set(
+                                                        quiz.questions
+                                                            .map(
+                                                                (q) =>
+                                                                    q.sectionTitle,
+                                                            )
+                                                            .filter(Boolean),
+                                                    ).size ||
                                                     1;
 
                                                 const formattedDate = (() => {
-                                                    if (!quiz.createdAt) return "Chưa rõ";
-                                                    const dateParts = quiz.createdAt.split("-");
-                                                    if (dateParts.length === 3) {
+                                                    if (!quiz.createdAt)
+                                                        return "Chưa rõ";
+                                                    const dateParts =
+                                                        quiz.createdAt.split(
+                                                            "-",
+                                                        );
+                                                    if (
+                                                        dateParts.length === 3
+                                                    ) {
                                                         return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
                                                     }
                                                     return quiz.createdAt;
@@ -791,14 +1230,34 @@ export default function AdminStatsStudentsTab({
                                                             <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-slate-400 font-bold font-mono">
                                                                 <span className="flex items-center gap-1">
                                                                     <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                                    {quiz.duration} phút
+                                                                    {
+                                                                        quiz.duration
+                                                                    }{" "}
+                                                                    phút
                                                                 </span>
                                                                 <span>•</span>
-                                                                <span>{quiz.questions.length} câu hỏi</span>
+                                                                <span>
+                                                                    {
+                                                                        quiz
+                                                                            .questions
+                                                                            .length
+                                                                    }{" "}
+                                                                    câu hỏi
+                                                                </span>
                                                                 <span>•</span>
-                                                                <span>{sectionCount} phần</span>
+                                                                <span>
+                                                                    {
+                                                                        sectionCount
+                                                                    }{" "}
+                                                                    phần
+                                                                </span>
                                                                 <span>•</span>
-                                                                <span className="font-sans">Ngày: {formattedDate}</span>
+                                                                <span className="font-sans">
+                                                                    Ngày:{" "}
+                                                                    {
+                                                                        formattedDate
+                                                                    }
+                                                                </span>
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100/50">
@@ -810,14 +1269,15 @@ export default function AdminStatsStudentsTab({
                                                 );
                                             })}
 
-                                            {uncompletedQuizzes.length === 0 && (
+                                            {uncompletedQuizzes.length ===
+                                                0 && (
                                                 <p className="text-xs text-slate-400 italic py-4">
-                                                    Đã hoàn thành xuất sắc tất cả đề thi! 🌸
+                                                    Đã hoàn thành xuất sắc tất
+                                                    cả đề thi! 🌸
                                                 </p>
                                             )}
                                         </div>
                                     </div>
-
                                 </div>
                             </>
                         );

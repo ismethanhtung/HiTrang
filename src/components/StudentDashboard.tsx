@@ -3568,8 +3568,8 @@ export default function StudentDashboard({
                                                             {/* Left Box: Activity calendar */}
                                                             <div className="w-full text-left flex flex-col gap-2.5">
                                                                 <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
-                                                                    Tần suất
-                                                                    hoạt động
+                                                                    Tần suất làm
+                                                                    bài
                                                                 </h4>
 
                                                                 <div className="w-full max-w-[140px] flex flex-col gap-2">

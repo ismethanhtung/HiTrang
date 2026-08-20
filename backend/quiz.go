@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -158,15 +159,38 @@ func HandleUpdateQuiz(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Ensure we don't accidentally override created_at
-		delete(updateData, "created_at")
-		delete(updateData, "created_by")
+		// Map JSON keys to DB column names
+		columnMapping := map[string]string{
+			"title":         "title",
+			"description":   "description",
+			"subject":       "subject",
+			"duration":      "duration",
+			"grade":         "grade",
+			"isPublic":      "is_public",
+			"questions":     "questions",
+			"scoringConfig": "scoring_config",
+		}
 
-		// If questions are present, parse them correctly (GORM handles json fields)
-		// Wait, mapping generic JSON map to GORM JSON field: GORM expects the exact types, or serialized maps.
-		// Since GORM JSON serializer handles structs, let's parse into a Quiz struct partially or update GORM.
-		// Let's bind directly to GORM by updating the quiz fields manually
-		if err := db.Model(&quiz).Updates(updateData).Error; err != nil {
+		dbUpdateData := make(map[string]interface{})
+		for k, v := range updateData {
+			dbCol, ok := columnMapping[k]
+			if !ok {
+				continue
+			}
+
+			if dbCol == "questions" || dbCol == "scoring_config" {
+				jsonBytes, err := json.Marshal(v)
+				if err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Lỗi định dạng dữ liệu JSON cho cột " + dbCol})
+					return
+				}
+				dbUpdateData[dbCol] = string(jsonBytes)
+			} else {
+				dbUpdateData[dbCol] = v
+			}
+		}
+
+		if err := db.Model(&quiz).Updates(dbUpdateData).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cập nhật đề thi thất bại: " + err.Error()})
 			return
 		}
