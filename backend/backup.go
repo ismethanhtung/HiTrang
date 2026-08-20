@@ -162,7 +162,7 @@ func PerformRestore(db *gorm.DB, zipReader *zip.Reader) error {
 	}
 
 	// Execute restoring inside a transaction
-	return db.Transaction(func(tx *gorm.DB) error {
+	err := db.Transaction(func(tx *gorm.DB) error {
 		// Clear existing tables in reverse dependency order
 		if err := tx.Exec("SET FOREIGN_KEY_CHECKS = 0").Error; err != nil {
 			return err
