@@ -147,6 +147,98 @@ export default function LandingPage({
                 </div>
             </section>
 
+            {/* HONORED HIGH-SCORING STUDENTS TIMELINE SECTION */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-slate-200/85 bg-transparent">
+                {/* Headline matching user's image typography style */}
+                <div className="text-center max-w-2xl mx-auto mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#233142] leading-[1.25] tracking-tight">
+                        Những gương mặt tiêu biểu <br />
+                        đạt điểm cao <span className="font-serif italic text-rose-500">học cô Trang</span>
+                    </h2>
+                </div>
+
+                {/* Timeline Axis & Cards wrapper */}
+                <div className="relative w-full">
+                    {/* Horizontal Line - hidden on mobile, visible on md/lg screens */}
+                    <div className="hidden md:block absolute top-[52px] left-[12%] right-[12%] h-[1px] bg-slate-200 dark:bg-slate-700/60 z-0"></div>
+
+                    {/* Timeline columns grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+                        {/* Student 01 */}
+                        <div className="flex flex-col items-center text-center group">
+                            {/* Number and Dot indicator */}
+                            <div className="flex flex-col items-center mb-6">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 select-none">
+                                    01
+                                </span>
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white bg-indigo-500 dark:border-slate-900 shadow-sm z-10"></div>
+                            </div>
+
+                            {/* Card */}
+                            <div className="w-full bg-white border border-slate-100 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
+                                <h3 className="text-base font-bold text-slate-800">
+                                    Nguyễn Thanh Phong
+                                </h3>
+                                <p className="text-[11px] font-bold text-[#3B6D85] uppercase tracking-wider mt-1">
+                                    10.0 Điểm môn Toán
+                                </p>
+                                <p className="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+                                    Thủ khoa khối A1 tỉnh Gia Lai, đỗ Đại học Ngoại thương Hà Nội. Học sinh xuất sắc chuyên Toán trường THPT Chuyên Hùng Vương.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Student 02 */}
+                        <div className="flex flex-col items-center text-center group">
+                            {/* Number and Dot indicator */}
+                            <div className="flex flex-col items-center mb-6">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 select-none">
+                                    02
+                                </span>
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white bg-amber-500 dark:border-slate-900 shadow-sm z-10"></div>
+                            </div>
+
+                            {/* Card */}
+                            <div className="w-full bg-white border border-slate-100 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
+                                <h3 className="text-base font-bold text-slate-800">
+                                    Lê Thị Mai Chi
+                                </h3>
+                                <p className="text-[11px] font-bold text-[#3B6D85] uppercase tracking-wider mt-1">
+                                    9.8 Điểm môn Toán
+                                </p>
+                                <p className="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+                                    Đỗ Đại học Bách Khoa TP.HCM chuyên ngành Khoa học Máy tính. Đạt giải Ba Học sinh Giỏi cấp Tỉnh môn Toán.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Student 03 */}
+                        <div className="flex flex-col items-center text-center group">
+                            {/* Number and Dot indicator */}
+                            <div className="flex flex-col items-center mb-6">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 select-none">
+                                    03
+                                </span>
+                                <div className="w-3.5 h-3.5 rounded-full border-2 border-white bg-rose-500 dark:border-slate-900 shadow-sm z-10"></div>
+                            </div>
+
+                            {/* Card */}
+                            <div className="w-full bg-white border border-slate-100 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
+                                <h3 className="text-base font-bold text-slate-800">
+                                    Trần Minh Đức
+                                </h3>
+                                <p className="text-[11px] font-bold text-[#3B6D85] uppercase tracking-wider mt-1">
+                                    9.6 Điểm môn Toán
+                                </p>
+                                <p className="text-xs text-slate-500 mt-3 font-medium leading-relaxed">
+                                    Đỗ Đại học Y Dược TP.HCM ngành Y đa khoa. Á khoa tổ hợp khối B trường THPT Chuyên Hùng Vương Gia Lai.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* PUBLIC QUIZZES CATALOG & GRADE SELECTION GRID */}
             <section
                 id="public-quiz-grid"

@@ -164,7 +164,12 @@ export default function Topbar({
                         onClick={onNavigateHome}
                         className="flex items-center gap-2 group cursor-pointer focus:outline-none"
                     >
-                        <span className="font-calligraphy text-1xl sm:text-2xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
+                        <img
+                            src="/logos/lotus.gif"
+                            alt="Logo"
+                            className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                        />
+                        <span className="font-calligraphy text-xl sm:text-xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
                             HiTrang
                         </span>
                     </button>

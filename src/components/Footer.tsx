@@ -24,7 +24,12 @@ export default function Footer({
                     {/* Column 1: Teacher Contact Info */}
                     <div className="md:col-span-5 space-y-4">
                         <div className="flex items-center gap-2">
-                            <span className="font-calligraphy text-2xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight">
+                            <img
+                                src="/logos/lotus.gif"
+                                alt="Logo"
+                                className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                            />
+                            <span className="font-calligraphy text-xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight">
                                 HiTrang
                             </span>
                         </div>
@@ -40,7 +45,8 @@ export default function Footer({
                             <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
                                 <div>
                                     <span>
-                                        Địa chỉ: Hẻm 111 Phùng Hưng, PleiKu, Gia Lai
+                                        Địa chỉ: Hẻm 111 Phùng Hưng, PleiKu, Gia
+                                        Lai
                                     </span>
                                 </div>
                                 <div>
