@@ -37,69 +37,79 @@ export default function AdminBugsTab({ bugReports, loading }: AdminBugsTabProps)
                 </div>
             </div>
 
-            {/* List */}
-            {loading ? (
-                <div className="py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl">
-                    <div className="w-8 h-8 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
-                    <span className="text-xs font-semibold text-slate-500 mt-3">
-                        Đang tải danh sách báo cáo...
-                    </span>
-                </div>
-            ) : bugReports.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
-                    <AlertCircle className="w-8 h-8 text-slate-350" />
-                    <p className="text-xs text-slate-400 italic">
-                        Chưa ghi nhận bất kỳ báo cáo lỗi nào trên hệ thống.
-                    </p>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {bugReports.map((report) => (
-                        <div
-                            key={report.id}
-                            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-5 hover:shadow-sm transition-all duration-200 flex flex-col gap-4 relative overflow-hidden"
-                        >
-                            {/* Decorative side badge */}
-                            <div className="absolute top-0 left-0 w-1.5 h-full bg-rose-455" />
-
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-rose-50 dark:bg-rose-950/20 text-rose-500 rounded-lg flex items-center justify-center shrink-0">
-                                        <ShieldAlert className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200">
-                                            Người gửi: {report.reporterName}
-                                        </h4>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            {/* Registered account details */}
-                                            {report.userId ? (
-                                                <span className="inline-flex items-center gap-1 text-[10px] text-[#4B726B] dark:text-brand-300 font-semibold bg-[#4B726B]/5 dark:bg-[#4B726B]/15 px-2 py-0.5 rounded">
-                                                    <User className="w-3 h-3" />
-                                                    Tài khoản: {report.username} ({report.userRole === "teacher" ? "Giáo viên" : "Học sinh"})
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 font-semibold bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded">
-                                                    Khách vãng lai / Chưa đăng nhập
-                                                </span>
-                                            )}
+            {/* Bugs List Table */}
+            <div className="bg-bg-card rounded-2xl overflow-hidden shadow-2xs">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
+                            <th className="py-2.5 px-4 w-[140px]">Thời gian</th>
+                            <th className="py-2.5 px-4 w-[160px]">Người gửi</th>
+                            <th className="py-2.5 px-4 w-[200px]">Tài khoản hệ thống</th>
+                            <th className="py-2.5 px-4">Nội dung báo lỗi</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/50 text-xs text-slate-650">
+                        {loading ? (
+                            <tr>
+                                <td colSpan={4} className="py-8 text-center text-slate-450">
+                                    <div className="w-6 h-6 border-2 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto" />
+                                    <span className="text-[10px] font-semibold text-slate-400 block mt-2">
+                                        Đang tải danh sách báo cáo...
+                                    </span>
+                                </td>
+                            </tr>
+                        ) : bugReports.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-12 text-center text-slate-400 italic">
+                                    <AlertCircle className="w-6 h-6 text-slate-350 mx-auto mb-1.5" />
+                                    <span>Chưa ghi nhận bất kỳ báo cáo lỗi nào trên hệ thống.</span>
+                                </td>
+                            </tr>
+                        ) : (
+                            bugReports.map((report) => (
+                                <tr key={report.id} className="hover:bg-slate-50/30 transition-colors">
+                                    {/* Time */}
+                                    <td className="py-3 px-4 text-slate-400 font-mono text-[11px] whitespace-nowrap">
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3 text-slate-350 shrink-0" />
+                                            <span>{formatDate(report.createdAt)}</span>
                                         </div>
-                                    </div>
-                                </div>
+                                    </td>
 
-                                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium sm:self-start">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <span>{formatDate(report.createdAt)}</span>
-                                </div>
-                            </div>
+                                    {/* Reporter Name */}
+                                    <td className="py-3 px-4 font-bold text-slate-850 dark:text-slate-200">
+                                        {report.reporterName}
+                                    </td>
 
-                            <div className="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850/60 rounded-xl p-3.5 text-xs text-slate-700 dark:text-slate-250 leading-relaxed font-sans whitespace-pre-wrap">
-                                {report.description}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                                    {/* System Account */}
+                                    <td className="py-3 px-4">
+                                        {report.userId ? (
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                                    <User className="w-3.5 h-3.5 text-[#4B726B]" />
+                                                    {report.username}
+                                                </span>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pl-4.5">
+                                                    {report.userRole === "teacher" ? "Giáo viên" : "Học sinh"}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-400 font-medium bg-slate-50 dark:bg-slate-850 px-1.5 py-0.5 rounded">
+                                                Khách vãng lai
+                                            </span>
+                                        )}
+                                    </td>
+
+                                    {/* Details */}
+                                    <td className="py-3 px-4 text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-sans">
+                                        {report.description}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

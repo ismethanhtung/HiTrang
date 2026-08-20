@@ -24,6 +24,7 @@ import {
 } from "./lib/supabaseService";
 import GradeView from "./components/GradeView";
 import LeaderboardView from "./components/LeaderboardView";
+import ScheduleView from "./components/ScheduleView";
 import {
     HelpCircle,
     X,
@@ -68,6 +69,8 @@ export default function App() {
             return { route: "teacher" };
         if (cleanPath === "/admin") return { route: "admin" };
         if (cleanPath === "/leaderboard") return { route: "leaderboard" };
+        if (cleanPath === "/lich" || cleanPath === "/schedule")
+            return { route: "schedule" };
 
         const gradeMatch = cleanPath.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
         if (gradeMatch) return { route: "grade", gradeId: gradeMatch[1] };
@@ -499,6 +502,11 @@ export default function App() {
                             navigateTo("/leaderboard");
                         }
                     }}
+                    onNavigateSchedule={() => {
+                        if (confirmNavigation()) {
+                            navigateTo("/lich");
+                        }
+                    }}
                     activeTab={activeTab}
                     currentPath={currentPath}
                 />
@@ -583,6 +591,8 @@ export default function App() {
                             onLogin={handleLogin}
                             navigateTo={navigateTo}
                         />
+                    ) : routeInfo.route === "schedule" ? (
+                        <ScheduleView user={user} onNavigate={navigateTo} />
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                         <LandingPage

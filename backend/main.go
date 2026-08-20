@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.17"
+const AppVersion = "1.0.20"
 
 func main() {
 	// 1. Configuration
@@ -88,11 +88,16 @@ func main() {
 		&Submission{},
 		&UserOverallStats{},
 		&BugReport{},
+		&ScheduleSlot{},
+		&SystemSetting{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
 	}
 	log.Println("Migration hoàn tất!")
+
+	// Seed Schedule
+	SeedScheduleIfEmpty(db)
 
 	// 4. Auto Restore if Empty Database
 	AutoRestoreIfEmpty(db, "/app/backup")
@@ -140,6 +145,7 @@ func main() {
 				"version": AppVersion,
 			})
 		})
+		api.GET("/schedule", HandleGetSchedule(db))
 		api.POST("/auth/verify-admin", func(c *gin.Context) {
 			var req struct {
 				Password string `json:"password" binding:"required"`
@@ -198,6 +204,10 @@ func main() {
 			// Bug Reports
 			protected.POST("/bugs", HandleCreateBugReport(db))
 			protected.GET("/admin/bugs", HandleGetBugReports(db))
+
+			// Schedule & Settings
+			protected.PUT("/admin/schedule", HandleUpdateSchedule(db))
+			protected.PUT("/admin/settings", HandleUpdateSettings(db))
 
 			// Backups
 			protected.GET("/admin/backup", HandleDownloadBackup(db))

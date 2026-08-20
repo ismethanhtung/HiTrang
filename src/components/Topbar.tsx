@@ -9,6 +9,7 @@ import {
     Search,
     Trophy,
     Crown,
+    Calendar,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -22,6 +23,7 @@ interface TopbarProps {
     onNavigateSettings: (tab?: "profile" | "history") => void;
     currentPath: string;
     onNavigateLeaderboard: () => void;
+    onNavigateSchedule: () => void;
     activeTab: string;
     quizzes: Quiz[];
 }
@@ -37,6 +39,7 @@ export default function Topbar({
     onNavigateSettings,
     currentPath,
     onNavigateLeaderboard,
+    onNavigateSchedule,
     activeTab,
     quizzes,
 }: TopbarProps) {
@@ -246,6 +249,16 @@ export default function Topbar({
                                 )}
                             </div>
                         ))}
+                        <button
+                            onClick={onNavigateSchedule}
+                            className={navButtonClass(
+                                currentPath === "/lich" || currentPath === "/schedule",
+                            )}
+                        >
+                            <Calendar className="w-3.5 h-3.5 text-[#8B7355]" />
+                            <span>Lịch học</span>
+                        </button>
+
                         {user && (
                             <button
                                 onClick={onNavigateLeaderboard}

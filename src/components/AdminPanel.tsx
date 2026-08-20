@@ -23,6 +23,7 @@ import {
     Upload,
     Activity,
     Bug,
+    Calendar,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -33,6 +34,7 @@ import AdminStatsStudentsTab from "./AdminStatsStudentsTab";
 import AdminSubmissionReviewer from "./AdminSubmissionReviewer";
 import AdminApiTab from "./AdminApiTab";
 import AdminBugsTab from "./AdminBugsTab";
+import AdminScheduleTab from "./AdminScheduleTab";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -65,6 +67,7 @@ export default function AdminPanel({
         | "stats-students"
         | "api-monitor"
         | "bugs"
+        | "schedule"
     >("plans");
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
@@ -102,7 +105,8 @@ export default function AdminPanel({
             | "stats-quizzes"
             | "stats-students"
             | "api-monitor"
-            | "bugs",
+            | "bugs"
+            | "schedule",
     ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
@@ -366,13 +370,22 @@ export default function AdminPanel({
                             "danh sách đề thi".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             ) ||
+                            "quản lý lịch học".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
+                            "lịch học".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
+                            "lịch".includes(
+                                sidebarSearchQuery.toLowerCase(),
+                            ) ||
                             "chống gian lận".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             )) && (
                             <div className="space-y-0.5 mb-4">
                                 <div className="flex items-center justify-between px-6 py-2">
                                     <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">
-                                        QUẢN LÝ ĐỀ THI
+                                        QUẢN LÝ ĐỀ THI & LỊCH HỌC
                                     </span>
                                     <ChevronDown className="w-3 h-3 text-slate-400" />
                                 </div>
@@ -412,6 +425,31 @@ export default function AdminPanel({
                                     >
                                         <BookOpen className="w-4 h-4 shrink-0" />
                                         <span>Danh Sách Đề Thi</span>
+                                    </button>
+                                )}
+
+                                {(!sidebarSearchQuery ||
+                                    "quản lý lịch học".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    ) ||
+                                    "lịch học".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    ) ||
+                                    "lịch".includes(
+                                        sidebarSearchQuery.toLowerCase(),
+                                    )) && (
+                                    <button
+                                        onClick={() =>
+                                            handleTabClick("schedule")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "schedule"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <Calendar className="w-4 h-4 shrink-0" />
+                                        <span>Quản Lý Lịch Học</span>
                                     </button>
                                 )}
 
@@ -686,6 +724,10 @@ export default function AdminPanel({
                                 bugReports={bugReports}
                                 loading={loadingBugs}
                             />
+                        )}
+
+                        {activeTab === "schedule" && (
+                            <AdminScheduleTab />
                         )}
                     </>
                 )}

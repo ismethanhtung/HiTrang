@@ -391,3 +391,39 @@ export async function getBugReports(): Promise<BugReport[]> {
     return [];
   }
 }
+
+export interface ScheduleSlot {
+  id: string;
+  timeSlot: string;
+  dayOfWeek: number;
+  content: string;
+  color: string;
+}
+
+export interface ScheduleData {
+  slots: ScheduleSlot[];
+  settings: Record<string, string>;
+}
+
+export async function getSchedule(): Promise<ScheduleData> {
+  try {
+    return await apiRequest<ScheduleData>('/schedule');
+  } catch (err) {
+    console.error('Lỗi khi tải lịch học:', err);
+    return { slots: [], settings: {} };
+  }
+}
+
+export async function updateSchedule(slots: ScheduleSlot[]): Promise<void> {
+  await apiRequest('/admin/schedule', {
+    method: 'PUT',
+    body: JSON.stringify(slots),
+  });
+}
+
+export async function updateSystemSettings(settings: Record<string, string>): Promise<void> {
+  await apiRequest('/admin/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  });
+}

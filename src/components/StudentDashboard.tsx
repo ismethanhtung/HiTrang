@@ -3496,6 +3496,71 @@ export default function StudentDashboard({
                                             {/* Section 3.5: Tần suất hoạt động & Xếp hạng */}
                                             <div className="text-left -mt-4">
                                                 {(() => {
+                                                    const streak = (() => {
+                                                        let count = 0;
+                                                        const checkDate =
+                                                            new Date();
+                                                        checkDate.setHours(
+                                                            0,
+                                                            0,
+                                                            0,
+                                                            0,
+                                                        );
+
+                                                        const studentSubDateStrings =
+                                                            new Set(
+                                                                submissions
+                                                                    .filter(
+                                                                        (s) =>
+                                                                            s.studentId ===
+                                                                            user.id,
+                                                                    )
+                                                                    .map((s) =>
+                                                                        safeParseDate(
+                                                                            s.submittedAt,
+                                                                        ).toDateString(),
+                                                                    ),
+                                                            );
+
+                                                        const hasToday =
+                                                            studentSubDateStrings.has(
+                                                                checkDate.toDateString(),
+                                                            );
+                                                        const yesterday =
+                                                            new Date(checkDate);
+                                                        yesterday.setDate(
+                                                            checkDate.getDate() -
+                                                                1,
+                                                        );
+                                                        const hasYesterday =
+                                                            studentSubDateStrings.has(
+                                                                yesterday.toDateString(),
+                                                            );
+
+                                                        if (
+                                                            !hasToday &&
+                                                            !hasYesterday
+                                                        ) {
+                                                            return 0;
+                                                        }
+
+                                                        let current = hasToday
+                                                            ? checkDate
+                                                            : yesterday;
+                                                        while (
+                                                            studentSubDateStrings.has(
+                                                                current.toDateString(),
+                                                            )
+                                                        ) {
+                                                            count++;
+                                                            current.setDate(
+                                                                current.getDate() -
+                                                                    1,
+                                                            );
+                                                        }
+                                                        return count;
+                                                    })();
+
                                                     const today = new Date();
                                                     today.setHours(
                                                         23,
@@ -3567,9 +3632,21 @@ export default function StudentDashboard({
                                                         <div className="grid grid-cols-2 gap-x-4 w-full">
                                                             {/* Left Box: Activity calendar */}
                                                             <div className="w-full text-left flex flex-col gap-2.5">
-                                                                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5">
-                                                                    Tần suất làm
-                                                                    bài
+                                                                <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200/60 dark:border-slate-800/80 pb-1.5 flex items-center justify-between">
+                                                                    <span>
+                                                                        Tần suất
+                                                                        làm bài
+                                                                    </span>
+                                                                    {streak >
+                                                                        0 && (
+                                                                        <span className="inline-flex items-center gap-0.5 px-1   text-orange-600 dark:text-orange-400 rounded text-[9px] font-extrabold normal-case">
+                                                                            🔥{" "}
+                                                                            {
+                                                                                streak
+                                                                            }{" "}
+                                                                            ngày
+                                                                        </span>
+                                                                    )}
                                                                 </h4>
 
                                                                 <div className="w-full max-w-[140px] flex flex-col gap-2">

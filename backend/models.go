@@ -117,3 +117,18 @@ type BugReport struct {
 	CreatedAt    time.Time `json:"createdAt" gorm:"column:created_at;index"`
 	User         *User     `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:SET NULL"`
 }
+
+// ScheduleSlot represents schedule_slots table
+type ScheduleSlot struct {
+	ID        string `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	TimeSlot  string `json:"timeSlot" gorm:"column:time_slot;type:varchar(50);not null"`
+	DayOfWeek int    `json:"dayOfWeek" gorm:"column:day_of_week;not null"` // 2 = Thứ 2, ..., 8 = Chủ Nhật
+	Content   string `json:"content" gorm:"column:content;type:varchar(255)"`
+	Color     string `json:"color" gorm:"column:color;type:varchar(50)"`
+}
+
+// SystemSetting represents settings table
+type SystemSetting struct {
+	Key   string `json:"key" gorm:"primaryKey;type:varchar(100)"`
+	Value string `json:"value" gorm:"type:text"`
+}
