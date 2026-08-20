@@ -60,7 +60,7 @@ type Quiz struct {
 	Questions     []Question     `json:"questions" gorm:"type:json;serializer:json;not null"`
 	ScoringConfig *ScoringConfig `json:"scoringConfig" gorm:"column:scoring_config;type:json;serializer:json"`
 	Grade         *string        `json:"grade" gorm:"type:varchar(10)"`
-	IsPublic      bool           `json:"isPublic" gorm:"column:is_public;default:true"`
+	IsPublic      bool           `json:"isPublic" gorm:"column:is_public"`
 	CreatedBy     *string        `json:"createdBy" gorm:"column:created_by;type:varchar(36)"`
 	CreatedAt     time.Time      `json:"-" gorm:"column:created_at;index"`
 	User          *User          `json:"-" gorm:"foreignKey:CreatedBy;constraint:OnDelete:SET NULL"`

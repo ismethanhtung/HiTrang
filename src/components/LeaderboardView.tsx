@@ -247,7 +247,7 @@ export default function LeaderboardView({
     ];
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
             {/* 1. Header Vinh Danh */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">

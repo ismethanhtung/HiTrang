@@ -217,7 +217,7 @@ export default function AdminCreateQuizTab({
                                     onChange={(e) =>
                                         setQuizDescription(e.target.value)
                                     }
-                                    placeholder="VD: Đề thi thử tự luyện tập giúp củng cố kiến thức nâng cao..."
+                                    placeholder="Mặc định: Đề thi ... Lớp ... phút"
                                     className="w-full px-3.5 py-2 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none resize-none"
                                 />
                             </div>
