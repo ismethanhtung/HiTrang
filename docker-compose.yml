@@ -44,5 +44,20 @@ services:
       db:
         condition: service_healthy
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: hitrang_caddy
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
 volumes:
   mysql_data:
+  caddy_data:
+  caddy_config:

@@ -146,9 +146,9 @@ export default function Topbar({
     };
 
     const navButtonClass = (isActive: boolean) =>
-        `px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+        `px-3 py-1.5 rounded-xl text-sm font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
             isActive
-                ? "bg-brand-100/80 dark:bg-brand-500/20 text-brand-600 dark:text-brand-300 font-bold shadow-2xs"
+                ? "text-brand-600 dark:text-brand-300 font-extrabold underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-4"
                 : "text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
         }`;
 
@@ -179,7 +179,7 @@ export default function Topbar({
                                     onClick={() => {
                                         onSelectGrade(grade.id, null);
                                     }}
-                                    className={navButtonClass(false)}
+                                    className={navButtonClass(selectedGrade === grade.id)}
                                 >
                                     <span>{grade.label}</span>
                                     <ChevronDown
@@ -203,9 +203,9 @@ export default function Topbar({
                                                     );
                                                     setHoveredGradeId(null);
                                                 }}
-                                                className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                className={`w-full text-left px-4 py-2.5 text-[13px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                     !currentCategory
-                                                        ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"
+                                                        ? "text-brand-600 dark:text-brand-300 font-extrabold bg-brand-50/30 dark:bg-brand-500/5"
                                                         : "text-text-secondary"
                                                 }`}
                                             >
@@ -227,10 +227,10 @@ export default function Topbar({
                                                         );
                                                         setHoveredGradeId(null);
                                                     }}
-                                                    className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                    className={`w-full text-left px-4 py-2.5 text-[13px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                         currentCategory ===
                                                         category
-                                                            ? "text-brand-600 dark:text-brand-300 font-bold bg-brand-50/30 dark:bg-brand-500/5"
+                                                            ? "text-brand-600 dark:text-brand-300 font-extrabold bg-brand-50/30 dark:bg-brand-500/5"
                                                             : "text-text-secondary"
                                                     }`}
                                                 >
@@ -441,7 +441,11 @@ export default function Topbar({
                         onClick={() => {
                             onSelectGrade(grade.id);
                         }}
-                        className="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap cursor-pointer transition-all text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                            selectedGrade === grade.id
+                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
+                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                        }`}
                     >
                         {grade.label}
                     </button>

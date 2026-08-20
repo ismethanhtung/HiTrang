@@ -141,7 +141,7 @@ export default function Footer({
                                 onClick={() => onSelectGrade("12", "Thi thử")}
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2"
                             >
-                                Thi thử TNTHPT 🎓
+                                Thi thử TN THPT 🎓
                             </button>
                         </div>
                     </div>
@@ -190,16 +190,6 @@ export default function Footer({
                             </button>
                         </div>
                     </div>
-                </div>
-
-                {/* Bottom copyright line */}
-                <div className="border-t border-slate-100 dark:border-slate-800/80 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                        &copy; {currentYear} HiTrang.
-                    </p>
-                    <p className="text-[9px] text-slate-300 dark:text-slate-600 font-bold uppercase tracking-wider">
-                        Phát triển với sự trân trọng 🌸
-                    </p>
                 </div>
             </div>
         </footer>
