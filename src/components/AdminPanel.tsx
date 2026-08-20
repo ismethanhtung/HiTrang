@@ -3,7 +3,9 @@ import { User, Quiz, Submission } from "../types";
 import {
     getAllProfiles,
     verifyAdminPasswordWithEdgeFunction,
+    getBackendVersion,
 } from "../lib/supabaseService";
+import { FRONTEND_VERSION } from "../version";
 import {
     Shield,
     Lock,
@@ -83,14 +85,18 @@ export default function AdminPanel({
     const [userProfiles, setUserProfiles] = useState<User[]>([]);
     const [loadingProfiles, setLoadingProfiles] = useState(false);
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+    const [backendVersion, setBackendVersion] = useState<string>("loading...");
 
     const [adminReviewSubmission, setAdminReviewSubmission] =
         useState<Submission | null>(null);
 
-    // Fetch profiles on mount if already authenticated
+    // Fetch profiles and version on mount if already authenticated
     React.useEffect(() => {
         if (isAuthenticated) {
             fetchProfiles();
+            getBackendVersion()
+                .then(setBackendVersion)
+                .catch(() => setBackendVersion("unknown"));
         }
     }, [isAuthenticated]);
 
@@ -552,9 +558,14 @@ export default function AdminPanel({
                 {/* Footer divider and info */}
                 <div className="py-4 border-t border-border-primary bg-bg-card">
                     <div className="px-6 text-center">
-                        <span className="text-[9px] text-slate-400 font-medium leading-none">
-                            HiTrang v1.2.7 - Admin
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] text-slate-400 font-medium">
+                                FE Version: v{FRONTEND_VERSION}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-medium">
+                                BE Version: v{backendVersion}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </aside>

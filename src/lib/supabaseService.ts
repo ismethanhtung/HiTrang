@@ -337,3 +337,13 @@ export async function getRecentSubmissionsByGrade(grade: string): Promise<any[]>
     return [];
   }
 }
+
+export async function getBackendVersion(): Promise<string> {
+  try {
+    const data = await apiRequest<{ version: string }>('/version');
+    return data.version;
+  } catch (err) {
+    console.error('Lỗi khi lấy version backend:', err);
+    return 'unknown';
+  }
+}

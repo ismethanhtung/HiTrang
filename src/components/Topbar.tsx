@@ -357,8 +357,16 @@ export default function Topbar({
                                         @{user.username}
                                     </span>
                                 </div>
-                                <div className="w-8 h-8 rounded-full bg-brand-600 dark:bg-brand-300 text-white dark:text-slate-900 flex items-center justify-center font-extrabold text-xs flex-shrink-0 shadow-2xs">
-                                    {user.name.charAt(0).toUpperCase()}
+                                <div className="w-8 h-8 rounded-full bg-brand-600 dark:bg-brand-300 text-white dark:text-slate-900 flex items-center justify-center font-extrabold text-xs flex-shrink-0 shadow-2xs overflow-hidden">
+                                    {user.avatarUrl ? (
+                                        <img
+                                            src={user.avatarUrl}
+                                            alt={user.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        user.name.charAt(0).toUpperCase()
+                                    )}
                                 </div>
                                 <ChevronDown className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
                             </button>

@@ -12,6 +12,8 @@ import (
 	"gorm.io/gorm"
 )
 
+const AppVersion = "1.0.4"
+
 func main() {
 	// 1. Configuration
 	port := os.Getenv("PORT")
@@ -127,6 +129,11 @@ func main() {
 		api.POST("/auth/register", HandleRegister(db))
 		api.POST("/auth/login", HandleLogin(db))
 		api.POST("/auth/google", HandleGoogleOAuthLogin(db))
+		api.GET("/version", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"version": AppVersion,
+			})
+		})
 		api.POST("/auth/verify-admin", func(c *gin.Context) {
 			var req struct {
 				Password string `json:"password" binding:"required"`
