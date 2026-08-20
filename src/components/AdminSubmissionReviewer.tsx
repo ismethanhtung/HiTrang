@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Quiz, Submission } from "../types";
 import { renderMathHtml } from "../lib/math";
+import { getQuiz } from "../lib/supabaseService";
 import {
     ChevronLeft,
     ChevronRight,
@@ -22,12 +23,35 @@ export default function AdminSubmissionReviewer({
     quizzes,
 }: AdminSubmissionReviewerProps) {
     const [adminReviewQuestionIdx, setAdminReviewQuestionIdx] = useState(0);
-
-    const quiz = quizzes.find((q) => q.id === submission.quizId);
+    const [fullQuiz, setFullQuiz] = useState<Quiz | null>(null);
+    const [loadingQuiz, setLoadingQuiz] = useState(false);
+    const quiz = fullQuiz;
 
     useEffect(() => {
+        const loadFullQuiz = async () => {
+            const cachedQuiz = quizzes.find((q) => q.id === submission.quizId);
+            const hasRealQuestions =
+                cachedQuiz?.questions &&
+                cachedQuiz.questions.length > 0 &&
+                Object.keys(cachedQuiz.questions[0]).length > 0;
+
+            if (hasRealQuestions && cachedQuiz) {
+                setFullQuiz(cachedQuiz);
+            } else {
+                setLoadingQuiz(true);
+                try {
+                    const data = await getQuiz(submission.quizId);
+                    setFullQuiz(data);
+                } catch (err) {
+                    console.error("Lỗi khi tải thông tin đề thi:", err);
+                } finally {
+                    setLoadingQuiz(false);
+                }
+            }
+        };
+        loadFullQuiz();
         setAdminReviewQuestionIdx(0);
-    }, [submission]);
+    }, [submission, quizzes]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,10 +82,13 @@ export default function AdminSubmissionReviewer({
         };
     }, [quiz]);
 
-    if (!quiz) {
+    if (loadingQuiz || !quiz) {
         return (
-            <div className="p-8 bg-white border border-slate-200 rounded-2xl text-center text-gray-400 italic">
-                Không tìm thấy dữ liệu đề thi tương ứng.
+            <div className="flex flex-col items-center justify-center py-24 bg-white border border-slate-200 rounded-2xl">
+                <div className="w-8 h-8 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+                <span className="text-xs font-semibold text-slate-500 mt-3">
+                    Đang tải chi tiết đề thi...
+                </span>
             </div>
         );
     }

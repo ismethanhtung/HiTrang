@@ -31,45 +31,41 @@ func StripAnswers(questions []Question) []Question {
 
 func HandleGetQuizzes(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var quizzes []Quiz
-		if err := db.Order("created_at desc").Find(&quizzes).Error; err != nil {
+		type QuizItem struct {
+			ID             string         `json:"id"`
+			Title          string         `json:"title"`
+			Description    string         `json:"description"`
+			Subject        string         `json:"subject"`
+			Duration       int            `json:"duration"`
+			Grade          *string        `json:"grade"`
+			IsPublic       bool           `json:"isPublic" gorm:"column:is_public"`
+			CreatedAt      time.Time      `json:"createdAt" gorm:"column:created_at"`
+			ScoringConfig  *ScoringConfig `json:"scoringConfig" gorm:"column:scoring_config;type:json;serializer:json"`
+			TotalQuestions int            `json:"totalQuestions" gorm:"column:total_questions"`
+		}
+
+		var list []QuizItem
+		if err := db.Model(&Quiz{}).
+			Select("id, title, description, subject, duration, grade, is_public, created_at, scoring_config, JSON_LENGTH(questions) as total_questions").
+			Order("created_at desc").
+			Scan(&list).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tải danh sách đề thi"})
 			return
 		}
 
-		// Check role from context
-		roleVal, exists := c.Get("role")
-		role := ""
-		if exists {
-			role = roleVal.(string)
-		}
-
-		// If user is a teacher or admin, return full quizzes with questions.
-		// Otherwise (student or public guest), return empty object placeholders to preserve question count (.length)
-		// without sending massive JSON question data over the network.
-		responseQuizzes := make([]gin.H, len(quizzes))
-		for i, q := range quizzes {
-			var questions interface{}
-			if role == "teacher" || role == "admin" {
-				questions = q.Questions
-			} else {
-				dummyQs := make([]gin.H, len(q.Questions))
-				for j := range dummyQs {
-					dummyQs[j] = gin.H{}
-				}
-				questions = dummyQs
-			}
-
-			// In supabaseService.ts: getQuizzes() does some fallback to parse grade from title/metadata.
-			// GORM models has Grade database column/json. We'll populate grade.
-			// GORM serialization will format it nicely
+		responseQuizzes := make([]gin.H, len(list))
+		for i, q := range list {
 			grade := ""
 			if q.Grade != nil {
 				grade = *q.Grade
 			}
-			if grade == "" && len(q.Questions) > 0 {
-				// Keep matching UI expects in supabaseService.ts
+			if grade == "" && q.TotalQuestions > 0 {
 				grade = "10"
+			}
+
+			dummyQs := make([]gin.H, q.TotalQuestions)
+			for j := range dummyQs {
+				dummyQs[j] = gin.H{}
 			}
 
 			responseQuizzes[i] = gin.H{
@@ -78,7 +74,7 @@ func HandleGetQuizzes(db *gorm.DB) gin.HandlerFunc {
 				"description":   q.Description,
 				"subject":       q.Subject,
 				"duration":      q.Duration,
-				"questions":     questions,
+				"questions":     dummyQs,
 				"grade":         grade,
 				"isPublic":      q.IsPublic,
 				"createdAt":     q.CreatedAt.Format("2006-01-02"),
@@ -87,6 +83,29 @@ func HandleGetQuizzes(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, responseQuizzes)
+	}
+}
+
+func HandleGetQuiz(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+		var quiz Quiz
+		if err := db.First(&quiz, "id = ?", id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đề thi"})
+			return
+		}
+
+		roleVal, exists := c.Get("role")
+		role := ""
+		if exists {
+			role = roleVal.(string)
+		}
+
+		if role != "teacher" && role != "admin" {
+			quiz.Questions = StripAnswers(quiz.Questions)
+		}
+
+		c.JSON(http.StatusOK, quiz)
 	}
 }
 

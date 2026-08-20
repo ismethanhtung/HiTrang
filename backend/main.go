@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.9"
+const AppVersion = "1.0.11"
 
 func main() {
 	// 1. Configuration
@@ -173,6 +173,7 @@ func main() {
 
 			// Quizzes
 			protected.GET("/quizzes", HandleGetQuizzes(db))
+			protected.GET("/quizzes/:id", HandleGetQuiz(db))
 			protected.POST("/quizzes", HandleCreateQuiz(db))
 			protected.PUT("/quizzes/:id", HandleUpdateQuiz(db))
 			protected.DELETE("/quizzes/:id", HandleDeleteQuiz(db))

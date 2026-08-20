@@ -167,6 +167,10 @@ export async function getQuizzes(): Promise<Quiz[]> {
   }
 }
 
+export async function getQuiz(quizId: string): Promise<Quiz> {
+  return await apiRequest<Quiz>(`/quizzes/${quizId}`);
+}
+
 export async function createQuiz(quiz: Quiz, creatorId?: string): Promise<void> {
   await apiRequest('/quizzes', {
     method: 'POST',

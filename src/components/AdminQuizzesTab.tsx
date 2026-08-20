@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Quiz, Submission, Question, QuestionType } from "../types";
-import { updateQuiz, deleteQuiz } from "../lib/supabaseService";
+import { updateQuiz, deleteQuiz, getQuiz } from "../lib/supabaseService";
 import { renderMathHtml } from "../lib/math";
 import {
     Search,
@@ -68,6 +68,7 @@ export default function AdminQuizzesTab({
         Record<string, number>
     >({});
     const [editDurationOption, setEditDurationOption] = useState<string>("45");
+    const [fetchingFullQuiz, setFetchingFullQuiz] = useState(false);
 
     // Quiz visibility toggle state & helper
     const [togglingQuizId, setTogglingQuizId] = useState<string | null>(null);
@@ -133,37 +134,46 @@ export default function AdminQuizzesTab({
         }
     };
 
-    const startEditQuiz = (quiz: Quiz) => {
-        setEditingQuiz(quiz);
-        setEditTitle(quiz.title);
-        setEditDescription(quiz.description);
-        setEditIsPublic(quiz.isPublic !== undefined ? quiz.isPublic : true);
-        setEditSubject(quiz.subject || "Toán Học");
-        setEditGrade(quiz.grade || "12");
-        setEditDuration(quiz.duration || 45);
-        setEditQuestions(quiz.questions || []);
-        setEditModalTab("questions");
-        setEditCurrentQuestionIdx(0);
-        setEditExpandedHtmlQuestions({});
-        setEditFontSize(14);
+    const startEditQuiz = async (quiz: Quiz) => {
+        setFetchingFullQuiz(true);
+        try {
+            const fullQuiz = await getQuiz(quiz.id);
+            setEditingQuiz(fullQuiz);
+            setEditTitle(fullQuiz.title);
+            setEditDescription(fullQuiz.description);
+            setEditIsPublic(fullQuiz.isPublic !== undefined ? fullQuiz.isPublic : true);
+            setEditSubject(fullQuiz.subject || "Toán Học");
+            setEditGrade(fullQuiz.grade || "12");
+            setEditDuration(fullQuiz.duration || 45);
+            setEditQuestions(fullQuiz.questions || []);
+            setEditModalTab("questions");
+            setEditCurrentQuestionIdx(0);
+            setEditExpandedHtmlQuestions({});
+            setEditFontSize(14);
 
-        const durationStr = quiz.duration ? String(quiz.duration) : "45";
-        if (["15", "30", "45", "60", "90"].includes(durationStr)) {
-            setEditDurationOption(durationStr);
-        } else {
-            setEditDurationOption("other");
+            const durationStr = fullQuiz.duration ? String(fullQuiz.duration) : "45";
+            if (["15", "30", "45", "60", "90"].includes(durationStr)) {
+                setEditDurationOption(durationStr);
+            } else {
+                setEditDurationOption("other");
+            }
+
+            const scoringType = fullQuiz.scoringConfig?.type || "EQUAL_WEIGHT";
+            setEditScoringMode(scoringType);
+
+            const secPts: Record<string, number> = {};
+            if (scoringType === "SECTION_BASED" && fullQuiz.scoringConfig?.sections) {
+                fullQuiz.scoringConfig.sections.forEach((sec) => {
+                    secPts[sec.section_id] = sec.total_points;
+                });
+            }
+            setEditSectionPoints(secPts);
+        } catch (err) {
+            console.error("Lỗi khi tải chi tiết đề thi để chỉnh sửa:", err);
+            alert("Không thể tải chi tiết đề thi. Vui lòng thử lại!");
+        } finally {
+            setFetchingFullQuiz(false);
         }
-
-        const scoringType = quiz.scoringConfig?.type || "EQUAL_WEIGHT";
-        setEditScoringMode(scoringType);
-
-        const secPts: Record<string, number> = {};
-        if (scoringType === "SECTION_BASED" && quiz.scoringConfig?.sections) {
-            quiz.scoringConfig.sections.forEach((sec) => {
-                secPts[sec.section_id] = sec.total_points;
-            });
-        }
-        setEditSectionPoints(secPts);
     };
 
     const handleUpdateQuestionText = (index: number, text: string) => {
@@ -426,6 +436,16 @@ export default function AdminQuizzesTab({
 
     return (
         <div className="space-y-6 animate-in fade-in duration-200">
+            {fetchingFullQuiz && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-2xs">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-4 border border-slate-100 dark:border-slate-800">
+                        <div className="w-8 h-8 border-3 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+                        <span className="text-xs font-semibold text-slate-750 dark:text-slate-250">
+                            Đang tải chi tiết đề thi...
+                        </span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
                 <div>

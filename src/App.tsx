@@ -94,14 +94,12 @@ export default function App() {
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
-    const [submissions, setSubmissions] = useState<Submission[]>(() => {
-        const saved = localStorage.getItem("hvt_submissions");
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<
         any[] | null
     >(null);
     const [loading, setLoading] = useState(true);
+    const [loadTimeMs, setLoadTimeMs] = useState<number | null>(null);
 
     // User Session State
     const [user, setUser] = useState<User | null>(() => {
@@ -154,6 +152,7 @@ export default function App() {
     // Check Supabase session on mount
     useEffect(() => {
         const fetchInitialData = async () => {
+            const startTime = performance.now();
             setLoading(true);
             try {
                 // Wait for local session token recovery to load auth headers
@@ -209,6 +208,7 @@ export default function App() {
                         }
                         if (currentUser) {
                             setUser(currentUser);
+                            localStorage.setItem("hvt_user", JSON.stringify(currentUser));
                             if (currentUser.role === "admin") {
                                 setActiveTab("student-dashboard");
                             } else {
@@ -240,6 +240,7 @@ export default function App() {
                         }
                         if (currentUser) {
                             setUser(currentUser);
+                            localStorage.setItem("hvt_user", JSON.stringify(currentUser));
                             if (currentUser.role === "admin") {
                                 setActiveTab("student-dashboard");
                             } else {
@@ -267,6 +268,7 @@ export default function App() {
 
                     if (currentUser) {
                         setUser(currentUser);
+                        localStorage.setItem("hvt_user", JSON.stringify(currentUser));
                         if (currentUser.role === "admin") {
                             setActiveTab("student-dashboard");
                         } else {
@@ -282,6 +284,9 @@ export default function App() {
             } catch (err) {
                 console.error("Lỗi khởi tạo dữ liệu:", err);
                 setLoading(false);
+            } finally {
+                const endTime = performance.now();
+                setLoadTimeMs(Math.round(endTime - startTime));
             }
         };
         fetchInitialData();
@@ -1083,6 +1088,20 @@ export default function App() {
                             </form>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Performance / Latency Indicator */}
+            {loadTimeMs !== null && (
+                <div className="fixed bottom-1.5 left-4 z-40 flex items-center gap-1 bg-white/75 dark:bg-slate-900/75 border border-slate-200/50 dark:border-slate-800/50 rounded-md px-1.5 py-0.5 text-[9px] font-mono text-slate-400 dark:text-slate-500 shadow-2xs select-none pointer-events-none">
+                    <span className={`w-1 h-1 rounded-full ${
+                        loadTimeMs < 300 
+                            ? "bg-emerald-500" 
+                            : loadTimeMs < 800 
+                                ? "bg-amber-500" 
+                                : "bg-rose-500"
+                    }`} />
+                    <span>Load: {loadTimeMs}ms</span>
                 </div>
             )}
         </div>
