@@ -149,7 +149,7 @@ export default function Topbar({
     };
 
     const navButtonClass = (isActive: boolean) =>
-        `px-3 py-1.5 rounded-xl text-sm font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+        `px-2.5 py-1.5 rounded-xl text-sm font-bold transition-all duration-150 cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
             isActive
                 ? "text-brand-600 dark:text-brand-300 font-extrabold underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-4"
                 : "text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
@@ -159,7 +159,7 @@ export default function Topbar({
         <header className="sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
                 {/* BRAND LOGO */}
-                <div className="flex items-center gap-8">
+                <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
                     <button
                         onClick={onNavigateHome}
                         className="flex items-center gap-2 group cursor-pointer focus:outline-none"
@@ -175,7 +175,7 @@ export default function Topbar({
                     </button>
 
                     {/* NAV LINKS - CLASS/GRADE SELECTION */}
-                    <nav className="hidden md:flex items-center gap-1.5">
+                    <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
                         {grades.map((grade) => (
                             <div
                                 key={grade.id}
@@ -281,11 +281,11 @@ export default function Topbar({
                 </div>
 
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center lg:gap-3 gap-1.5">
                     {/* SEARCH BOX */}
                     <div
                         ref={searchContainerRef}
-                        className="relative hidden sm:block w-40 md:w-56 lg:w-64 flex-shrink-0"
+                        className="relative hidden sm:block w-28 md:w-36 lg:w-44 flex-shrink-0"
                     >
                         <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
                             <Search className="h-3.5 w-3.5 text-text-tertiary" />
