@@ -397,20 +397,14 @@ export interface ScheduleSlot {
   timeSlot: string;
   dayOfWeek: number;
   content: string;
-  color: string;
 }
 
-export interface ScheduleData {
-  slots: ScheduleSlot[];
-  settings: Record<string, string>;
-}
-
-export async function getSchedule(): Promise<ScheduleData> {
+export async function getSchedule(): Promise<ScheduleSlot[]> {
   try {
-    return await apiRequest<ScheduleData>('/schedule');
+    return await apiRequest<ScheduleSlot[]>('/schedule');
   } catch (err) {
     console.error('Lỗi khi tải lịch học:', err);
-    return { slots: [], settings: {} };
+    return [];
   }
 }
 
@@ -418,12 +412,5 @@ export async function updateSchedule(slots: ScheduleSlot[]): Promise<void> {
   await apiRequest('/admin/schedule', {
     method: 'PUT',
     body: JSON.stringify(slots),
-  });
-}
-
-export async function updateSystemSettings(settings: Record<string, string>): Promise<void> {
-  await apiRequest('/admin/settings', {
-    method: 'PUT',
-    body: JSON.stringify(settings),
   });
 }

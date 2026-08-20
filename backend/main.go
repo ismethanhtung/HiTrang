@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.20"
+const AppVersion = "1.0.22"
 
 func main() {
 	// 1. Configuration
@@ -89,7 +89,6 @@ func main() {
 		&UserOverallStats{},
 		&BugReport{},
 		&ScheduleSlot{},
-		&SystemSetting{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -207,7 +206,6 @@ func main() {
 
 			// Schedule & Settings
 			protected.PUT("/admin/schedule", HandleUpdateSchedule(db))
-			protected.PUT("/admin/settings", HandleUpdateSettings(db))
 
 			// Backups
 			protected.GET("/admin/backup", HandleDownloadBackup(db))

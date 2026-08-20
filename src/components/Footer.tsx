@@ -169,7 +169,7 @@ export default function Footer({
                             )}
 
                             <button
-                                onClick={onOpenContactModal}
+                                onClick={() => onNavigate("/lich")}
                                 className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
                             >
                                 Lịch học

@@ -182,7 +182,9 @@ export default function Topbar({
                                     onClick={() => {
                                         onSelectGrade(grade.id, null);
                                     }}
-                                    className={navButtonClass(selectedGrade === grade.id)}
+                                    className={navButtonClass(
+                                        selectedGrade === grade.id,
+                                    )}
                                 >
                                     <span>{grade.label}</span>
                                     <ChevronDown
@@ -252,10 +254,10 @@ export default function Topbar({
                         <button
                             onClick={onNavigateSchedule}
                             className={navButtonClass(
-                                currentPath === "/lich" || currentPath === "/schedule",
+                                currentPath === "/lich" ||
+                                    currentPath === "/schedule",
                             )}
                         >
-                            <Calendar className="w-3.5 h-3.5 text-[#8B7355]" />
                             <span>Lịch học</span>
                         </button>
 
