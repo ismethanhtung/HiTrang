@@ -38,6 +38,8 @@ services:
       - JWT_SECRET=hitrang_grading_jwt_secret_key_2026_xyz
       - ADMIN_PASSKEY=hitrang2026
       - PORT=8080
+      - VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
     volumes:
       - ./backup:/app/backup
     depends_on:

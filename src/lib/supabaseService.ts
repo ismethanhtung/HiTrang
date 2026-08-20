@@ -133,7 +133,17 @@ export async function deleteUserProfile(userId: string): Promise<void> {
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  alert('Đăng nhập qua Google OAuth chưa cấu hình cho bản Tự Host.');
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    alert("Hệ thống chưa cấu hình VITE_GOOGLE_CLIENT_ID trong file .env!");
+    return;
+  }
+  
+  const redirectUri = `${window.location.origin}/auth/google/callback`;
+  const scope = "email profile";
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}`;
+  
+  window.location.href = authUrl;
 }
 
 export async function signOutUser(): Promise<void> {

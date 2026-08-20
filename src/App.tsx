@@ -9,6 +9,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AdminPanel from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
 import Footer from "./components/Footer";
+import GoogleCallback from "./components/GoogleCallback";
 import {
     getCurrentUser,
     signOutUser,
@@ -56,6 +57,8 @@ export default function App() {
     const matchRoute = (path: string) => {
         const cleanPath = path.split("?")[0];
         if (cleanPath === "/") return { route: "home" };
+        if (cleanPath === "/auth/google/callback")
+            return { route: "google-callback" };
         if (cleanPath === "/settings")
             return { route: "settings", tab: "profile" };
         if (cleanPath === "/history")
@@ -482,6 +485,11 @@ export default function App() {
                                 </button>
                             </div>
                         )
+                    ) : routeInfo.route === "google-callback" ? (
+                        <GoogleCallback
+                            onLogin={handleLogin}
+                            navigateTo={navigateTo}
+                        />
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                         <LandingPage

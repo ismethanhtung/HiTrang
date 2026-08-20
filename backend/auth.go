@@ -1,8 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -496,5 +501,214 @@ func HandleUpdatePassword(db *gorm.DB) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"message": "Cập nhật mật khẩu thành công"})
 	}
+}
+
+type GoogleLoginRequest struct {
+	Code        string `json:"code" binding:"required"`
+	RedirectURI string `json:"redirectUri" binding:"required"`
+}
+
+func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req GoogleLoginRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu yêu cầu không hợp lệ"})
+			return
+		}
+
+		googleClientID := os.Getenv("VITE_GOOGLE_CLIENT_ID")
+		if googleClientID == "" {
+			googleClientID = os.Getenv("GOOGLE_CLIENT_ID")
+		}
+		googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+		if googleClientID == "" || googleClientSecret == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Hệ thống chưa cấu hình Google Client ID / Client Secret"})
+			return
+		}
+
+		// Exchange code for token
+		tokenURL := "https://oauth2.googleapis.com/token"
+		resp, err := http.PostForm(tokenURL, url.Values{
+			"code":          {req.Code},
+			"client_id":     {googleClientID},
+			"client_secret": {googleClientSecret},
+			"redirect_uri":  {req.RedirectURI},
+			"grant_type":    {"authorization_code"},
+		})
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không thể kết nối đến máy chủ Google OAuth: " + err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Lỗi trao đổi token với Google: " + string(bodyBytes)})
+			return
+		}
+
+		var tokenResp struct {
+			AccessToken string `json:"access_token"`
+			IDToken     string `json:"id_token"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi đọc phản hồi token từ Google"})
+			return
+		}
+
+		// Get user info from Google
+		userInfoURL := fmt.Sprintf("https://www.googleapis.com/oauth2/v3/userinfo?access_token=%s", url.QueryEscape(tokenResp.AccessToken))
+		infoResp, err := http.Get(userInfoURL)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không thể lấy thông tin người dùng từ Google: " + err.Error()})
+			return
+		}
+		defer infoResp.Body.Close()
+
+		if infoResp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(infoResp.Body)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Google từ chối cung cấp thông tin profile: " + string(bodyBytes)})
+			return
+		}
+
+		var googleUser struct {
+			Sub   string `json:"sub"`
+			Email string `json:"email"`
+			Name  string `json:"name"`
+		}
+		if err := json.NewDecoder(infoResp.Body).Decode(&googleUser); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi đọc dữ liệu profile từ Google"})
+			return
+		}
+
+		if googleUser.Email == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tài khoản Google của bạn không cung cấp địa chỉ email"})
+			return
+		}
+
+		emailClean := strings.ToLower(strings.TrimSpace(googleUser.Email))
+
+		// Check if user already exists
+		var user User
+		err = db.Preload("Profile").Where("email = ?", emailClean).First(&user).Error
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// Create new user
+				userID := uuid.New().String()
+				emailParts := strings.Split(emailClean, "@")
+				baseUsername := emailParts[0]
+				uniqueUsername := GenerateUniqueUsername(db, baseUsername)
+
+				// Create random password hash because of non-null db constraint
+				randomPass := uuid.New().String()
+				hashedBytes, _ := bcrypt.GenerateFromPassword([]byte(randomPass), bcrypt.DefaultCost)
+
+				tx := db.Begin()
+				defer func() {
+					if r := recover(); r != nil {
+						tx.Rollback()
+					}
+				}()
+
+				user = User{
+					ID:           userID,
+					Username:     uniqueUsername,
+					Email:        emailClean,
+					PasswordHash: string(hashedBytes),
+				}
+				if err := tx.Create(&user).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo tài khoản mới: " + err.Error()})
+					return
+				}
+
+				nameClean := strings.TrimSpace(googleUser.Name)
+				if nameClean == "" {
+					nameClean = uniqueUsername
+				}
+
+				profile := Profile{
+					ID:       userID,
+					Name:     nameClean,
+					Username: uniqueUsername,
+					Role:     "student",
+					Plan:     "nothing",
+				}
+				if err := tx.Create(&profile).Error; err != nil {
+					tx.Rollback()
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo hồ sơ người dùng mới: " + err.Error()})
+					return
+				}
+
+				if err := tx.Commit().Error; err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi hoàn tất giao dịch tạo tài khoản"})
+					return
+				}
+
+				user.Profile = &profile
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi truy vấn cơ sở dữ liệu: " + err.Error()})
+				return
+			}
+		}
+
+		if user.Profile == nil {
+			var profile Profile
+			if err := db.Where("id = ?", user.ID).First(&profile).Error; err == nil {
+				user.Profile = &profile
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể nạp thông tin hồ sơ của bạn"})
+				return
+			}
+		}
+
+		token, err := GenerateJWT(user.ID, user.Username, user.Profile.Role)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo mã thông báo đăng nhập JWT"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"token": token,
+			"user": gin.H{
+				"id":        user.ID,
+				"name":      user.Profile.Name,
+				"username":  user.Username,
+				"email":     user.Email,
+				"role":      user.Profile.Role,
+				"plan":      user.Profile.Plan,
+				"grade":     user.Profile.Grade,
+				"createdAt": user.Profile.CreatedAt.Format("2006-01-02"),
+			},
+		})
+	}
+}
+
+func GenerateUniqueUsername(db *gorm.DB, base string) string {
+	username := strings.ToLower(strings.TrimSpace(base))
+	var cleaned []rune
+	for _, r := range username {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			cleaned = append(cleaned, r)
+		}
+	}
+	username = string(cleaned)
+	if username == "" {
+		username = "user"
+	}
+
+	finalUsername := username
+	var count int64
+	db.Model(&User{}).Where("username = ?", finalUsername).Count(&count)
+
+	suffix := 1
+	for count > 0 {
+		finalUsername = fmt.Sprintf("%s%d", username, suffix)
+		db.Model(&User{}).Where("username = ?", finalUsername).Count(&count)
+		suffix++
+	}
+	return finalUsername
 }
 

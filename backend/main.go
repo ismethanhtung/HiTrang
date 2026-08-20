@@ -126,6 +126,7 @@ func main() {
 		// Authentication
 		api.POST("/auth/register", HandleRegister(db))
 		api.POST("/auth/login", HandleLogin(db))
+		api.POST("/auth/google", HandleGoogleOAuthLogin(db))
 		api.POST("/auth/verify-admin", func(c *gin.Context) {
 			var req struct {
 				Password string `json:"password" binding:"required"`
