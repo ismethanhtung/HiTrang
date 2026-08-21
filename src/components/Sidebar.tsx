@@ -18,6 +18,7 @@ import {
     Sun,
     Moon,
     Trophy,
+    User as UserIcon,
 } from "lucide-react";
 import { User } from "../types";
 
@@ -235,7 +236,7 @@ export default function Sidebar({
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            user.name.charAt(0)
+                            <UserIcon className="w-4.5 h-4.5 text-brand-500 dark:text-brand-400" />
                         )}
                     </div>
                     <div className="flex-1 min-w-0">

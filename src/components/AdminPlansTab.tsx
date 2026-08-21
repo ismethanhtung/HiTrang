@@ -227,7 +227,8 @@ export default function AdminPlansTab({
     }, [userProfiles]);
 
     const formatLastActive = (lastActiveAt?: string) => {
-        if (!lastActiveAt) return <span className="text-slate-400 font-medium">—</span>;
+        if (!lastActiveAt)
+            return <span className="text-slate-400 font-medium">—</span>;
 
         const date = new Date(lastActiveAt);
         const now = new Date();
@@ -244,20 +245,36 @@ export default function AdminPlansTab({
         }
 
         if (diffMins < 60) {
-            return <span className="text-slate-500 dark:text-slate-400 font-semibold">{diffMins} phút trước</span>;
+            return (
+                <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                    {diffMins} phút trước
+                </span>
+            );
         }
 
         const diffHours = Math.floor(diffMins / 60);
         if (diffHours < 24) {
-            return <span className="text-slate-500 dark:text-slate-400 font-semibold">{diffHours} giờ trước</span>;
+            return (
+                <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                    {diffHours} giờ trước
+                </span>
+            );
         }
 
         const diffDays = Math.floor(diffHours / 24);
         if (diffDays < 7) {
-            return <span className="text-slate-550 dark:text-slate-400 font-semibold">{diffDays} ngày trước</span>;
+            return (
+                <span className="text-slate-550 dark:text-slate-400 font-semibold">
+                    {diffDays} ngày trước
+                </span>
+            );
         }
 
-        return <span className="text-slate-400 font-medium">{date.toLocaleDateString("vi-VN")}</span>;
+        return (
+            <span className="text-slate-400 font-medium">
+                {date.toLocaleDateString("vi-VN")}
+            </span>
+        );
     };
 
     return (
@@ -282,46 +299,28 @@ export default function AdminPlansTab({
                 </button>
             </div>
 
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className="bg-bg-card border border-border-primary rounded-xl p-4 flex items-center justify-between shadow-3xs">
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Tổng số tài khoản
-                        </span>
-                        <span className="text-xl font-extrabold text-slate-800 dark:text-slate-200 block mt-1">
-                            {userProfiles.length}
-                        </span>
-                    </div>
-                </div>
-                <div className="bg-bg-card border border-border-primary rounded-xl p-4 flex items-center justify-between shadow-3xs">
-                    <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Đang hoạt động (Online)
-                        </span>
-                        <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block mt-1 flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            {onlineCount}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
             {/* Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                {/* Search */}
-                <div className="relative w-full sm:w-64">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                    <input
-                        type="text"
-                        placeholder="Tìm tên hoặc username..."
-                        value={searchQuery}
-                        onChange={(e) => {
-                            setSearchQuery(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500/20"
-                    />
+                {/* Search & Online Badge */}
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                        <input
+                            type="text"
+                            placeholder="Tìm tên hoặc username..."
+                            value={searchQuery}
+                            onChange={(e) => {
+                                setSearchQuery(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                        />
+                    </div>
+                    {/* Online badge */}
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap dark:bg-emerald-950/20 px-2 py-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        user online: {onlineCount}
+                    </span>
                 </div>
 
                 {/* Filters */}
@@ -377,6 +376,9 @@ export default function AdminPlansTab({
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
+                            <th className="py-2.5 px-4 text-center w-12">
+                                STT
+                            </th>
                             <th className="py-2.5 px-4">Tên Người Dùng</th>
                             <th className="py-2.5 px-4">Username</th>
                             <th className="py-2.5 px-4">Vai Trò</th>
@@ -390,7 +392,7 @@ export default function AdminPlansTab({
                         {loadingProfiles ? (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={8}
                                     className="py-8 text-center text-slate-450"
                                 >
                                     <RefreshCw className="w-5 h-5 animate-spin mx-auto text-slate-350" />
@@ -399,18 +401,23 @@ export default function AdminPlansTab({
                         ) : paginatedUsers.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={7}
+                                    colSpan={8}
                                     className="py-8 text-center text-slate-450"
                                 >
                                     Không tìm thấy tài khoản nào.
                                 </td>
                             </tr>
                         ) : (
-                            paginatedUsers.map((prof) => (
+                            paginatedUsers.map((prof, index) => (
                                 <tr
                                     key={prof.id}
                                     className="hover:bg-slate-50/30 transition-colors"
                                 >
+                                    <td className="py-3 px-4 text-center text-slate-400 font-bold">
+                                        {(currentPage - 1) * pageSize +
+                                            index +
+                                            1}
+                                    </td>
                                     <td className="py-3 px-4 font-semibold text-slate-800">
                                         {prof.name}
                                     </td>

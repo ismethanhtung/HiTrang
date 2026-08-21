@@ -10,6 +10,7 @@ import {
     Trophy,
     Crown,
     Calendar,
+    User as UserIcon,
 } from "lucide-react";
 
 interface TopbarProps {
@@ -149,15 +150,15 @@ export default function Topbar({
     };
 
     const navButtonClass = (isActive: boolean) =>
-        `px-2.5 py-1.5 rounded-xl text-sm font-bold transition-all duration-150 cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
+        `px-2 py-0.5 rounded-lg text-[12.5px] transition-all duration-150 cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${
             isActive
-                ? "text-brand-600 dark:text-brand-300 font-extrabold underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-4"
-                : "text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
+                ? "text-brand-700 dark:text-brand-300 font-black underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-[5px] opacity-100"
+                : "text-text-secondary/65 dark:text-text-secondary/55 font-bold hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
         }`;
 
     return (
         <header className="sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[54px] flex items-center justify-between">
                 {/* BRAND LOGO */}
                 <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
                     <button
@@ -167,9 +168,9 @@ export default function Topbar({
                         <img
                             src="/logos/lotus.gif"
                             alt="Logo"
-                            className="w-7 h-7 sm:w-8 sm:h-8 object-contain"
+                            className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
                         />
-                        <span className="font-calligraphy text-xl sm:text-xl text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
+                        <span className="font-calligraphy text-lg sm:text-lg text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
                             HiTrang
                         </span>
                     </button>
@@ -213,10 +214,10 @@ export default function Topbar({
                                                     );
                                                     setHoveredGradeId(null);
                                                 }}
-                                                className={`w-full text-left px-4 py-2.5 text-[13px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                     !currentCategory
-                                                        ? "text-brand-600 dark:text-brand-300 font-extrabold bg-brand-50/30 dark:bg-brand-500/5"
-                                                        : "text-text-secondary"
+                                                        ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
+                                                        : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
                                                 }`}
                                             >
                                                 <span>Tất cả</span>
@@ -237,11 +238,11 @@ export default function Topbar({
                                                         );
                                                         setHoveredGradeId(null);
                                                     }}
-                                                    className={`w-full text-left px-4 py-2.5 text-[13px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                    className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                         currentCategory ===
                                                         category
-                                                            ? "text-brand-600 dark:text-brand-300 font-extrabold bg-brand-50/30 dark:bg-brand-500/5"
-                                                            : "text-text-secondary"
+                                                            ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
+                                                            : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
                                                     }`}
                                                 >
                                                     <span>{category}</span>
@@ -368,14 +369,6 @@ export default function Topbar({
                                 }
                                 className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer flex-shrink-0"
                             >
-                                <div className="hidden sm:flex flex-col text-right flex-shrink-0">
-                                    <span className="text-xs font-bold text-text-primary leading-tight whitespace-nowrap truncate max-w-[120px]">
-                                        {user.name}
-                                    </span>
-                                    <span className="text-[10px] text-text-tertiary whitespace-nowrap truncate max-w-[120px]">
-                                        @{user.username}
-                                    </span>
-                                </div>
                                 <div className="w-8 h-8 rounded-full bg-brand-600 dark:bg-brand-300 text-white dark:text-slate-900 flex items-center justify-center font-extrabold text-xs flex-shrink-0 shadow-2xs overflow-hidden">
                                     {user.avatarUrl ? (
                                         <img
@@ -384,7 +377,7 @@ export default function Topbar({
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        user.name.charAt(0).toUpperCase()
+                                        <UserIcon className="w-4.5 h-4.5 text-white dark:text-slate-900" />
                                     )}
                                 </div>
                                 <ChevronDown className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />

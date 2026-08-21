@@ -21,6 +21,7 @@ import {
     Trophy,
     Loader2,
     Crown,
+    User as UserIcon,
 } from "lucide-react";
 import {
     Quiz,
@@ -1474,9 +1475,6 @@ export default function StudentDashboard({
                                             <Trophy className="w-4.5 h-4.5 text-amber-500" />{" "}
                                             Bảng xếp hạng thi thử
                                         </h3>
-                                        <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">
-                                            Lượt thi đầu tiên
-                                        </span>
                                     </div>
 
                                     {/* Loader hoặc Danh sách BXH */}
@@ -1495,14 +1493,24 @@ export default function StudentDashboard({
                                                 {quizLeaderboard[1] ? (
                                                     <div className="flex flex-col items-center text-center">
                                                         <div className="relative">
-                                                            <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500">
-                                                                {quizLeaderboard[1].studentName.charAt(
-                                                                    0,
+                                                            <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500 overflow-hidden">
+                                                                {quizLeaderboard[1].studentAvatarUrl ? (
+                                                                    <img
+                                                                        src={quizLeaderboard[1].studentAvatarUrl}
+                                                                        alt={quizLeaderboard[1].studentName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <UserIcon className="w-5 h-5 text-slate-455" />
                                                                 )}
                                                             </div>
-                                                            <span className="absolute -top-1.5 -right-1 text-xs">
-                                                                🥈
-                                                            </span>
+                                                            <div className="absolute -top-1.5 -right-1.5 z-20">
+                                                                <img
+                                                                    src="/icons/medal2.png"
+                                                                    className="w-5.5 h-5.5 object-contain"
+                                                                    alt="Huy chương bạc"
+                                                                />
+                                                            </div>
                                                         </div>
                                                         <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
                                                             {
@@ -1525,10 +1533,23 @@ export default function StudentDashboard({
                                                 {/* Hạng 1 */}
                                                 {quizLeaderboard[0] ? (
                                                     <div className="flex flex-col items-center text-center">
-                                                        <div className="relative">
-                                                            <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600">
-                                                                {quizLeaderboard[0].studentName.charAt(
-                                                                    0,
+                                                        <div className="relative mb-1">
+                                                            <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 z-20">
+                                                                <img
+                                                                    src="/icons/crown.png"
+                                                                    className="w-9 h-6.5 object-fill drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
+                                                                    alt="Vương miện"
+                                                                />
+                                                            </div>
+                                                            <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600 overflow-hidden">
+                                                                {quizLeaderboard[0].studentAvatarUrl ? (
+                                                                    <img
+                                                                        src={quizLeaderboard[0].studentAvatarUrl}
+                                                                        alt={quizLeaderboard[0].studentName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <UserIcon className="w-6 h-6 text-amber-500" />
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1554,14 +1575,24 @@ export default function StudentDashboard({
                                                 {quizLeaderboard[2] ? (
                                                     <div className="flex flex-col items-center text-center">
                                                         <div className="relative">
-                                                            <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80">
-                                                                {quizLeaderboard[2].studentName.charAt(
-                                                                    0,
+                                                            <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80 overflow-hidden">
+                                                                {quizLeaderboard[2].studentAvatarUrl ? (
+                                                                    <img
+                                                                        src={quizLeaderboard[2].studentAvatarUrl}
+                                                                        alt={quizLeaderboard[2].studentName}
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <UserIcon className="w-5 h-5 text-orange-750" />
                                                                 )}
                                                             </div>
-                                                            <span className="absolute -top-1.5 -right-1 text-xs">
-                                                                🥉
-                                                            </span>
+                                                            <div className="absolute -top-1.5 -right-1.5 z-20">
+                                                                <img
+                                                                    src="/icons/medal3.png"
+                                                                    className="w-5.5 h-5.5 object-contain"
+                                                                    alt="Huy chương đồng"
+                                                                />
+                                                            </div>
                                                         </div>
                                                         <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
                                                             {
@@ -1607,25 +1638,43 @@ export default function StudentDashboard({
                                                                 key={
                                                                     entry.studentId
                                                                 }
-                                                                className={`py-2.5 px-3.5 flex items-center justify-between rounded-xl transition-colors ${
+                                                                className={`py-2.5 px-3.5 flex items-center justify-between transition-colors ${
                                                                     isMe
                                                                         ? "bg-brand-50/30 font-bold border border-brand-100/50"
                                                                         : "hover:bg-slate-50/50"
                                                                 }`}
                                                             >
                                                                 <div className="flex items-center gap-3">
-                                                                    <span className="font-extrabold text-slate-400 w-6">
+                                                                    <span className="font-extrabold text-slate-400 w-6 flex items-center justify-center">
                                                                         {entry.rankPosition <=
-                                                                        3
-                                                                            ? entry.rankPosition ===
-                                                                              1
-                                                                                ? "🥇"
-                                                                                : entry.rankPosition ===
-                                                                                    2
-                                                                                  ? "🥈"
-                                                                                  : "🥉"
-                                                                            : `#${entry.rankPosition}`}
+                                                                        3 ? (
+                                                                            <img
+                                                                                src={`/icons/medal${entry.rankPosition}.png`}
+                                                                                alt={`Hạng ${entry.rankPosition}`}
+                                                                                className="w-5 h-5 object-contain"
+                                                                            />
+                                                                        ) : (
+                                                                            `#${entry.rankPosition}`
+                                                                        )}
                                                                     </span>
+                                                                    {/* Avatar */}
+                                                                    <div
+                                                                        className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden ${
+                                                                            isMe
+                                                                                ? "bg-brand-100 text-brand-700"
+                                                                                : "bg-slate-100 text-slate-600"
+                                                                        }`}
+                                                                    >
+                                                                        {entry.studentAvatarUrl ? (
+                                                                            <img
+                                                                                src={entry.studentAvatarUrl}
+                                                                                alt={entry.studentName}
+                                                                                className="w-full h-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <UserIcon className="w-4 h-4 text-slate-400" />
+                                                                        )}
+                                                                    </div>
                                                                     <div className="min-w-0">
                                                                         <p className="text-slate-800 font-semibold truncate max-w-[120px]">
                                                                             {

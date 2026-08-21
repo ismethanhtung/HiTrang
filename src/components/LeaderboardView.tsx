@@ -405,7 +405,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                getAvatarInitial(podiumOrder[0].studentName)
+                                                <UserIcon className="w-6.5 h-6.5 text-slate-400" />
                                             )}
                                         </div>
                                     </div>
@@ -452,7 +452,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                getAvatarInitial(podiumOrder[1].studentName)
+                                                <UserIcon className="w-8 h-8 text-amber-500" />
                                             )}
                                         </div>
                                     </div>
@@ -500,7 +500,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                getAvatarInitial(podiumOrder[2].studentName)
+                                                <UserIcon className="w-6.5 h-6.5 text-orange-700" />
                                             )}
                                         </div>
                                     </div>
@@ -631,7 +631,7 @@ export default function LeaderboardView({
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             ) : (
-                                                                entry.studentName.charAt(0)
+                                                                <UserIcon className="w-4.5 h-4.5 text-slate-400" />
                                                             )}
                                                         </div>
                                                         <div className="min-w-0">
