@@ -170,7 +170,7 @@ export default function Footer({
                                     onClick={() => onNavigate("/leaderboard")}
                                     className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
                                 >
-                                    Bảng xếp hạng (BXH)
+                                    Bảng xếp hạng
                                 </button>
                             )}
 

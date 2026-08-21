@@ -47,7 +47,7 @@ func GenerateJWT(userID, username, role string) (string, error) {
 }
 
 // AuthMiddleware protects routes and injects claims into context
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -74,6 +74,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// Update last active time
+		go func(uid string) {
+			db.Model(&Profile{}).Where("id = ?", uid).Update("last_active_at", time.Now())
+		}(claims.UserID)
 
 		// Inject into Gin context
 		c.Set("userID", claims.UserID)
@@ -280,27 +285,29 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		type UserResponse struct {
-			ID        string  `json:"id"`
-			Name      string  `json:"name"`
-			Username  string  `json:"username"`
-			Role      string  `json:"role"`
-			Plan      string  `json:"plan"`
-			Grade     *string `json:"grade"`
-			AvatarURL *string `json:"avatarUrl"`
-			CreatedAt string  `json:"createdAt"`
+			ID           string     `json:"id"`
+			Name         string     `json:"name"`
+			Username     string     `json:"username"`
+			Role         string     `json:"role"`
+			Plan         string     `json:"plan"`
+			Grade        *string    `json:"grade"`
+			AvatarURL    *string    `json:"avatarUrl"`
+			CreatedAt    string     `json:"createdAt"`
+			LastActiveAt *time.Time `json:"lastActiveAt"`
 		}
 
 		resp := make([]UserResponse, len(profiles))
 		for i, p := range profiles {
 			resp[i] = UserResponse{
-				ID:        p.ID,
-				Name:      p.Name,
-				Username:  p.Username,
-				Role:      p.Role,
-				Plan:      p.Plan,
-				Grade:     p.Grade,
-				AvatarURL: p.AvatarURL,
-				CreatedAt: p.CreatedAt.Format("2006-01-02"),
+				ID:           p.ID,
+				Name:         p.Name,
+				Username:     p.Username,
+				Role:         p.Role,
+				Plan:         p.Plan,
+				Grade:        p.Grade,
+				AvatarURL:    p.AvatarURL,
+				CreatedAt:    p.CreatedAt.Format("2006-01-02"),
+				LastActiveAt: p.LastActiveAt,
 			}
 		}
 

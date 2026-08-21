@@ -157,7 +157,7 @@ export default function Topbar({
 
     return (
         <header className="sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[56px] flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between">
                 {/* BRAND LOGO */}
                 <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
                     <button

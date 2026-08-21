@@ -389,9 +389,13 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <span className="absolute -top-3 -right-3 text-xl sm:text-2xl select-none z-20">
-                                            🥈
-                                        </span>
+                                        <div className="absolute -top-2.5 -right-2.5 z-20">
+                                            <img
+                                                src="/icons/medal2.png"
+                                                className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
+                                                alt="Huy chương bạc"
+                                            />
+                                        </div>
                                         <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[0].studentAvatarUrl ? (
@@ -480,9 +484,13 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <span className="absolute -top-3 -right-3 text-xl sm:text-2xl select-none z-20">
-                                            🥉
-                                        </span>
+                                        <div className="absolute -top-2.5 -right-2.5 z-20">
+                                            <img
+                                                src="/icons/medal3.png"
+                                                className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
+                                                alt="Huy chương đồng"
+                                            />
+                                        </div>
                                         <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[2].studentAvatarUrl ? (
@@ -587,13 +595,11 @@ export default function LeaderboardView({
                                                 <div className="relative z-10 flex items-center gap-6 min-w-0">
                                                     <span className="w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center">
                                                         {isTop3 ? (
-                                                            rank === 1 ? (
-                                                                "🥇"
-                                                            ) : rank === 2 ? (
-                                                                "🥈"
-                                                            ) : (
-                                                                "🥉"
-                                                            )
+                                                            <img
+                                                                src={`/icons/medal${rank}.png`}
+                                                                alt={`Hạng ${rank}`}
+                                                                className="w-5.5 h-5.5 object-contain"
+                                                            />
                                                         ) : (
                                                             <span className="text-slate-450">
                                                                 #{rank}

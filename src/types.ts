@@ -41,6 +41,7 @@ export interface User {
   grade?: string;
   avatarUrl?: string;
   createdAt?: string;
+  lastActiveAt?: string;
 }
 
 export interface Submission {

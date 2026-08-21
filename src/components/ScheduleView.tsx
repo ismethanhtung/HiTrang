@@ -348,7 +348,7 @@ export default function ScheduleView({
                                 onClick={() => onNavigate("/leaderboard")}
                                 className="text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left md:text-right border-0 bg-transparent p-0 outline-none"
                             >
-                                Bảng xếp hạng (BXH)
+                                Bảng xếp hạng
                             </button>
                         )}
 

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.22"
+const AppVersion = "1.0.23"
 
 func main() {
 	// 1. Configuration
@@ -162,7 +162,7 @@ func main() {
 
 		// Protected APIs
 		protected := api.Group("")
-		protected.Use(AuthMiddleware())
+		protected.Use(AuthMiddleware(db))
 		{
 			// User Me & Profile updates
 			protected.GET("/auth/me", HandleMe(db))

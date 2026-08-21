@@ -215,6 +215,51 @@ export default function AdminPlansTab({
         }
     };
 
+    const onlineCount = React.useMemo(() => {
+        const now = new Date();
+        return userProfiles.filter((u) => {
+            if (!u.lastActiveAt) return false;
+            const date = new Date(u.lastActiveAt);
+            const diffMs = now.getTime() - date.getTime();
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            return diffMins < 5;
+        }).length;
+    }, [userProfiles]);
+
+    const formatLastActive = (lastActiveAt?: string) => {
+        if (!lastActiveAt) return <span className="text-slate-400 font-medium">—</span>;
+
+        const date = new Date(lastActiveAt);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+
+        if (diffMins < 5) {
+            return (
+                <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Online
+                </span>
+            );
+        }
+
+        if (diffMins < 60) {
+            return <span className="text-slate-500 dark:text-slate-400 font-semibold">{diffMins} phút trước</span>;
+        }
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) {
+            return <span className="text-slate-500 dark:text-slate-400 font-semibold">{diffHours} giờ trước</span>;
+        }
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) {
+            return <span className="text-slate-550 dark:text-slate-400 font-semibold">{diffDays} ngày trước</span>;
+        }
+
+        return <span className="text-slate-400 font-medium">{date.toLocaleDateString("vi-VN")}</span>;
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-200">
             {/* Header */}
@@ -235,6 +280,31 @@ export default function AdminPlansTab({
                     <UserPlus className="w-3.5 h-3.5" />
                     Tạo tài khoản
                 </button>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="bg-bg-card border border-border-primary rounded-xl p-4 flex items-center justify-between shadow-3xs">
+                    <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Tổng số tài khoản
+                        </span>
+                        <span className="text-xl font-extrabold text-slate-800 dark:text-slate-200 block mt-1">
+                            {userProfiles.length}
+                        </span>
+                    </div>
+                </div>
+                <div className="bg-bg-card border border-border-primary rounded-xl p-4 flex items-center justify-between shadow-3xs">
+                    <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                            Đang hoạt động (Online)
+                        </span>
+                        <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block mt-1 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            {onlineCount}
+                        </span>
+                    </div>
+                </div>
             </div>
 
             {/* Filter Bar */}
@@ -312,6 +382,7 @@ export default function AdminPlansTab({
                             <th className="py-2.5 px-4">Vai Trò</th>
                             <th className="py-2.5 px-4">Plan</th>
                             <th className="py-2.5 px-4">Lớp</th>
+                            <th className="py-2.5 px-4">Hoạt động</th>
                             <th className="py-2.5 px-4 text-right">Thao tác</th>
                         </tr>
                     </thead>
@@ -319,7 +390,7 @@ export default function AdminPlansTab({
                         {loadingProfiles ? (
                             <tr>
                                 <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="py-8 text-center text-slate-450"
                                 >
                                     <RefreshCw className="w-5 h-5 animate-spin mx-auto text-slate-350" />
@@ -328,7 +399,7 @@ export default function AdminPlansTab({
                         ) : paginatedUsers.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="py-8 text-center text-slate-450"
                                 >
                                     Không tìm thấy tài khoản nào.
@@ -454,6 +525,9 @@ export default function AdminPlansTab({
                                                 Không có
                                             </span>
                                         )}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        {formatLastActive(prof.lastActiveAt)}
                                     </td>
                                     <td className="py-3 px-4 text-right space-x-1.5">
                                         <button
