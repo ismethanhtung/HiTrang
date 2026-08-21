@@ -1454,7 +1454,7 @@ export default function StudentDashboard({
                         </p>
                     </div>
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
-                    <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] overflow-y-auto">
+                    <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto">
                         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
                             {/* Cột 1: Bảng xếp hạng của bài thi */}
                             <motion.div
@@ -3640,7 +3640,11 @@ export default function StudentDashboard({
                                                                     {streak >
                                                                         0 && (
                                                                         <span className="inline-flex items-center gap-0.5 px-1   text-orange-600 dark:text-orange-400 rounded text-[9px] font-extrabold normal-case">
-                                                                            🔥{" "}
+                                                                            <img
+                                                                                src="/icons/fire.png"
+                                                                                alt="streak"
+                                                                                className="w-3.5 h-3.5 object-contain"
+                                                                            />{" "}
                                                                             {
                                                                                 streak
                                                                             }{" "}

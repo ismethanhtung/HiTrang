@@ -448,7 +448,7 @@ export default function App() {
 
     return (
         <div
-            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} bg-[#F9F8F6] text-[#222B38] font-sans antialiased flex flex-col selection:bg-brand-200`}
+            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} bg-[#F9F8F6] dark:bg-bg-base text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
             {!isTakingQuiz && (

@@ -3,8 +3,8 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg-base: #F4F7F5;        /* Very light, clean sage-white backdrop */
-  --bg-surface: #F4F7F5;     /* Surface background */
+  --bg-base: #F9F8F6;        /* Very light, clean beige backdrop */
+  --bg-surface: #F9F8F6;     /* Surface background */
   --bg-card: #ffffff;        /* Pure white for dashboard cards & sidebar */
   --text-primary: #1A2824;   /* Deep Forest Sage primary text */
   --text-secondary: #455752; /* Medium sage-slate text */

@@ -231,7 +231,9 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                         <Lock className="w-4 h-4" />
                                     </span>
                                     <input
-                                        type={showPassword ? "text" : "password"}
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
                                         id="reg-confirm-password-input"
                                         placeholder="Nhập lại mật khẩu"
                                         value={confirmPassword}
@@ -258,7 +260,9 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                     <select
                                         id="reg-grade-select"
                                         value={grade}
-                                        onChange={(e) => setGrade(e.target.value)}
+                                        onChange={(e) =>
+                                            setGrade(e.target.value)
+                                        }
                                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors text-gray-700 cursor-pointer"
                                     >
                                         <option value="10">Khối 10</option>
@@ -273,13 +277,13 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     )}
 
                     {error && (
-                        <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
+                        <div className="p-1 text-xs text-red-600 font-medium">
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div className="p-3 bg-brand-50 border border-brand-200 rounded-xl text-xs text-brand-600 font-medium animate-pulse">
+                        <div className="p-1 text-xs text-brand-600 font-medium animate-pulse">
                             {success}
                         </div>
                     )}
