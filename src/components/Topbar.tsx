@@ -451,7 +451,7 @@ export default function Topbar({
 
             {/* MOBILE GRADE NAVIGATION BAR */}
             {user && (
-                <div className="md:hidden flex items-center gap-2 px-4 py-2 overflow-x-auto border-t border-border-primary bg-bg-surface/90">
+                <div className="lg:hidden flex items-center gap-2 px-4 py-2 overflow-x-auto border-t border-border-primary bg-bg-surface/90">
                     {grades.map((grade) => (
                         <button
                             key={grade.id}
@@ -467,6 +467,29 @@ export default function Topbar({
                                 {grade.label}
                         </button>
                     ))}
+                    {/* Mobile Schedule Link */}
+                    <button
+                        onClick={onNavigateSchedule}
+                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                            currentPath === "/schedule"
+                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
+                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                        }`}
+                    >
+                        Lịch học
+                    </button>
+                    {/* Mobile Leaderboard Link */}
+                    <button
+                        onClick={onNavigateLeaderboard}
+                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all flex items-center gap-1 ${
+                            currentPath === "/leaderboard"
+                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
+                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                        }`}
+                    >
+                        <Crown className="w-3 h-3 text-amber-500" />
+                        <span>BXH</span>
+                    </button>
                 </div>
             )}
         </header>

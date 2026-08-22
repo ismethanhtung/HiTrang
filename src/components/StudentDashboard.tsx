@@ -167,6 +167,8 @@ export default function StudentDashboard({
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [showMobileQuestionSheet, setShowMobileQuestionSheet] =
         useState(false);
+    const [showMobileLeaderboardSheet, setShowMobileLeaderboardSheet] =
+        useState(false);
     const [fontSize, setFontSize] = useState<number>(13); // Default font size in px
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>(
         {},
@@ -1457,9 +1459,10 @@ export default function StudentDashboard({
                         </p>
                     </div>
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
+                    <>
                     <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto">
                         <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
-                            {/* Cột 1: Bảng xếp hạng của bài thi */}
+                            {/* Cột 1: Bảng xếp hạng của bài thi — ẩn trên mobile, hiện từ lg */}
                             <motion.div
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1468,7 +1471,7 @@ export default function StudentDashboard({
                                     delay: 0.1,
                                     ease: "easeOut",
                                 }}
-                                className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-4"
+                                className="hidden lg:flex lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex-col justify-between space-y-4"
                             >
                                 <div className="space-y-4 flex-1 flex flex-col min-h-0">
                                     {/* Header BXH */}
@@ -1789,8 +1792,7 @@ export default function StudentDashboard({
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between   pb-3">
                                             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
-                                                Tiến trình làm bài (Tối đa 5
-                                                lượt)
+                                                Tiến trình làm bài
                                             </h3>
                                             <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
                                                 Đã làm: {attemptsCount}/5 lượt
@@ -1973,6 +1975,118 @@ export default function StudentDashboard({
                             </motion.div>
                         </div>
                     </div>
+
+                    {/* MOBILE CROWN FAB — chỉ hiện ở entry phase, mobile, ẩn từ lg */}
+                    <button
+                        type="button"
+                        onClick={() => setShowMobileLeaderboardSheet(true)}
+                        className="fixed right-0 top-1/2 -translate-y-1/2 lg:hidden z-40 bg-amber-500 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-amber-600 active:scale-95 transition-all border border-r-0 border-amber-400/30 min-w-[42px]"
+                    >
+                        <Crown className="w-5 h-5 text-white drop-shadow" />
+                    </button>
+
+                    {/* MOBILE LEADERBOARD BOTTOM SHEET */}
+                    <AnimatePresence>
+                        {showMobileLeaderboardSheet && (
+                            <>
+                                {/* Backdrop */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 0.5 }}
+                                    exit={{ opacity: 0 }}
+                                    onClick={() => setShowMobileLeaderboardSheet(false)}
+                                    className="fixed inset-0 bg-black z-50 lg:hidden"
+                                />
+                                {/* Slide-up sheet */}
+                                <motion.div
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 250 }}
+                                    className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl p-5 shadow-2xl z-55 lg:hidden flex flex-col gap-4"
+                                >
+                                    {/* Sheet Header */}
+                                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                                        <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
+                                            <Trophy className="w-4.5 h-4.5 text-amber-500" />
+                                            Bảng xếp hạng thi thử
+                                        </h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowMobileLeaderboardSheet(false)}
+                                            className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 cursor-pointer"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* Leaderboard content (scrollable) */}
+                                    <div className="overflow-y-auto flex-1 min-h-0 space-y-4">
+                                        {loadingQuizLeaderboard ? (
+                                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+                                                <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+                                                <span className="text-xs font-semibold">Đang tải bảng xếp hạng...</span>
+                                            </div>
+                                        ) : quizLeaderboard.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {quizLeaderboard.map((entry, index) => {
+                                                    const mins = Math.floor(entry.timeTaken / 60);
+                                                    const secs = entry.timeTaken % 60;
+                                                    const timeStr = `${mins}:${secs.toString().padStart(2, "0")}`;
+                                                    return (
+                                                        <div
+                                                            key={entry.userId}
+                                                            className={`flex items-center gap-3 p-3 rounded-xl text-xs ${
+                                                                index === 0 ? "bg-amber-50 border border-amber-100" :
+                                                                index === 1 ? "bg-slate-50 border border-slate-100" :
+                                                                index === 2 ? "bg-orange-50 border border-orange-100" :
+                                                                "bg-white border border-slate-100"
+                                                            }`}
+                                                        >
+                                                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
+                                                                index === 0 ? "bg-amber-400 text-white" :
+                                                                index === 1 ? "bg-slate-400 text-white" :
+                                                                index === 2 ? "bg-orange-400 text-white" :
+                                                                "bg-slate-200 text-slate-600"
+                                                            }`}>
+                                                                {index + 1}
+                                                            </span>
+                                                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                                                                {entry.avatarUrl ? (
+                                                                    <img src={entry.avatarUrl} alt={entry.studentName} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <UserIcon className="w-4 h-4 text-slate-400" />
+                                                                )}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="font-semibold text-slate-800 truncate">{entry.studentName}</p>
+                                                            </div>
+                                                            <div className="text-right shrink-0">
+                                                                <span className="font-extrabold text-slate-800">{entry.score}/10</span>
+                                                                <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium mt-0.5">
+                                                                    <Clock className="w-2.5 h-2.5" /> {timeStr}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400 gap-2.5">
+                                                <BookOpen className="w-8 h-8 text-slate-300" />
+                                                <span className="text-xs">Chưa có ai hoàn thành đề thi này. Hãy là người mở màn!</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-100 pt-3 shrink-0">
+                                        💡 Điểm thi trên BXH được tính theo lượt thi ĐẦU TIÊN.
+                                    </p>
+                                </motion.div>
+                            </>
+                        )}
+                    </AnimatePresence>
+                    </>
                 ) : activeQuiz && quizEntryPhase === "taking" ? (
                     <div className="w-full px-0 sm:px-4 xl:px-8 relative flex-1 h-full min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start gap-6">
                         {/* CENTER COLUMN: Question Box Card & Options */}
