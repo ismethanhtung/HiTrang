@@ -7,9 +7,14 @@ interface GoogleCallbackProps {
     navigateTo: (path: string) => void;
 }
 
-export default function GoogleCallback({ onLogin, navigateTo }: GoogleCallbackProps) {
+export default function GoogleCallback({
+    onLogin,
+    navigateTo,
+}: GoogleCallbackProps) {
     const [error, setError] = useState("");
-    const [status, setStatus] = useState("Đang liên kết với tài khoản Google của bạn...");
+    const [status, setStatus] = useState(
+        "Đang liên kết với tài khoản Google của bạn...",
+    );
 
     useEffect(() => {
         const exchangeCode = async () => {
@@ -52,14 +57,18 @@ export default function GoogleCallback({ onLogin, navigateTo }: GoogleCallbackPr
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base p-6 text-primary">
-            <div className="w-full max-w-md bg-card p-8 rounded-2xl shadow-sm border border-border-primary/40 flex flex-col items-center text-center">
+            <div className="w-full max-w-md bg-card flex flex-col items-center text-center">
                 {error ? (
                     <div className="space-y-4">
                         <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 flex items-center justify-center text-red-600 dark:text-red-400 text-2xl font-bold">
                             !
                         </div>
-                        <h2 className="text-xl font-semibold">Đăng nhập thất bại</h2>
-                        <p className="text-sm text-secondary leading-relaxed">{error}</p>
+                        <h2 className="text-xl font-semibold">
+                            Đăng nhập thất bại
+                        </h2>
+                        <p className="text-sm text-secondary leading-relaxed">
+                            {error}
+                        </p>
                         <button
                             onClick={() => navigateTo("/auth")}
                             className="w-full py-2.5 px-4 bg-base hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border-primary rounded-xl font-medium text-sm transition-colors mt-2"
@@ -71,7 +80,9 @@ export default function GoogleCallback({ onLogin, navigateTo }: GoogleCallbackPr
                     <div className="space-y-4">
                         <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mx-auto" />
                         <h2 className="text-lg font-medium">{status}</h2>
-                        <p className="text-xs text-secondary">Vui lòng không đóng màn hình này</p>
+                        <p className="text-xs text-secondary">
+                            Vui lòng không đóng màn hình này
+                        </p>
                     </div>
                 )}
             </div>
