@@ -5,6 +5,7 @@ interface FooterProps {
     onNavigate: (path: string) => void;
     onOpenContactModal: () => void;
     onOpenBugModal: () => void;
+    onOpenAuth: (mode: "login" | "register") => void;
     userLoggedIn: boolean;
 }
 
@@ -13,6 +14,7 @@ export default function Footer({
     onNavigate,
     onOpenContactModal,
     onOpenBugModal,
+    onOpenAuth,
     userLoggedIn,
 }: FooterProps) {
     const currentYear = new Date().getFullYear();
@@ -108,43 +110,43 @@ export default function Footer({
                         </h4>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                             <button
-                                onClick={() => onSelectGrade("8")}
+                                onClick={() => userLoggedIn ? onSelectGrade("8") : onOpenAuth("login")}
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 8
                             </button>
                             <button
-                                onClick={() => onSelectGrade("9")}
+                                onClick={() => userLoggedIn ? onSelectGrade("9") : onOpenAuth("login")}
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 9
                             </button>
                             <button
-                                onClick={() => onSelectGrade("10")}
+                                onClick={() => userLoggedIn ? onSelectGrade("10") : onOpenAuth("login")}
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 10
                             </button>
                             <button
-                                onClick={() => onSelectGrade("11")}
+                                onClick={() => userLoggedIn ? onSelectGrade("11") : onOpenAuth("login")}
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 11
                             </button>
                             <button
-                                onClick={() => onSelectGrade("12")}
+                                onClick={() => userLoggedIn ? onSelectGrade("12") : onOpenAuth("login")}
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 12
                             </button>
                             <button
-                                onClick={() => onSelectGrade("9", "Thi vào 10")}
+                                onClick={() => userLoggedIn ? onSelectGrade("9", "Thi vào 10") : onOpenAuth("login")}
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold"
                             >
                                 Thi vào 10 🌸
                             </button>
                             <button
-                                onClick={() => onSelectGrade("12", "Thi thử")}
+                                onClick={() => userLoggedIn ? onSelectGrade("12", "Thi thử") : onOpenAuth("login")}
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2"
                             >
                                 Thi thử TN THPT 🌸

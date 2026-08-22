@@ -789,6 +789,7 @@ export default function App() {
                                 setGlobalContactModalOpen(true)
                             }
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                            onOpenAuth={(mode) => { setAuthMode(mode); setAuthModalOpen(true); }}
                             userLoggedIn={!!user}
                         />
                     )}
