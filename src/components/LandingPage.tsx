@@ -11,9 +11,8 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
             {/* HERO SECTION - MODERN MINIMAL EDITORIAL LAYOUT */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-                    
                     {/* LEFT HERO COLUMN */}
-                    <motion.div 
+                    <motion.div
                         className="lg:col-span-7 space-y-8 text-left"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -28,7 +27,9 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                         </h1>
 
                         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed font-medium">
-                            🌸 Học tập không chỉ là lý thuyết – mà là rèn luyện tư duy, giải nhanh đề thi, bứt phá điểm số và làm chủ kiến thức cùng HiTrang.
+                            🌸 Học tập không chỉ là lý thuyết – mà là rèn luyện
+                            tư duy, giải nhanh đề thi, bứt phá điểm số và làm
+                            chủ kiến thức cùng HiTrang.
                         </p>
 
                         <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -42,11 +43,15 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                     </motion.div>
 
                     {/* RIGHT HERO COLUMN */}
-                    <motion.div 
+                    <motion.div
                         className="lg:col-span-5 flex justify-center"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
+                        transition={{
+                            duration: 0.6,
+                            delay: 0.15,
+                            ease: "easeOut",
+                        }}
                     >
                         <div className="relative w-64 h-80 sm:w-72 sm:h-96 rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 shadow-md bg-white dark:bg-slate-800">
                             <img
@@ -56,8 +61,12 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                             />
                             {/* Elegant overlay card */}
                             <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md dark:bg-slate-900/95 p-3.5 rounded-xl border border-slate-100 dark:border-slate-850 shadow-sm">
-                                <p className="text-xs font-black text-slate-900 dark:text-slate-100">Cô Trang</p>
-                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">Nơi Kiến Thức Nâng Tầm Kết Quả</p>
+                                <p className="text-xs font-black text-slate-900 dark:text-slate-100">
+                                    Cô Trang
+                                </p>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                                    Nơi Kiến Thức Nâng Tầm Kết Quả
+                                </p>
                             </div>
                         </div>
                     </motion.div>
@@ -68,8 +77,11 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-200/50 dark:border-slate-800/50 bg-transparent">
                 <div className="text-center max-w-2xl mx-auto mb-16">
                     <h2 className="text-2xl sm:text-3xl font-serif text-slate-900 dark:text-slate-100 leading-snug">
-                        Những gương mặt tiêu biểu <br />
-                        đạt điểm cao <span className="font-serif italic text-brand-600 dark:text-brand-300">học cô Trang</span>
+                        Học sinh tiêu biểu <br />
+                        đạt điểm cao{" "}
+                        <span className="font-serif italic text-brand-600 dark:text-brand-300">
+                            học cô Trang
+                        </span>
                     </h2>
                 </div>
 
@@ -98,7 +110,10 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                             initial={{ opacity: 0, y: 15 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            whileHover={{ y: -4, shadow: "0 10px 25px -5px rgba(0,0,0,0.05)" }}
+                            whileHover={{
+                                y: -4,
+                                shadow: "0 10px 25px -5px rgba(0,0,0,0.05)",
+                            }}
                             transition={{ duration: 0.2 }}
                         >
                             <div>

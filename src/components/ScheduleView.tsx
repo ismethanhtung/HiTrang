@@ -1,6 +1,52 @@
 import React, { useState, useEffect } from "react";
 import { getSchedule, ScheduleSlot } from "../lib/supabaseService";
-import { RefreshCw } from "lucide-react";
+
+const getGradeFromContent = (content: string): string | null => {
+    if (!content) return null;
+    const clean = content.toLowerCase();
+    if (clean.includes("12")) return "12";
+    if (clean.includes("11")) return "11";
+    if (clean.includes("10")) return "10";
+    if (clean.includes("9")) return "9";
+    if (clean.includes("8")) return "8";
+    return null;
+};
+
+const getGridPastelStyles = (grade: string | null): string => {
+    if (!grade) return "";
+    switch (grade) {
+        case "8":
+            return "bg-rose-100/60 text-rose-700 dark:bg-rose-500/18 dark:text-rose-300";
+        case "9":
+            return "bg-purple-100/60 text-purple-700 dark:bg-purple-500/18 dark:text-purple-300";
+        case "10":
+            return "bg-sky-100/60 text-sky-700 dark:bg-sky-500/18 dark:text-sky-300";
+        case "11":
+            return "bg-amber-100/60 text-amber-800 dark:bg-amber-500/18 dark:text-amber-300";
+        case "12":
+            return "bg-emerald-100/60 text-emerald-800 dark:bg-emerald-500/18 dark:text-emerald-300";
+        default:
+            return "";
+    }
+};
+
+const getListPastelStyles = (grade: string | null): string => {
+    if (!grade) return "";
+    switch (grade) {
+        case "8":
+            return "bg-rose-100/60 text-rose-700 dark:bg-rose-500/18 dark:text-rose-300 border border-rose-200/30 dark:border-rose-500/20 rounded-md";
+        case "9":
+            return "bg-purple-100/60 text-purple-700 dark:bg-purple-500/18 dark:text-purple-300 border border-purple-200/30 dark:border-purple-500/20 rounded-md";
+        case "10":
+            return "bg-sky-100/60 text-sky-700 dark:bg-sky-500/18 dark:text-sky-300 border border-sky-200/30 dark:border-sky-500/20 rounded-md";
+        case "11":
+            return "bg-amber-100/60 text-amber-800 dark:bg-amber-500/18 dark:text-amber-300 border border-amber-200/30 dark:border-amber-500/20 rounded-md";
+        case "12":
+            return "bg-emerald-100/60 text-emerald-800 dark:bg-emerald-500/18 dark:text-emerald-300 border border-emerald-200/30 dark:border-emerald-500/20 rounded-md";
+        default:
+            return "";
+    }
+};
 
 interface ScheduleViewProps {
     user: any;
@@ -17,7 +63,7 @@ export default function ScheduleView({
 }: ScheduleViewProps) {
     const [slots, setSlots] = useState<ScheduleSlot[]>([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<"list" | "grid" | "image">("list"); // Default to list cards for clean UI
+    const [viewMode, setViewMode] = useState<"list" | "grid" | "image">("grid"); // Default to grid for clean UI
 
     useEffect(() => {
         getSchedule().then((res) => {
@@ -92,16 +138,6 @@ export default function ScheduleView({
                     {/* Toggle view mode buttons */}
                     <div className="inline-flex bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
                         <button
-                            onClick={() => setViewMode("list")}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
-                                viewMode === "list"
-                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
-                                    : "text-slate-400 hover:text-slate-650"
-                            }`}
-                        >
-                            Theo ngày
-                        </button>
-                        <button
                             onClick={() => setViewMode("grid")}
                             className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
                                 viewMode === "grid"
@@ -110,6 +146,16 @@ export default function ScheduleView({
                             }`}
                         >
                             Lưới thời khoá biểu
+                        </button>
+                        <button
+                            onClick={() => setViewMode("list")}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
+                                viewMode === "list"
+                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
+                                    : "text-slate-400 hover:text-slate-650"
+                            }`}
+                        >
+                            Theo ngày
                         </button>
                         <button
                             onClick={() => setViewMode("image")}
@@ -125,37 +171,17 @@ export default function ScheduleView({
                 </div>
             </div>
 
-            {/* VIEW MODE SELECTION */}
             {viewMode === "list" ? (
-                /* VIEW MODE: LIST OF CARDS (Clean Flat style, 4 columns layout with vertical dividers) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-6 sm:gap-x-8">
-                    {days.map((day, index) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-6 sm:gap-x-4">
+                    {days.map((day) => {
                         const daySlots = timeRows
                             .map((time) => ({ time, slot: getSlot(time, day) }))
                             .filter((item) => item.slot && item.slot.content);
 
-                        // Force right-border for Thursday (day 5) and Sunday (day 8) as requested
-                        const isLastInRowSm =
-                            ((index + 1) % 2 === 0 || index === 6) &&
-                            day !== 5 &&
-                            day !== 8;
-                        const isLastInRowMd =
-                            ((index + 1) % 3 === 0 || index === 6) &&
-                            day !== 5 &&
-                            day !== 8;
-                        const isLastInRowLg =
-                            ((index + 1) % 4 === 0 || index === 6) &&
-                            day !== 5 &&
-                            day !== 8;
-
                         return (
                             <div
                                 key={day}
-                                className={`py-4 border-b border-slate-200 dark:border-slate-800 flex flex-col justify-between sm:pr-4 md:pr-5 lg:pr-6
-                                    ${isLastInRowSm ? "sm:border-r-0 sm:pr-0" : "sm:border-r sm:border-slate-200 dark:sm:border-slate-800"}
-                                    ${isLastInRowMd ? "md:border-r-0 md:pr-0" : "md:border-r md:border-slate-200 dark:md:border-slate-800"}
-                                    ${isLastInRowLg ? "lg:border-r-0 lg:pr-0" : "lg:border-r lg:border-slate-200 dark:lg:border-slate-800"}
-                                `}
+                                className="py-4 px-5 border border-slate-200 dark:border-slate-800 flex flex-col justify-between"
                             >
                                 <div>
                                     <div className="pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
@@ -173,19 +199,23 @@ export default function ScheduleView({
                                                 Không có lịch học
                                             </p>
                                         ) : (
-                                            daySlots.map(({ time, slot }) => (
-                                                <div
-                                                    key={time}
-                                                    className="flex items-center justify-between gap-3 text-xs"
-                                                >
-                                                    <span className="font-mono text-slate-600 dark:text-slate-300 font-bold">
-                                                        {time}
-                                                    </span>
-                                                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                                                        {slot?.content}
-                                                    </span>
-                                                </div>
-                                            ))
+                                            daySlots.map(({ time, slot }) => {
+                                                const grade = getGradeFromContent(slot?.content || "");
+                                                const pastelClass = getListPastelStyles(grade);
+                                                return (
+                                                    <div
+                                                        key={time}
+                                                        className="flex items-center justify-between gap-3 text-xs"
+                                                    >
+                                                        <span className="font-mono text-slate-600 dark:text-slate-300 font-bold">
+                                                            {time}
+                                                        </span>
+                                                        <span className={`font-bold px-2 py-0.5 ${pastelClass || "text-slate-800 dark:text-slate-200"}`}>
+                                                            {slot?.content}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
                                         )}
                                     </div>
                                 </div>
@@ -195,17 +225,17 @@ export default function ScheduleView({
                 </div>
             ) : viewMode === "grid" ? (
                 /* VIEW MODE: TABLE GRID (Clean Flat Table, transparent background, outer border, rounded corners) */
-                <div className="overflow-x-auto bg-transparent border border-slate-200 dark:border-slate-800 shadow-3xs">
-                    <table className="w-full min-w-[850px] border-collapse text-center">
+                <div className="overflow-x-auto bg-transparent border border-slate-300 dark:border-slate-800 shadow-3xs">
+                    <table className="w-full min-w-[850px] border-collapse text-center table-fixed">
                         <thead>
-                            <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 text-[11px] font-bold text-slate-455 uppercase">
+                            <tr className="border-b border-slate-300 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 text-[11px] font-bold text-slate-455 uppercase">
                                 <th className="py-3.5 px-4 w-[130px] border-r border-slate-200/60 dark:border-slate-800/60">
                                     Khung giờ
                                 </th>
                                 {days.map((day) => (
                                     <th
                                         key={day}
-                                        className="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-355 border-r border-slate-200/60 dark:border-slate-800/60 last:border-0"
+                                        className="py-3.5 px-4 w-[12.5%] font-bold text-slate-700 dark:text-slate-355 border-r border-slate-200/60 dark:border-slate-800/60 last:border-0"
                                     >
                                         {dayLabels[day]}
                                     </th>
@@ -223,17 +253,19 @@ export default function ScheduleView({
                                     </td>
                                     {days.map((day) => {
                                         const slot = getSlot(timeRow, day);
+                                        const grade = slot && slot.content ? getGradeFromContent(slot.content) : null;
+                                        const pastelClass = getGridPastelStyles(grade);
                                         return (
                                             <td
                                                 key={day}
-                                                className="p-1 border-r border-slate-200/50 dark:border-slate-800/50 last:border-0"
+                                                className={`p-0 border-r border-slate-200/50 dark:border-slate-800/50 last:border-0 align-middle ${pastelClass || "text-slate-855 dark:text-slate-200"}`}
                                             >
                                                 {slot && slot.content ? (
-                                                    <div className="py-2.5 px-2 text-xs font-bold text-slate-855 dark:text-slate-200">
+                                                    <div className="py-4 px-2 text-xs font-bold text-center">
                                                         {slot.content}
                                                     </div>
                                                 ) : (
-                                                    <div className="py-2.5 text-slate-200 dark:text-slate-800 select-none">
+                                                    <div className="py-4 text-slate-200 dark:text-slate-800 select-none">
                                                         -
                                                     </div>
                                                 )}
