@@ -165,6 +165,8 @@ export default function StudentDashboard({
         "none" | "entry" | "taking"
     >("none");
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+    const [showMobileQuestionSheet, setShowMobileQuestionSheet] =
+        useState(false);
     const [fontSize, setFontSize] = useState<number>(13); // Default font size in px
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>(
         {},
@@ -1320,7 +1322,7 @@ export default function StudentDashboard({
                                                         key={secTitle}
                                                         className="space-y-2"
                                                     >
-                                                        <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40">
+                                                        <h4 className="text-[10px] font-bold text-brand-600 bg-brand-100 px-2 py-1 rounded border border-brand-100/40">
                                                             {secTitle}
                                                         </h4>
                                                         <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-5 gap-2 p-1">
@@ -1494,10 +1496,17 @@ export default function StudentDashboard({
                                                     <div className="flex flex-col items-center text-center">
                                                         <div className="relative">
                                                             <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500 overflow-hidden">
-                                                                {quizLeaderboard[1].studentAvatarUrl ? (
+                                                                {quizLeaderboard[1]
+                                                                    .studentAvatarUrl ? (
                                                                     <img
-                                                                        src={quizLeaderboard[1].studentAvatarUrl}
-                                                                        alt={quizLeaderboard[1].studentName}
+                                                                        src={
+                                                                            quizLeaderboard[1]
+                                                                                .studentAvatarUrl
+                                                                        }
+                                                                        alt={
+                                                                            quizLeaderboard[1]
+                                                                                .studentName
+                                                                        }
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 ) : (
@@ -1542,10 +1551,17 @@ export default function StudentDashboard({
                                                                 />
                                                             </div>
                                                             <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600 overflow-hidden">
-                                                                {quizLeaderboard[0].studentAvatarUrl ? (
+                                                                {quizLeaderboard[0]
+                                                                    .studentAvatarUrl ? (
                                                                     <img
-                                                                        src={quizLeaderboard[0].studentAvatarUrl}
-                                                                        alt={quizLeaderboard[0].studentName}
+                                                                        src={
+                                                                            quizLeaderboard[0]
+                                                                                .studentAvatarUrl
+                                                                        }
+                                                                        alt={
+                                                                            quizLeaderboard[0]
+                                                                                .studentName
+                                                                        }
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 ) : (
@@ -1576,10 +1592,17 @@ export default function StudentDashboard({
                                                     <div className="flex flex-col items-center text-center">
                                                         <div className="relative">
                                                             <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80 overflow-hidden">
-                                                                {quizLeaderboard[2].studentAvatarUrl ? (
+                                                                {quizLeaderboard[2]
+                                                                    .studentAvatarUrl ? (
                                                                     <img
-                                                                        src={quizLeaderboard[2].studentAvatarUrl}
-                                                                        alt={quizLeaderboard[2].studentName}
+                                                                        src={
+                                                                            quizLeaderboard[2]
+                                                                                .studentAvatarUrl
+                                                                        }
+                                                                        alt={
+                                                                            quizLeaderboard[2]
+                                                                                .studentName
+                                                                        }
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 ) : (
@@ -1658,13 +1681,15 @@ export default function StudentDashboard({
                                                                         )}
                                                                     </span>
                                                                     {/* Avatar */}
-                                                                    <div
-                                                                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
-                                                                    >
+                                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
                                                                         {entry.studentAvatarUrl ? (
                                                                             <img
-                                                                                src={entry.studentAvatarUrl}
-                                                                                alt={entry.studentName}
+                                                                                src={
+                                                                                    entry.studentAvatarUrl
+                                                                                }
+                                                                                alt={
+                                                                                    entry.studentName
+                                                                                }
                                                                                 className="w-full h-full object-cover"
                                                                             />
                                                                         ) : (
@@ -1884,7 +1909,7 @@ export default function StudentDashboard({
                                             className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
                                         >
                                             <ChevronLeft className="w-4 h-4" />
-                                            <span>Quay lại Dashboard</span>
+                                            <span>Quay lại</span>
                                         </button>
 
                                         {isGradeMismatch ? (
@@ -1913,7 +1938,7 @@ export default function StudentDashboard({
                                                 onClick={startQuizAttempt}
                                                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
                                             >
-                                                <span>Tiếp tục làm bài</span>
+                                                <span>Tiếp tục</span>
                                                 <RefreshCw
                                                     className="w-4 h-4 animate-spin"
                                                     style={{
@@ -1949,36 +1974,43 @@ export default function StudentDashboard({
                         </div>
                     </div>
                 ) : activeQuiz && quizEntryPhase === "taking" ? (
-                    <div className="w-full px-4 xl:px-8 relative flex-1 min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start xl:h-full xl:min-h-0 gap-6">
+                    <div className="w-full px-0 sm:px-4 xl:px-8 relative flex-1 h-full min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start gap-6">
                         {/* CENTER COLUMN: Question Box Card & Options */}
-                        <div className="w-full xl:flex-1 xl:max-w-4xl xl:h-full xl:min-h-0 flex flex-col">
+                        <div className="w-full flex-1 min-h-0 xl:max-w-4xl xl:h-full flex flex-col">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.99 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="bg-white border border-gray-100 rounded-xl p-6 sm:p-8 shadow-sm space-y-6 flex flex-col justify-between xl:h-full xl:min-h-0"
+                                className="bg-white border-0 sm:border border-gray-100 rounded-none sm:rounded-xl p-4 sm:p-8 shadow-none sm:shadow-sm space-y-6 flex flex-col justify-between flex-1 min-h-0 xl:h-full"
                             >
                                 {/* Quiz Player Header */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-5">
-                                    <div>
-                                        <span className="text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-2 py-0.5 rounded-md">
-                                            {activeQuiz.subject}
-                                        </span>
-                                        <h2 className="text-sm font-bold text-slate-900 mt-2">
+                                <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-3 sm:pb-5">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-1.5 py-0.5 rounded-md shrink-0">
+                                                {activeQuiz.subject}
+                                            </span>
+                                        </div>
+                                        <h2
+                                            className="text-xs sm:text-sm font-extrabold text-slate-900 mt-1 truncate"
+                                            title={activeQuiz.title}
+                                        >
                                             {activeQuiz.title}
                                         </h2>
                                     </div>
 
                                     {/* Timer Pill */}
                                     <div
-                                        className={`flex items-center gap-2 px-3.5 py-2 rounded-lg border ${
+                                        className={`flex items-center gap-1 px-2.5 py-1 sm:px-3.5 sm:py-2 rounded-lg border ${
                                             timeLeft < 60
                                                 ? "bg-rose-50 border-rose-100 text-rose-600 animate-pulse"
                                                 : "bg-brand-50 border-brand-200 text-brand-700"
-                                        } text-xs font-bold self-start sm:self-auto`}
+                                        } text-[10px] sm:text-xs font-black shrink-0`}
                                     >
-                                        <Clock className="w-4.5 h-4.5" />
                                         <span>
-                                            Thời gian: {formatTime(timeLeft)}
+                                            <span className="hidden sm:inline">
+                                                Thời gian:{" "}
+                                            </span>
+                                            {formatTime(timeLeft)}
                                         </span>
                                     </div>
                                 </div>
@@ -1988,9 +2020,13 @@ export default function StudentDashboard({
                                     const answeredCount =
                                         activeQuiz.questions.filter((q) => {
                                             const ans = selectedAnswers[q.id];
+                                            if (
+                                                ans === undefined ||
+                                                ans === null
+                                            )
+                                                return false;
                                             if (q.type === "true_false") {
                                                 return (
-                                                    ans !== undefined &&
                                                     Array.isArray(ans) &&
                                                     ans.some(
                                                         (x) =>
@@ -1999,10 +2035,7 @@ export default function StudentDashboard({
                                                     )
                                                 );
                                             } else {
-                                                return (
-                                                    ans !== undefined &&
-                                                    ans !== ""
-                                                );
+                                                return ans !== "";
                                             }
                                         }).length;
                                     const progressPercent = Math.round(
@@ -2045,7 +2078,7 @@ export default function StudentDashboard({
                                     style={{ fontSize: `${fontSize}px` }}
                                 >
                                     {/* Question Box Card */}
-                                    <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-6 rounded-xl space-y-4">
+                                    <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-4 sm:p-6 rounded-lg sm:rounded-xl space-y-4">
                                         {activeQuiz.questions[
                                             currentQuestionIdx
                                         ].sectionTitle && (
@@ -2128,11 +2161,11 @@ export default function StudentDashboard({
                                                                                 : "border-gray-200 text-slate-700 hover:border-gray-300"
                                                                         }`}
                                                                     >
-                                                                        <div className="flex items-center gap-3">
+                                                                        <div className="flex items-start gap-3">
                                                                             <span
-                                                                                className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] ${
+                                                                                className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5 ${
                                                                                     isSelected
-                                                                                        ? "bg-brand-300 text-white font-medium"
+                                                                                        ? "bg-brand-300 text-white font-bold"
                                                                                         : "bg-slate-100 text-slate-500"
                                                                                 }`}
                                                                             >
@@ -2149,11 +2182,6 @@ export default function StudentDashboard({
                                                                                 }}
                                                                             />
                                                                         </div>
-                                                                        {isSelected && (
-                                                                            <div className="w-5 h-5 rounded-full bg-brand-300 text-white font-medium flex items-center justify-center animate-scale-in">
-                                                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                            </div>
-                                                                        )}
                                                                     </button>
                                                                 );
                                                             },
@@ -2174,7 +2202,7 @@ export default function StudentDashboard({
                                                         null,
                                                     ];
                                                 return (
-                                                    <div className="bg-slate-50 border border-slate-300 p-4 rounded-xl space-y-3 overflow-x-auto">
+                                                    <div className="bg-slate-50 border border-slate-300 p-3 sm:p-4 rounded-lg sm:rounded-xl space-y-3 overflow-x-auto">
                                                         <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase pb-2 border-b border-slate-200 min-w-[320px]">
                                                             <div className="col-span-8 sm:col-span-9">
                                                                 Khẳng định /
@@ -2348,7 +2376,7 @@ export default function StudentDashboard({
                                                     (prev) => prev + 1,
                                                 )
                                             }
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white hover:bg-brand-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
                                         >
                                             <span>Tiếp theo</span>
                                             <ChevronRight className="w-4 h-4" />
@@ -2359,7 +2387,7 @@ export default function StudentDashboard({
                         </div>
 
                         {/* RIGHT COLUMN: Questions Tracker & Quick Select Panel */}
-                        <div className="w-full xl:w-80 bg-white border border-gray-100 rounded-xl p-5 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex flex-col justify-between">
+                        <div className="hidden xl:flex xl:w-80 bg-white border border-gray-100 rounded-xl p-5 xl:p-8 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex-col justify-between">
                             <div>
                                 <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
                                     Bảng câu hỏi
@@ -2397,7 +2425,7 @@ export default function StudentDashboard({
                                                 key={secTitle}
                                                 className="space-y-2"
                                             >
-                                                <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40">
+                                                <h4 className="text-[10px] font-bold text-brand-600 bg-brand-100 px-2 py-1 rounded border border-brand-100/40">
                                                     {secTitle}
                                                 </h4>
                                                 <div className="grid grid-cols-5 sm:grid-cols-8 lg:grid-cols-5 gap-2 p-1">
@@ -2409,30 +2437,24 @@ export default function StudentDashboard({
                                                                 ];
 
                                                             // Determine if question is answered
-                                                            let isAnswered = false;
-                                                            if (
-                                                                q.type ===
+                                                            const isAnswered =
+                                                                ans !==
+                                                                    undefined &&
+                                                                ans !== null &&
+                                                                (q.type ===
                                                                 "true_false"
-                                                            ) {
-                                                                isAnswered =
-                                                                    ans !==
-                                                                        undefined &&
-                                                                    Array.isArray(
-                                                                        ans,
-                                                                    ) &&
-                                                                    ans.some(
-                                                                        (x) =>
-                                                                            x !==
-                                                                                undefined &&
-                                                                            x !==
-                                                                                null,
-                                                                    );
-                                                            } else {
-                                                                isAnswered =
-                                                                    ans !==
-                                                                        undefined &&
-                                                                    ans !== "";
-                                                            }
+                                                                    ? Array.isArray(
+                                                                          ans,
+                                                                      ) &&
+                                                                      ans.some(
+                                                                          (x) =>
+                                                                              x !==
+                                                                                  undefined &&
+                                                                              x !==
+                                                                                  null,
+                                                                      )
+                                                                    : ans !==
+                                                                      "");
 
                                                             const isCurrent =
                                                                 qIndex ===
@@ -2451,8 +2473,8 @@ export default function StudentDashboard({
                                                                         isCurrent
                                                                             ? "bg-slate-900 text-white border-slate-900 shadow-sm"
                                                                             : isAnswered
-                                                                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                                              : "bg-amber-50 text-amber-700 border-amber-200"
+                                                                              ? "bg-emerald-100/50 text-emerald-700 border-emerald-200"
+                                                                              : "bg-amber-100/50 text-amber-700 border-amber-200"
                                                                     }`}
                                                                 >
                                                                     {qIndex + 1}
@@ -2513,6 +2535,265 @@ export default function StudentDashboard({
                                 </button>
                             </div>
                         </div>
+
+                        {/* FLOATING ACTION BUTTON (FAB) FOR MOBILE DEVICES */}
+                        <button
+                            type="button"
+                            onClick={() => setShowMobileQuestionSheet(true)}
+                            className="fixed right-0 top-1/2 -translate-y-1/2 xl:hidden z-40 bg-brand-600 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-brand-700 active:scale-95 transition-all border border-r-0 border-brand-500/30 min-w-[42px]"
+                        >
+                            <span className="text-sm font-black text-white leading-none">
+                                {(() => {
+                                    const answeredCount =
+                                        activeQuiz.questions.filter((q) => {
+                                            const ans = selectedAnswers[q.id];
+                                            if (
+                                                ans === undefined ||
+                                                ans === null
+                                            )
+                                                return false;
+                                            if (q.type === "true_false") {
+                                                return (
+                                                    Array.isArray(ans) &&
+                                                    ans.some(
+                                                        (x) =>
+                                                            x !== undefined &&
+                                                            x !== null,
+                                                    )
+                                                );
+                                            } else {
+                                                return ans !== "";
+                                            }
+                                        }).length;
+                                    console.log("FAB Answered Count Debug:", {
+                                        answeredCount,
+                                        selectedAnswers,
+                                        questions: activeQuiz.questions.map(
+                                            (q) => ({ id: q.id, type: q.type }),
+                                        ),
+                                    });
+                                    return answeredCount;
+                                })()}
+                            </span>
+                        </button>
+
+                        {/* MOBILE QUESTION NAVIGATION SHEET (BOTTOM DRAWER) */}
+                        <AnimatePresence>
+                            {showMobileQuestionSheet && (
+                                <>
+                                    {/* Backdrop overlay */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.5 }}
+                                        exit={{ opacity: 0 }}
+                                        onClick={() =>
+                                            setShowMobileQuestionSheet(false)
+                                        }
+                                        className="fixed inset-0 bg-black z-50 xl:hidden"
+                                    />
+                                    {/* Slide-up bottom sheet card */}
+                                    <motion.div
+                                        initial={{ y: "100%" }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: "100%" }}
+                                        transition={{
+                                            type: "spring",
+                                            damping: 25,
+                                            stiffness: 250,
+                                        }}
+                                        className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl p-5 shadow-2xl z-55 xl:hidden flex flex-col justify-between space-y-4 animate-in slide-in-from-bottom"
+                                    >
+                                        {/* Sheet Header */}
+                                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                                            <div>
+                                                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+                                                    Bảng câu hỏi
+                                                </h3>
+                                                <p className="text-[9px] text-gray-500 mt-0.5">
+                                                    Chọn số câu để di chuyển
+                                                    nhanh.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setShowMobileQuestionSheet(
+                                                        false,
+                                                    )
+                                                }
+                                                className="p-1 rounded-md text-gray-400 hover:text-slate-650 dark:hover:text-slate-200"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Section list container */}
+                                        <div className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0 max-h-[50vh]">
+                                            {(() => {
+                                                const sections: Record<
+                                                    string,
+                                                    {
+                                                        qIndex: number;
+                                                        q: Question;
+                                                    }[]
+                                                > = {};
+                                                activeQuiz.questions.forEach(
+                                                    (q, idx) => {
+                                                        const secTitle =
+                                                            q.sectionTitle ||
+                                                            "Phần câu hỏi";
+                                                        if (
+                                                            !sections[secTitle]
+                                                        ) {
+                                                            sections[secTitle] =
+                                                                [];
+                                                        }
+                                                        sections[secTitle].push(
+                                                            {
+                                                                qIndex: idx,
+                                                                q,
+                                                            },
+                                                        );
+                                                    },
+                                                );
+
+                                                return Object.entries(
+                                                    sections,
+                                                ).map(([secTitle, items]) => (
+                                                    <div
+                                                        key={secTitle}
+                                                        className="space-y-2"
+                                                    >
+                                                        <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40 dark:bg-brand-950/20 dark:border-brand-900/30">
+                                                            {secTitle}
+                                                        </h4>
+                                                        <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-1">
+                                                            {items.map(
+                                                                ({
+                                                                    qIndex,
+                                                                    q,
+                                                                }) => {
+                                                                    const ans =
+                                                                        selectedAnswers[
+                                                                            q.id
+                                                                        ];
+                                                                    const isAnswered =
+                                                                        ans !==
+                                                                            undefined &&
+                                                                        ans !==
+                                                                            null &&
+                                                                        (q.type ===
+                                                                        "true_false"
+                                                                            ? Array.isArray(
+                                                                                  ans,
+                                                                              ) &&
+                                                                              ans.some(
+                                                                                  (
+                                                                                      x,
+                                                                                  ) =>
+                                                                                      x !==
+                                                                                          undefined &&
+                                                                                      x !==
+                                                                                          null,
+                                                                              )
+                                                                            : ans !==
+                                                                              "");
+                                                                    const isCurrent =
+                                                                        qIndex ===
+                                                                        currentQuestionIdx;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={
+                                                                                q.id
+                                                                            }
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                setCurrentQuestionIdx(
+                                                                                    qIndex,
+                                                                                );
+                                                                                setShowMobileQuestionSheet(
+                                                                                    false,
+                                                                                );
+                                                                            }}
+                                                                            className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${
+                                                                                isCurrent
+                                                                                    ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 shadow-sm"
+                                                                                    : isAnswered
+                                                                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/30"
+                                                                                      : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900/30"
+                                                                            }`}
+                                                                        >
+                                                                            {qIndex +
+                                                                                1}
+                                                                        </button>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+
+                                        {/* Font size adjustments */}
+                                        <div className="flex items-center justify-between px-1 py-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-650 dark:text-slate-355 font-medium">
+                                            <span>Cỡ chữ đề thi:</span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFontSize((prev) =>
+                                                            Math.max(
+                                                                11,
+                                                                prev - 1,
+                                                            ),
+                                                        )
+                                                    }
+                                                    className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="font-bold text-slate-800 dark:text-slate-200 w-8 text-center">
+                                                    {fontSize}px
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFontSize((prev) =>
+                                                            Math.min(
+                                                                20,
+                                                                prev + 1,
+                                                            ),
+                                                        )
+                                                    }
+                                                    className="w-6 h-6 rounded-md bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex items-center justify-center font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Submit button */}
+                                        <div className="pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowMobileQuestionSheet(
+                                                        false,
+                                                    );
+                                                    handleQuizSubmit();
+                                                }}
+                                                className="w-full py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm hover:opacity-95 cursor-pointer"
+                                            >
+                                                <span>Nộp bài kiểm tra</span>
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </div>
                 ) : showResultSummary ? (
                     /* SUBMISSION SCORE OVERVIEW MODAL */
