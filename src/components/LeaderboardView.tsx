@@ -616,13 +616,7 @@ export default function LeaderboardView({
 
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div
-                                                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden ${
-                                                                isMe
-                                                                    ? "bg-[#4B726B]/20 text-[#4B726B] dark:bg-[#4B726B]/30 dark:text-brand-300"
-                                                                    : isTop3
-                                                                      ? "bg-slate-100 text-slate-655 dark:bg-slate-800"
-                                                                      : "bg-slate-50 text-slate-400 dark:bg-slate-800/40"
-                                                            }`}
+                                                            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
                                                         >
                                                             {entry.studentAvatarUrl ? (
                                                                 <img

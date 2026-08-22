@@ -514,7 +514,7 @@ export default function App() {
 
             {/* AUTH MODAL OVERLAY */}
             {authModalOpen && !user && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
                     <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
                         <button
                             onClick={() => setAuthModalOpen(false)}
@@ -612,7 +612,7 @@ export default function App() {
                                 setAuthModalOpen(true);
                             }}
                             onSelectQuizToPreview={(quiz) => {
-                                setAuthMode("register");
+                                setAuthMode("login");
                                 setAuthModalOpen(true);
                             }}
                             loading={loading}
@@ -804,10 +804,8 @@ export default function App() {
                         />
                     )}
             </main>
-
-            {/* Floating Support Card */}
             {!isSupportDismissed && (
-                <div className="fixed bottom-4 left-4 z-50 w-46 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                <div className="fixed bottom-4 left-4 z-40 w-46 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-300">
@@ -820,7 +818,7 @@ export default function App() {
                             onClick={() => {
                                 setIsSupportDismissed(true);
                             }}
-                            className="text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center p-0.5 rounded-full hover:bg-slate-200/50"
+                            className="text-slate-400 hover:text-slate-655 dark:hover:text-slate-200 transition-colors cursor-pointer flex items-center justify-center p-0.5 rounded-full hover:bg-slate-200/50"
                             title="Đóng"
                         >
                             <X className="w-3 h-3" />
@@ -844,7 +842,7 @@ export default function App() {
                         <button
                             type="button"
                             onClick={() => setGlobalBugModalOpen(true)}
-                            className="flex-1 py-1.5 bg-rose-50/80 hover:bg-rose-100/80 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 border border-rose-100/30 dark:border-rose-900/40 text-rose-650 dark:text-rose-450 rounded-md text-[10px] font-bold text-center block transition-colors duration-150 cursor-pointer"
+                            className="flex-1 py-1.5 bg-rose-50/80 hover:bg-rose-100/80 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 border border-rose-100/30 dark:border-rose-900/40 text-rose-655 dark:text-rose-455 rounded-md text-[10px] font-bold text-center block transition-colors duration-150 cursor-pointer"
                         >
                             Có lỗi?
                         </button>
@@ -856,7 +854,7 @@ export default function App() {
             {ongoingAttempt &&
                 !isOngoingAttemptDismissed &&
                 currentPath !== `/quiz/${ongoingAttempt.quiz_id}` && (
-                    <div className="fixed bottom-6 right-6 z-50 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-100 dark:border-blue-900 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                    <div className="fixed bottom-6 right-6 z-40 w-48 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-100 dark:border-blue-900 rounded-xl p-3 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                         {/* Header */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-400 font-extrabold">

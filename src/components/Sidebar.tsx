@@ -228,7 +228,7 @@ export default function Sidebar({
                             : "hover:bg-slate-50/70 dark:hover:bg-slate-800/70"
                     }`}
                 >
-                    <div className="w-8.5 h-8.5 rounded-full overflow-hidden flex-shrink-0 bg-brand-50 dark:bg-brand-500/10 text-brand-500 dark:text-brand-400 flex items-center justify-center font-bold text-xs border border-brand-100/30 dark:border-brand-500/20">
+                    <div className="w-8.5 h-8.5 rounded-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 shadow-2xs">
                         {user.avatarUrl ? (
                             <img
                                 src={user.avatarUrl}

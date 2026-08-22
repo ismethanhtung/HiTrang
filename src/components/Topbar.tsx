@@ -176,98 +176,98 @@ export default function Topbar({
                     </button>
 
                     {/* NAV LINKS - CLASS/GRADE SELECTION */}
-                    <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
-                        {grades.map((grade) => (
-                            <div
-                                key={grade.id}
-                                className="relative py-2"
-                                onMouseEnter={() => setHoveredGradeId(grade.id)}
-                                onMouseLeave={() => setHoveredGradeId(null)}
-                            >
-                                <button
-                                    onClick={() => {
-                                        onSelectGrade(grade.id, null);
-                                    }}
-                                    className={navButtonClass(
-                                        selectedGrade === grade.id,
-                                    )}
+                    {user && (
+                        <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
+                            {grades.map((grade) => (
+                                <div
+                                    key={grade.id}
+                                    className="relative py-2"
+                                    onMouseEnter={() => setHoveredGradeId(grade.id)}
+                                    onMouseLeave={() => setHoveredGradeId(null)}
                                 >
-                                    <span>{grade.label}</span>
-                                    <ChevronDown
-                                        className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
-                                            hoveredGradeId === grade.id
-                                                ? "rotate-180"
-                                                : ""
-                                        }`}
-                                    />
-                                </button>
+                                    <button
+                                        onClick={() => {
+                                            onSelectGrade(grade.id, null);
+                                        }}
+                                        className={navButtonClass(
+                                            selectedGrade === grade.id,
+                                        )}
+                                    >
+                                        <span>{grade.label}</span>
+                                        <ChevronDown
+                                            className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
+                                                hoveredGradeId === grade.id
+                                                    ? "rotate-180"
+                                                    : ""
+                                            }`}
+                                        />
+                                    </button>
 
-                                {/* HOVER DROPDOWN MENU */}
-                                {hoveredGradeId === grade.id && (
-                                    <div className="absolute top-full left-0 pt-2 z-50">
-                                        <div className="w-44 bg-bg-card border border-border-primary rounded-2xl shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                                            <button
-                                                onClick={() => {
-                                                    onSelectGrade(
-                                                        grade.id,
-                                                        null,
-                                                    );
-                                                    setHoveredGradeId(null);
-                                                }}
-                                                className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                    !currentCategory
-                                                        ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
-                                                        : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
-                                                }`}
-                                            >
-                                                <span>Tất cả</span>
-                                                {!currentCategory && (
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
-                                                )}
-                                            </button>
-
-                                            {(
-                                                gradeCategories[grade.id] || []
-                                            ).map((category) => (
+                                    {/* HOVER DROPDOWN MENU */}
+                                    {hoveredGradeId === grade.id && (
+                                        <div className="absolute top-full left-0 pt-2 z-50">
+                                            <div className="w-44 bg-bg-card border border-border-primary rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                                                 <button
-                                                    key={category}
                                                     onClick={() => {
                                                         onSelectGrade(
                                                             grade.id,
-                                                            category,
+                                                            null,
                                                         );
                                                         setHoveredGradeId(null);
                                                     }}
                                                     className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                        currentCategory ===
-                                                        category
+                                                        !currentCategory
                                                             ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
                                                             : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
                                                     }`}
                                                 >
-                                                    <span>{category}</span>
-                                                    {currentCategory ===
-                                                        category && (
+                                                    <span>Tất cả</span>
+                                                    {!currentCategory && (
                                                         <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
                                                     )}
                                                 </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        <button
-                            onClick={onNavigateSchedule}
-                            className={navButtonClass(
-                                currentPath === "/lich" ||
-                                    currentPath === "/schedule",
-                            )}
-                        >
-                            <span>Lịch học</span>
-                        </button>
 
-                        {user && (
+                                                {(
+                                                    gradeCategories[grade.id] || []
+                                                ).map((category) => (
+                                                    <button
+                                                        key={category}
+                                                        onClick={() => {
+                                                            onSelectGrade(
+                                                                grade.id,
+                                                                category,
+                                                            );
+                                                            setHoveredGradeId(null);
+                                                        }}
+                                                        className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                            currentCategory ===
+                                                            category
+                                                                ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
+                                                                : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
+                                                        }`}
+                                                    >
+                                                        <span>{category}</span>
+                                                        {currentCategory ===
+                                                            category && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                onClick={onNavigateSchedule}
+                                className={navButtonClass(
+                                    currentPath === "/lich" ||
+                                        currentPath === "/schedule",
+                                )}
+                            >
+                                <span>Lịch học</span>
+                            </button>
+
                             <button
                                 onClick={onNavigateLeaderboard}
                                 className={navButtonClass(
@@ -277,88 +277,84 @@ export default function Topbar({
                                 <Crown className="w-3.5 h-3.5 text-amber-500" />
                                 <span>BXH</span>
                             </button>
-                        )}
-                    </nav>
+                        </nav>
+                    )}
                 </div>
 
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center lg:gap-3 gap-1.5">
                     {/* SEARCH BOX */}
-                    <div
-                        ref={searchContainerRef}
-                        className="relative hidden sm:block w-40 md:w-52 lg:w-64 flex-shrink-0"
-                    >
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
-                            <Search className="h-3.5 w-3.5 text-text-tertiary" />
-                        </span>
-                        <input
-                            type="text"
-                            value={localSearchQuery}
-                            onFocus={() => setSearchFocused(true)}
-                            onChange={(e) => {
-                                setLocalSearchQuery(e.target.value);
-                                setSearchFocused(true);
-                            }}
-                            placeholder="Tìm đề thi..."
-                            className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
-                        />
-                        {searchFocused &&
-                            localSearchQuery.trim().length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                    {filteredSearchQuizzes.length > 0 ? (
-                                        filteredSearchQuizzes.map((quiz) => (
-                                            <button
-                                                key={quiz.id}
-                                                onClick={() => {
-                                                    onSelectGrade(
-                                                        quiz.grade || null,
-                                                    );
-                                                    setLocalSearchQuery("");
-                                                    setSearchFocused(false);
-                                                }}
-                                                className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
-                                            >
-                                                <span className="text-xs font-semibold text-text-primary line-clamp-1">
-                                                    {quiz.title}
-                                                </span>
-                                                <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
-                                                    <span>{quiz.subject}</span>
-                                                    {quiz.grade && (
-                                                        <>
-                                                            <span className="w-1 h-1 rounded-full bg-border-secondary" />
-                                                            <span className="font-semibold text-brand-500 dark:text-brand-300">
-                                                                Lớp {quiz.grade}
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                </span>
-                                            </button>
-                                        ))
-                                    ) : (
-                                        <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
-                                            Không tìm thấy đề thi phù hợp
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                    </div>
+                    {user && (
+                        <div
+                            ref={searchContainerRef}
+                            className="relative hidden sm:block w-40 md:w-52 lg:w-64 flex-shrink-0"
+                        >
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                                <Search className="h-3.5 w-3.5 text-text-tertiary" />
+                            </span>
+                            <input
+                                type="text"
+                                value={localSearchQuery}
+                                onFocus={() => setSearchFocused(true)}
+                                onChange={(e) => {
+                                    setLocalSearchQuery(e.target.value);
+                                    setSearchFocused(true);
+                                }}
+                                placeholder="Tìm đề thi..."
+                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
+                            />
+                            {searchFocused &&
+                                localSearchQuery.trim().length > 0 && (
+                                    <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                        {filteredSearchQuizzes.length > 0 ? (
+                                            filteredSearchQuizzes.map((quiz) => (
+                                                <button
+                                                    key={quiz.id}
+                                                    onClick={() => {
+                                                        onSelectGrade(
+                                                            quiz.grade || null,
+                                                        );
+                                                        setLocalSearchQuery("");
+                                                        setSearchFocused(false);
+                                                    }}
+                                                    className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                                >
+                                                    <span className="text-xs font-semibold text-text-primary line-clamp-1">
+                                                        {quiz.title}
+                                                    </span>
+                                                    <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
+                                                        <span>{quiz.subject}</span>
+                                                        {quiz.grade && (
+                                                            <>
+                                                                <span className="w-1 h-1 rounded-full bg-border-secondary" />
+                                                                <span className="font-semibold text-brand-500 dark:text-brand-300">
+                                                                    Lớp {quiz.grade}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </span>
+                                                </button>
+                                            ))
+                                        ) : (
+                                            <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
+                                                Không tìm thấy đề thi phù hợp
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                        </div>
+                    )}
 
                     {/* LEADERBOARD ROUTE BUTTON */}
 
                     {!user ? (
                         /* UNAUTHENTICATED ACTION BUTTONS */
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
                             <button
                                 onClick={() => onOpenAuth("login")}
-                                className="px-3.5 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-surface hover:bg-brand-50 border border-border-primary rounded-xl transition-all cursor-pointer"
+                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
                             >
                                 Đăng nhập
-                            </button>
-                            <button
-                                onClick={() => onOpenAuth("register")}
-                                className="px-4 py-1.5 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-xl transition-all shadow-xs active:scale-98 cursor-pointer"
-                            >
-                                Đăng ký
                             </button>
                         </div>
                     ) : (
@@ -369,7 +365,7 @@ export default function Topbar({
                                 }
                                 className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer flex-shrink-0"
                             >
-                                <div className="w-8 h-8 rounded-full bg-brand-600 dark:bg-brand-300 text-white dark:text-slate-900 flex items-center justify-center font-extrabold text-xs flex-shrink-0 shadow-2xs overflow-hidden">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                                     {user.avatarUrl ? (
                                         <img
                                             src={user.avatarUrl}
@@ -377,14 +373,14 @@ export default function Topbar({
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
-                                        <UserIcon className="w-4.5 h-4.5 text-white dark:text-slate-900" />
+                                        <UserIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                                     )}
                                 </div>
                                 <ChevronDown className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
                             </button>
 
                             {userDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-bg-card rounded-2xl shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                                <div className="absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
                                     <div className="px-4 py-2 border-b border-border-primary mb-1">
                                         <p className="text-xs font-bold text-text-primary">
                                             {user.name}
@@ -454,23 +450,25 @@ export default function Topbar({
             </div>
 
             {/* MOBILE GRADE NAVIGATION BAR */}
-            <div className="md:hidden flex items-center gap-2 px-4 py-2 overflow-x-auto border-t border-border-primary bg-bg-surface/90">
-                {grades.map((grade) => (
-                    <button
-                        key={grade.id}
-                        onClick={() => {
-                            onSelectGrade(grade.id);
-                        }}
-                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
-                            selectedGrade === grade.id
-                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
-                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
-                        }`}
-                    >
-                        {grade.label}
-                    </button>
-                ))}
-            </div>
+            {user && (
+                <div className="md:hidden flex items-center gap-2 px-4 py-2 overflow-x-auto border-t border-border-primary bg-bg-surface/90">
+                    {grades.map((grade) => (
+                        <button
+                            key={grade.id}
+                            onClick={() => {
+                                onSelectGrade(grade.id);
+                            }}
+                            className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                                selectedGrade === grade.id
+                                    ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
+                                    : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                            }`}
+                        >
+                                {grade.label}
+                        </button>
+                    ))}
+                </div>
+            )}
         </header>
     );
 }

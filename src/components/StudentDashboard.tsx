@@ -1659,11 +1659,7 @@ export default function StudentDashboard({
                                                                     </span>
                                                                     {/* Avatar */}
                                                                     <div
-                                                                        className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden ${
-                                                                            isMe
-                                                                                ? "bg-brand-100 text-brand-700"
-                                                                                : "bg-slate-100 text-slate-600"
-                                                                        }`}
+                                                                        className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
                                                                     >
                                                                         {entry.studentAvatarUrl ? (
                                                                             <img

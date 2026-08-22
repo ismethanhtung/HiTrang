@@ -836,7 +836,7 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 flex items-center gap-5">
-                            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-brand-50 dark:bg-brand-500/10 text-brand-500 dark:text-brand-400 flex items-center justify-center font-bold text-xl border border-brand-100/30 dark:border-brand-500/20 shadow-2xs">
+                            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 shadow-2xs">
                                 {user.avatarUrl ? (
                                     <img
                                         src={user.avatarUrl}
