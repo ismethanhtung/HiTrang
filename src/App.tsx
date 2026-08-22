@@ -515,7 +515,7 @@ export default function App() {
             {/* AUTH MODAL OVERLAY */}
             {authModalOpen && !user && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-                    <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
+                    <div className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-xl overflow-hidden">
                         <button
                             onClick={() => setAuthModalOpen(false)}
                             className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center z-10"
@@ -601,21 +601,10 @@ export default function App() {
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                         <LandingPage
-                            quizzes={filteredQuizzes}
-                            selectedGrade={selectedGrade}
-                            onSelectGrade={(grade) => {
-                                if (grade) navigateTo("/grade/" + grade);
-                                else navigateTo("/");
-                            }}
                             onOpenAuth={(mode = "login") => {
                                 setAuthMode(mode);
                                 setAuthModalOpen(true);
                             }}
-                            onSelectQuizToPreview={(quiz) => {
-                                setAuthMode("login");
-                                setAuthModalOpen(true);
-                            }}
-                            loading={loading}
                         />
                     ) : (
                         /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */

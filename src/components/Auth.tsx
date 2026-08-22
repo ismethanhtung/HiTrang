@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
     Lock,
     User,
@@ -141,30 +141,34 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {isRegister && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            className="space-y-1.5"
-                        >
-                            <label className="text-xs font-medium text-gray-600">
-                                Họ và tên
-                            </label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                    <UserCheck className="w-4 h-4" />
-                                </span>
-                                <input
-                                    type="text"
-                                    id="reg-name-input"
-                                    placeholder="Nhập họ và tên đầy đủ"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
-                                />
-                            </div>
-                        </motion.div>
-                    )}
+                    <AnimatePresence>
+                        {isRegister && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: "auto", marginTop: 6 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                className="space-y-1.5 overflow-hidden"
+                            >
+                                <label className="text-xs font-medium text-gray-600">
+                                    Họ và tên
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+                                        <UserCheck className="w-4 h-4" />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        id="reg-name-input"
+                                        placeholder="Nhập họ và tên đầy đủ"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-gray-600">
@@ -216,65 +220,65 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                         </div>
                     </div>
 
-                    {isRegister && (
-                        <div className="space-y-4">
+                    <AnimatePresence>
+                        {isRegister && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                className="space-y-1.5"
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                className="space-y-4 overflow-hidden"
                             >
-                                <label className="text-xs font-medium text-gray-600">
-                                    Xác nhận mật khẩu
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                        <Lock className="w-4 h-4" />
-                                    </span>
-                                    <input
-                                        type={
-                                            showPassword ? "text" : "password"
-                                        }
-                                        id="reg-confirm-password-input"
-                                        placeholder="Nhập lại mật khẩu"
-                                        value={confirmPassword}
-                                        onChange={(e) =>
-                                            setConfirmPassword(e.target.value)
-                                        }
-                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
-                                    />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-gray-600">
+                                        Xác nhận mật khẩu
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+                                            <Lock className="w-4 h-4" />
+                                        </span>
+                                        <input
+                                            type={
+                                                showPassword ? "text" : "password"
+                                            }
+                                            id="reg-confirm-password-input"
+                                            placeholder="Nhập lại mật khẩu"
+                                            value={confirmPassword}
+                                            onChange={(e) =>
+                                                setConfirmPassword(e.target.value)
+                                            }
+                                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                        />
+                                    </div>
                                 </div>
-                            </motion.div>
 
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto" }}
-                                className="space-y-1.5"
-                            >
-                                <label className="text-xs font-medium text-gray-600">
-                                    Khối lớp học
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                        <BookOpen className="w-4 h-4" />
-                                    </span>
-                                    <select
-                                        id="reg-grade-select"
-                                        value={grade}
-                                        onChange={(e) =>
-                                            setGrade(e.target.value)
-                                        }
-                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors text-gray-700 cursor-pointer"
-                                    >
-                                        <option value="10">Khối 10</option>
-                                        <option value="11">Khối 11</option>
-                                        <option value="12">Khối 12</option>
-                                        <option value="9">Khối 9</option>
-                                        <option value="8">Khối 8</option>
-                                    </select>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-medium text-gray-600">
+                                        Khối lớp học
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
+                                            <BookOpen className="w-4 h-4" />
+                                        </span>
+                                        <select
+                                            id="reg-grade-select"
+                                            value={grade}
+                                            onChange={(e) =>
+                                                setGrade(e.target.value)
+                                            }
+                                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors text-gray-700 cursor-pointer"
+                                        >
+                                            <option value="10">Khối 10</option>
+                                            <option value="11">Khối 11</option>
+                                            <option value="12">Khối 12</option>
+                                            <option value="9">Khối 9</option>
+                                            <option value="8">Khối 8</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </motion.div>
-                        </div>
-                    )}
+                        )}
+                    </AnimatePresence>
 
                     {error && (
                         <div className="p-1 text-xs text-red-600 font-medium">
@@ -363,7 +367,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 setError("");
                                 setSuccess("");
                             }}
-                            className="ml-1.5 text-brand-600 font-medium hover:underline focus:outline-none"
+                            className="ml-1.5 text-brand-600 font-medium underline focus:outline-none cursor-pointer"
                         >
                             {isRegister ? "Đăng nhập ngay" : "Đăng ký miễn phí"}
                         </button>

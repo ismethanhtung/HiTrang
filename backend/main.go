@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.26"
+const AppVersion = "1.0.31"
 
 func main() {
 	// 1. Configuration
@@ -94,6 +94,11 @@ func main() {
 		log.Fatalf("Migration thất bại: %v", err)
 	}
 	log.Println("Migration hoàn tất!")
+
+	// Đảm bảo cột avatar_url có kiểu TEXT để tránh tràn dữ liệu khi lưu avatar từ Google OAuth
+	if err := db.Exec("ALTER TABLE profiles MODIFY avatar_url TEXT").Error; err != nil {
+		log.Printf("Cảnh báo: Không thể MODIFY avatar_url: %v", err)
+	}
 
 	// Seed Schedule
 	SeedScheduleIfEmpty(db)

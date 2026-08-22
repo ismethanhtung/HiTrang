@@ -46,7 +46,7 @@ type Profile struct {
 	Role         string     `json:"role" gorm:"type:enum('student', 'teacher', 'admin');default:'student';not null"`
 	Plan         string     `json:"plan" gorm:"type:enum('nothing', 'basic', 'vip');default:'nothing';not null"`
 	Grade        *string    `json:"grade" gorm:"type:varchar(10)"`
-	AvatarURL    *string    `json:"avatarUrl" gorm:"type:varchar(500)"`
+	AvatarURL    *string    `json:"avatarUrl" gorm:"type:text"`
 	CreatedAt    time.Time  `json:"created_at"`
 	LastActiveAt *time.Time `json:"lastActiveAt" gorm:"column:last_active_at"`
 }
