@@ -30,23 +30,7 @@ const getGridPastelStyles = (grade: string | null): string => {
     }
 };
 
-const getListPastelStyles = (grade: string | null): string => {
-    if (!grade) return "";
-    switch (grade) {
-        case "8":
-            return "bg-rose-100/60 text-rose-700 dark:bg-rose-500/18 dark:text-rose-300 border border-rose-200/30 dark:border-rose-500/20 rounded-md";
-        case "9":
-            return "bg-purple-100/60 text-purple-700 dark:bg-purple-500/18 dark:text-purple-300 border border-purple-200/30 dark:border-purple-500/20 rounded-md";
-        case "10":
-            return "bg-sky-100/60 text-sky-700 dark:bg-sky-500/18 dark:text-sky-300 border border-sky-200/30 dark:border-sky-500/20 rounded-md";
-        case "11":
-            return "bg-amber-100/60 text-amber-800 dark:bg-amber-500/18 dark:text-amber-300 border border-amber-200/30 dark:border-amber-500/20 rounded-md";
-        case "12":
-            return "bg-emerald-100/60 text-emerald-800 dark:bg-emerald-500/18 dark:text-emerald-300 border border-emerald-200/30 dark:border-emerald-500/20 rounded-md";
-        default:
-            return "";
-    }
-};
+
 
 interface ScheduleViewProps {
     user: any;
@@ -200,8 +184,6 @@ export default function ScheduleView({
                                             </p>
                                         ) : (
                                             daySlots.map(({ time, slot }) => {
-                                                const grade = getGradeFromContent(slot?.content || "");
-                                                const pastelClass = getListPastelStyles(grade);
                                                 return (
                                                     <div
                                                         key={time}
@@ -210,7 +192,7 @@ export default function ScheduleView({
                                                         <span className="font-mono text-slate-600 dark:text-slate-300 font-bold">
                                                             {time}
                                                         </span>
-                                                        <span className={`font-bold px-2 py-0.5 ${pastelClass || "text-slate-800 dark:text-slate-200"}`}>
+                                                        <span className="font-bold text-slate-700 dark:text-slate-200">
                                                             {slot?.content}
                                                         </span>
                                                     </div>
