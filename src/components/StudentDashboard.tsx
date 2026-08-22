@@ -2657,37 +2657,7 @@ export default function StudentDashboard({
                             className="fixed right-0 top-1/2 -translate-y-1/2 xl:hidden z-40 bg-brand-600 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-brand-700 active:scale-95 transition-all border border-r-0 border-brand-500/30 min-w-[42px]"
                         >
                             <span className="text-sm font-black text-white leading-none">
-                                {(() => {
-                                    const answeredCount =
-                                        activeQuiz.questions.filter((q) => {
-                                            const ans = selectedAnswers[q.id];
-                                            if (
-                                                ans === undefined ||
-                                                ans === null
-                                            )
-                                                return false;
-                                            if (q.type === "true_false") {
-                                                return (
-                                                    Array.isArray(ans) &&
-                                                    ans.some(
-                                                        (x) =>
-                                                            x !== undefined &&
-                                                            x !== null,
-                                                    )
-                                                );
-                                            } else {
-                                                return ans !== "";
-                                            }
-                                        }).length;
-                                    console.log("FAB Answered Count Debug:", {
-                                        answeredCount,
-                                        selectedAnswers,
-                                        questions: activeQuiz.questions.map(
-                                            (q) => ({ id: q.id, type: q.type }),
-                                        ),
-                                    });
-                                    return answeredCount;
-                                })()}
+                            {currentQuestionIdx + 1}
                             </span>
                         </button>
 
