@@ -182,7 +182,9 @@ export default function Topbar({
                                 <div
                                     key={grade.id}
                                     className="relative py-2"
-                                    onMouseEnter={() => setHoveredGradeId(grade.id)}
+                                    onMouseEnter={() =>
+                                        setHoveredGradeId(grade.id)
+                                    }
                                     onMouseLeave={() => setHoveredGradeId(null)}
                                 >
                                     <button
@@ -228,7 +230,8 @@ export default function Topbar({
                                                 </button>
 
                                                 {(
-                                                    gradeCategories[grade.id] || []
+                                                    gradeCategories[grade.id] ||
+                                                    []
                                                 ).map((category) => (
                                                     <button
                                                         key={category}
@@ -237,7 +240,9 @@ export default function Topbar({
                                                                 grade.id,
                                                                 category,
                                                             );
-                                                            setHoveredGradeId(null);
+                                                            setHoveredGradeId(
+                                                                null,
+                                                            );
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
                                                             currentCategory ===
@@ -307,34 +312,46 @@ export default function Topbar({
                                 localSearchQuery.trim().length > 0 && (
                                     <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
                                         {filteredSearchQuizzes.length > 0 ? (
-                                            filteredSearchQuizzes.map((quiz) => (
-                                                <button
-                                                    key={quiz.id}
-                                                    onClick={() => {
-                                                        onSelectGrade(
-                                                            quiz.grade || null,
-                                                        );
-                                                        setLocalSearchQuery("");
-                                                        setSearchFocused(false);
-                                                    }}
-                                                    className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
-                                                >
-                                                    <span className="text-xs font-semibold text-text-primary line-clamp-1">
-                                                        {quiz.title}
-                                                    </span>
-                                                    <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
-                                                        <span>{quiz.subject}</span>
-                                                        {quiz.grade && (
-                                                            <>
-                                                                <span className="w-1 h-1 rounded-full bg-border-secondary" />
-                                                                <span className="font-semibold text-brand-500 dark:text-brand-300">
-                                                                    Lớp {quiz.grade}
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </span>
-                                                </button>
-                                            ))
+                                            filteredSearchQuizzes.map(
+                                                (quiz) => (
+                                                    <button
+                                                        key={quiz.id}
+                                                        onClick={() => {
+                                                            onSelectGrade(
+                                                                quiz.grade ||
+                                                                    null,
+                                                            );
+                                                            setLocalSearchQuery(
+                                                                "",
+                                                            );
+                                                            setSearchFocused(
+                                                                false,
+                                                            );
+                                                        }}
+                                                        className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                                    >
+                                                        <span className="text-xs font-semibold text-text-primary line-clamp-1">
+                                                            {quiz.title}
+                                                        </span>
+                                                        <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
+                                                            <span>
+                                                                {quiz.subject}
+                                                            </span>
+                                                            {quiz.grade && (
+                                                                <>
+                                                                    <span className="w-1 h-1 rounded-full bg-border-secondary" />
+                                                                    <span className="font-semibold text-brand-500 dark:text-brand-300">
+                                                                        Lớp{" "}
+                                                                        {
+                                                                            quiz.grade
+                                                                        }
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </span>
+                                                    </button>
+                                                ),
+                                            )
                                         ) : (
                                             <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
                                                 Không tìm thấy đề thi phù hợp
@@ -352,7 +369,7 @@ export default function Topbar({
                         <div className="flex items-center">
                             <button
                                 onClick={() => onOpenAuth("login")}
-                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-xl transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-lg transition-all shadow-xs active:scale-[0.98] cursor-pointer"
                             >
                                 Đăng nhập
                             </button>
@@ -464,7 +481,7 @@ export default function Topbar({
                                     : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
                             }`}
                         >
-                                {grade.label}
+                            {grade.label}
                         </button>
                     ))}
                     {/* Mobile Schedule Link */}
