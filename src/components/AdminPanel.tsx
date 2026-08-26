@@ -191,11 +191,14 @@ export default function AdminPanel({
         try {
             const token = localStorage.getItem("hitrang_token");
             const apiUrl = import.meta.env.VITE_API_URL || "/api";
-            const response = await fetch(`${apiUrl}/admin/backup?passkey=${encodeURIComponent(pass)}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
+            const response = await fetch(
+                `${apiUrl}/admin/backup?passkey=${encodeURIComponent(pass)}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 },
-            });
+            );
             if (!response.ok) {
                 if (response.status === 403) {
                     throw new Error("Mật khẩu cấp 2 không chính xác!");
@@ -215,7 +218,9 @@ export default function AdminPanel({
         }
     };
 
-    const handleUploadRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleUploadRestore = async (
+        e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
         const file = files[0];
@@ -241,7 +246,8 @@ export default function AdminPanel({
                 body: formData,
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Lỗi khôi phục dữ liệu");
+            if (!response.ok)
+                throw new Error(data.error || "Lỗi khôi phục dữ liệu");
             alert("Phục hồi dữ liệu thành công!");
             fetchProfiles();
         } catch (err: any) {
@@ -251,16 +257,11 @@ export default function AdminPanel({
 
     if (!isAuthenticated) {
         return (
-            <div className="max-w-md mx-auto my-16 p-8 bg-white border border-slate-200 rounded-3xl shadow-xl space-y-6 text-center animate-in fade-in duration-300">
-                <div className="w-16 h-16 text-brand-600 rounded-2xl flex items-center justify-center mx-auto bg-slate-50 border border-slate-100">
-                    <Shield className="w-8 h-8" />
-                </div>
+            <div className="max-w-md mx-auto my-16 p-8 bg-white border-none space-y-6 text-center animate-in fade-in duration-300">
                 <h2 className="text-xl font-bold text-slate-900">
                     Trang Quản Trị Hệ Thống (Admin)
                 </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                    Yêu cầu xác thực (ví dụ: admin123).
-                </p>
+                <p className="text-xs text-slate-500 mt-1">Yêu cầu xác thực</p>
                 <form
                     onSubmit={handleVerifyPassword}
                     className="space-y-4 text-left"
@@ -376,9 +377,7 @@ export default function AdminPanel({
                             "lịch học".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             ) ||
-                            "lịch".includes(
-                                sidebarSearchQuery.toLowerCase(),
-                            ) ||
+                            "lịch".includes(sidebarSearchQuery.toLowerCase()) ||
                             "chống gian lận".includes(
                                 sidebarSearchQuery.toLowerCase(),
                             )) && (
@@ -578,9 +577,7 @@ export default function AdminPanel({
                                         sidebarSearchQuery.toLowerCase(),
                                     )) && (
                                     <button
-                                        onClick={() =>
-                                            handleTabClick("bugs")
-                                        }
+                                        onClick={() => handleTabClick("bugs")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "bugs"
                                                 ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -715,9 +712,7 @@ export default function AdminPanel({
                             />
                         )}
 
-                        {activeTab === "api-monitor" && (
-                            <AdminApiTab />
-                        )}
+                        {activeTab === "api-monitor" && <AdminApiTab />}
 
                         {activeTab === "bugs" && (
                             <AdminBugsTab
@@ -726,9 +721,7 @@ export default function AdminPanel({
                             />
                         )}
 
-                        {activeTab === "schedule" && (
-                            <AdminScheduleTab />
-                        )}
+                        {activeTab === "schedule" && <AdminScheduleTab />}
                     </>
                 )}
             </section>

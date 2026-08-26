@@ -60,11 +60,11 @@ export default function GoogleCallback({
             <div className="w-full max-w-md bg-card flex flex-col items-center text-center">
                 {error ? (
                     <div className="space-y-4">
-                        <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/30 flex items-center justify-center text-red-600 dark:text-red-400 text-2xl font-bold">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 text-2xl font-bold">
                             !
                         </div>
                         <h2 className="text-xl font-semibold">
-                            Đăng nhập thất bại
+                            Thử lại đăng nhập
                         </h2>
                         <p className="text-sm text-secondary leading-relaxed">
                             {error}
