@@ -144,10 +144,21 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     <AnimatePresence>
                         {isRegister && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: "auto", marginTop: 6 }}
+                                initial={{
+                                    opacity: 0,
+                                    height: 0,
+                                    marginTop: 0,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    height: "auto",
+                                    marginTop: 6,
+                                }}
                                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                transition={{
+                                    duration: 0.2,
+                                    ease: "easeInOut",
+                                }}
                                 className="space-y-1.5 overflow-hidden"
                             >
                                 <label className="text-xs font-medium text-gray-600">
@@ -162,7 +173,9 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                         id="reg-name-input"
                                         placeholder="Nhập họ và tên đầy đủ"
                                         value={name}
-                                        onChange={(e) => setName(e.target.value)}
+                                        onChange={(e) =>
+                                            setName(e.target.value)
+                                        }
                                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                                     />
                                 </div>
@@ -223,10 +236,21 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     <AnimatePresence>
                         {isRegister && (
                             <motion.div
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: "auto", marginTop: 16 }}
+                                initial={{
+                                    opacity: 0,
+                                    height: 0,
+                                    marginTop: 0,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    height: "auto",
+                                    marginTop: 16,
+                                }}
                                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                transition={{ duration: 0.2, ease: "easeInOut" }}
+                                transition={{
+                                    duration: 0.2,
+                                    ease: "easeInOut",
+                                }}
                                 className="space-y-4 overflow-hidden"
                             >
                                 <div className="space-y-1.5">
@@ -239,13 +263,17 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                         </span>
                                         <input
                                             type={
-                                                showPassword ? "text" : "password"
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
                                             }
                                             id="reg-confirm-password-input"
                                             placeholder="Nhập lại mật khẩu"
                                             value={confirmPassword}
                                             onChange={(e) =>
-                                                setConfirmPassword(e.target.value)
+                                                setConfirmPassword(
+                                                    e.target.value,
+                                                )
                                             }
                                             className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                                         />

@@ -63,10 +63,10 @@ export default function Footer({
                                 <div>
                                     <span>Email: </span>
                                     <a
-                                        href="mailto:ismethanhtung@gmail.com"
+                                        href="mailto:trangnthsp@gmail.com"
                                         className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline"
                                     >
-                                        ismethanhtung@gmail.com
+                                        trangnthsp@gmail.com
                                     </a>
                                 </div>
                             </div>
@@ -91,15 +91,15 @@ export default function Footer({
                             >
                                 Facebook
                             </a>
-                            <span>&bull;</span>
-                            <a
+                            {/*<span>&bull;</span>*/}
+                            {/*<a
                                 href="https://m.me/nguyen.trang.724265"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline"
                             >
                                 Messenger
-                            </a>
+                            </a>*/}
                         </div>
                     </div>
 
@@ -110,43 +110,71 @@ export default function Footer({
                         </h4>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("8") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("8")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 8
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("9") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("9")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 9
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("10") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("10")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 10
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("11") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("11")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 11
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("12") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("12")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer"
                             >
                                 Lớp 12
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("9", "Thi vào 10") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("9", "Thi vào 10")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold"
                             >
                                 Thi vào 10 🌸
                             </button>
                             <button
-                                onClick={() => userLoggedIn ? onSelectGrade("12", "Thi thử") : onOpenAuth("login")}
+                                onClick={() =>
+                                    userLoggedIn
+                                        ? onSelectGrade("12", "Thi thử")
+                                        : onOpenAuth("login")
+                                }
                                 className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2"
                             >
                                 Thi thử TN THPT 🌸
