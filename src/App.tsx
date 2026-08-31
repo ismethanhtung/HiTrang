@@ -540,7 +540,7 @@ export default function App() {
                     className={
                         isTakingOrReviewing || currentPath === "/admin"
                             ? "flex-1 flex flex-col min-h-0 overflow-hidden"
-                            : "flex-1 flex flex-col min-h-[calc(100vh-30px)]"
+                            : "flex-1 flex flex-col min-h-[calc(100vh-54px)] bg-[#F9F8F6] dark:bg-bg-base relative z-10"
                     }
                 >
                     {/* 1. ADMIN PANEL ROUTE */}

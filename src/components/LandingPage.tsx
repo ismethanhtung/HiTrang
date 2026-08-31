@@ -82,7 +82,7 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                     >
                         <div className="w-64 h-64 sm:w-72 sm:h-72 lg:w-96 lg:h-96 rounded-full overflow-hidden border-4 border-white dark:border-slate-800 shadow-xl">
                             <img
-                                src="/images/trang.jpg"
+                                src="/images/trang2.jpeg"
                                 alt="Cô Huyền Trang"
                                 className="w-full h-full object-cover object-top"
                             />
