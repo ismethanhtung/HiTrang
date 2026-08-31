@@ -132,7 +132,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
             >
                 {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <h1 className="font-calligraphy text-5xl text-brand-300 select-none tracking-wide drop-shadow-xs">
+                    <h1 className="font-calligraphy text-4xl text-brand-400 select-none tracking-wide drop-shadow-xs">
                         HiTrang
                     </h1>
                     <p className="text-xs text-slate-400 mt-2.5 italic font-medium">
