@@ -514,13 +514,21 @@ export default function App() {
 
             {/* AUTH MODAL OVERLAY */}
             {authModalOpen && !user && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-                    <div className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div
+                    onClick={() => setAuthModalOpen(false)}
+                    className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative w-full max-w-[420px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden cursor-default"
+                    >
                         <button
+                            type="button"
                             onClick={() => setAuthModalOpen(false)}
-                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center z-10"
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-655 hover:bg-slate-100 p-1.5 rounded-full transition-all cursor-pointer flex items-center justify-center z-20"
+                            title="Đóng"
                         >
-                            ✕
+                            <X className="w-4 h-4" />
                         </button>
                         <Auth
                             onLogin={handleLogin}
@@ -972,7 +980,7 @@ export default function App() {
                                 href="tel:0914765601"
                                 className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
                             >
-                                <span>Hotline / SĐT</span>
+                                <span>Phone / SĐT</span>
                                 <span className="text-[10px] text-slate-400 font-normal">
                                     Gọi ngay →
                                 </span>
