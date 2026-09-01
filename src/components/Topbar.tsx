@@ -384,9 +384,9 @@ export default function Topbar({
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors cursor-pointer flex-shrink-0"
+                                className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
                             >
-                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200/50 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
                                     {user.avatarUrl ? (
                                         <img
                                             src={user.avatarUrl}
@@ -397,7 +397,11 @@ export default function Topbar({
                                         <UserIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                                     )}
                                 </div>
-                                <ChevronDown className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
+                                <ChevronDown
+                                    className={`w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
+                                        userDropdownOpen ? "rotate-180" : ""
+                                    }`}
+                                />
                             </button>
 
                             {userDropdownOpen && (

@@ -13,6 +13,7 @@ const safeParseDate = (dateVal: any): Date => {
 import React, { useState } from "react";
 import { Quiz, Submission, User } from "../types";
 import {
+    Hourglass,
     Clock,
     HelpCircle,
     ArrowRight,
@@ -25,6 +26,7 @@ import {
     ChevronRight,
     RefreshCw,
     BookMarked,
+    List,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -177,33 +179,30 @@ export default function GradeView({
     // Grid column border and padding classes for borderless line-separated columns
     const getColClasses = (index: number) => {
         let classes =
-            "group flex flex-col justify-between bg-transparent border-t border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
+            "group flex flex-col justify-between bg-transparent border-t border-r border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
 
         // Tablet (2 columns on md)
         const mdCol = index % 2;
         if (mdCol === 0) {
             classes +=
-                "md:border-l md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
+                "md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
         } else {
             classes +=
-                "md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
+                "md:border-l-0 md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
         }
 
         // Desktop (3 columns on lg)
         const lgCol = index % 3;
         if (lgCol === 0) {
             classes +=
-                "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
-        } else if (lgCol === 1) {
-            classes +=
-                "lg:border-l lg:border-r-0 lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+                "lg:border-l lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         } else {
             classes +=
-                "lg:border-l lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+                "lg:border-l-0 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
         }
 
-        // Mobile reset
-        classes += "max-md:border-l-0 max-md:pl-0 max-md:pr-0";
+        // Mobile (1 column on mobile has border-r to close on the right side)
+        classes += "max-md:border-r max-md:border-l-0 max-md:pl-0 max-md:pr-0";
         return classes;
     };
 
@@ -434,7 +433,7 @@ export default function GradeView({
 
                                         {/* Description */}
                                         {quiz.description && (
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
                                                 {quiz.description}
                                             </p>
                                         )}
@@ -452,7 +451,7 @@ export default function GradeView({
                                             </span>
                                             <span>•</span>
                                             <span className="flex items-center gap-1">
-                                                <BookMarked className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                <List className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
                                                 {sectionsCount} phần
                                             </span>
                                         </div>

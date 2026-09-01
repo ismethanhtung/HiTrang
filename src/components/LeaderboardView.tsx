@@ -495,7 +495,7 @@ export default function LeaderboardView({
                                             {podiumOrder[1].totalPoints} điểm
                                         </span>
                                         <span className="absolute -bottom-5 right-2 font-brand text-amber-500/80 text-[11px] select-none rotate-6 hidden sm:inline">
-                                            Nhà vô địch!
+                                            Cũng được!
                                         </span>
                                     </div>
                                 </motion.div>
