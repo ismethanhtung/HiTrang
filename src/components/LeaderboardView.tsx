@@ -12,6 +12,8 @@ import {
     Clock,
     BookOpen,
     ArrowRight,
+    PartyPopper,
+    CheckCircle2,
     User as UserIcon,
 } from "lucide-react";
 import { User, Quiz, Submission, OverallLeaderboardEntry } from "../types";
@@ -247,7 +249,7 @@ export default function LeaderboardView({
     ];
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 pb-32 animate-in fade-in duration-300">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 pb-32 animate-in fade-in duration-300 overflow-x-hidden">
             {/* 1. Header Vinh Danh */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">
@@ -256,8 +258,7 @@ export default function LeaderboardView({
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            Ghi lại nỗ lực và sự chăm chỉ của các học sinh lớp{" "}
-                            {activeGrade}.
+                            Ghi lại nỗ lực và sự chăm chỉ của các học sinh.
                         </p>
                     </div>
                 </div>
@@ -327,23 +328,30 @@ export default function LeaderboardView({
                                                 key={champion.studentId}
                                                 className="py-3 bg-transparent hover:bg-amber-500/5 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 flex items-center gap-3.5 transition-all duration-200 group"
                                             >
-                                                {/* Small gold avatar */}
-                                                <div className="w-8.5 h-8.5 rounded-full border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform overflow-hidden">
-                                                    {champion.studentAvatarUrl ? (
-                                                        <img
-                                                            src={
-                                                                champion.studentAvatarUrl
-                                                            }
-                                                            alt={
-                                                                champion.studentName
-                                                            }
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        getAvatarInitial(
-                                                            champion.studentName,
-                                                        )
-                                                    )}
+                                                {/* Small gold avatar with laurel wreath */}
+                                                <div className="relative shrink-0 flex items-center justify-center">
+                                                    <img
+                                                        src="/icons/laurel-wreath.png"
+                                                        alt=""
+                                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11.5 h-11.5 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
+                                                    />
+                                                    <div className="w-8.5 h-8.5 rounded-full border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform overflow-hidden relative z-0">
+                                                        {champion.studentAvatarUrl ? (
+                                                            <img
+                                                                src={
+                                                                    champion.studentAvatarUrl
+                                                                }
+                                                                alt={
+                                                                    champion.studentName
+                                                                }
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            getAvatarInitial(
+                                                                champion.studentName,
+                                                            )
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-1.5">
@@ -385,7 +393,7 @@ export default function LeaderboardView({
                 <div className="lg:col-span-6 space-y-8 min-w-0">
                     {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
                     {top3.length > 0 && (
-                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-4 sm:gap-6 pt-10 pb-4 relative select-none">
+                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-2 sm:gap-6 pt-10 pb-4 relative select-none">
                             {/* HẠNG 2 (Bên trái) */}
                             {podiumOrder[0] ? (
                                 <motion.div
@@ -395,15 +403,15 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="absolute -top-2.5 -right-2.5 z-20">
+                                        <div className="absolute -top-2 -right-2 z-20">
                                             <img
                                                 src="/icons/medal2.png"
-                                                className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
+                                                className="w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 object-contain"
                                                 alt="Huy chương bạc"
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
+                                        <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[0].studentAvatarUrl ? (
                                                 <img
                                                     src={
@@ -417,7 +425,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <UserIcon className="w-6.5 h-6.5 text-slate-400" />
+                                                <UserIcon className="w-5.5 h-5.5 text-slate-400" />
                                             )}
                                         </div>
                                     </div>
@@ -426,7 +434,7 @@ export default function LeaderboardView({
                                             {podiumOrder[0].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[72px] flex flex-col items-center justify-center transition-all">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all">
                                         <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                             HẠNG 2
                                         </span>
@@ -447,16 +455,16 @@ export default function LeaderboardView({
                                     transition={{ duration: 0.4 }}
                                     className="flex flex-col items-center text-center group relative z-10"
                                 >
-                                    <div className="relative mb-4">
-                                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20">
+                                    <div className="relative mb-3">
+                                        <div className="absolute -top-2 -right-2 z-20">
                                             <img
-                                                src="/icons/crown.png"
-                                                className="w-11 h-8 object-fill drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
-                                                alt="Vương miện"
+                                                src="/icons/medal1.png"
+                                                className="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
+                                                alt="Huy chương vàng"
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
-                                        <div className="w-16 h-16 sm:w-19 sm:h-19 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-lg text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
+                                        <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-base text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
                                             {podiumOrder[1].studentAvatarUrl ? (
                                                 <img
                                                     src={
@@ -470,7 +478,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <UserIcon className="w-8 h-8 text-amber-500" />
+                                                <UserIcon className="w-6.5 h-6.5 text-amber-500" />
                                             )}
                                         </div>
                                     </div>
@@ -479,11 +487,11 @@ export default function LeaderboardView({
                                             {podiumOrder[1].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none h-[72px] flex flex-col items-center justify-center transition-all relative">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
                                         <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
                                             Hạng nhất
                                         </span>
-                                        <span className="text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
+                                        <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints} điểm
                                         </span>
                                         <span className="absolute -bottom-5 right-2 font-brand text-amber-500/80 text-[11px] select-none rotate-6 hidden sm:inline">
@@ -502,15 +510,15 @@ export default function LeaderboardView({
                                     className="flex flex-col items-center text-center group"
                                 >
                                     <div className="relative mb-3">
-                                        <div className="absolute -top-2.5 -right-2.5 z-20">
+                                        <div className="absolute -top-2 -right-2 z-20">
                                             <img
                                                 src="/icons/medal3.png"
-                                                className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
+                                                className="w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 object-contain"
                                                 alt="Huy chương đồng"
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
+                                        <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[2].studentAvatarUrl ? (
                                                 <img
                                                     src={
@@ -524,7 +532,7 @@ export default function LeaderboardView({
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <UserIcon className="w-6.5 h-6.5 text-orange-700" />
+                                                <UserIcon className="w-5.5 h-5.5 text-orange-700" />
                                             )}
                                         </div>
                                     </div>
@@ -533,7 +541,7 @@ export default function LeaderboardView({
                                             {podiumOrder[2].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[72px] flex flex-col items-center justify-center transition-all">
+                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all">
                                         <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                             HẠNG 3
                                         </span>
@@ -561,18 +569,21 @@ export default function LeaderboardView({
                     {/* DANH SÁCH BẢNG XẾP HẠNG CHI TIẾT */}
                     {filteredOverall.length > 0 && (
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-6">
-                                    <span className="w-8 text-center">
+                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5 sm:px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-2 sm:gap-6 min-w-0">
+                                    <span className="w-7 sm:w-8 text-center shrink-0">
                                         Hạng
+                                    </span>
+                                    <span className="w-5 sm:w-6 text-center shrink-0 hidden xs:inline-block">
+                                        Xu hướng
                                     </span>
                                     <span>Học sinh</span>
                                 </div>
-                                <div className="flex items-center gap-12">
+                                <div className="flex items-center gap-2 sm:gap-12 shrink-0">
                                     <span className="hidden sm:inline">
                                         Số đề đã thi
                                     </span>
-                                    <span className="w-20 text-right">
+                                    <span className="w-16 sm:w-20 text-right">
                                         Tổng điểm
                                     </span>
                                 </div>
@@ -614,10 +625,10 @@ export default function LeaderboardView({
                                                 key={entry.studentId}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                className={`relative overflow-hidden py-3.5 px-3 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800 shrink-0 ${getRowBackground()}`}
+                                                className={`relative overflow-hidden py-3 px-2 sm:px-3 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800 shrink-0 ${getRowBackground()}`}
                                             >
-                                                <div className="relative z-10 flex items-center gap-6 min-w-0">
-                                                    <span className="w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center">
+                                                <div className="relative z-10 flex items-center gap-2 sm:gap-6 min-w-0 flex-1 mr-2">
+                                                    <span className="w-7 sm:w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
                                                         {isTop3 ? (
                                                             <img
                                                                 src={`/icons/medal${rank}.png`}
@@ -631,30 +642,47 @@ export default function LeaderboardView({
                                                         )}
                                                     </span>
 
-                                                    <span className="w-6 flex items-center justify-center">
+                                                    <span className="w-5 sm:w-6 flex items-center justify-center shrink-0">
                                                         {renderTrend(
                                                             entry.rankPosition,
                                                             entry.previousRankPosition,
                                                         )}
                                                     </span>
 
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
-                                                            {entry.studentAvatarUrl ? (
+                                                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                                        <div className="relative shrink-0 flex items-center justify-center">
+                                                            {rank === 1 && (
                                                                 <img
-                                                                    src={
-                                                                        entry.studentAvatarUrl
-                                                                    }
-                                                                    alt={
-                                                                        entry.studentName
-                                                                    }
-                                                                    className="w-full h-full object-cover"
+                                                                    src="/icons/laurel-wreath.png"
+                                                                    alt=""
+                                                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                                 />
-                                                            ) : (
-                                                                <UserIcon className="w-4.5 h-4.5 text-slate-400" />
                                                             )}
+                                                            <div
+                                                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden relative z-0 ${
+                                                                    rank === 1
+                                                                        ? "border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                                                                        : "bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
+                                                                }`}
+                                                            >
+                                                                {entry.studentAvatarUrl ? (
+                                                                    <img
+                                                                        src={
+                                                                            entry.studentAvatarUrl
+                                                                        }
+                                                                        alt={
+                                                                            entry.studentName
+                                                                        }
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <UserIcon
+                                                                        className={`w-4.5 h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
+                                                                    />
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <div className="min-w-0">
+                                                        <div className="min-w-0 flex-1">
                                                             <p
                                                                 className={`truncate leading-snug flex items-center gap-1.5 text-xs sm:text-sm ${
                                                                     isMe
@@ -662,13 +690,13 @@ export default function LeaderboardView({
                                                                         : "text-slate-800 dark:text-slate-200"
                                                                 }`}
                                                             >
-                                                                <span>
+                                                                <span className="truncate">
                                                                     {
                                                                         entry.studentName
                                                                     }
                                                                 </span>
                                                                 {isMe && (
-                                                                    <span className="text-[8px] bg-[#4B726B] text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider font-sans">
+                                                                    <span className="text-[8px] bg-[#4B726B] text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider font-sans shrink-0">
                                                                         Bạn
                                                                     </span>
                                                                 )}
@@ -677,13 +705,13 @@ export default function LeaderboardView({
                                                     </div>
                                                 </div>
 
-                                                <div className="relative z-10 flex items-center gap-12 shrink-0 text-xs">
+                                                <div className="relative z-10 flex items-center gap-2 sm:gap-12 shrink-0 text-xs">
                                                     <span className="hidden sm:inline text-slate-450 dark:text-slate-400 font-medium">
                                                         {entry.testsCompleted}{" "}
                                                         đề thi
                                                     </span>
                                                     <span
-                                                        className={`w-20 text-right font-mono font-bold sm:text-sm ${
+                                                        className={`w-16 sm:w-20 text-right font-bold sm:text-sm ${
                                                             isMe
                                                                 ? "text-[#4B726B] dark:text-[#88BDA4]"
                                                                 : isTop3
@@ -691,7 +719,7 @@ export default function LeaderboardView({
                                                                   : "text-slate-700 dark:text-slate-350"
                                                         }`}
                                                     >
-                                                        {entry.totalPoints} đ
+                                                        {entry.totalPoints}
                                                     </span>
                                                 </div>
                                             </motion.div>
@@ -859,12 +887,16 @@ export default function LeaderboardView({
                                 </div>
                             </div>
                         ) : (
-                            <div className="py-8 text-center space-y-2 text-slate-400">
-                                <BookOpen className="w-8 h-8 text-slate-300 mx-auto" />
-                                <p className="text-xs font-semibold">
+                            <div className="py-8 text-center space-y-2.5 text-slate-400">
+                                <img
+                                    src="/icons/party.gif"
+                                    alt="Chúc mừng"
+                                    className="w-12 h-12 object-contain mx-auto select-none"
+                                />
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                     Tuyệt vời! Bạn đã hoàn thành tất cả đề thi.
                                 </p>
-                                <p className="text-[10px] text-slate-455">
+                                <p className="text-[10px] text-slate-455 dark:text-slate-500">
                                     Không còn đề thi chưa hoàn thành của Khối{" "}
                                     {activeGrade}.
                                 </p>

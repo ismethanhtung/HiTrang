@@ -1551,11 +1551,11 @@ export default function StudentDashboard({
                                                     {quizLeaderboard[0] ? (
                                                         <div className="flex flex-col items-center text-center">
                                                             <div className="relative mb-1">
-                                                                <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 z-20">
+                                                                <div className="absolute -top-1.5 -right-1.5 z-20">
                                                                     <img
-                                                                        src="/icons/crown.png"
-                                                                        className="w-9 h-6.5 object-fill drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
-                                                                        alt="Vương miện"
+                                                                        src="/icons/medal1.png"
+                                                                        className="w-6 h-6 object-contain drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
+                                                                        alt="Huy chương vàng"
                                                                     />
                                                                 </div>
                                                                 <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600 overflow-hidden">
@@ -2103,20 +2103,29 @@ export default function StudentDashboard({
                                                                         {index +
                                                                             1}
                                                                     </span>
-                                                                    <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-                                                                        {entry.avatarUrl ? (
+                                                                    <div className="relative shrink-0 flex items-center justify-center">
+                                                                        {index === 0 && (
                                                                             <img
-                                                                                src={
-                                                                                    entry.avatarUrl
-                                                                                }
-                                                                                alt={
-                                                                                    entry.studentName
-                                                                                }
-                                                                                className="w-full h-full object-cover"
+                                                                                src="/icons/laurel-wreath.png"
+                                                                                alt=""
+                                                                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9.5 h-9.5 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                                             />
-                                                                        ) : (
-                                                                            <UserIcon className="w-4 h-4 text-slate-400" />
                                                                         )}
+                                                                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative z-0">
+                                                                            {entry.avatarUrl ? (
+                                                                                <img
+                                                                                    src={
+                                                                                        entry.avatarUrl
+                                                                                    }
+                                                                                    alt={
+                                                                                        entry.studentName
+                                                                                    }
+                                                                                    className="w-full h-full object-cover"
+                                                                                />
+                                                                            ) : (
+                                                                                <UserIcon className="w-4 h-4 text-slate-400" />
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                     <div className="min-w-0 flex-1">
                                                                         <p className="font-semibold text-slate-800 truncate">
