@@ -32,6 +32,7 @@ import {
 import { User as UserType, Quiz, Submission } from "../types";
 import {
     updateProfileName,
+    updateUsername,
     updatePassword,
     signOutAllDevices,
     uploadAvatar,
@@ -180,9 +181,68 @@ export default function SettingsView({
     // Feedback alerts
     const [nameError, setNameError] = useState("");
     const [nameSuccess, setNameSuccess] = useState("");
+    const [usernameInput, setUsernameInput] = useState(user.username || "");
+    const [updatingUsername, setUpdatingUsername] = useState(false);
+    const [usernameError, setUsernameError] = useState("");
+    const [usernameSuccess, setUsernameSuccess] = useState("");
     const [pwdError, setPwdError] = useState("");
     const [pwdSuccess, setPwdSuccess] = useState("");
     const [globalError, setGlobalError] = useState("");
+
+    // Sync username input if user changes
+    React.useEffect(() => {
+        setUsernameInput(user.username || "");
+    }, [user.username]);
+
+    // Handle username update
+    const handleUpdateUsername = async () => {
+        setUsernameError("");
+        setUsernameSuccess("");
+
+        const clean = usernameInput.trim().toLowerCase();
+        if (clean === (user.username || "").toLowerCase()) {
+            setUsernameError("Tên đăng nhập mới không có sự thay đổi.");
+            return;
+        }
+
+        if (clean.length < 4 || clean.length > 30) {
+            setUsernameError("Tên đăng nhập phải từ 4 đến 30 ký tự.");
+            return;
+        }
+
+        if (/\s/.test(clean)) {
+            setUsernameError("Tên đăng nhập không được chứa khoảng trắng.");
+            return;
+        }
+
+        if (clean.includes("@")) {
+            setUsernameError(
+                "Tên đăng nhập không được chứa ký tự '@' (không nhập email).",
+            );
+            return;
+        }
+
+        if (!/^[a-z0-9_.]+$/.test(clean)) {
+            setUsernameError(
+                "Tên đăng nhập chỉ gồm chữ cái không dấu (a-z), số (0-9), dấu gạch dưới (_) hoặc dấu chấm (.). Không dùng tiếng Việt có dấu.",
+            );
+            return;
+        }
+
+        setUpdatingUsername(true);
+        try {
+            const res = await updateUsername(clean);
+            onUpdateUser({
+                ...user,
+                username: res.username || clean,
+            });
+            setUsernameSuccess("Đã đổi tên đăng nhập thành công!");
+        } catch (err: any) {
+            setUsernameError(err.message || "Lỗi khi đổi tên đăng nhập.");
+        } finally {
+            setUpdatingUsername(false);
+        }
+    };
 
     // Handle name update
     const handleUpdateName = async () => {
@@ -989,19 +1049,54 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Username (soon)
+                                Tên đăng nhập (Username)
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Unique identifier in the platform.
+                                Dùng để đăng nhập vào tài khoản của bạn.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8">
-                            <input
-                                type="text"
-                                readOnly
-                                value={user.username}
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
-                            />
+                        <div className="col-span-12 md:col-span-8 space-y-3">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 max-w-lg">
+                                <input
+                                    type="text"
+                                    placeholder="Nhập tên đăng nhập mới"
+                                    value={usernameInput}
+                                    onChange={(e) =>
+                                        setUsernameInput(e.target.value)
+                                    }
+                                    className="w-full sm:max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleUpdateUsername}
+                                    disabled={
+                                        updatingUsername ||
+                                        usernameInput.trim().toLowerCase() ===
+                                            (user.username || "").toLowerCase()
+                                    }
+                                    className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                >
+                                    {updatingUsername && (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
+                                    <span>Lưu tên đăng nhập</span>
+                                </button>
+                            </div>
+
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                Quy tắc: 4-30 ký tự (a-z, 0-9, dấu _ hoặc .). Không dấu, không khoảng trắng, không chứa @.
+                            </p>
+
+                            {usernameError && (
+                                <div className="text-xs text-red-600 font-medium">
+                                    {usernameError}
+                                </div>
+                            )}
+                            {usernameSuccess && (
+                                <div className="text-xs text-emerald-600 font-medium">
+                                    {usernameSuccess}
+                                </div>
+                            )}
                         </div>
                     </div>
 

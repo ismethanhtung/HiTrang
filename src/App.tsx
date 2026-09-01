@@ -540,7 +540,7 @@ export default function App() {
                     className={
                         isTakingOrReviewing || currentPath === "/admin"
                             ? "flex-1 flex flex-col min-h-0 overflow-hidden"
-                            : "flex-1 flex flex-col min-h-[calc(100vh-54px)] bg-[#F9F8F6] dark:bg-bg-base relative z-10"
+                            : "flex-1 flex flex-col bg-bg-base"
                     }
                 >
                     {/* 1. ADMIN PANEL ROUTE */}
@@ -595,7 +595,9 @@ export default function App() {
                         <ScheduleView
                             user={user}
                             onNavigate={navigateTo}
-                            onOpenContactModal={() => setGlobalContactModalOpen(true)}
+                            onOpenContactModal={() =>
+                                setGlobalContactModalOpen(true)
+                            }
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
                         />
                     ) : !user ? (
@@ -789,7 +791,10 @@ export default function App() {
                                 setGlobalContactModalOpen(true)
                             }
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
-                            onOpenAuth={(mode) => { setAuthMode(mode); setAuthModalOpen(true); }}
+                            onOpenAuth={(mode) => {
+                                setAuthMode(mode);
+                                setAuthModalOpen(true);
+                            }}
                             userLoggedIn={!!user}
                         />
                     )}
@@ -1045,10 +1050,16 @@ export default function App() {
                                     }
                                     try {
                                         const fullDesc = `Tiêu đề: ${bugTitle.trim()}\n\nChi tiết: ${bugContent.trim()}`;
-                                        await submitBugReport(bugSenderName.trim() || "Ẩn danh", fullDesc);
+                                        await submitBugReport(
+                                            bugSenderName.trim() || "Ẩn danh",
+                                            fullDesc,
+                                        );
                                         setBugSubmitted(true);
                                     } catch (err: any) {
-                                        alert("Lỗi khi gửi báo cáo: " + (err.message || err));
+                                        alert(
+                                            "Lỗi khi gửi báo cáo: " +
+                                                (err.message || err),
+                                        );
                                     }
                                 }}
                                 className="space-y-4"
@@ -1130,9 +1141,9 @@ export default function App() {
 
             {/* Performance / Latency Indicator */}
             {loadTimeMs !== null && (
-                <div className="fixed bottom-1.5 right-4 z-40 flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-mono text-slate-400 dark:text-slate-500 select-none pointer-events-none">
+                <div className="fixed bottom-1.5 right-4 z-40 flex items-center gap-1 px-1.5 py-0.5 text-[6px] font-mono text-slate-400 dark:text-slate-500 select-none pointer-events-none">
                     <span
-                        className={`w-1 h-1 rounded-full ${
+                        className={`w-0.5 h-0.5 rounded-full ${
                             loadTimeMs < 300
                                 ? "bg-emerald-500"
                                 : loadTimeMs < 800

@@ -226,11 +226,37 @@ export default function AdminPlansTab({
         }).length;
     }, [userProfiles]);
 
-    const formatLastActive = (lastActiveAt?: string) => {
-        if (!lastActiveAt)
+    const testingCount = React.useMemo(() => {
+        return userProfiles.filter((u) => !!u.activeExam).length;
+    }, [userProfiles]);
+
+    const formatLastActive = (prof: User) => {
+        if (prof.activeExam) {
+            return (
+                <div
+                    className="flex flex-col gap-0.5 max-w-[200px]"
+                    title={`Đang thi: ${prof.activeExam.quizTitle} (${prof.activeExam.durationMinutes} phút)`}
+                >
+                    <span className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-amber-700/50 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit shadow-2xs">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        <span className="truncate">
+                            Đang thi: {prof.activeExam.quizTitle}
+                        </span>
+                    </span>
+                    <span className="text-[9px] text-amber-600/80 dark:text-amber-400/80 font-medium pl-0.5">
+                        Thời lượng {prof.activeExam.durationMinutes}p
+                    </span>
+                </div>
+            );
+        }
+
+        if (!prof.lastActiveAt)
             return <span className="text-slate-400 font-medium">—</span>;
 
-        const date = new Date(lastActiveAt);
+        const date = new Date(prof.lastActiveAt);
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -316,11 +342,20 @@ export default function AdminPlansTab({
                             className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500/20"
                         />
                     </div>
-                    {/* Online badge */}
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap dark:bg-emerald-950/20 px-2 py-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        user online: {onlineCount}
-                    </span>
+                    {/* Online badge & Testing badge */}
+                    <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/40 rounded-lg px-2.5 py-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            online: {onlineCount}
+                        </span>
+
+                        {testingCount > 0 && (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-lg px-2.5 py-1 animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                đang thi: {testingCount}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Filters */}
@@ -534,7 +569,7 @@ export default function AdminPlansTab({
                                         )}
                                     </td>
                                     <td className="py-3 px-4">
-                                        {formatLastActive(prof.lastActiveAt)}
+                                        {formatLastActive(prof)}
                                     </td>
                                     <td className="py-3 px-4 text-right space-x-1.5">
                                         <button

@@ -76,7 +76,7 @@ Mọi trang chủ hoặc trang dashboard của một phân hệ mới cần bắ
             Chào mừng quay trở lại, {user.name} 👋
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-            Đối thủ của bạn đang cày đề, còn bạn làm gì?
+            Đối thủ của bạn đang cày đề, còn bạn đang làm gì?
         </p>
     </div>
     

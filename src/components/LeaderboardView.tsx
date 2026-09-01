@@ -331,12 +331,18 @@ export default function LeaderboardView({
                                                 <div className="w-8.5 h-8.5 rounded-full border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform overflow-hidden">
                                                     {champion.studentAvatarUrl ? (
                                                         <img
-                                                            src={champion.studentAvatarUrl}
-                                                            alt={champion.studentName}
+                                                            src={
+                                                                champion.studentAvatarUrl
+                                                            }
+                                                            alt={
+                                                                champion.studentName
+                                                            }
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        getAvatarInitial(champion.studentName)
+                                                        getAvatarInitial(
+                                                            champion.studentName,
+                                                        )
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
@@ -400,8 +406,14 @@ export default function LeaderboardView({
                                         <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[0].studentAvatarUrl ? (
                                                 <img
-                                                    src={podiumOrder[0].studentAvatarUrl}
-                                                    alt={podiumOrder[0].studentName}
+                                                    src={
+                                                        podiumOrder[0]
+                                                            .studentAvatarUrl
+                                                    }
+                                                    alt={
+                                                        podiumOrder[0]
+                                                            .studentName
+                                                    }
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -447,8 +459,14 @@ export default function LeaderboardView({
                                         <div className="w-16 h-16 sm:w-19 sm:h-19 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-lg text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
                                             {podiumOrder[1].studentAvatarUrl ? (
                                                 <img
-                                                    src={podiumOrder[1].studentAvatarUrl}
-                                                    alt={podiumOrder[1].studentName}
+                                                    src={
+                                                        podiumOrder[1]
+                                                            .studentAvatarUrl
+                                                    }
+                                                    alt={
+                                                        podiumOrder[1]
+                                                            .studentName
+                                                    }
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -495,8 +513,14 @@ export default function LeaderboardView({
                                         <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-base text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
                                             {podiumOrder[2].studentAvatarUrl ? (
                                                 <img
-                                                    src={podiumOrder[2].studentAvatarUrl}
-                                                    alt={podiumOrder[2].studentName}
+                                                    src={
+                                                        podiumOrder[2]
+                                                            .studentAvatarUrl
+                                                    }
+                                                    alt={
+                                                        podiumOrder[2]
+                                                            .studentName
+                                                    }
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -615,13 +639,15 @@ export default function LeaderboardView({
                                                     </span>
 
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        <div
-                                                            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
-                                                        >
+                                                        <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
                                                             {entry.studentAvatarUrl ? (
                                                                 <img
-                                                                    src={entry.studentAvatarUrl}
-                                                                    alt={entry.studentName}
+                                                                    src={
+                                                                        entry.studentAvatarUrl
+                                                                    }
+                                                                    alt={
+                                                                        entry.studentName
+                                                                    }
                                                                     className="w-full h-full object-cover"
                                                                 />
                                                             ) : (

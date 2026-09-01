@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
     BookOpen,
@@ -247,6 +247,15 @@ export default function StudentDashboard({
     const [hoveredChartPoint, setHoveredChartPoint] = useState<number | null>(
         null,
     );
+    const chartHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (chartHoverTimeoutRef.current) {
+                clearTimeout(chartHoverTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Detailed Review State
     const [reviewSubmission, setReviewSubmission] = useState<Submission | null>(
@@ -563,29 +572,22 @@ export default function StudentDashboard({
         }
     };
 
-    // Student specific stats, filtered by their current grade to prevent mixed totals
+    // Student specific stats, filtered by their current grade and active quizzes only (ignores deleted quizzes)
     const gradeQuizzes = user.grade
         ? quizzes.filter((q) => !q.grade || q.grade === user.grade)
         : quizzes;
+    const gradeQuizIdSet = new Set(gradeQuizzes.map((q) => q.id));
+
     const studentSubmissions = submissions.filter((sub) => {
         if (sub.studentId !== user.id) return false;
-        const quizObj = quizzes.find((q) => q.id === sub.quizId);
-        if (
-            quizObj &&
-            quizObj.grade &&
-            user.grade &&
-            quizObj.grade !== user.grade
-        ) {
-            return false;
-        }
-        return true;
+        return gradeQuizIdSet.has(sub.quizId);
     });
     const completedCount = studentSubmissions.length;
     const averageScore =
         completedCount > 0
             ? (
                   studentSubmissions.reduce(
-                      (acc, curr) => acc + curr.score,
+                      (acc, curr) => acc + Number(curr.score),
                       0,
                   ) / completedCount
               ).toFixed(1)
@@ -603,7 +605,10 @@ export default function StudentDashboard({
     ).size;
     const completionRate =
         gradeQuizzes.length > 0
-            ? Math.round((uniqueQuizzesDone / gradeQuizzes.length) * 100)
+            ? Math.min(
+                  100,
+                  Math.round((uniqueQuizzesDone / gradeQuizzes.length) * 100),
+              )
             : 0;
     const totalStudyHours = Math.round((completedCount * 45) / 60);
 
@@ -1460,235 +1465,649 @@ export default function StudentDashboard({
                     </div>
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
                     <>
-                    <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto">
-                        <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
-                            {/* Cột 1: Bảng xếp hạng của bài thi — ẩn trên mobile, hiện từ lg */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{
-                                    duration: 0.3,
-                                    delay: 0.1,
-                                    ease: "easeOut",
-                                }}
-                                className="hidden lg:flex lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex-col justify-between space-y-4"
-                            >
-                                <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                                    {/* Header BXH */}
-                                    <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
-                                        <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-                                            <Trophy className="w-4.5 h-4.5 text-amber-500" />{" "}
-                                            Bảng xếp hạng thi thử
-                                        </h3>
-                                    </div>
-
-                                    {/* Loader hoặc Danh sách BXH */}
-                                    {loadingQuizLeaderboard ? (
-                                        <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-                                            <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
-                                            <span className="text-xs font-semibold">
-                                                Đang tải bảng xếp hạng...
-                                            </span>
+                        <div className="flex-1 flex items-center justify-center p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto">
+                            <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
+                                {/* Cột 1: Bảng xếp hạng của bài thi — ẩn trên mobile, hiện từ lg */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{
+                                        duration: 0.3,
+                                        delay: 0.1,
+                                        ease: "easeOut",
+                                    }}
+                                    className="hidden lg:flex lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex-col justify-between space-y-4"
+                                >
+                                    <div className="space-y-4 flex-1 flex flex-col min-h-0">
+                                        {/* Header BXH */}
+                                        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                                            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                                                <Trophy className="w-4.5 h-4.5 text-amber-500" />{" "}
+                                                Bảng xếp hạng bài thi
+                                            </h3>
                                         </div>
-                                    ) : quizLeaderboard.length > 0 ? (
-                                        <div className="flex-1 flex flex-col justify-between min-h-0">
-                                            {/* Podium Top 3 Mini */}
-                                            <div className="grid grid-cols-3 gap-3 items-end justify-center py-4 border-b border-slate-100/60 mb-3 select-none">
-                                                {/* Hạng 2 */}
-                                                {quizLeaderboard[1] ? (
-                                                    <div className="flex flex-col items-center text-center">
-                                                        <div className="relative">
-                                                            <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500 overflow-hidden">
-                                                                {quizLeaderboard[1]
-                                                                    .studentAvatarUrl ? (
-                                                                    <img
-                                                                        src={
-                                                                            quizLeaderboard[1]
-                                                                                .studentAvatarUrl
-                                                                        }
-                                                                        alt={
-                                                                            quizLeaderboard[1]
-                                                                                .studentName
-                                                                        }
-                                                                        className="w-full h-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <UserIcon className="w-5 h-5 text-slate-455" />
-                                                                )}
-                                                            </div>
-                                                            <div className="absolute -top-1.5 -right-1.5 z-20">
-                                                                <img
-                                                                    src="/icons/medal2.png"
-                                                                    className="w-5.5 h-5.5 object-contain"
-                                                                    alt="Huy chương bạc"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
-                                                            {
-                                                                quizLeaderboard[1]
-                                                                    .studentName
-                                                            }
-                                                        </span>
-                                                        <span className="text-[10px] font-black text-slate-500">
-                                                            {
-                                                                quizLeaderboard[1]
-                                                                    .score
-                                                            }{" "}
-                                                            điểm
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div />
-                                                )}
 
-                                                {/* Hạng 1 */}
-                                                {quizLeaderboard[0] ? (
-                                                    <div className="flex flex-col items-center text-center">
-                                                        <div className="relative mb-1">
-                                                            <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 z-20">
-                                                                <img
-                                                                    src="/icons/crown.png"
-                                                                    className="w-9 h-6.5 object-fill drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
-                                                                    alt="Vương miện"
-                                                                />
-                                                            </div>
-                                                            <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600 overflow-hidden">
-                                                                {quizLeaderboard[0]
-                                                                    .studentAvatarUrl ? (
+                                        {/* Loader hoặc Danh sách BXH */}
+                                        {loadingQuizLeaderboard ? (
+                                            <div className="flex-1 flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+                                                <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+                                                <span className="text-xs font-semibold">
+                                                    Đang tải bảng xếp hạng...
+                                                </span>
+                                            </div>
+                                        ) : quizLeaderboard.length > 0 ? (
+                                            <div className="flex-1 flex flex-col justify-between min-h-0">
+                                                {/* Podium Top 3 Mini */}
+                                                <div className="grid grid-cols-3 gap-3 items-end justify-center py-4 border-b border-slate-100/60 mb-3 select-none">
+                                                    {/* Hạng 2 */}
+                                                    {quizLeaderboard[1] ? (
+                                                        <div className="flex flex-col items-center text-center">
+                                                            <div className="relative">
+                                                                <div className="w-10 h-10 rounded-full border border-slate-300 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500 overflow-hidden">
+                                                                    {quizLeaderboard[1]
+                                                                        .studentAvatarUrl ? (
+                                                                        <img
+                                                                            src={
+                                                                                quizLeaderboard[1]
+                                                                                    .studentAvatarUrl
+                                                                            }
+                                                                            alt={
+                                                                                quizLeaderboard[1]
+                                                                                    .studentName
+                                                                            }
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <UserIcon className="w-5 h-5 text-slate-455" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="absolute -top-1.5 -right-1.5 z-20">
                                                                     <img
-                                                                        src={
-                                                                            quizLeaderboard[0]
-                                                                                .studentAvatarUrl
-                                                                        }
-                                                                        alt={
-                                                                            quizLeaderboard[0]
-                                                                                .studentName
-                                                                        }
-                                                                        className="w-full h-full object-cover"
+                                                                        src="/icons/medal2.png"
+                                                                        className="w-5.5 h-5.5 object-contain"
+                                                                        alt="Huy chương bạc"
                                                                     />
-                                                                ) : (
-                                                                    <UserIcon className="w-6 h-6 text-amber-500" />
-                                                                )}
+                                                                </div>
                                                             </div>
+                                                            <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
+                                                                {
+                                                                    quizLeaderboard[1]
+                                                                        .studentName
+                                                                }
+                                                            </span>
+                                                            <span className="text-[10px] font-black text-slate-500">
+                                                                {
+                                                                    quizLeaderboard[1]
+                                                                        .score
+                                                                }{" "}
+                                                                điểm
+                                                            </span>
                                                         </div>
-                                                        <span className="text-[11px] font-black text-slate-800 truncate max-w-[90px] block mt-1">
-                                                            {
-                                                                quizLeaderboard[0]
-                                                                    .studentName
-                                                            }
-                                                        </span>
-                                                        <span className="text-[11px] font-black text-amber-600">
-                                                            {
-                                                                quizLeaderboard[0]
-                                                                    .score
-                                                            }{" "}
-                                                            điểm
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div />
-                                                )}
+                                                    ) : (
+                                                        <div />
+                                                    )}
 
-                                                {/* Hạng 3 */}
-                                                {quizLeaderboard[2] ? (
-                                                    <div className="flex flex-col items-center text-center">
-                                                        <div className="relative">
-                                                            <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80 overflow-hidden">
-                                                                {quizLeaderboard[2]
-                                                                    .studentAvatarUrl ? (
+                                                    {/* Hạng 1 */}
+                                                    {quizLeaderboard[0] ? (
+                                                        <div className="flex flex-col items-center text-center">
+                                                            <div className="relative mb-1">
+                                                                <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 z-20">
                                                                     <img
-                                                                        src={
-                                                                            quizLeaderboard[2]
-                                                                                .studentAvatarUrl
-                                                                        }
-                                                                        alt={
-                                                                            quizLeaderboard[2]
-                                                                                .studentName
-                                                                        }
-                                                                        className="w-full h-full object-cover"
+                                                                        src="/icons/crown.png"
+                                                                        className="w-9 h-6.5 object-fill drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
+                                                                        alt="Vương miện"
                                                                     />
-                                                                ) : (
-                                                                    <UserIcon className="w-5 h-5 text-orange-750" />
-                                                                )}
+                                                                </div>
+                                                                <div className="w-12 h-12 rounded-full border-2 border-amber-400 bg-amber-55/30 flex items-center justify-center font-black text-sm text-amber-600 overflow-hidden">
+                                                                    {quizLeaderboard[0]
+                                                                        .studentAvatarUrl ? (
+                                                                        <img
+                                                                            src={
+                                                                                quizLeaderboard[0]
+                                                                                    .studentAvatarUrl
+                                                                            }
+                                                                            alt={
+                                                                                quizLeaderboard[0]
+                                                                                    .studentName
+                                                                            }
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <UserIcon className="w-6 h-6 text-amber-500" />
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="absolute -top-1.5 -right-1.5 z-20">
-                                                                <img
-                                                                    src="/icons/medal3.png"
-                                                                    className="w-5.5 h-5.5 object-contain"
-                                                                    alt="Huy chương đồng"
-                                                                />
-                                                            </div>
+                                                            <span className="text-[11px] font-black text-slate-800 truncate max-w-[90px] block mt-1">
+                                                                {
+                                                                    quizLeaderboard[0]
+                                                                        .studentName
+                                                                }
+                                                            </span>
+                                                            <span className="text-[11px] font-black text-amber-600">
+                                                                {
+                                                                    quizLeaderboard[0]
+                                                                        .score
+                                                                }{" "}
+                                                                điểm
+                                                            </span>
                                                         </div>
-                                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
-                                                            {
-                                                                quizLeaderboard[2]
-                                                                    .studentName
-                                                            }
-                                                        </span>
-                                                        <span className="text-[10px] font-black text-slate-500">
-                                                            {
-                                                                quizLeaderboard[2]
-                                                                    .score
-                                                            }{" "}
-                                                            điểm
-                                                        </span>
-                                                    </div>
-                                                ) : (
-                                                    <div />
-                                                )}
+                                                    ) : (
+                                                        <div />
+                                                    )}
+
+                                                    {/* Hạng 3 */}
+                                                    {quizLeaderboard[2] ? (
+                                                        <div className="flex flex-col items-center text-center">
+                                                            <div className="relative">
+                                                                <div className="w-10 h-10 rounded-full border border-amber-600 bg-amber-50/10 flex items-center justify-center font-bold text-xs text-amber-700/80 overflow-hidden">
+                                                                    {quizLeaderboard[2]
+                                                                        .studentAvatarUrl ? (
+                                                                        <img
+                                                                            src={
+                                                                                quizLeaderboard[2]
+                                                                                    .studentAvatarUrl
+                                                                            }
+                                                                            alt={
+                                                                                quizLeaderboard[2]
+                                                                                    .studentName
+                                                                            }
+                                                                            className="w-full h-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <UserIcon className="w-5 h-5 text-orange-750" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="absolute -top-1.5 -right-1.5 z-20">
+                                                                    <img
+                                                                        src="/icons/medal3.png"
+                                                                        className="w-5.5 h-5.5 object-contain"
+                                                                        alt="Huy chương đồng"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px] block mt-1">
+                                                                {
+                                                                    quizLeaderboard[2]
+                                                                        .studentName
+                                                                }
+                                                            </span>
+                                                            <span className="text-[10px] font-black text-slate-500">
+                                                                {
+                                                                    quizLeaderboard[2]
+                                                                        .score
+                                                                }{" "}
+                                                                điểm
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <div />
+                                                    )}
+                                                </div>
+
+                                                {/* Danh sách các thứ hạng khác */}
+                                                <div className="flex-1 overflow-y-auto max-h-[220px] divide-y divide-slate-100 pr-1 text-xs">
+                                                    {quizLeaderboard.map(
+                                                        (entry) => {
+                                                            const isMe =
+                                                                entry.studentId ===
+                                                                user.id;
+                                                            const minVal =
+                                                                Math.floor(
+                                                                    entry.durationSeconds /
+                                                                        60,
+                                                                );
+                                                            const secVal =
+                                                                entry.durationSeconds %
+                                                                60;
+                                                            const timeStr =
+                                                                minVal === 0
+                                                                    ? `${secVal}s`
+                                                                    : `${minVal}p ${secVal}s`;
+
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        entry.studentId
+                                                                    }
+                                                                    className={`py-2.5 px-3.5 flex items-center justify-between transition-colors ${
+                                                                        isMe
+                                                                            ? "bg-brand-50/30 font-bold border border-brand-100/50"
+                                                                            : "hover:bg-slate-50/50"
+                                                                    }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="font-extrabold text-slate-400 w-6 flex items-center justify-center">
+                                                                            {entry.rankPosition <=
+                                                                            3 ? (
+                                                                                <img
+                                                                                    src={`/icons/medal${entry.rankPosition}.png`}
+                                                                                    alt={`Hạng ${entry.rankPosition}`}
+                                                                                    className="w-5 h-5 object-contain"
+                                                                                />
+                                                                            ) : (
+                                                                                `#${entry.rankPosition}`
+                                                                            )}
+                                                                        </span>
+                                                                        {/* Avatar */}
+                                                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
+                                                                            {entry.studentAvatarUrl ? (
+                                                                                <img
+                                                                                    src={
+                                                                                        entry.studentAvatarUrl
+                                                                                    }
+                                                                                    alt={
+                                                                                        entry.studentName
+                                                                                    }
+                                                                                    className="w-full h-full object-cover"
+                                                                                />
+                                                                            ) : (
+                                                                                <UserIcon className="w-4 h-4 text-slate-400" />
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="min-w-0">
+                                                                            <p className="text-slate-800 font-semibold truncate max-w-[120px]">
+                                                                                {
+                                                                                    entry.studentName
+                                                                                }
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <span className="font-extrabold text-slate-750">
+                                                                            {
+                                                                                entry.score
+                                                                            }
+                                                                            /10
+                                                                        </span>
+                                                                        <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium">
+                                                                            <Clock className="w-2.5 h-2.5" />{" "}
+                                                                            {
+                                                                                timeStr
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        },
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-2.5">
+                                                <BookOpen className="w-8 h-8 text-slate-300" />
+                                                <span className="text-xs">
+                                                    Chưa có ai hoàn thành đề thi
+                                                    này. Hãy là người mở màn!
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3">
+                                        💡 Điểm thi trên BXH được tính theo lượt
+                                        thi ĐẦU TIÊN.
+                                    </p>
+                                </motion.div>
+
+                                {/* Cột 2: Thông tin đề thi */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{
+                                        duration: 0.3,
+                                        ease: "easeOut",
+                                    }}
+                                    className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-6"
+                                >
+                                    <div className="space-y-6">
+                                        {/* Quiz info header */}
+                                        <div className="text-center space-y-3">
+                                            <h1 className="text-xl sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                                                {activeQuiz.title}
+                                            </h1>
+                                            {activeQuiz.description && (
+                                                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                                    {activeQuiz.description}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Meta info inline simplified */}
+                                        <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="w-4 h-4 text-slate-400" />
+                                                <span>
+                                                    Thời gian:{" "}
+                                                    <strong className="text-slate-800 font-extrabold">
+                                                        {activeQuiz.duration}{" "}
+                                                        phút
+                                                    </strong>
+                                                </span>
+                                            </div>
+                                            <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
+                                            <div className="flex items-center gap-1.5">
+                                                <HelpCircle className="w-4 h-4 text-slate-400" />
+                                                <span>
+                                                    Số câu hỏi:{" "}
+                                                    <strong className="text-slate-800 font-extrabold">
+                                                        {activeQuiz.questions
+                                                            ?.length || 0}{" "}
+                                                        câu
+                                                    </strong>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Attempts & History Section */}
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between   pb-3">
+                                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
+                                                    Tiến trình làm bài
+                                                </h3>
+                                                <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                    Đã làm: {attemptsCount}/5
+                                                    lượt
+                                                </span>
                                             </div>
 
-                                            {/* Danh sách các thứ hạng khác */}
-                                            <div className="flex-1 overflow-y-auto max-h-[220px] divide-y divide-slate-100 pr-1 text-xs">
-                                                {quizLeaderboard.map(
-                                                    (entry) => {
-                                                        const isMe =
-                                                            entry.studentId ===
-                                                            user.id;
-                                                        const minVal =
-                                                            Math.floor(
-                                                                entry.durationSeconds /
-                                                                    60,
-                                                            );
-                                                        const secVal =
-                                                            entry.durationSeconds %
-                                                            60;
-                                                        const timeStr =
-                                                            minVal === 0
-                                                                ? `${secVal}s`
-                                                                : `${minVal}p ${secVal}s`;
+                                            {/* Custom Attempts visual indicator circles */}
+                                            <div className="flex items-center gap-2">
+                                                {[1, 2, 3, 4, 5].map((idx) => {
+                                                    const isUsed =
+                                                        idx <= attemptsCount;
+                                                    return (
+                                                        <div
+                                                            key={idx}
+                                                            className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
+                                                                isUsed
+                                                                    ? "bg-brand-500 shadow-xs"
+                                                                    : "bg-slate-200/60 border border-dashed border-slate-300"
+                                                            }`}
+                                                            title={
+                                                                isUsed
+                                                                    ? `Lượt thứ ${idx} đã dùng`
+                                                                    : `Lượt thứ ${idx} chưa dùng`
+                                                            }
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
 
-                                                        return (
+                                            {/* Attempts List */}
+                                            {attemptsCount > 0 ? (
+                                                <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
+                                                    {quizSubmissions.map(
+                                                        (sub, index) => (
                                                             <div
-                                                                key={
-                                                                    entry.studentId
-                                                                }
-                                                                className={`py-2.5 px-3.5 flex items-center justify-between transition-colors ${
-                                                                    isMe
-                                                                        ? "bg-brand-50/30 font-bold border border-brand-100/50"
-                                                                        : "hover:bg-slate-50/50"
-                                                                }`}
+                                                                key={sub.id}
+                                                                className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
                                                             >
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="font-extrabold text-slate-400 w-6 flex items-center justify-center">
-                                                                        {entry.rankPosition <=
-                                                                        3 ? (
-                                                                            <img
-                                                                                src={`/icons/medal${entry.rankPosition}.png`}
-                                                                                alt={`Hạng ${entry.rankPosition}`}
-                                                                                className="w-5 h-5 object-contain"
-                                                                            />
-                                                                        ) : (
-                                                                            `#${entry.rankPosition}`
-                                                                        )}
+                                                                <div className="space-y-1">
+                                                                    <span className="block text-[10px] font-bold text-brand-600 uppercase">
+                                                                        Lần làm
+                                                                        thứ{" "}
+                                                                        {index +
+                                                                            1}
                                                                     </span>
-                                                                    {/* Avatar */}
-                                                                    <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
-                                                                        {entry.studentAvatarUrl ? (
+                                                                    <span className="text-[11px] text-slate-400 block font-medium">
+                                                                        Ngày
+                                                                        nộp:{" "}
+                                                                        {
+                                                                            sub.submittedAt
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="text-right">
+                                                                        <span className="text-sm font-extrabold text-slate-800">
+                                                                            {
+                                                                                sub.score
+                                                                            }{" "}
+                                                                            điểm
+                                                                        </span>
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            onNavigate(
+                                                                                "/result/" +
+                                                                                    sub.id,
+                                                                            )
+                                                                        }
+                                                                        className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                                                    >
+                                                                        Xem lại
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-6   rounded-xl   text-slate-400 text-xs italic">
+                                                    🍀 Hãy chuẩn bị tinh thần và
+                                                    bấm "Bắt đầu làm bài".
+                                                </div>
+                                            )}
+
+                                            {hasOtherActiveAttempt && (
+                                                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
+                                                    <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                                                    <span>
+                                                        Bạn đang có bài thi khác
+                                                        chưa hoàn thành!
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            {attemptsCount > 0 && (
+                                                <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
+                                                    <Award className="w-4 h-4 text-emerald-600" />
+                                                    <span className="text-[11px] font-bold">
+                                                        Điểm số cao nhất của
+                                                        bạn: {maxScore} điểm
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Buttons actions */}
+                                    <div className="space-y-3 pt-4">
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (navigateReplace)
+                                                        navigateReplace("/");
+                                                    else onNavigate("/");
+                                                }}
+                                                className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
+                                            >
+                                                <ChevronLeft className="w-4 h-4" />
+                                                <span>Quay lại</span>
+                                            </button>
+
+                                            {isGradeMismatch ? (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                                >
+                                                    <span>Bắt đầu làm bài</span>
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </button>
+                                            ) : hasOtherActiveAttempt ? (
+                                                <button
+                                                    type="button"
+                                                    disabled
+                                                    className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
+                                                >
+                                                    <span>
+                                                        Đang làm đề thi khác
+                                                    </span>
+                                                    <AlertCircle className="w-4 h-4" />
+                                                </button>
+                                            ) : activeAttemptInProgress ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={startQuizAttempt}
+                                                    className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
+                                                >
+                                                    <span>Tiếp tục</span>
+                                                    <RefreshCw
+                                                        className="w-4 h-4 animate-spin"
+                                                        style={{
+                                                            animationDuration:
+                                                                "3s",
+                                                        }}
+                                                    />
+                                                </button>
+                                            ) : remainingAttempts > 0 ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={startQuizAttempt}
+                                                    className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
+                                                >
+                                                    <span>Bắt đầu làm bài</span>
+                                                    <ArrowRight className="w-4 h-4 animate-pulse" />
+                                                </button>
+                                            ) : (
+                                                <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                                    <span>
+                                                        Đã hết lượt thi (Tối đa
+                                                        5)
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {isGradeMismatch && (
+                                            <div className="text-center text-xs text-rose-400 font-semibold">
+                                                Em đang là học sinh lớp{" "}
+                                                {user.grade} mà?
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            </div>
+                        </div>
+
+                        {/* MOBILE CROWN FAB — chỉ hiện ở entry phase, mobile, ẩn từ lg */}
+                        <button
+                            type="button"
+                            onClick={() => setShowMobileLeaderboardSheet(true)}
+                            className="fixed right-0 top-1/2 -translate-y-1/2 lg:hidden z-40 bg-amber-500 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-amber-600 active:scale-95 transition-all border border-r-0 border-amber-400/30 min-w-[42px]"
+                        >
+                            <Crown className="w-5 h-5 text-white drop-shadow" />
+                        </button>
+
+                        {/* MOBILE LEADERBOARD BOTTOM SHEET */}
+                        <AnimatePresence>
+                            {showMobileLeaderboardSheet && (
+                                <>
+                                    {/* Backdrop */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.5 }}
+                                        exit={{ opacity: 0 }}
+                                        onClick={() =>
+                                            setShowMobileLeaderboardSheet(false)
+                                        }
+                                        className="fixed inset-0 bg-black z-50 lg:hidden"
+                                    />
+                                    {/* Slide-up sheet */}
+                                    <motion.div
+                                        initial={{ y: "100%" }}
+                                        animate={{ y: 0 }}
+                                        exit={{ y: "100%" }}
+                                        transition={{
+                                            type: "spring",
+                                            damping: 25,
+                                            stiffness: 250,
+                                        }}
+                                        className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl p-5 shadow-2xl z-55 lg:hidden flex flex-col gap-4"
+                                    >
+                                        {/* Sheet Header */}
+                                        <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                                            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
+                                                <Trophy className="w-4.5 h-4.5 text-amber-500" />
+                                                Bảng xếp hạng bài thi
+                                            </h3>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setShowMobileLeaderboardSheet(
+                                                        false,
+                                                    )
+                                                }
+                                                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 cursor-pointer"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        {/* Leaderboard content (scrollable) */}
+                                        <div className="overflow-y-auto flex-1 min-h-0 space-y-4">
+                                            {loadingQuizLeaderboard ? (
+                                                <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
+                                                    <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+                                                    <span className="text-xs font-semibold">
+                                                        Đang tải bảng xếp
+                                                        hạng...
+                                                    </span>
+                                                </div>
+                                            ) : quizLeaderboard.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {quizLeaderboard.map(
+                                                        (entry, index) => {
+                                                            const mins =
+                                                                Math.floor(
+                                                                    entry.timeTaken /
+                                                                        60,
+                                                                );
+                                                            const secs =
+                                                                entry.timeTaken %
+                                                                60;
+                                                            const timeStr = `${mins}:${secs.toString().padStart(2, "0")}`;
+                                                            return (
+                                                                <div
+                                                                    key={
+                                                                        entry.userId
+                                                                    }
+                                                                    className={`flex items-center gap-3 p-3 rounded-xl text-xs ${
+                                                                        index ===
+                                                                        0
+                                                                            ? "bg-amber-50 border border-amber-100"
+                                                                            : index ===
+                                                                                1
+                                                                              ? "bg-slate-50 border border-slate-100"
+                                                                              : index ===
+                                                                                  2
+                                                                                ? "bg-orange-50 border border-orange-100"
+                                                                                : "bg-white border border-slate-100"
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
+                                                                            index ===
+                                                                            0
+                                                                                ? "bg-amber-400 text-white"
+                                                                                : index ===
+                                                                                    1
+                                                                                  ? "bg-slate-400 text-white"
+                                                                                  : index ===
+                                                                                      2
+                                                                                    ? "bg-orange-400 text-white"
+                                                                                    : "bg-slate-200 text-slate-600"
+                                                                        }`}
+                                                                    >
+                                                                        {index +
+                                                                            1}
+                                                                    </span>
+                                                                    <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                                                                        {entry.avatarUrl ? (
                                                                             <img
                                                                                 src={
-                                                                                    entry.studentAvatarUrl
+                                                                                    entry.avatarUrl
                                                                                 }
                                                                                 alt={
                                                                                     entry.studentName
@@ -1699,393 +2118,52 @@ export default function StudentDashboard({
                                                                             <UserIcon className="w-4 h-4 text-slate-400" />
                                                                         )}
                                                                     </div>
-                                                                    <div className="min-w-0">
-                                                                        <p className="text-slate-800 font-semibold truncate max-w-[120px]">
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="font-semibold text-slate-800 truncate">
                                                                             {
                                                                                 entry.studentName
                                                                             }
                                                                         </p>
                                                                     </div>
+                                                                    <div className="text-right shrink-0">
+                                                                        <span className="font-extrabold text-slate-800">
+                                                                            {
+                                                                                entry.score
+                                                                            }
+                                                                            /10
+                                                                        </span>
+                                                                        <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium mt-0.5">
+                                                                            <Clock className="w-2.5 h-2.5" />{" "}
+                                                                            {
+                                                                                timeStr
+                                                                            }
+                                                                        </p>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    <span className="font-extrabold text-slate-750">
-                                                                        {
-                                                                            entry.score
-                                                                        }
-                                                                        /10
-                                                                    </span>
-                                                                    <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium">
-                                                                        <Clock className="w-2.5 h-2.5" />{" "}
-                                                                        {
-                                                                            timeStr
-                                                                        }
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    },
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-2.5">
-                                            <BookOpen className="w-8 h-8 text-slate-300" />
-                                            <span className="text-xs">
-                                                Chưa có ai hoàn thành đề thi
-                                                này. Hãy là người mở màn!
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                                <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3">
-                                    💡 Điểm thi trên BXH được tính theo lượt thi
-                                    ĐẦU TIÊN.
-                                </p>
-                            </motion.div>
-
-                            {/* Cột 2: Thông tin đề thi */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between space-y-6"
-                            >
-                                <div className="space-y-6">
-                                    {/* Quiz info header */}
-                                    <div className="text-center space-y-3">
-                                        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug">
-                                            {activeQuiz.title}
-                                        </h1>
-                                        {activeQuiz.description && (
-                                            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                                                {activeQuiz.description}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Meta info inline simplified */}
-                                    <div className="flex items-center justify-center gap-6 text-xs font-semibold text-slate-500 border-y border-slate-100 py-3.5">
-                                        <div className="flex items-center gap-1.5">
-                                            <Clock className="w-4 h-4 text-slate-400" />
-                                            <span>
-                                                Thời gian:{" "}
-                                                <strong className="text-slate-800 font-extrabold">
-                                                    {activeQuiz.duration} phút
-                                                </strong>
-                                            </span>
-                                        </div>
-                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full" />
-                                        <div className="flex items-center gap-1.5">
-                                            <HelpCircle className="w-4 h-4 text-slate-400" />
-                                            <span>
-                                                Số câu hỏi:{" "}
-                                                <strong className="text-slate-800 font-extrabold">
-                                                    {activeQuiz.questions
-                                                        ?.length || 0}{" "}
-                                                    câu
-                                                </strong>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Attempts & History Section */}
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between   pb-3">
-                                            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550">
-                                                Tiến trình làm bài
-                                            </h3>
-                                            <span className="text-xs font-extrabold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                                                Đã làm: {attemptsCount}/5 lượt
-                                            </span>
+                                                            );
+                                                        },
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400 gap-2.5">
+                                                    <BookOpen className="w-8 h-8 text-slate-300" />
+                                                    <span className="text-xs">
+                                                        Chưa có ai hoàn thành đề
+                                                        thi này. Hãy là người mở
+                                                        màn!
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {/* Custom Attempts visual indicator circles */}
-                                        <div className="flex items-center gap-2">
-                                            {[1, 2, 3, 4, 5].map((idx) => {
-                                                const isUsed =
-                                                    idx <= attemptsCount;
-                                                return (
-                                                    <div
-                                                        key={idx}
-                                                        className={`flex-1 h-2.5 rounded-xl transition-all duration-300 ${
-                                                            isUsed
-                                                                ? "bg-brand-500 shadow-xs"
-                                                                : "bg-slate-200/60 border border-dashed border-slate-300"
-                                                        }`}
-                                                        title={
-                                                            isUsed
-                                                                ? `Lượt thứ ${idx} đã dùng`
-                                                                : `Lượt thứ ${idx} chưa dùng`
-                                                        }
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Attempts List */}
-                                        {attemptsCount > 0 ? (
-                                            <div className="space-y-3 max-h-40 overflow-y-auto pr-1">
-                                                {quizSubmissions.map(
-                                                    (sub, index) => (
-                                                        <div
-                                                            key={sub.id}
-                                                            className="p-3 bg-white border border-slate-200/80 rounded-xl flex items-center justify-between hover:border-brand-200 hover:shadow-2xs transition-all duration-200"
-                                                        >
-                                                            <div className="space-y-1">
-                                                                <span className="block text-[10px] font-bold text-brand-600 uppercase">
-                                                                    Lần làm thứ{" "}
-                                                                    {index + 1}
-                                                                </span>
-                                                                <span className="text-[11px] text-slate-400 block font-medium">
-                                                                    Ngày nộp:{" "}
-                                                                    {
-                                                                        sub.submittedAt
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="text-right">
-                                                                    <span className="text-sm font-extrabold text-slate-800">
-                                                                        {
-                                                                            sub.score
-                                                                        }{" "}
-                                                                        điểm
-                                                                    </span>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() =>
-                                                                        onNavigate(
-                                                                            "/result/" +
-                                                                                sub.id,
-                                                                        )
-                                                                    }
-                                                                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-brand-550 hover:text-white border border-slate-200 text-slate-650 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
-                                                                >
-                                                                    Xem lại
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ),
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-6   rounded-xl   text-slate-400 text-xs italic">
-                                                🍀 Hãy chuẩn bị tinh thần và bấm
-                                                "Bắt đầu làm bài".
-                                            </div>
-                                        )}
-
-                                        {hasOtherActiveAttempt && (
-                                            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-705 rounded-xl text-[11px] font-bold text-center flex items-center justify-center gap-1.5 shadow-3xs leading-relaxed animate-pulse">
-                                                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                                                <span>
-                                                    Bạn đang có bài thi khác
-                                                    chưa hoàn thành!
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {attemptsCount > 0 && (
-                                            <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
-                                                <Award className="w-4 h-4 text-emerald-600" />
-                                                <span className="text-[11px] font-bold">
-                                                    Điểm số cao nhất của bạn:{" "}
-                                                    {maxScore} điểm
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Buttons actions */}
-                                <div className="space-y-3 pt-4">
-                                    <div className="flex gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (navigateReplace)
-                                                    navigateReplace("/");
-                                                else onNavigate("/");
-                                            }}
-                                            className="flex-1 py-3 border border-slate-200 hover:bg-slate-50 text-slate-655 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
-                                        >
-                                            <ChevronLeft className="w-4 h-4" />
-                                            <span>Quay lại</span>
-                                        </button>
-
-                                        {isGradeMismatch ? (
-                                            <button
-                                                type="button"
-                                                disabled
-                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                            >
-                                                <span>Bắt đầu làm bài</span>
-                                                <ArrowRight className="w-4 h-4" />
-                                            </button>
-                                        ) : hasOtherActiveAttempt ? (
-                                            <button
-                                                type="button"
-                                                disabled
-                                                className="flex-1 py-3 bg-slate-100 text-slate-400 font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed opacity-60"
-                                            >
-                                                <span>
-                                                    Đang làm đề thi khác
-                                                </span>
-                                                <AlertCircle className="w-4 h-4" />
-                                            </button>
-                                        ) : activeAttemptInProgress ? (
-                                            <button
-                                                type="button"
-                                                onClick={startQuizAttempt}
-                                                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-99 transition-all cursor-pointer"
-                                            >
-                                                <span>Tiếp tục</span>
-                                                <RefreshCw
-                                                    className="w-4 h-4 animate-spin"
-                                                    style={{
-                                                        animationDuration: "3s",
-                                                    }}
-                                                />
-                                            </button>
-                                        ) : remainingAttempts > 0 ? (
-                                            <button
-                                                type="button"
-                                                onClick={startQuizAttempt}
-                                                className="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-extrabold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-500/10 active:scale-99 transition-all cursor-pointer"
-                                            >
-                                                <span>Bắt đầu làm bài</span>
-                                                <ArrowRight className="w-4 h-4 animate-pulse" />
-                                            </button>
-                                        ) : (
-                                            <div className="flex-1 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-not-allowed">
-                                                <span>
-                                                    Đã hết lượt thi (Tối đa 5)
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    {isGradeMismatch && (
-                                        <div className="text-center text-xs text-rose-400 font-semibold">
-                                            Em đang là học sinh lớp {user.grade}{" "}
-                                            mà?
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </div>
-                    </div>
-
-                    {/* MOBILE CROWN FAB — chỉ hiện ở entry phase, mobile, ẩn từ lg */}
-                    <button
-                        type="button"
-                        onClick={() => setShowMobileLeaderboardSheet(true)}
-                        className="fixed right-0 top-1/2 -translate-y-1/2 lg:hidden z-40 bg-amber-500 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-amber-600 active:scale-95 transition-all border border-r-0 border-amber-400/30 min-w-[42px]"
-                    >
-                        <Crown className="w-5 h-5 text-white drop-shadow" />
-                    </button>
-
-                    {/* MOBILE LEADERBOARD BOTTOM SHEET */}
-                    <AnimatePresence>
-                        {showMobileLeaderboardSheet && (
-                            <>
-                                {/* Backdrop */}
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 0.5 }}
-                                    exit={{ opacity: 0 }}
-                                    onClick={() => setShowMobileLeaderboardSheet(false)}
-                                    className="fixed inset-0 bg-black z-50 lg:hidden"
-                                />
-                                {/* Slide-up sheet */}
-                                <motion.div
-                                    initial={{ y: "100%" }}
-                                    animate={{ y: 0 }}
-                                    exit={{ y: "100%" }}
-                                    transition={{ type: "spring", damping: 25, stiffness: 250 }}
-                                    className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-2xl p-5 shadow-2xl z-55 lg:hidden flex flex-col gap-4"
-                                >
-                                    {/* Sheet Header */}
-                                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
-                                        <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                                            <Trophy className="w-4.5 h-4.5 text-amber-500" />
-                                            Bảng xếp hạng thi thử
-                                        </h3>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowMobileLeaderboardSheet(false)}
-                                            className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 cursor-pointer"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-
-                                    {/* Leaderboard content (scrollable) */}
-                                    <div className="overflow-y-auto flex-1 min-h-0 space-y-4">
-                                        {loadingQuizLeaderboard ? (
-                                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-                                                <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
-                                                <span className="text-xs font-semibold">Đang tải bảng xếp hạng...</span>
-                                            </div>
-                                        ) : quizLeaderboard.length > 0 ? (
-                                            <div className="space-y-2">
-                                                {quizLeaderboard.map((entry, index) => {
-                                                    const mins = Math.floor(entry.timeTaken / 60);
-                                                    const secs = entry.timeTaken % 60;
-                                                    const timeStr = `${mins}:${secs.toString().padStart(2, "0")}`;
-                                                    return (
-                                                        <div
-                                                            key={entry.userId}
-                                                            className={`flex items-center gap-3 p-3 rounded-xl text-xs ${
-                                                                index === 0 ? "bg-amber-50 border border-amber-100" :
-                                                                index === 1 ? "bg-slate-50 border border-slate-100" :
-                                                                index === 2 ? "bg-orange-50 border border-orange-100" :
-                                                                "bg-white border border-slate-100"
-                                                            }`}
-                                                        >
-                                                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-[10px] shrink-0 ${
-                                                                index === 0 ? "bg-amber-400 text-white" :
-                                                                index === 1 ? "bg-slate-400 text-white" :
-                                                                index === 2 ? "bg-orange-400 text-white" :
-                                                                "bg-slate-200 text-slate-600"
-                                                            }`}>
-                                                                {index + 1}
-                                                            </span>
-                                                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
-                                                                {entry.avatarUrl ? (
-                                                                    <img src={entry.avatarUrl} alt={entry.studentName} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <UserIcon className="w-4 h-4 text-slate-400" />
-                                                                )}
-                                                            </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <p className="font-semibold text-slate-800 truncate">{entry.studentName}</p>
-                                                            </div>
-                                                            <div className="text-right shrink-0">
-                                                                <span className="font-extrabold text-slate-800">{entry.score}/10</span>
-                                                                <p className="text-[9px] text-slate-400 flex items-center justify-end gap-1 font-medium mt-0.5">
-                                                                    <Clock className="w-2.5 h-2.5" /> {timeStr}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400 gap-2.5">
-                                                <BookOpen className="w-8 h-8 text-slate-300" />
-                                                <span className="text-xs">Chưa có ai hoàn thành đề thi này. Hãy là người mở màn!</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-100 pt-3 shrink-0">
-                                        💡 Điểm thi trên BXH được tính theo lượt thi ĐẦU TIÊN.
-                                    </p>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
+                                        <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-100 pt-3 shrink-0">
+                                            💡 Điểm thi trên BXH được tính theo
+                                            lượt thi ĐẦU TIÊN.
+                                        </p>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
                     </>
                 ) : activeQuiz && quizEntryPhase === "taking" ? (
                     <div className="w-full px-0 sm:px-4 xl:px-8 relative flex-1 h-full min-h-0 flex flex-col xl:flex-row xl:justify-center xl:items-start gap-6">
@@ -2657,7 +2735,7 @@ export default function StudentDashboard({
                             className="fixed right-0 top-1/2 -translate-y-1/2 xl:hidden z-40 bg-brand-600 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-brand-700 active:scale-95 transition-all border border-r-0 border-brand-500/30 min-w-[42px]"
                         >
                             <span className="text-sm font-black text-white leading-none">
-                            {currentQuestionIdx + 1}
+                                {currentQuestionIdx + 1}
                             </span>
                         </button>
 
@@ -2962,86 +3040,47 @@ export default function StudentDashboard({
                                 className="space-y-8"
                             >
                                 {/* Header section (Welcome back, Alex style) */}
-                                {(() => {
-                                    const completedCount =
-                                        studentSubmissions.length;
-                                    const averageScore =
-                                        completedCount > 0
-                                            ? (
-                                                  studentSubmissions.reduce(
-                                                      (sum, sub) =>
-                                                          sum +
-                                                          Number(sub.score),
-                                                      0,
-                                                  ) / completedCount
-                                              ).toFixed(1)
-                                            : "0.0";
+                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-slate-200">
+                                    <div>
+                                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                                            Chào mừng quay trở lại, {user.name}{" "}
+                                            👋
+                                        </h1>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                                            Đối thủ của bạn đang cày đề, còn bạn
+                                            đang làm gì?
+                                        </p>
+                                    </div>
 
-                                    const uniqueQuizzesDone = new Set(
-                                        studentSubmissions.map(
-                                            (sub) => sub.quizId,
-                                        ),
-                                    ).size;
-                                    const completionRate =
-                                        gradeQuizzes.length > 0
-                                            ? Math.round(
-                                                  (uniqueQuizzesDone /
-                                                      gradeQuizzes.length) *
-                                                      100,
-                                              )
-                                            : 0;
-                                    const totalStudyHours = Math.round(
-                                        (completedCount * 45) / 60,
-                                    );
-                                    const totalCerts =
-                                        studentSubmissions.filter(
-                                            (sub) => Number(sub.score) >= 8.0,
-                                        ).length;
-
-                                    return (
-                                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-slate-200">
-                                            <div>
-                                                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                                                    Chào mừng quay trở lại,{" "}
-                                                    {user.name} 👋
-                                                </h1>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
-                                                    Đối thủ của bạn đang cày đề,
-                                                    còn bạn làm gì?
-                                                </p>
-                                            </div>
-
-                                            {/* Stats Grid */}
-                                            <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 p-4 rounded-2xl">
-                                                <div className="text-center min-w-[50px]">
-                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                        Số đề thi
-                                                    </span>
-                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                        {gradeQuizzes.length}
-                                                    </span>
-                                                </div>
-                                                <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
-                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                        Hoàn thành
-                                                    </span>
-                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                        {completionRate}%
-                                                    </span>
-                                                </div>
-
-                                                <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
-                                                    <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                        Điểm TB
-                                                    </span>
-                                                    <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                        {averageScore}/10
-                                                    </span>
-                                                </div>
-                                            </div>
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 p-4 rounded-2xl">
+                                        <div className="text-center min-w-[50px]">
+                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                Số đề thi
+                                            </span>
+                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                {gradeQuizzes.length}
+                                            </span>
                                         </div>
-                                    );
-                                })()}
+                                        <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
+                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                Hoàn thành
+                                            </span>
+                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                {completionRate}%
+                                            </span>
+                                        </div>
+
+                                        <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
+                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
+                                                Điểm TB
+                                            </span>
+                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
+                                                {averageScore}/10
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 {/* ULTRA-CLEAN FLAT SAGE-WHITE DASHBOARD */}
                                 <div className="space-y-12 pt-8">
@@ -3049,15 +3088,15 @@ export default function StudentDashboard({
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
                                         {/* Left Column: Continue Learning & Quizzes Feed (2/3 width) */}
                                         <div className="lg:col-span-2 space-y-10">
-                                            {/* Section 1: Học tiếp bài trước */}
+                                            {/* Section 1: TIẾP TỤC LUYỆN TẬP */}
                                             <div className="space-y-4 text-left">
                                                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
                                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                                                        Học tiếp bài trước
+                                                        TIẾP TỤC LUYỆN TẬP
                                                     </h3>
-                                                    <span className="text-[10px] font-bold text-slate-400">
+                                                    {/*<span className="text-[10px] font-bold text-slate-400">
                                                         Tiến trình hôm nay
-                                                    </span>
+                                                    </span>*/}
                                                 </div>
 
                                                 {/* Wide aspect ratio image spanning fully across the layout */}
@@ -3431,6 +3470,7 @@ export default function StudentDashboard({
                                                                         score: Number(
                                                                             sub.score,
                                                                         ),
+                                                                        quizId: sub.quizId,
                                                                         quizTitle:
                                                                             sub.quizTitle,
                                                                         submittedAt:
@@ -3615,6 +3655,66 @@ export default function StudentDashboard({
                                                             }
                                                         };
 
+                                                        const handleMouseEnterChartPoint =
+                                                            (idx: number) => {
+                                                                if (
+                                                                    chartHoverTimeoutRef.current
+                                                                ) {
+                                                                    clearTimeout(
+                                                                        chartHoverTimeoutRef.current,
+                                                                    );
+                                                                }
+                                                                setHoveredChartPoint(
+                                                                    idx,
+                                                                );
+                                                            };
+
+                                                        const handleMouseLeaveChartPoint =
+                                                            () => {
+                                                                if (
+                                                                    chartHoverTimeoutRef.current
+                                                                ) {
+                                                                    clearTimeout(
+                                                                        chartHoverTimeoutRef.current,
+                                                                    );
+                                                                }
+                                                                chartHoverTimeoutRef.current =
+                                                                    setTimeout(
+                                                                        () => {
+                                                                            setHoveredChartPoint(
+                                                                                null,
+                                                                            );
+                                                                        },
+                                                                        150,
+                                                                    );
+                                                            };
+
+                                                        const handleOpenQuizFromChart =
+                                                            (
+                                                                quizId?: string,
+                                                            ) => {
+                                                                if (!quizId)
+                                                                    return;
+                                                                const targetQuiz =
+                                                                    quizzes.find(
+                                                                        (q) =>
+                                                                            q.id ===
+                                                                            quizId,
+                                                                    );
+                                                                if (
+                                                                    targetQuiz
+                                                                ) {
+                                                                    handleStartQuiz(
+                                                                        targetQuiz,
+                                                                    );
+                                                                } else {
+                                                                    onNavigate(
+                                                                        "/quiz/" +
+                                                                            quizId,
+                                                                    );
+                                                                }
+                                                            };
+
                                                         return (
                                                             <div className="w-full relative">
                                                                 <svg
@@ -3747,18 +3847,6 @@ export default function StudentDashboard({
                                                                             p,
                                                                             i,
                                                                         ) => {
-                                                                            const isHovered =
-                                                                                hoveredChartPoint ===
-                                                                                i;
-                                                                            const isLast =
-                                                                                i ===
-                                                                                points.length -
-                                                                                    1;
-                                                                            const showLabel =
-                                                                                isHovered ||
-                                                                                (hoveredChartPoint ===
-                                                                                    null &&
-                                                                                    isLast);
                                                                             return (
                                                                                 <g
                                                                                     key={
@@ -3814,13 +3902,19 @@ export default function StudentDashboard({
                                                                                         fill="transparent"
                                                                                         className="cursor-pointer"
                                                                                         onMouseEnter={() =>
-                                                                                            setHoveredChartPoint(
+                                                                                            handleMouseEnterChartPoint(
                                                                                                 i,
                                                                                             )
                                                                                         }
-                                                                                        onMouseLeave={() =>
-                                                                                            setHoveredChartPoint(
-                                                                                                null,
+                                                                                        onMouseLeave={
+                                                                                            handleMouseLeaveChartPoint
+                                                                                        }
+                                                                                        onClick={() =>
+                                                                                            handleOpenQuizFromChart(
+                                                                                                historyPoints[
+                                                                                                    i
+                                                                                                ]
+                                                                                                    .quizId,
                                                                                             )
                                                                                         }
                                                                                     />
@@ -3836,15 +3930,23 @@ export default function StudentDashboard({
                                                                         hoveredChartPoint
                                                                     ] && (
                                                                         <div
-                                                                            className="absolute bg-white border border-slate-200/80 text-slate-855 p-2.5 rounded-xl shadow-lg pointer-events-none transition-all duration-150 animate-in fade-in-50 zoom-in-95 z-30 select-none text-left min-w-[140px]"
+                                                                            className="absolute bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-100 p-2.5 rounded-xl shadow-lg transition-all duration-150 animate-in fade-in-50 zoom-in-95 z-30 select-none text-left min-w-[140px] pointer-events-auto"
                                                                             style={{
                                                                                 left: `${(points[hoveredChartPoint].x / width) * 100}%`,
                                                                                 top: `${(points[hoveredChartPoint].y / height) * 100}%`,
                                                                                 transform:
                                                                                     "translate(-50%, -115%)",
                                                                             }}
+                                                                            onMouseEnter={() =>
+                                                                                handleMouseEnterChartPoint(
+                                                                                    hoveredChartPoint,
+                                                                                )
+                                                                            }
+                                                                            onMouseLeave={
+                                                                                handleMouseLeaveChartPoint
+                                                                            }
                                                                         >
-                                                                            <div className="text-[8px] font-bold text-slate-400 leading-none mb-1">
+                                                                            <div className="text-[8px] font-bold text-slate-400 dark:text-slate-500 leading-none mb-1">
                                                                                 {formatDate(
                                                                                     historyPoints[
                                                                                         hoveredChartPoint
@@ -3852,14 +3954,29 @@ export default function StudentDashboard({
                                                                                         .submittedAt,
                                                                                 )}
                                                                             </div>
-                                                                            <div className="text-[9px] font-black text-slate-800 truncate max-w-[130px] mb-1">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(
+                                                                                    e,
+                                                                                ) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleOpenQuizFromChart(
+                                                                                        historyPoints[
+                                                                                            hoveredChartPoint
+                                                                                        ]
+                                                                                            .quizId,
+                                                                                    );
+                                                                                }}
+                                                                                className="text-[9px] font-black text-slate-800 dark:text-slate-100 hover:text-brand-600 dark:hover:text-brand-400 hover:underline cursor-pointer truncate max-w-[130px] mb-1 text-left block w-full transition-colors"
+                                                                                title={`Làm đề: ${historyPoints[hoveredChartPoint].quizTitle}`}
+                                                                            >
                                                                                 {
                                                                                     historyPoints[
                                                                                         hoveredChartPoint
                                                                                     ]
                                                                                         .quizTitle
                                                                                 }
-                                                                            </div>
+                                                                            </button>
                                                                             <div
                                                                                 className="flex items-center gap-1 mt-0.5 text-[9px] font-bold"
                                                                                 style={{
@@ -3894,7 +4011,7 @@ export default function StudentDashboard({
                                                                                     /10đ
                                                                                 </span>
                                                                             </div>
-                                                                            <div className="absolute top-[100%] left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white border-b border-r border-slate-200/80 rotate-45" />
+                                                                            <div className="absolute top-[100%] left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white dark:bg-slate-800 border-b border-r border-slate-200/80 dark:border-slate-700 rotate-45" />
                                                                         </div>
                                                                     )}
                                                             </div>

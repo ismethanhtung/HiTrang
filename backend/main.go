@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.63"
+const AppVersion = "1.0.65"
 
 func main() {
 	// 1. Configuration
@@ -100,6 +100,11 @@ func main() {
 		log.Printf("Cảnh báo: Không thể MODIFY avatar_url: %v", err)
 	}
 
+	// Đảm bảo cột email của users cho phép NULL (đăng ký username không bắt buộc và không gắn domain ảo)
+	if err := db.Exec("ALTER TABLE users MODIFY email VARCHAR(255) NULL").Error; err != nil {
+		log.Printf("Cảnh báo: Không thể MODIFY email: %v", err)
+	}
+
 	// Seed Schedule
 	SeedScheduleIfEmpty(db)
 
@@ -172,6 +177,7 @@ func main() {
 			// User Me & Profile updates
 			protected.GET("/auth/me", HandleMe(db))
 			protected.PUT("/auth/me/name", HandleUpdateProfileName(db))
+			protected.PUT("/auth/me/username", HandleUpdateUsername(db))
 			protected.PUT("/auth/me/password", HandleUpdatePassword(db))
 			protected.POST("/auth/me/avatar", HandleUploadAvatar(db))
 

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,7 +20,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var jwtSecret []byte
+var (
+	jwtSecret     []byte
+	usernameRegex = regexp.MustCompile(`^[a-z0-9_.]{4,30}$`)
+)
+
+func IsValidUsername(u string) bool {
+	return usernameRegex.MatchString(u)
+}
 
 func InitJWT(secret string) {
 	jwtSecret = []byte(secret)
@@ -110,6 +118,11 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		if !IsValidUsername(cleanUsername) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tên đăng nhập không hợp lệ. Tên đăng nhập phải từ 4-30 ký tự, chỉ gồm chữ cái không dấu (a-z), số (0-9), dấu gạch dưới (_) hoặc dấu chấm (.), không chứa khoảng trắng, dấu @ hay ký tự tiếng Việt có dấu."})
+			return
+		}
+
 		// Hash password
 		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -118,7 +131,6 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		userID := uuid.New().String()
-		email := cleanUsername + "@hocvientinhte.edu.vn"
 
 		tx := db.Begin()
 		defer func() {
@@ -127,11 +139,11 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 			}
 		}()
 
-		// 1. Create User
+		// 1. Create User (Email is nil for username-based signups)
 		user := User{
 			ID:           userID,
 			Username:     cleanUsername,
-			Email:        email,
+			Email:        nil,
 			PasswordHash: string(hashedBytes),
 		}
 		if err := tx.Create(&user).Error; err != nil {
@@ -202,7 +214,7 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
 
 		var user User
-		if err := db.Where("username = ?", cleanUsername).First(&user).Error; err != nil {
+		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Tên đăng nhập hoặc mật khẩu không chính xác."})
 			} else {
@@ -284,16 +296,55 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		type ActiveExamInfo struct {
+			QuizID          string `json:"quizId"`
+			QuizTitle       string `json:"quizTitle"`
+			StartedAt       string `json:"startedAt"`
+			ExpiresAt       string `json:"expiresAt"`
+			DurationMinutes int    `json:"durationMinutes"`
+		}
+
 		type UserResponse struct {
-			ID           string     `json:"id"`
-			Name         string     `json:"name"`
-			Username     string     `json:"username"`
-			Role         string     `json:"role"`
-			Plan         string     `json:"plan"`
-			Grade        *string    `json:"grade"`
-			AvatarURL    *string    `json:"avatarUrl"`
-			CreatedAt    string     `json:"createdAt"`
-			LastActiveAt *time.Time `json:"lastActiveAt"`
+			ID           string          `json:"id"`
+			Name         string          `json:"name"`
+			Username     string          `json:"username"`
+			Role         string          `json:"role"`
+			Plan         string          `json:"plan"`
+			Grade        *string         `json:"grade"`
+			AvatarURL    *string         `json:"avatarUrl"`
+			CreatedAt    string          `json:"createdAt"`
+			LastActiveAt *time.Time      `json:"lastActiveAt"`
+			ActiveExam   *ActiveExamInfo `json:"activeExam,omitempty"`
+		}
+
+		// Find inprogress unexpired attempts
+		var activeAttempts []struct {
+			UserID          string
+			QuizID          string
+			StartedAt       time.Time
+			ExpiresAt       time.Time
+			DurationMinutes int
+			QuizTitle       string
+		}
+
+		_ = db.Table("exam_attempts").
+			Select("exam_attempts.user_id, exam_attempts.quiz_id, exam_attempts.started_at, exam_attempts.expires_at, exam_attempts.duration_minutes, COALESCE(quizzes.title, 'Đề thi') as quiz_title").
+			Joins("LEFT JOIN quizzes ON quizzes.id = exam_attempts.quiz_id").
+			Where("exam_attempts.status = 'inprogress' AND exam_attempts.expires_at > ?", time.Now()).
+			Order("exam_attempts.started_at desc").
+			Scan(&activeAttempts)
+
+		activeMap := make(map[string]*ActiveExamInfo)
+		for _, a := range activeAttempts {
+			if _, exists := activeMap[a.UserID]; !exists {
+				activeMap[a.UserID] = &ActiveExamInfo{
+					QuizID:          a.QuizID,
+					QuizTitle:       a.QuizTitle,
+					StartedAt:       a.StartedAt.Format(time.RFC3339),
+					ExpiresAt:       a.ExpiresAt.Format(time.RFC3339),
+					DurationMinutes: a.DurationMinutes,
+				}
+			}
 		}
 
 		resp := make([]UserResponse, len(profiles))
@@ -308,6 +359,7 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 				AvatarURL:    p.AvatarURL,
 				CreatedAt:    p.CreatedAt.Format("2006-01-02"),
 				LastActiveAt: p.LastActiveAt,
+				ActiveExam:   activeMap[p.ID],
 			}
 		}
 
@@ -364,11 +416,10 @@ func HandleUpdateUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Also update User username/email
+		// Also update User username
 		var user User
 		if err := tx.Where("id = ?", userID).First(&user).Error; err == nil {
 			user.Username = profile.Username
-			user.Email = profile.Username + "@hocvientinhte.edu.vn"
 			if err := tx.Save(&user).Error; err != nil {
 				tx.Rollback()
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật tài khoản người dùng"})
@@ -484,6 +535,90 @@ func HandleUpdateProfileName(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Cập nhật họ tên thành công"})
+	}
+}
+
+type UpdateUsernameRequest struct {
+	Username string `json:"username" binding:"required"`
+}
+
+func HandleUpdateUsername(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, exists := c.Get("userID")
+		if !exists || userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Chưa xác thực người dùng"})
+			return
+		}
+		roleVal, _ := c.Get("role")
+
+		var req UpdateUsernameRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập tên đăng nhập mới"})
+			return
+		}
+
+		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
+		if !IsValidUsername(cleanUsername) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tên đăng nhập không hợp lệ. Tên đăng nhập phải từ 4-30 ký tự, chỉ gồm chữ cái không dấu (a-z), số (0-9), dấu gạch dưới (_) hoặc dấu chấm (.), không chứa khoảng trắng, dấu @ hay ký tự tiếng Việt có dấu."})
+			return
+		}
+
+		// Check if username already exists in another user
+		var existing User
+		if err := db.Where("username = ? AND id != ?", cleanUsername, userID).First(&existing).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "Tên đăng nhập này đã được sử dụng bởi tài khoản khác. Vui lòng chọn tên khác."})
+			return
+		}
+
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		// Update users table
+		if err := tx.Model(&User{}).Where("id = ?", userID).Update("username", cleanUsername).Error; err != nil {
+			tx.Rollback()
+			if strings.Contains(err.Error(), "Duplicate entry") {
+				c.JSON(http.StatusConflict, gin.H{"error": "Tên đăng nhập này đã được sử dụng."})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật tài khoản: " + err.Error()})
+			}
+			return
+		}
+
+		// Update profiles table
+		if err := tx.Model(&Profile{}).Where("id = ?", userID).Update("username", cleanUsername).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật hồ sơ: " + err.Error()})
+			return
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu giao dịch khi đổi tên đăng nhập"})
+			return
+		}
+
+		roleStr := "student"
+		if r, ok := roleVal.(string); ok && r != "" {
+			roleStr = r
+		}
+		newToken, err := GenerateJWT(userID.(string), cleanUsername, roleStr)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"message":  "Đổi tên đăng nhập thành công",
+				"username": cleanUsername,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":  "Đổi tên đăng nhập thành công",
+			"username": cleanUsername,
+			"token":    newToken,
+		})
 	}
 }
 

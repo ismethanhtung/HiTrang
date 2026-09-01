@@ -237,6 +237,17 @@ export async function updateProfileName(userId: string, newName: string): Promis
   });
 }
 
+export async function updateUsername(newUsername: string): Promise<{ message: string; username: string; token?: string }> {
+  const data = await apiRequest<{ message: string; username: string; token?: string }>('/auth/me/username', {
+    method: 'PUT',
+    body: JSON.stringify({ username: newUsername })
+  });
+  if (data && data.token) {
+    localStorage.setItem('hitrang_token', data.token);
+  }
+  return data;
+}
+
 export async function updatePassword(password: string): Promise<void> {
   await apiRequest('/auth/me/password', {
     method: 'PUT',

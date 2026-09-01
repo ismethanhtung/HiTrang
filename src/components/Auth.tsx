@@ -7,7 +7,7 @@ import {
     Flower,
     Eye,
     EyeOff,
-    BookOpen,
+    GraduationCap,
     ArrowRight,
     Loader2,
 } from "lucide-react";
@@ -66,8 +66,25 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                 setError("Vui lòng nhập họ và tên.");
                 return;
             }
-            if (username.trim().length < 8) {
-                setError("Tên đăng nhập phải chứa ít nhất 8 ký tự.");
+            const cleanUser = username.trim().toLowerCase();
+            if (cleanUser.length < 4 || cleanUser.length > 30) {
+                setError("Tên đăng nhập phải từ 4 đến 30 ký tự.");
+                return;
+            }
+            if (/\s/.test(cleanUser)) {
+                setError("Tên đăng nhập không được chứa khoảng trắng.");
+                return;
+            }
+            if (cleanUser.includes("@")) {
+                setError(
+                    "Tên đăng nhập không được chứa ký tự '@' (vui lòng không nhập địa chỉ email).",
+                );
+                return;
+            }
+            if (!/^[a-z0-9_.]+$/.test(cleanUser)) {
+                setError(
+                    "Tên đăng nhập chỉ gồm chữ cái không dấu (a-z), số (0-9), dấu gạch dưới (_) hoặc dấu chấm (.). Không dùng tiếng Việt có dấu.",
+                );
                 return;
             }
             if (password !== confirmPassword) {
@@ -83,7 +100,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
             try {
                 const newUser = await signUpUser(
                     name.trim(),
-                    username.trim(),
+                    cleanUser,
                     password,
                     role,
                     grade,
@@ -194,12 +211,21 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                             <input
                                 type="text"
                                 id="login-username-input"
-                                placeholder="Nhập tên tài khoản"
+                                placeholder={
+                                    isRegister
+                                        ? "Ví dụ: trang_2009, linhtran, duc03"
+                                        : "Tên đăng nhập hoặc Email"
+                                }
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                             />
                         </div>
+                        {isRegister && (
+                            <p className="text-[10px] text-gray-400">
+                                4-30 ký tự (a-z, 0-9, dấu _ hoặc .). Không dấu, không khoảng trắng, không chứa @.
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -286,7 +312,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                     </label>
                                     <div className="relative">
                                         <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                            <BookOpen className="w-4 h-4" />
+                                            <GraduationCap className="w-4 h-4" />
                                         </span>
                                         <select
                                             id="reg-grade-select"

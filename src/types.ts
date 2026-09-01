@@ -42,6 +42,13 @@ export interface User {
   avatarUrl?: string;
   createdAt?: string;
   lastActiveAt?: string;
+  activeExam?: {
+    quizId: string;
+    quizTitle: string;
+    startedAt: string;
+    expiresAt: string;
+    durationMinutes: number;
+  } | null;
 }
 
 export interface Submission {
