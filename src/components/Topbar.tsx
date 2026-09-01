@@ -150,7 +150,7 @@ export default function Topbar({
     };
 
     const navButtonClass = (isActive: boolean) =>
-        `px-2 py-0.5 rounded-lg text-[12.5px] transition-all duration-150 cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${
+        `px-2 py-0.5 rounded-lg text-[12.5px] transition-colors duration-150 cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${
             isActive
                 ? "text-brand-700 dark:text-brand-300 font-black underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-[5px] opacity-100"
                 : "text-text-secondary/65 dark:text-text-secondary/55 font-bold hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
@@ -291,6 +291,7 @@ export default function Topbar({
                     {/* SEARCH BOX */}
                     {user && (
                         <div
+                            key="topbar-search-container"
                             ref={searchContainerRef}
                             className="relative hidden sm:block w-40 md:w-52 lg:w-64 flex-shrink-0"
                         >
@@ -306,7 +307,7 @@ export default function Topbar({
                                     setSearchFocused(true);
                                 }}
                                 placeholder="Tìm đề thi..."
-                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
+                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
                             />
                             {searchFocused &&
                                 localSearchQuery.trim().length > 0 && (
@@ -362,25 +363,28 @@ export default function Topbar({
                         </div>
                     )}
 
-                    {/* LEADERBOARD ROUTE BUTTON */}
-
+                    {/* AUTH ACTION / USER PROFILE BUTTON */}
                     {!user ? (
                         /* UNAUTHENTICATED ACTION BUTTONS */
-                        <div className="flex items-center">
+                        <div key="unauth-login-wrap" className="flex items-center">
                             <button
+                                key="btn-trigger-login"
+                                type="button"
                                 onClick={() => onOpenAuth("login")}
-                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-lg transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-lg shadow-xs active:scale-[0.98] transition-colors cursor-pointer"
                             >
                                 Đăng nhập
                             </button>
                         </div>
                     ) : (
-                        <div className="relative" ref={dropdownRef}>
+                        <div key="user-profile-dropdown" className="relative" ref={dropdownRef}>
                             <button
+                                key="btn-user-avatar-toggle"
+                                type="button"
                                 onClick={() =>
                                     setUserDropdownOpen(!userDropdownOpen)
                                 }
-                                className="flex items-center gap-2.5 px-2.5 py-1.5 transition-all cursor-pointer flex-shrink-0"
+                                className="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 transition-colors cursor-pointer flex-shrink-0"
                             >
                                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
                                     {user.avatarUrl ? (
