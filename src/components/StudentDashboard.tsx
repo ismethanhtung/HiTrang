@@ -3488,12 +3488,15 @@ export default function StudentDashboard({
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap min-h-[120px] w-full py-4">
-                                                                    <span>
-                                                                        Ai cũng
-                                                                        phải bắt
-                                                                        đầu từ
-                                                                        đâu đó
-                                                                        🌸
+                                                                    <span className="inline-flex items-center gap-1">
+                                                                        <span>
+                                                                            Ai cũng phải bắt đầu từ đâu đó
+                                                                        </span>
+                                                                        <img
+                                                                            src="/icons/sakura.png"
+                                                                            alt=""
+                                                                            className="w-3.5 h-3.5 object-contain inline-block"
+                                                                        />
                                                                     </span>
                                                                     <button
                                                                         onClick={() => {

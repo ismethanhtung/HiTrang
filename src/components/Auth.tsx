@@ -152,8 +152,13 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                     <h1 className="font-calligraphy text-4xl text-brand-400 select-none tracking-wide drop-shadow-xs">
                         HiTrang
                     </h1>
-                    <p className="text-xs text-slate-400 mt-2.5 italic font-medium">
-                        🌸 Học hành như cá kho tiêu
+                    <p className="text-xs text-slate-400 mt-2.5 italic font-medium flex items-center justify-center gap-1.5">
+                        <img
+                            src="/icons/sakura.png"
+                            alt=""
+                            className="w-3.5 h-3.5 object-contain inline-block"
+                        />
+                        <span>Học hành như cá kho tiêu</span>
                     </p>
                 </div>
 

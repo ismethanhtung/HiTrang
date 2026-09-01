@@ -252,7 +252,7 @@ export default function LeaderboardView({
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-start gap-4">
                     <div className="space-y-0.5">
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">

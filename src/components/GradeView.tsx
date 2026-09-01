@@ -212,7 +212,7 @@ export default function GradeView({
             <div className="max-w-6xl mx-auto space-y-8">
                 {/* Banner Header */}
                 <div className="pb-6 border-b border-slate-100 space-y-2 text-left">
-                    <h1 className="text-2xl font-bold text-slate-900 font-serif">
+                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         Kho Đề Thi Ôn Luyện Lớp {grade}
                     </h1>
                     <p className="text-xs text-slate-400 max-w-xl">

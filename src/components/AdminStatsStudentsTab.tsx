@@ -528,9 +528,13 @@ export default function AdminStatsStudentsTab({
                                                     <div className="w-full relative">
                                                         {completedCount ===
                                                         0 ? (
-                                                            <div className="py-8 flex items-center justify-center text-slate-400 text-xs italic">
-                                                                Chưa có lịch sử
-                                                                điểm số 🌸
+                                                            <div className="py-8 flex items-center justify-center text-slate-400 text-xs italic gap-1">
+                                                                <span>Chưa có lịch sử điểm số</span>
+                                                                <img
+                                                                    src="/icons/sakura.png"
+                                                                    alt=""
+                                                                    className="w-3.5 h-3.5 object-contain inline-block"
+                                                                />
                                                             </div>
                                                         ) : (
                                                             <svg
@@ -1331,9 +1335,13 @@ export default function AdminStatsStudentsTab({
 
                                             {uncompletedQuizzes.length ===
                                                 0 && (
-                                                <p className="text-xs text-slate-400 italic py-4">
-                                                    Đã hoàn thành xuất sắc tất
-                                                    cả đề thi! 🌸
+                                                <p className="text-xs text-slate-400 italic py-4 flex items-center gap-1">
+                                                    <span>Đã hoàn thành xuất sắc tất cả đề thi!</span>
+                                                    <img
+                                                        src="/icons/sakura.png"
+                                                        alt=""
+                                                        className="w-3.5 h-3.5 object-contain inline-block"
+                                                    />
                                                 </p>
                                             )}
                                         </div>

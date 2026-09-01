@@ -830,7 +830,12 @@ export default function App() {
 
                     {/* Text */}
                     <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-normal font-medium">
-                        Báo cáo sự cố hoặc đăng ký học cô Trang 🌸
+                        Báo cáo sự cố hoặc đăng ký học cô Trang{" "}
+                        <img
+                            src="/icons/sakura.png"
+                            alt=""
+                            className="w-3 h-3 object-contain inline-block align-text-bottom -mt-0.5 ml-0.5"
+                        />
                     </p>
 
                     {/* Buttons Row - Horizontal */}
@@ -1072,10 +1077,15 @@ export default function App() {
                                 }}
                                 className="space-y-4"
                             >
-                                <div className="flex items-center gap-1.5 text-rose-300 dark:text-rose-400">
+                                <div className="flex items-center gap-1.5 text-rose-500 dark:text-rose-400">
                                     <span className="text-xs font-bold uppercase">
-                                        Báo cáo lỗi hệ thống 🌸
+                                        Báo cáo lỗi hệ thống
                                     </span>
+                                    <img
+                                        src="/icons/sakura.png"
+                                        alt=""
+                                        className="w-3.5 h-3.5 object-contain inline-block"
+                                    />
                                 </div>
 
                                 <div className="space-y-3 text-left">
@@ -1130,7 +1140,12 @@ export default function App() {
 
                                 {/* Lời cảm ơn */}
                                 <p className="text-[10px] text-slate-500 leading-normal italic text-left font-medium">
-                                    🌸 Lời cảm ơn: Cảm ơn bạn rất nhiều!
+                                    <img
+                                        src="/icons/sakura.png"
+                                        alt=""
+                                        className="w-3 h-3 object-contain inline-block align-text-bottom mr-1"
+                                    />
+                                    <span>Lời cảm ơn: Cảm ơn bạn rất nhiều!</span>
                                 </p>
 
                                 <div className="pt-1">

@@ -165,9 +165,14 @@ export default function Footer({
                                         ? onSelectGrade("9", "Thi vào 10")
                                         : onOpenAuth("login")
                                 }
-                                className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold"
+                                className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold inline-flex items-center gap-1"
                             >
-                                Thi vào 10 🌸
+                                <span>Thi vào 10</span>
+                                <img
+                                    src="/icons/sakura.png"
+                                    alt=""
+                                    className="w-3 h-3 object-contain inline-block"
+                                />
                             </button>
                             <button
                                 onClick={() =>
@@ -175,9 +180,14 @@ export default function Footer({
                                         ? onSelectGrade("12", "Thi thử")
                                         : onOpenAuth("login")
                                 }
-                                className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2"
+                                className="text-left text-brand-500 dark:text-brand-300 transition-colors hover:underline cursor-pointer font-bold col-span-2 inline-flex items-center gap-1"
                             >
-                                Thi thử TN THPT 🌸
+                                <span>Thi thử TN THPT</span>
+                                <img
+                                    src="/icons/sakura.png"
+                                    alt=""
+                                    className="w-3 h-3 object-contain inline-block"
+                                />
                             </button>
                         </div>
                     </div>

@@ -99,7 +99,7 @@ export default function ScheduleView({
     const title = "Lịch học năm học 2026 - 2027";
     const subtext = "Môn Toán - Lớp cô Trang (Ms Carlie)";
     const applyDate = "Bắt đầu áp dụng từ 01/07";
-    const quote = "Mối tình đẹp nhất là mối tình với tri thức 🌸";
+    const quote = "Mối tình đẹp nhất là mối tình với tri thức";
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 pb-32 bg-transparent">
@@ -339,8 +339,14 @@ export default function ScheduleView({
 
                 {/* Center Column: Quote - aligned perfectly centered visually */}
                 <div className="flex items-center justify-center text-center md:h-full py-4 md:py-6">
-                    <p className="text-xs sm:text-sm italic text-slate-550 dark:text-slate-455 font-medium leading-relaxed max-w-xs">
-                        "{quote}"
+                    <p className="text-xs sm:text-sm italic text-slate-550 dark:text-slate-455 font-medium leading-relaxed max-w-xs inline-flex items-center justify-center gap-1.5 flex-wrap">
+                        <span>"{quote}</span>
+                        <img
+                            src="/icons/sakura.png"
+                            alt=""
+                            className="w-3.5 h-3.5 object-contain inline-block"
+                        />
+                        <span>"</span>
                     </p>
                 </div>
 
