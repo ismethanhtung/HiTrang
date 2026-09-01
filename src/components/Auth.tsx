@@ -218,7 +218,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 id="login-username-input"
                                 placeholder={
                                     isRegister
-                                        ? "Ví dụ: trang_2009, linhtran, duc03"
+                                        ? "Nhập tên đăng nhập"
                                         : "Tên đăng nhập hoặc Email"
                                 }
                                 value={username}
@@ -226,11 +226,6 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
                             />
                         </div>
-                        {isRegister && (
-                            <p className="text-[10px] text-gray-400">
-                                4-30 ký tự (a-z, 0-9, dấu _ hoặc .). Không dấu, không khoảng trắng, không chứa @.
-                            </p>
-                        )}
                     </div>
 
                     <div className="space-y-1.5">

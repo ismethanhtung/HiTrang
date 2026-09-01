@@ -847,8 +847,15 @@ export default function LeaderboardView({
 
                         {untakenQuizzes.length > 0 ? (
                             <div className="space-y-3">
-                                <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
-                                    💡 Dưới đây là các bài thi bạn chưa làm:
+                                <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed flex items-center gap-1.5">
+                                    <img
+                                        src="/icons/lightbulb.png"
+                                        alt=""
+                                        className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                    />
+                                    <span>
+                                        Dưới đây là các bài thi bạn chưa làm:
+                                    </span>
                                 </p>
                                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                                     {untakenQuizzes.slice(0, 5).map((quiz) => (
