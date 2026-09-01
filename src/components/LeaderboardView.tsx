@@ -628,7 +628,7 @@ export default function LeaderboardView({
                                                 className={`relative overflow-hidden py-3 px-2 sm:px-3 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800 shrink-0 ${getRowBackground()}`}
                                             >
                                                 <div className="relative z-10 flex items-center gap-2 sm:gap-6 min-w-0 flex-1 mr-2">
-                                                    <span className="w-7 sm:w-8 text-center font-mono font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
+                                                    <span className="w-7 sm:w-8 text-center font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
                                                         {isTop3 ? (
                                                             <img
                                                                 src={`/icons/medal${rank}.png`}
@@ -756,7 +756,7 @@ export default function LeaderboardView({
                                         <p className="text-xs text-slate-450">
                                             Thứ hạng hiện tại
                                         </p>
-                                        <p className="text-xl font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5 flex items-center gap-1.5">
+                                        <p className="text-xl font-black text-slate-800 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
                                             #{myOverallStats.rankPosition}
                                             {renderTrend(
                                                 myOverallStats.rankPosition,
@@ -768,7 +768,7 @@ export default function LeaderboardView({
                                         <p className="text-xs text-slate-455">
                                             Tổng tích lũy
                                         </p>
-                                        <p className="text-base font-extrabold text-[#4B726B] font-mono mt-0.5">
+                                        <p className="text-base font-extrabold text-[#4B726B] mt-0.5">
                                             {myOverallStats.totalPoints} điểm
                                         </p>
                                     </div>
@@ -784,7 +784,7 @@ export default function LeaderboardView({
                                         ) > 0 ? (
                                             <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                                                 Bạn cần tích lũy thêm{" "}
-                                                <strong className="text-[#4B726B] font-mono">
+                                                <strong className="text-[#4B726B]">
                                                     {Number(
                                                         (
                                                             nextUserAbove.totalPoints -

@@ -30,8 +30,6 @@ const getGridPastelStyles = (grade: string | null): string => {
     }
 };
 
-
-
 interface ScheduleViewProps {
     user: any;
     onNavigate: (path: string) => void;
@@ -189,7 +187,7 @@ export default function ScheduleView({
                                                         key={time}
                                                         className="flex items-center justify-between gap-3 text-xs"
                                                     >
-                                                        <span className="font-mono text-slate-600 dark:text-slate-300 font-bold">
+                                                        <span className="text-slate-600 dark:text-slate-300 font-bold">
                                                             {time}
                                                         </span>
                                                         <span className="font-bold text-slate-700 dark:text-slate-200">
@@ -230,13 +228,19 @@ export default function ScheduleView({
                                     key={timeRow}
                                     className="border-b border-slate-200 dark:border-slate-800 last:border-0"
                                 >
-                                    <td className="py-4 px-3 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200/60 dark:border-slate-800/60 font-mono bg-slate-50/10 dark:bg-slate-900/10">
+                                    <td className="py-4 px-3 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200/60 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-900/10">
                                         {timeRow}
                                     </td>
                                     {days.map((day) => {
                                         const slot = getSlot(timeRow, day);
-                                        const grade = slot && slot.content ? getGradeFromContent(slot.content) : null;
-                                        const pastelClass = getGridPastelStyles(grade);
+                                        const grade =
+                                            slot && slot.content
+                                                ? getGradeFromContent(
+                                                      slot.content,
+                                                  )
+                                                : null;
+                                        const pastelClass =
+                                            getGridPastelStyles(grade);
                                         return (
                                             <td
                                                 key={day}

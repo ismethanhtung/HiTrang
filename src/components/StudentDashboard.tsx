@@ -2104,7 +2104,8 @@ export default function StudentDashboard({
                                                                             1}
                                                                     </span>
                                                                     <div className="relative shrink-0 flex items-center justify-center">
-                                                                        {index === 0 && (
+                                                                        {index ===
+                                                                            0 && (
                                                                             <img
                                                                                 src="/icons/laurel-wreath.png"
                                                                                 alt=""
@@ -3499,7 +3500,14 @@ export default function StudentDashboard({
                                                                 <div className="flex items-center justify-center text-slate-400 text-xs italic gap-1 flex-wrap min-h-[120px] w-full py-4">
                                                                     <span className="inline-flex items-center gap-1">
                                                                         <span>
-                                                                            Ai cũng phải bắt đầu từ đâu đó
+                                                                            Ai
+                                                                            cũng
+                                                                            phải
+                                                                            bắt
+                                                                            đầu
+                                                                            từ
+                                                                            đâu
+                                                                            đó
                                                                         </span>
                                                                         <img
                                                                             src="/icons/sakura.png"
@@ -4310,7 +4318,7 @@ export default function StudentDashboard({
                                                                                 {user.grade ||
                                                                                     "10"}
                                                                             </span>
-                                                                            <span className="text-2xl font-black text-slate-800 dark:text-slate-200 block font-mono">
+                                                                            <span className="text-2xl font-black text-slate-800 dark:text-slate-200 block">
                                                                                 #
                                                                                 {
                                                                                     userRank.rankPosition

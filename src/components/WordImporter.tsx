@@ -2191,7 +2191,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                             )
                                                         }
                                                         rows={4}
-                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-650 focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-650 focus:outline-none focus:border-blue-500 focus:bg-white"
                                                     />
                                                 </div>
                                             )}
@@ -2281,7 +2281,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                                                                 .value,
                                                                                         )
                                                                                     }
-                                                                                    className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs font-mono text-slate-850 focus:outline-none focus:bg-white"
+                                                                                    className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs text-slate-850 focus:outline-none focus:bg-white"
                                                                                     placeholder={`Phương án ${letter}`}
                                                                                 />
                                                                             ) : (
@@ -2410,7 +2410,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                                                                 .value,
                                                                                         )
                                                                                     }
-                                                                                    className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs font-mono text-slate-800 focus:outline-none focus:bg-white"
+                                                                                    className="flex-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs  text-slate-800 focus:outline-none focus:bg-white"
                                                                                     placeholder={`Khẳng định ${letter}`}
                                                                                 />
                                                                             ) : (
@@ -2538,7 +2538,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                                     }
                                                     rows={2}
                                                     placeholder="Nhập lời giải..."
-                                                    className="w-full px-3 py-2 bg-amber-50/20 border border-amber-200/40 rounded-xl text-xs font-mono text-amber-900 focus:outline-none focus:border-amber-400"
+                                                    className="w-full px-3 py-2 bg-amber-50/20 border border-amber-200/40 rounded-xl text-xs  text-amber-900 focus:outline-none focus:border-amber-400"
                                                 />
                                             </div>
                                         )}
@@ -2807,7 +2807,7 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                 readOnly
                                 value={rawText}
                                 rows={25}
-                                className="w-full p-3.5 bg-slate-800 border border-slate-900 rounded-xl text-[10px] font-mono text-emerald-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                                className="w-full p-3.5 bg-slate-800 border border-slate-900 rounded-xl text-[10px]  text-emerald-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                                 placeholder="Không có dữ liệu gốc"
                             />
                         </div>
