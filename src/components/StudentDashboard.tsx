@@ -2527,7 +2527,7 @@ export default function StudentDashboard({
                                                                     },
                                                                 )
                                                             }
-                                                            placeholder="Ví dụ: 150, 24, 2.05, -3..."
+                                                            placeholder="Ví dụ: 150, 24, 2,05, -3..."
                                                             className="w-full px-4 py-3 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900 rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
                                                             style={{
                                                                 fontSize: `${fontSize}px`,
