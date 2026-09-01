@@ -764,7 +764,7 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 				user = User{
 					ID:           userID,
 					Username:     uniqueUsername,
-					Email:        emailClean,
+					Email:        &emailClean,
 					PasswordHash: string(hashedBytes),
 				}
 				if err := tx.Create(&user).Error; err != nil {
