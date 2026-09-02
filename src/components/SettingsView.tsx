@@ -50,6 +50,7 @@ import {
     setup2FA,
     enable2FA,
     disable2FA,
+    setRequire2FALogin,
     ActiveSession,
     getActiveSessions,
     revokeSession,
@@ -154,10 +155,10 @@ export default function SettingsView({
         setEnable2FAError("");
         try {
             await enable2FA(verify2FACode.trim());
-            onUpdateUser({ ...user, totpEnabled: true });
+            onUpdateUser({ ...user, totpEnabled: true, totpLinked: true, require2FALogin: false });
             setIs2FAModalOpen(false);
             alert(
-                "Đã kích hoạt xác thực 2 bước (Google Authenticator) thành công!",
+                "Đã liên kết Google Authenticator thành công! Bạn có thể dùng mã để khôi phục mật khẩu.",
             );
         } catch (err: any) {
             setEnable2FAError(
@@ -181,14 +182,14 @@ export default function SettingsView({
                 disable2FACodeOrPassword.trim(),
                 disable2FACodeOrPassword.trim(),
             );
-            onUpdateUser({ ...user, totpEnabled: false });
+            onUpdateUser({ ...user, totpEnabled: false, totpLinked: false, require2FALogin: false });
             setIsDisable2FAModalOpen(false);
             setDisable2FACodeOrPassword("");
-            alert("Đã tắt xác thực 2 bước thành công.");
+            alert("Đã hủy liên kết Google Authenticator thành công.");
         } catch (err: any) {
             setDisable2FAError(
                 err.message ||
-                    "Không thể tắt 2FA. Vui lòng kiểm tra lại thông tin.",
+                    "Không thể hủy liên kết. Vui lòng kiểm tra lại thông tin.",
             );
         } finally {
             setDisabling2FA(false);
@@ -204,6 +205,19 @@ export default function SettingsView({
         } catch (e) {
             setCopied2FASecret(true);
             setTimeout(() => setCopied2FASecret(false), 2500);
+        }
+    };
+
+    const [toggling2FALogin, setToggling2FALogin] = useState(false);
+    const handleToggle2FALogin = async (enabled: boolean) => {
+        setToggling2FALogin(true);
+        try {
+            await setRequire2FALogin(enabled);
+            onUpdateUser({ ...user, require2FALogin: enabled });
+        } catch (err: any) {
+            alert(`Không thể cập nhật cấu hình: ${err.message || "Vui lòng thử lại"}`);
+        } finally {
+            setToggling2FALogin(false);
         }
     };
 
@@ -1607,77 +1621,104 @@ export default function SettingsView({
                         </div>
                     </div>
 
-                    {/* 2-Step Verification Row */}
+                    {/* Google Authenticator & 2-Step Row */}
                     <div className="grid grid-cols-12 gap-6 py-6 border-b border-slate-100 dark:border-slate-800">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                Xác thực 2 bước (Google Authenticator)
+                                <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                                Google Authenticator
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
-                                Tăng cường bảo mật khi đăng nhập và dùng để tự
-                                khôi phục mật khẩu khi quên.
+                                Dùng ứng dụng Google Authenticator để tự khôi phục mật khẩu khi quên hoặc bảo vệ 2 bước khi đăng nhập.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-700/60">
-                            <div className="flex items-center gap-3">
-                                {/*<div
-                                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${user.totpEnabled ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400" : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"}`}
-                                >
-                                    {user.totpEnabled ? (
-                                        <ShieldCheck className="w-5 h-5" />
-                                    ) : (
-                                        <Shield className="w-5 h-5" />
-                                    )}
-                                </div>*/}
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <div className="col-span-12 md:col-span-8 space-y-3">
+                            {/* Card status */}
+                            <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                {user.totpEnabled
+                                                    ? "Đã liên kết Google Authenticator"
+                                                    : "Chưa liên kết"}
+                                            </span>
+                                            <span
+                                                className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                                    user.totpEnabled
+                                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                                                }`}
+                                            >
+                                                {user.totpEnabled ? "Đã liên kết" : "Chưa liên kết"}
+                                            </span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">
                                             {user.totpEnabled
-                                                ? "Đã bật xác thực 2 bước"
-                                                : "Chưa kích hoạt"}
-                                        </span>
-                                        <span
-                                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${user.totpEnabled ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}
-                                        >
-                                            {user.totpEnabled
-                                                ? "Bảo vệ"
-                                                : "Chưa bật"}
-                                        </span>
+                                                ? "Bạn có thể dùng mã 6 số từ Google Authenticator để tự đổi mật khẩu khi quên bất kỳ lúc nào."
+                                                : "Khuyên dùng để có thể tự khôi phục mật khẩu khi quên mà không cần nhắn tin cho cô Trang."}
+                                        </p>
                                     </div>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">
-                                        {user.totpEnabled
-                                            ? "Mã TOTP 6 số trên ứng dụng Google Authenticator được yêu cầu khi đăng nhập hoặc quên mật khẩu."
-                                            : "Khuyên dùng để bảo vệ tài khoản và lấy lại mật khẩu nhanh chóng."}
-                                    </p>
                                 </div>
+
+                                {user.totpEnabled ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setDisable2FAError("");
+                                            setDisable2FACodeOrPassword("");
+                                            setIsDisable2FAModalOpen(true);
+                                        }}
+                                        className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 dark:text-rose-400 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0"
+                                    >
+                                        Hủy liên kết
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        disabled={loading2FASetup}
+                                        onClick={handleStartSetup2FA}
+                                        className="py-2 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                                    >
+                                        {loading2FASetup ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <QrCode className="w-3.5 h-3.5" />
+                                        )}
+                                        Liên kết Google Authenticator
+                                    </button>
+                                )}
                             </div>
 
-                            {user.totpEnabled ? (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setDisable2FAError("");
-                                        setDisable2FACodeOrPassword("");
-                                        setIsDisable2FAModalOpen(true);
-                                    }}
-                                    className="py-2 px-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 dark:text-rose-400 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0"
-                                >
-                                    Tắt xác thực 2 bước
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    disabled={loading2FASetup}
-                                    onClick={handleStartSetup2FA}
-                                    className="py-2 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm disabled:opacity-50"
-                                >
-                                    {loading2FASetup ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                        <QrCode className="w-3.5 h-3.5" />
-                                    )}
-                                    Bật xác thực 2 bước
-                                </button>
+                            {/* Separate Toggle for 2-Step Login */}
+                            {user.totpEnabled && (
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4 shadow-xs">
+                                    <div className="space-y-0.5">
+                                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                            Bắt buộc xác thực 2 bước khi đăng nhập
+                                        </h5>
+                                        <p className="text-[11px] text-slate-400 dark:text-slate-550">
+                                            Mặc định tắt: Bạn vẫn dùng Google Authenticator để tự khôi phục mật khẩu mà không bị hỏi mã mỗi khi đăng nhập.
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        disabled={toggling2FALogin}
+                                        onClick={() => handleToggle2FALogin(!user.require2FALogin)}
+                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                            user.require2FALogin
+                                                ? "bg-brand-600"
+                                                : "bg-slate-200 dark:bg-slate-700"
+                                        }`}
+                                    >
+                                        <span
+                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                user.require2FALogin ? "translate-x-5" : "translate-x-0"
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>

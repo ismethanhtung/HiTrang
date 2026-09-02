@@ -34,11 +34,12 @@ type User struct {
 	Username       string    `json:"username" gorm:"uniqueIndex;type:varchar(100);not null"`
 	Email          *string   `json:"email" gorm:"uniqueIndex;type:varchar(255)"`
 	PasswordHash   string    `json:"password_hash" gorm:"type:varchar(255);not null"`
-	TOTPSecret     *string   `json:"-" gorm:"column:totp_secret;type:varchar(64)"`
-	TOTPTempSecret *string   `json:"-" gorm:"column:totp_temp_secret;type:varchar(64)"`
-	TOTPEnabled    bool      `json:"totpEnabled" gorm:"column:totp_enabled;default:false;not null"`
-	CreatedAt      time.Time `json:"created_at"`
-	Profile        *Profile  `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	TOTPSecret      *string   `json:"-" gorm:"column:totp_secret;type:varchar(64)"`
+	TOTPTempSecret  *string   `json:"-" gorm:"column:totp_temp_secret;type:varchar(64)"`
+	TOTPEnabled     bool      `json:"totpEnabled" gorm:"column:totp_enabled;default:false;not null"`
+	Require2FALogin bool      `json:"require2FALogin" gorm:"column:require_2fa_login;default:false;not null"`
+	CreatedAt       time.Time `json:"created_at"`
+	Profile         *Profile  `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
 }
 
 // Profile represents profiles table

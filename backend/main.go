@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.69"
+const AppVersion = "1.0.70"
 
 func main() {
 	// 1. Configuration
@@ -191,6 +191,7 @@ func main() {
 			protected.POST("/auth/2fa/setup", HandleSetup2FA(db))
 			protected.POST("/auth/2fa/enable", HandleEnable2FA(db))
 			protected.POST("/auth/2fa/disable", HandleDisable2FA(db))
+			protected.PUT("/auth/2fa/login-required", HandleToggle2FALogin(db))
 
 			// Active Sessions & Account Deletion
 			protected.GET("/auth/sessions", HandleGetSessions(db))

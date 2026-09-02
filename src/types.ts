@@ -41,6 +41,8 @@ export interface User {
   grade?: string;
   avatarUrl?: string;
   totpEnabled?: boolean;
+  totpLinked?: boolean;
+  require2FALogin?: boolean;
   createdAt?: string;
   lastActiveAt?: string;
   activeExam?: {

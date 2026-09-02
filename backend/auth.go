@@ -258,12 +258,12 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// If user has 2FA enabled, verify TOTP code
-		if user.TOTPEnabled && user.TOTPSecret != nil {
+		// If user has 2FA required on login, verify TOTP code
+		if user.Require2FALogin && user.TOTPSecret != nil {
 			if strings.TrimSpace(req.TOTPCode) == "" {
 				c.JSON(http.StatusOK, gin.H{
 					"require2FA": true,
-					"message":    "Tài khoản đã kích hoạt xác thực 2 bước. Vui lòng nhập mã Google Authenticator.",
+					"message":    "Tài khoản đã bật bảo vệ 2 bước khi đăng nhập. Vui lòng nhập mã Google Authenticator.",
 				})
 				return
 			}
@@ -290,14 +290,16 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
 			"user": gin.H{
-				"id":          user.ID,
-				"name":        profile.Name,
-				"username":    profile.Username,
-				"role":        profile.Role,
-				"grade":       profile.Grade,
-				"plan":        profile.Plan,
-				"avatarUrl":   profile.AvatarURL,
-				"totpEnabled": user.TOTPEnabled,
+				"id":              user.ID,
+				"name":            profile.Name,
+				"username":        profile.Username,
+				"role":            profile.Role,
+				"grade":           profile.Grade,
+				"plan":            profile.Plan,
+				"avatarUrl":       profile.AvatarURL,
+				"totpEnabled":     user.TOTPSecret != nil,
+				"totpLinked":      user.TOTPSecret != nil,
+				"require2FALogin": user.Require2FALogin,
 			},
 		})
 	}
@@ -320,14 +322,16 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":          profile.ID,
-			"name":        profile.Name,
-			"username":    profile.Username,
-			"role":        profile.Role,
-			"grade":       profile.Grade,
-			"plan":        profile.Plan,
-			"avatarUrl":   profile.AvatarURL,
-			"totpEnabled": user.TOTPEnabled,
+			"id":              profile.ID,
+			"name":            profile.Name,
+			"username":        profile.Username,
+			"role":            profile.Role,
+			"grade":           profile.Grade,
+			"plan":            profile.Plan,
+			"avatarUrl":       profile.AvatarURL,
+			"totpEnabled":     user.TOTPSecret != nil,
+			"totpLinked":      user.TOTPSecret != nil,
+			"require2FALogin": user.Require2FALogin,
 		})
 	}
 }
@@ -1286,9 +1290,11 @@ func HandleCheckForgotPassword(db *gorm.DB) gin.HandlerFunc {
 			name = profile.Name
 		}
 
+		hasGoogleAuth := user.TOTPSecret != nil && *user.TOTPSecret != ""
+
 		c.JSON(http.StatusOK, gin.H{
 			"exists":   true,
-			"has2FA":   user.TOTPEnabled,
+			"has2FA":   hasGoogleAuth,
 			"username": user.Username,
 			"name":     name,
 		})
@@ -1322,9 +1328,9 @@ func HandleResetWithTOTP(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if !user.TOTPEnabled || user.TOTPSecret == nil {
+		if user.TOTPSecret == nil || *user.TOTPSecret == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Tài khoản này chưa kích hoạt xác thực 2 bước (Google Authenticator). Vui lòng nhắn tin cho cô Trang để nhận liên kết đổi mật khẩu.",
+				"error": "Tài khoản này chưa liên kết Google Authenticator. Vui lòng nhắn tin cho cô Trang để nhận liên kết đổi mật khẩu.",
 			})
 			return
 		}
@@ -1440,11 +1446,12 @@ func HandleEnable2FA(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Kích hoạt chính thức
+		// Kích hoạt chính thức: Lưu secret, Mặc định require_2fa_login = false để không bắt buộc mã khi đăng nhập
 		updates := map[string]interface{}{
-			"totp_secret":      *user.TOTPTempSecret,
-			"totp_temp_secret": nil,
-			"totp_enabled":     true,
+			"totp_secret":       *user.TOTPTempSecret,
+			"totp_temp_secret":  nil,
+			"totp_enabled":      true,
+			"require_2fa_login": false,
 		}
 
 		if err := db.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
@@ -1454,7 +1461,7 @@ func HandleEnable2FA(db *gorm.DB) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"message": "Kích hoạt xác thực 2 bước (Google Authenticator) thành công!",
+			"message": "Liên kết Google Authenticator thành công! Bạn có thể dùng mã để khôi phục mật khẩu.",
 		})
 	}
 }
@@ -1477,8 +1484,8 @@ func HandleDisable2FA(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if !user.TOTPEnabled {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Xác thực 2 bước hiện chưa được bật."})
+		if user.TOTPSecret == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Google Authenticator hiện chưa được liên kết."})
 			return
 		}
 
@@ -1496,24 +1503,68 @@ func HandleDisable2FA(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		if !authorized {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã xác thực hoặc mật khẩu không chính xác để tắt xác thực 2 bước."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã xác thực hoặc mật khẩu không chính xác để hủy liên kết Google Authenticator."})
 			return
 		}
 
 		updates := map[string]interface{}{
-			"totp_secret":      nil,
-			"totp_temp_secret": nil,
-			"totp_enabled":     false,
+			"totp_secret":       nil,
+			"totp_temp_secret":  nil,
+			"totp_enabled":      false,
+			"require_2fa_login": false,
 		}
 
 		if err := db.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tắt xác thực 2 bước: " + err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể hủy liên kết Google Authenticator: " + err.Error()})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
-			"message": "Đã tắt xác thực 2 bước thành công.",
+			"message": "Đã hủy liên kết Google Authenticator thành công.",
+		})
+	}
+}
+
+// HandleToggle2FALogin (Protected)
+// PUT /api/auth/2fa/login-required
+func HandleToggle2FALogin(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+
+		var req struct {
+			Enabled bool `json:"enabled"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu yêu cầu không hợp lệ"})
+			return
+		}
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		if req.Enabled && (user.TOTPSecret == nil || *user.TOTPSecret == "") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng liên kết Google Authenticator trước khi bật xác thực lúc đăng nhập"})
+			return
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", user.ID).Update("require_2fa_login", req.Enabled).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật cấu hình: " + err.Error()})
+			return
+		}
+
+		msg := "Đã tắt yêu cầu mã xác thực khi đăng nhập."
+		if req.Enabled {
+			msg = "Đã bật yêu cầu mã xác thực khi đăng nhập."
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":         true,
+			"message":         msg,
+			"require2FALogin": req.Enabled,
 		})
 	}
 }

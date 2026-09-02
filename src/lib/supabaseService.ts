@@ -531,6 +531,13 @@ export async function disable2FA(code?: string, password?: string): Promise<{ su
   });
 }
 
+export async function setRequire2FALogin(enabled: boolean): Promise<{ success: boolean; message: string; require2FALogin: boolean }> {
+  return await apiRequest('/auth/2fa/login-required', {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  });
+}
+
 // ----------------------------------------------------
 // ACTIVE SESSIONS & ACCOUNT DELETION
 // ----------------------------------------------------
