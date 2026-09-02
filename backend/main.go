@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.68"
+const AppVersion = "1.0.69"
 
 func main() {
 	// 1. Configuration
@@ -90,6 +90,7 @@ func main() {
 		&BugReport{},
 		&ScheduleSlot{},
 		&PasswordResetToken{},
+		&UserSession{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -190,6 +191,12 @@ func main() {
 			protected.POST("/auth/2fa/setup", HandleSetup2FA(db))
 			protected.POST("/auth/2fa/enable", HandleEnable2FA(db))
 			protected.POST("/auth/2fa/disable", HandleDisable2FA(db))
+
+			// Active Sessions & Account Deletion
+			protected.GET("/auth/sessions", HandleGetSessions(db))
+			protected.DELETE("/auth/sessions/:id", HandleRevokeSession(db))
+			protected.POST("/auth/sessions/logout-all", HandleRevokeAllOtherSessions(db))
+			protected.DELETE("/auth/account", HandleDeleteAccount(db))
 
 			// User Management (Admin/Teacher)
 			protected.GET("/admin/users", HandleGetAllProfiles(db))

@@ -141,5 +141,23 @@ type PasswordResetToken struct {
 	User      *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
+// UserSession represents active user login sessions
+type UserSession struct {
+	ID        string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	UserID    string    `json:"userId" gorm:"type:varchar(36);index;not null"`
+	TokenHash string    `json:"-" gorm:"type:varchar(64);index;not null"`
+	Browser   string    `json:"browser" gorm:"type:varchar(100)"`
+	OS        string    `json:"os" gorm:"type:varchar(100)"`
+	Device    string    `json:"device" gorm:"type:varchar(50)"`
+	IPAddress string    `json:"ipAddress" gorm:"type:varchar(50)"`
+	Location  string    `json:"location" gorm:"type:varchar(100)"`
+	IsCurrent bool      `json:"isCurrent" gorm:"-"`
+	LastSeen  time.Time `json:"lastSeen" gorm:"not null"`
+	ExpiresAt time.Time `json:"expiresAt" gorm:"not null"`
+	CreatedAt time.Time `json:"createdAt"`
+	User      *User     `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+}
+
+
 
 

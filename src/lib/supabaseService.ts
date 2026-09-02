@@ -531,4 +531,46 @@ export async function disable2FA(code?: string, password?: string): Promise<{ su
   });
 }
 
+// ----------------------------------------------------
+// ACTIVE SESSIONS & ACCOUNT DELETION
+// ----------------------------------------------------
+
+export interface ActiveSession {
+  id: string;
+  userId: string;
+  browser: string;
+  os: string;
+  device: string;
+  ipAddress: string;
+  location: string;
+  isCurrent: boolean;
+  lastSeen: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export async function getActiveSessions(): Promise<ActiveSession[]> {
+  return await apiRequest<ActiveSession[]>('/auth/sessions');
+}
+
+export async function revokeSession(sessionId: string): Promise<{ success: boolean; message: string }> {
+  return await apiRequest(`/auth/sessions/${sessionId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function revokeAllOtherSessions(): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/sessions/logout-all', {
+    method: 'POST',
+  });
+}
+
+export async function deleteUserAccount(password?: string): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/account', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
+}
+
+
 

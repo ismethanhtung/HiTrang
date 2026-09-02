@@ -90,6 +90,24 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		tokenHash := hashToken(tokenStr)
+
+		// Check if this session was explicitly revoked
+		var sessionCount int64
+		db.Model(&UserSession{}).Where("user_id = ?", claims.UserID).Count(&sessionCount)
+		if sessionCount > 0 {
+			var sess UserSession
+			if err := db.Where("user_id = ? AND token_hash = ?", claims.UserID, tokenHash).First(&sess).Error; err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Phiên đăng nhập của thiết bị này đã bị đăng xuất"})
+				c.Abort()
+				return
+			}
+			// Update last seen
+			go func(sid string) {
+				_ = db.Model(&UserSession{}).Where("id = ?", sid).Update("last_seen", time.Now())
+			}(sess.ID)
+		}
+
 		// Update last active time
 		go func(uid string) {
 			db.Model(&Profile{}).Where("id = ?", uid).Update("last_active_at", time.Now())
@@ -99,6 +117,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		c.Set("userID", claims.UserID)
 		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
+		c.Set("tokenHash", tokenHash)
 		c.Next()
 	}
 }
@@ -190,6 +209,8 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		RecordUserSession(db, c, userID, token)
+
 		c.JSON(http.StatusCreated, gin.H{
 			"token": token,
 			"user": gin.H{
@@ -263,6 +284,8 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã xác thực đăng nhập"})
 			return
 		}
+
+		RecordUserSession(db, c, user.ID, token)
 
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
@@ -854,6 +877,8 @@ func HandleGoogleOAuthLogin(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi tạo mã thông báo đăng nhập JWT"})
 			return
 		}
+
+		RecordUserSession(db, c, user.ID, token)
 
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
@@ -1492,6 +1517,268 @@ func HandleDisable2FA(db *gorm.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+// ----------------------------------------------------
+// ACTIVE SESSIONS & DEVICE MANAGEMENT
+// ----------------------------------------------------
+
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
+
+func parseUserAgent(ua string) (browser, os, device string) {
+	if ua == "" {
+		return "Chrome 152.0.0.0", "macOS 10.15.7", "Desktop"
+	}
+
+	// 1. Device
+	device = "Desktop"
+	uaLower := strings.ToLower(ua)
+	if strings.Contains(uaLower, "mobile") || strings.Contains(uaLower, "iphone") || strings.Contains(uaLower, "android") {
+		device = "Mobile"
+	} else if strings.Contains(uaLower, "ipad") || strings.Contains(uaLower, "tablet") {
+		device = "Tablet"
+	}
+
+	// 2. OS
+	os = "Unknown OS"
+	if strings.Contains(ua, "Macintosh") || strings.Contains(ua, "Mac OS X") {
+		reMac := regexp.MustCompile(`Mac OS X ([0-9_.]+)`)
+		match := reMac.FindStringSubmatch(ua)
+		if len(match) > 1 {
+			ver := strings.ReplaceAll(match[1], "_", ".")
+			os = "macOS " + ver
+		} else {
+			os = "macOS 10.15.7"
+		}
+	} else if strings.Contains(ua, "Windows NT 10.0") {
+		os = "Windows 11"
+	} else if strings.Contains(ua, "Windows") {
+		os = "Windows"
+	} else if strings.Contains(ua, "iPhone") {
+		os = "iOS"
+	} else if strings.Contains(ua, "Android") {
+		os = "Android"
+	} else if strings.Contains(ua, "Linux") {
+		os = "Linux"
+	}
+
+	// 3. Browser
+	browser = "Trình duyệt Web"
+	if strings.Contains(ua, "Edg/") {
+		re := regexp.MustCompile(`Edg/([0-9.]+)`)
+		m := re.FindStringSubmatch(ua)
+		if len(m) > 1 {
+			browser = "Edge " + m[1]
+		} else {
+			browser = "Edge"
+		}
+	} else if strings.Contains(ua, "Chrome/") {
+		re := regexp.MustCompile(`Chrome/([0-9.]+)`)
+		m := re.FindStringSubmatch(ua)
+		if len(m) > 1 {
+			browser = "Chrome " + m[1]
+		} else {
+			browser = "Chrome"
+		}
+	} else if strings.Contains(ua, "Firefox/") {
+		re := regexp.MustCompile(`Firefox/([0-9.]+)`)
+		m := re.FindStringSubmatch(ua)
+		if len(m) > 1 {
+			browser = "Firefox " + m[1]
+		} else {
+			browser = "Firefox"
+		}
+	} else if strings.Contains(ua, "Safari/") && strings.Contains(ua, "Version/") {
+		re := regexp.MustCompile(`Version/([0-9.]+)`)
+		m := re.FindStringSubmatch(ua)
+		if len(m) > 1 {
+			browser = "Safari " + m[1]
+		} else {
+			browser = "Safari"
+		}
+	}
+
+	return browser, os, device
+}
+
+func RecordUserSession(db *gorm.DB, c *gin.Context, userID, token string) {
+	if token == "" || userID == "" {
+		return
+	}
+	tokenHash := hashToken(token)
+	ua := c.GetHeader("User-Agent")
+	browser, osName, device := parseUserAgent(ua)
+
+	ip := c.ClientIP()
+	if ip == "" {
+		ip = c.RemoteIP()
+	}
+	if ip == "" {
+		ip = "127.0.0.1"
+	}
+
+	location := "VN"
+	if country := c.GetHeader("CF-IPCountry"); country != "" {
+		location = country
+	}
+
+	sess := UserSession{
+		ID:        uuid.New().String(),
+		UserID:    userID,
+		TokenHash: tokenHash,
+		Browser:   browser,
+		OS:        osName,
+		Device:    device,
+		IPAddress: ip,
+		Location:  location,
+		LastSeen:  time.Now(),
+		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+		CreatedAt: time.Now(),
+	}
+
+	_ = db.Create(&sess)
+}
+
+// HandleGetSessions (Protected)
+// GET /api/auth/sessions
+func HandleGetSessions(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+		currentTokenHash, _ := c.Get("tokenHash")
+		tokenHashStr, _ := currentTokenHash.(string)
+
+		var sessions []UserSession
+		db.Where("user_id = ?", userID).Order("last_seen DESC").Find(&sessions)
+
+		// If no session found, record one on the fly for current device
+		if len(sessions) == 0 && tokenHashStr != "" {
+			ua := c.GetHeader("User-Agent")
+			browser, osName, device := parseUserAgent(ua)
+			ip := c.ClientIP()
+			if ip == "" {
+				ip = "127.0.0.1"
+			}
+			newSess := UserSession{
+				ID:        uuid.New().String(),
+				UserID:    userID.(string),
+				TokenHash: tokenHashStr,
+				Browser:   browser,
+				OS:        osName,
+				Device:    device,
+				IPAddress: ip,
+				Location:  "VN",
+				LastSeen:  time.Now(),
+				ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+				CreatedAt: time.Now(),
+			}
+			db.Create(&newSess)
+			sessions = append(sessions, newSess)
+		}
+
+		for i := range sessions {
+			if sessions[i].TokenHash == tokenHashStr {
+				sessions[i].IsCurrent = true
+			}
+		}
+
+		c.JSON(http.StatusOK, sessions)
+	}
+}
+
+// HandleRevokeSession (Protected)
+// DELETE /api/auth/sessions/:id
+func HandleRevokeSession(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+		sessionID := c.Param("id")
+
+		if err := db.Where("id = ? AND user_id = ?", sessionID, userID).Delete(&UserSession{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể đăng xuất phiên: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Đã đăng xuất thiết bị."})
+	}
+}
+
+// HandleRevokeAllOtherSessions (Protected)
+// POST /api/auth/sessions/logout-all
+func HandleRevokeAllOtherSessions(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+		currentTokenHash, _ := c.Get("tokenHash")
+		tokenHashStr, _ := currentTokenHash.(string)
+
+		if tokenHashStr != "" {
+			if err := db.Where("user_id = ? AND token_hash <> ?", userID, tokenHashStr).Delete(&UserSession{}).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể đăng xuất các thiết bị khác: " + err.Error()})
+				return
+			}
+		} else {
+			_ = db.Where("user_id = ?", userID).Delete(&UserSession{})
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Đã đăng xuất toàn bộ thiết bị khác."})
+	}
+}
+
+// HandleDeleteAccount (Protected)
+// DELETE /api/auth/account
+func HandleDeleteAccount(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+
+		var req struct {
+			Password string `json:"password"`
+		}
+		_ = c.ShouldBindJSON(&req)
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		// If user has password set and password is provided
+		if user.PasswordHash != "" && req.Password != "" {
+			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu xác nhận không chính xác."})
+				return
+			}
+		}
+
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		// Delete cascading data
+		_ = tx.Where("user_id = ?", user.ID).Delete(&UserSession{})
+		_ = tx.Where("user_id = ?", user.ID).Delete(&PasswordResetToken{})
+		_ = tx.Where("user_id = ?", user.ID).Delete(&Submission{})
+		_ = tx.Where("user_id = ?", user.ID).Delete(&ExamAttempt{})
+		_ = tx.Where("user_id = ?", user.ID).Delete(&UserOverallStats{})
+		_ = tx.Where("reporter_id = ?", user.ID).Delete(&BugReport{})
+		_ = tx.Where("id = ?", user.ID).Delete(&Profile{})
+		if err := tx.Where("id = ?", user.ID).Delete(&User{}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể xóa tài khoản: " + err.Error()})
+			return
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi hoàn tất xóa tài khoản: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Tài khoản của bạn đã được xóa vĩnh viễn."})
+	}
+}
+
 
 
 
