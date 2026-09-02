@@ -127,4 +127,16 @@ type ScheduleSlot struct {
 	Content   string `json:"content" gorm:"column:content;type:varchar(255)"`
 }
 
+// PasswordResetToken represents password_reset_tokens table
+type PasswordResetToken struct {
+	ID        string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	UserID    string    `json:"userId" gorm:"index;type:varchar(36);not null"`
+	TokenHash string    `json:"-" gorm:"uniqueIndex;type:varchar(64);not null"`
+	ExpiresAt time.Time `json:"expiresAt" gorm:"index;not null"`
+	Used      bool      `json:"used" gorm:"default:false;not null"`
+	CreatedAt time.Time `json:"createdAt"`
+	User      *User     `json:"user,omitempty" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+}
+
+
 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Quiz, Submission } from "../types";
 import { BarChart3, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { matchesSearch } from "../lib/searchUtils";
 
 interface AdminStatsQuizzesTabProps {
     quizzes: Quiz[];
@@ -98,11 +99,11 @@ export default function AdminStatsQuizzesTab({
         let result = [...statsQuizzesData];
 
         if (search.trim()) {
-            const q = search.toLowerCase();
-            result = result.filter(
-                (d) =>
-                    d.title.toLowerCase().includes(q) ||
-                    d.subject.toLowerCase().includes(q),
+            result = result.filter((d) =>
+                matchesSearch(
+                    [d.title, d.subject, d.grade ? `Lớp ${d.grade}` : ""],
+                    search,
+                ),
             );
         }
 
@@ -202,7 +203,7 @@ export default function AdminStatsQuizzesTab({
             {/* Table */}
             <div className="bg-bg-card overflow-hidden shadow-2xs">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
+                    <table className="w-full text-left border-1 border-slate-100 text-xs">
                         <thead>
                             <tr className="border-b border-border-primary/50 bg-slate-50/30 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
                                 <th className="px-4 py-3">Đề thi</th>

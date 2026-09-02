@@ -6,7 +6,9 @@ import {
     deleteUserProfile,
     updateUserPlan,
     updateUserGrade,
+    generatePasswordResetLink,
 } from "../lib/supabaseService";
+import { matchesSearch as matchesSearchFn } from "../lib/searchUtils";
 import {
     Search,
     UserPlus,
@@ -17,6 +19,9 @@ import {
     Shield,
     Zap,
     Crown,
+    KeyRound,
+    Copy,
+    Check,
 } from "lucide-react";
 
 interface AdminPlansTabProps {
@@ -65,11 +70,58 @@ export default function AdminPlansTab({
     const [editUserPlan, setEditUserPlan] = useState<UserPlan>("nothing");
     const [editUserGrade, setEditUserGrade] = useState<string>("");
 
+    // Reset password link modal state
+    const [resetModalUser, setResetModalUser] = useState<User | null>(null);
+    const [resetLinkData, setResetLinkData] = useState<{
+        token: string;
+        link: string;
+        expiresAt: string;
+        username: string;
+        name: string;
+    } | null>(null);
+    const [generatingResetId, setGeneratingResetId] = useState<string | null>(null);
+    const [copiedResetLink, setCopiedResetLink] = useState(false);
+
+    const handleGenerateResetLink = async (targetUser: User) => {
+        setGeneratingResetId(targetUser.id);
+        try {
+            const res = await generatePasswordResetLink(targetUser.id);
+            const fullLink = `${window.location.origin}/reset-password?token=${res.token}`;
+            setResetLinkData({
+                ...res,
+                link: fullLink,
+            });
+            setResetModalUser(targetUser);
+            setCopiedResetLink(false);
+        } catch (err: any) {
+            console.error("Lỗi tạo link reset:", err);
+            alert(`Lỗi tạo link đặt lại mật khẩu: ${err.message || "Vui lòng thử lại"}`);
+        } finally {
+            setGeneratingResetId(null);
+        }
+    };
+
+    const handleCopyResetLink = async () => {
+        if (!resetLinkData) return;
+        try {
+            await navigator.clipboard.writeText(resetLinkData.link);
+            setCopiedResetLink(true);
+            setTimeout(() => setCopiedResetLink(false), 2500);
+        } catch (e) {
+            const textarea = document.createElement("textarea");
+            textarea.value = resetLinkData.link;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            setCopiedResetLink(true);
+            setTimeout(() => setCopiedResetLink(false), 2500);
+        }
+    };
+
     // Filtering logic
     const filteredUsers = userProfiles.filter((u) => {
-        const matchesSearch =
-            u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.username.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = matchesSearchFn([u.name, u.username], searchQuery);
         const matchesRole = filterRole === "all" || u.role === filterRole;
         const matchesPlan =
             filterPlan === "all" || (u.plan || "nothing") === filterPlan;
@@ -407,8 +459,8 @@ export default function AdminPlansTab({
             </div>
 
             {/* User List */}
-            <div className="bg-bg-card rounded-2xl overflow-hidden shadow-2xs">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-bg-card  overflow-hidden shadow-2xs">
+                <table className="w-full text-left border-1 border-slate-100">
                     <thead>
                         <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
                             <th className="py-2.5 px-4 text-center w-12">
@@ -453,8 +505,25 @@ export default function AdminPlansTab({
                                             index +
                                             1}
                                     </td>
-                                    <td className="py-3 px-4 font-semibold text-slate-800">
-                                        {prof.name}
+                                    <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200/50 dark:border-slate-700/50 shadow-2xs">
+                                                {prof.avatarUrl ? (
+                                                    <img
+                                                        src={prof.avatarUrl}
+                                                        alt={prof.name}
+                                                        referrerPolicy="no-referrer"
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = "none";
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    (prof.name || "U").charAt(0).toUpperCase()
+                                                )}
+                                            </div>
+                                            <span className="truncate">{prof.name}</span>
+                                        </div>
                                     </td>
                                     <td className="py-3 px-4 text-slate-400">
                                         @{prof.username}
@@ -572,6 +641,23 @@ export default function AdminPlansTab({
                                         {formatLastActive(prof)}
                                     </td>
                                     <td className="py-3 px-4 text-right space-x-1.5">
+                                        <button
+                                            disabled={
+                                                generatingResetId === prof.id
+                                            }
+                                            onClick={() =>
+                                                handleGenerateResetLink(prof)
+                                            }
+                                            className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-700 dark:text-amber-400 rounded-lg transition-colors cursor-pointer text-[11px] font-medium disabled:opacity-50"
+                                            title="Tạo link đặt lại mật khẩu cho học sinh"
+                                        >
+                                            {generatingResetId === prof.id ? (
+                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                            ) : (
+                                                <KeyRound className="w-3 h-3" />
+                                            )}
+                                            Reset MK
+                                        </button>
                                         <button
                                             onClick={() => startEditUser(prof)}
                                             className="inline-flex items-center px-2.5 py-1 hover:bg-slate-150 text-slate-500 rounded-lg transition-colors cursor-pointer text-[11px] font-medium"
@@ -891,6 +977,117 @@ export default function AdminPlansTab({
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Reset Password Link Modal */}
+            {resetLinkData && resetModalUser && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-xl border border-border-primary/80 animate-in zoom-in-95 duration-200 font-sans">
+                        <div className="flex items-center justify-between pb-3 border-b border-border-primary/60 mb-4">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                    <KeyRound className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                        Link Đặt Lại Mật Khẩu
+                                    </h3>
+                                    <p className="text-[10px] text-slate-400">
+                                        Sao chép liên kết gửi cho học sinh
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setResetLinkData(null);
+                                    setResetModalUser(null);
+                                }}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Target User Info */}
+                            <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-border-primary/50 flex items-center justify-between text-xs">
+                                <div>
+                                    <p className="font-bold text-slate-800 dark:text-slate-200">
+                                        {resetModalUser.name}
+                                    </p>
+                                    <p className="text-[11px] text-slate-400 font-mono">
+                                        @{resetModalUser.username}
+                                    </p>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300">
+                                    {resetModalUser.role === "admin" ? "Admin" : "Học sinh"}
+                                </span>
+                            </div>
+
+                            {/* Link Box */}
+                            <div>
+                                <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                                    Liên kết đặt lại mật khẩu:
+                                </label>
+                                <div className="flex items-center gap-1.5">
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        value={resetLinkData.link}
+                                        className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none select-all truncate"
+                                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyResetLink}
+                                        className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 active:scale-95 ${
+                                            copiedResetLink
+                                                ? "bg-emerald-600 text-white"
+                                                : "bg-brand-600 hover:bg-brand-700 text-white"
+                                        }`}
+                                    >
+                                        {copiedResetLink ? (
+                                            <>
+                                                <Check className="w-3.5 h-3.5" />
+                                                Đã chép!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="w-3.5 h-3.5" />
+                                                Sao chép
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Security Warnings & Instructions */}
+                            <div className="p-3 bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30 rounded-2xl text-[11px] text-amber-800 dark:text-amber-300 space-y-1">
+                                <p className="font-bold flex items-center gap-1">
+                                    ⚡ Quy tắc bảo mật:
+                                </p>
+                                <ul className="list-disc list-inside space-y-0.5 text-[10px] text-amber-700 dark:text-amber-400 pl-1">
+                                    <li>Link chỉ có hiệu lực trong <b>30 phút</b>.</li>
+                                    <li>Chỉ sử dụng được <b>1 lần duy nhất</b>.</li>
+                                    <li>Sau khi học sinh đổi MK thành công, link lập tức vô hiệu hóa.</li>
+                                </ul>
+                            </div>
+
+                            <div className="flex justify-end pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setResetLinkData(null);
+                                        setResetModalUser(null);
+                                    }}
+                                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                >
+                                    Đóng
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

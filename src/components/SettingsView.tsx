@@ -901,11 +901,19 @@ export default function SettingsView({
                                     <img
                                         src={user.avatarUrl}
                                         alt={user.name}
+                                        referrerPolicy="no-referrer"
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = "none";
+                                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (fallback) fallback.style.display = "block";
+                                        }}
                                     />
-                                ) : (
-                                    <User className="w-6 h-6" />
-                                )}
+                                ) : null}
+                                <User
+                                    className="w-6 h-6"
+                                    style={{ display: user.avatarUrl ? "none" : "block" }}
+                                />
                                 {uploadingAvatar && (
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white z-10">
                                         <Loader2 className="w-5 h-5 animate-spin" />

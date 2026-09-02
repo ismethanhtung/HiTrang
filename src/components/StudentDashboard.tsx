@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
     BookOpen,
+    CircleSlash,
     Clock,
     Sparkles,
     ArrowRight,
@@ -10,6 +11,7 @@ import {
     HelpCircle,
     Award,
     BookMarked,
+    List,
     RefreshCw,
     ChevronRight,
     ChevronLeft,
@@ -18,7 +20,6 @@ import {
     Users,
     Check,
     Calendar,
-    Trophy,
     Loader2,
     Crown,
     User as UserIcon,
@@ -1482,7 +1483,11 @@ export default function StudentDashboard({
                                         {/* Header BXH */}
                                         <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
                                             <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-                                                <Trophy className="w-4.5 h-4.5 text-amber-500" />{" "}
+                                                <img
+                                                    src="/icons/trophy.svg"
+                                                    alt=""
+                                                    className="w-4.5 h-4.5 object-contain select-none flex-shrink-0"
+                                                />{" "}
                                                 Bảng xếp hạng bài thi
                                             </h3>
                                         </div>
@@ -1734,7 +1739,7 @@ export default function StudentDashboard({
                                             </div>
                                         ) : (
                                             <div className="flex-1 flex flex-col items-center justify-center py-20 text-center text-slate-400 gap-2.5">
-                                                <BookOpen className="w-8 h-8 text-slate-300" />
+                                                {/*<CircleSlash className="w-8 h-8 text-slate-300" />*/}
                                                 <span className="text-xs">
                                                     Chưa có ai hoàn thành đề thi
                                                     này. Hãy là người mở màn!
@@ -1742,9 +1747,16 @@ export default function StudentDashboard({
                                             </div>
                                         )}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3">
-                                        💡 Điểm thi trên BXH được tính theo lượt
-                                        thi ĐẦU TIÊN.
+                                    <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-50 pt-3 flex items-center justify-center gap-1.5">
+                                        <img
+                                            src="/icons/warn.png"
+                                            alt=""
+                                            className="w-4 h-4 object-contain select-none flex-shrink-0"
+                                        />
+                                        <span>
+                                            Điểm thi trên BXH được tính theo
+                                            lượt thi ĐẦU TIÊN.
+                                        </span>
                                     </p>
                                 </motion.div>
 
@@ -1765,7 +1777,7 @@ export default function StudentDashboard({
                                                 {activeQuiz.title}
                                             </h1>
                                             {activeQuiz.description && (
-                                                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                                <p className="text-[12px] text-slate-500 leading-relaxed">
                                                     {activeQuiz.description}
                                                 </p>
                                             )}
@@ -1787,7 +1799,7 @@ export default function StudentDashboard({
                                             <div className="flex items-center gap-1.5">
                                                 <HelpCircle className="w-4 h-4 text-slate-400" />
                                                 <span>
-                                                    Số câu hỏi:{" "}
+                                                    Số lượng:{" "}
                                                     <strong className="text-slate-800 font-extrabold">
                                                         {activeQuiz.questions
                                                             ?.length || 0}{" "}
@@ -1883,9 +1895,17 @@ export default function StudentDashboard({
                                                     )}
                                                 </div>
                                             ) : (
-                                                <div className="text-center py-6   rounded-xl   text-slate-400 text-xs italic">
-                                                    🍀 Hãy chuẩn bị tinh thần và
-                                                    bấm "Bắt đầu làm bài".
+                                                <div className="text-center py-6 rounded-xl text-slate-400 text-xs italic flex items-center justify-center gap-1.5">
+                                                    <img
+                                                        src="/icons/lucky.gif"
+                                                        alt="May mắn"
+                                                        className="w-5 h-5 object-contain select-none flex-shrink-0"
+                                                    />
+                                                    <span>
+                                                        Hãy chuẩn bị tinh thần
+                                                        và bấm "Bắt đầu làm
+                                                        bài".
+                                                    </span>
                                                 </div>
                                             )}
 
@@ -2029,7 +2049,11 @@ export default function StudentDashboard({
                                         {/* Sheet Header */}
                                         <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                                                <Trophy className="w-4.5 h-4.5 text-amber-500" />
+                                                <img
+                                                    src="/icons/trophy.svg"
+                                                    alt=""
+                                                    className="w-4.5 h-4.5 object-contain select-none flex-shrink-0"
+                                                />
                                                 Bảng xếp hạng bài thi
                                             </h3>
                                             <button
@@ -2113,19 +2137,54 @@ export default function StudentDashboard({
                                                                             />
                                                                         )}
                                                                         <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden relative z-0">
-                                                                            {entry.avatarUrl ? (
+                                                                            {(
+                                                                                entry as any
+                                                                            )
+                                                                                .studentAvatarUrl ||
+                                                                            entry.avatarUrl ? (
                                                                                 <img
                                                                                     src={
+                                                                                        (
+                                                                                            entry as any
+                                                                                        )
+                                                                                            .studentAvatarUrl ||
                                                                                         entry.avatarUrl
                                                                                     }
                                                                                     alt={
                                                                                         entry.studentName
                                                                                     }
+                                                                                    referrerPolicy="no-referrer"
                                                                                     className="w-full h-full object-cover"
+                                                                                    onError={(
+                                                                                        e,
+                                                                                    ) => {
+                                                                                        e.currentTarget.style.display =
+                                                                                            "none";
+                                                                                        const fallback =
+                                                                                            e
+                                                                                                .currentTarget
+                                                                                                .nextElementSibling as HTMLElement;
+                                                                                        if (
+                                                                                            fallback
+                                                                                        )
+                                                                                            fallback.style.display =
+                                                                                                "block";
+                                                                                    }}
                                                                                 />
-                                                                            ) : (
-                                                                                <UserIcon className="w-4 h-4 text-slate-400" />
-                                                                            )}
+                                                                            ) : null}
+                                                                            <UserIcon
+                                                                                className="w-4 h-4 text-slate-400"
+                                                                                style={{
+                                                                                    display:
+                                                                                        (
+                                                                                            entry as any
+                                                                                        )
+                                                                                            .studentAvatarUrl ||
+                                                                                        entry.avatarUrl
+                                                                                            ? "none"
+                                                                                            : "block",
+                                                                                }}
+                                                                            />
                                                                         </div>
                                                                     </div>
                                                                     <div className="min-w-0 flex-1">
@@ -2166,9 +2225,16 @@ export default function StudentDashboard({
                                             )}
                                         </div>
 
-                                        <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-100 pt-3 shrink-0">
-                                            💡 Điểm thi trên BXH được tính theo
-                                            lượt thi ĐẦU TIÊN.
+                                        <p className="text-[10px] text-slate-400 text-center italic border-t border-slate-100 pt-3 shrink-0 flex items-center justify-center gap-1.5">
+                                            <img
+                                                src="/icons/lightbulb.png"
+                                                alt=""
+                                                className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                            />
+                                            <span>
+                                                Điểm thi trên BXH được tính theo
+                                                lượt thi ĐẦU TIÊN.
+                                            </span>
                                         </p>
                                     </motion.div>
                                 </>
@@ -3385,7 +3451,7 @@ export default function StudentDashboard({
                                                                                         •
                                                                                     </span>
                                                                                     <span className="flex items-center gap-1">
-                                                                                        <BookMarked className="w-3.5 h-3.5 text-slate-400" />
+                                                                                        <List className="w-3.5 h-3.5 text-slate-400" />
                                                                                         {
                                                                                             sectionCount
                                                                                         }{" "}

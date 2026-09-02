@@ -425,3 +425,42 @@ export async function updateSchedule(slots: ScheduleSlot[]): Promise<void> {
     body: JSON.stringify(slots),
   });
 }
+
+export interface GenerateResetTokenResponse {
+  success: boolean;
+  token: string;
+  expiresAt: string;
+  userId: string;
+  username: string;
+  name: string;
+}
+
+export interface VerifyResetTokenResponse {
+  valid: boolean;
+  username?: string;
+  name?: string;
+  error?: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export async function generatePasswordResetLink(userId: string): Promise<GenerateResetTokenResponse> {
+  return await apiRequest<GenerateResetTokenResponse>(`/admin/users/${userId}/reset-token`, {
+    method: 'POST',
+  });
+}
+
+export async function verifyPasswordResetToken(token: string): Promise<VerifyResetTokenResponse> {
+  return await apiRequest<VerifyResetTokenResponse>(`/auth/verify-reset-token?token=${encodeURIComponent(token)}`);
+}
+
+export async function resetPasswordWithToken(token: string, password: string): Promise<ResetPasswordResponse> {
+  return await apiRequest<ResetPasswordResponse>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+

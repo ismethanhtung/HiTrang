@@ -12,6 +12,7 @@ const safeParseDate = (dateVal: any): Date => {
 
 import React, { useState } from "react";
 import { Quiz, Submission, User } from "../types";
+import { matchesQuiz } from "../lib/searchUtils";
 import {
     Hourglass,
     Clock,
@@ -133,11 +134,7 @@ export default function GradeView({
 
     // Filter quizzes by search query, clean subject, and submission status
     let processedQuizzes = rawGradeQuizzes.filter((q) => {
-        const matchesSearch =
-            q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (q.description || "")
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase());
+        const matchesSearch = matchesQuiz(q, searchQuery);
         const matchesSubject =
             selectedSubject === "Tất cả" ||
             getCleanSubjectName(q.subject) === selectedSubject;
@@ -403,7 +400,7 @@ export default function GradeView({
                                         {/* Header line: Tags & Date */}
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex flex-wrap items-center gap-1.5">
-                                                <span className="text-[9px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 px-2 py-0.5 rounded-md border border-brand-200/40 dark:border-brand-500/20">
+                                                <span className="text-[8px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 px-2 py-0.5 rounded-md border border-brand-100 dark:border-brand-500/20">
                                                     {getCleanSubjectName(
                                                         quiz.subject,
                                                     )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { matchesSearch } from '../lib/searchUtils';
 import { 
   AreaChart, 
   Area, 
@@ -408,7 +409,7 @@ export default function AdminDashboard({
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs text-slate-700">
                     {STUDENT_LIST
-                      .filter(st => st.name.toLowerCase().includes(searchTerm.toLowerCase()) || st.group.toLowerCase().includes(searchTerm.toLowerCase()))
+                      .filter(st => matchesSearch([st.name, st.group, st.id], searchTerm))
                       .map((student) => {
                         const scoreColor = student.avgScore >= 8.0 
                           ? 'text-brand-600 bg-brand-50/50' 

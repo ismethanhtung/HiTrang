@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { User, Quiz, Submission } from "../types";
 import { Search, Users, Clock } from "lucide-react";
 import { getOverallLeaderboard } from "../lib/supabaseService";
+import { matchesSearch } from "../lib/searchUtils";
 
 interface AdminStatsStudentsTabProps {
     quizzes: Quiz[];
@@ -20,6 +21,43 @@ const safeParseDate = (dateVal: any): Date => {
         return new Date(normalized);
     }
     return new Date(dateVal);
+};
+
+const StudentAvatar: React.FC<{
+    name: string;
+    avatarUrl?: string;
+    size?: "sm" | "md" | "lg";
+    className?: string;
+}> = ({ name, avatarUrl, size = "sm", className = "" }) => {
+    const [imgFailed, setImgFailed] = useState(false);
+
+    useEffect(() => {
+        setImgFailed(false);
+    }, [avatarUrl]);
+
+    const sizeClasses = {
+        sm: "w-8 h-8 text-xs",
+        md: "w-10 h-10 text-sm",
+        lg: "w-12 h-12 text-base",
+    }[size];
+
+    return (
+        <div
+            className={`${sizeClasses} rounded-full flex items-center justify-center font-bold flex-shrink-0 overflow-hidden select-none ${className}`}
+        >
+            {avatarUrl && !imgFailed ? (
+                <img
+                    src={avatarUrl}
+                    alt={name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                    onError={() => setImgFailed(true)}
+                />
+            ) : (
+                <span>{(name || "U").charAt(0).toUpperCase()}</span>
+            )}
+        </div>
+    );
 };
 
 export default function AdminStatsStudentsTab({
@@ -114,10 +152,7 @@ export default function AdminStatsStudentsTab({
             return false;
 
         // Filter by search query
-        return (
-            u.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
-            u.username.toLowerCase().includes(studentSearchQuery.toLowerCase())
-        );
+        return matchesSearch([u.name, u.username], studentSearchQuery);
     });
 
     // Handle lazy load infinite scrolling on list scroll
@@ -162,9 +197,9 @@ export default function AdminStatsStudentsTab({
                 }}
             />
             {/* Header */}
-            <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/60">
+            <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800/60">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-900">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                         Thống Kê Học Sinh
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
@@ -244,20 +279,19 @@ export default function AdminStatsStudentsTab({
                                                 : "bg-transparent text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-850"
                                         }`}
                                     >
-                                        <div
-                                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                                        <StudentAvatar
+                                            name={student.name}
+                                            avatarUrl={student.avatarUrl}
+                                            size="sm"
+                                            className={`border border-slate-200/50 dark:border-slate-700/50 ${
                                                 isSelected
-                                                    ? "bg-brand-200 dark:bg-brand-200/20 text-brand-800 dark:text-brand-300"
+                                                    ? "bg-brand-200 dark:bg-brand-200/20 text-brand-800 dark:text-brand-300 ring-2 ring-brand-400/30"
                                                     : "bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                                             }`}
-                                        >
-                                            {(student.name || "U")
-                                                .charAt(0)
-                                                .toUpperCase()}
-                                        </div>
+                                        />
                                         <div className="flex-1 min-w-0">
                                             <div
-                                                className={`text-xs font-bold truncate ${isSelected ? "text-brand-800 dark:text-brand-300" : "text-slate-900"}`}
+                                                className={`text-xs font-bold truncate ${isSelected ? "text-brand-800 dark:text-brand-300" : "text-slate-900 dark:text-slate-100"}`}
                                             >
                                                 {student.name}
                                             </div>
@@ -348,13 +382,14 @@ export default function AdminStatsStudentsTab({
                                 <div className="md:col-span-4 space-y-8 pr-6 border-r border-slate-200/60 dark:border-slate-800/60 h-full overflow-y-auto pb-8 min-w-0 custom-admin-scrollbar">
                                     {/* Student Header */}
                                     <div className="flex items-center gap-4 pb-6 border-b border-slate-200/60 dark:border-slate-800/60 flex-shrink-0">
-                                        <div className="w-12 h-12 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-200 dark:text-slate-900 flex items-center justify-center font-bold text-base flex-shrink-0">
-                                            {student.name
-                                                .charAt(0)
-                                                .toUpperCase()}
-                                        </div>
+                                        <StudentAvatar
+                                            name={student.name}
+                                            avatarUrl={student.avatarUrl}
+                                            size="lg"
+                                            className="bg-brand-100 text-brand-700 dark:bg-brand-200/20 dark:text-brand-300 border border-slate-200/50 dark:border-slate-700/50 shadow-2xs"
+                                        />
                                         <div className="space-y-0.5 min-w-0">
-                                            <h3 className="text-base font-black text-slate-900 truncate">
+                                            <h3 className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
                                                 {student.name}
                                             </h3>
                                             <p className="text-[11px] text-slate-400 font-medium truncate">

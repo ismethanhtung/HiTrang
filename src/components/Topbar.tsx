@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { User, UserPlan, Quiz } from "../types";
+import { matchesQuiz } from "../lib/searchUtils";
 import {
     LogOut,
     Shield,
@@ -7,7 +8,6 @@ import {
     ChevronDown,
     History,
     Search,
-    Trophy,
     Crown,
     Calendar,
     User as UserIcon,
@@ -108,14 +108,8 @@ export default function Topbar({
 
     // Filter quizzes matching search query
     const filteredSearchQuizzes = quizzes.filter((quiz) => {
-        const query = localSearchQuery.toLowerCase().trim();
-        if (!query) return false;
-        return (
-            quiz.title.toLowerCase().includes(query) ||
-            (quiz.description &&
-                quiz.description.toLowerCase().includes(query)) ||
-            (quiz.subject && quiz.subject.toLowerCase().includes(query))
-        );
+        if (!localSearchQuery.trim()) return false;
+        return matchesQuiz(quiz, localSearchQuery);
     });
 
     const grades = [
@@ -391,11 +385,19 @@ export default function Topbar({
                                         <img
                                             src={user.avatarUrl}
                                             alt={user.name}
+                                            referrerPolicy="no-referrer"
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = "none";
+                                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                                if (fallback) fallback.style.display = "block";
+                                            }}
                                         />
-                                    ) : (
-                                        <UserIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                                    )}
+                                    ) : null}
+                                    <UserIcon
+                                        className="w-4 h-4 text-slate-400 dark:text-slate-500"
+                                        style={{ display: user.avatarUrl ? "none" : "block" }}
+                                    />
                                 </div>
                                 <ChevronDown
                                     className={`w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${

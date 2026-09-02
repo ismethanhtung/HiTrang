@@ -1,6 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -930,4 +933,223 @@ func HandleUploadAvatar(db *gorm.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+// GenerateSecureResetToken generates 32 cryptographically secure random bytes
+// and returns both the raw token (to give to the user) and the SHA-256 hash (to store in DB).
+func GenerateSecureResetToken() (string, string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", "", err
+	}
+	rawToken := hex.EncodeToString(bytes)
+	tokenHash := HashResetToken(rawToken)
+	return rawToken, tokenHash, nil
+}
+
+// HashResetToken hashes the raw token with SHA-256
+func HashResetToken(rawToken string) string {
+	hash := sha256.Sum256([]byte(rawToken))
+	return hex.EncodeToString(hash[:])
+}
+
+// HandleGenerateResetToken (Admin/Teacher only)
+// POST /api/admin/users/:id/reset-token
+func HandleGenerateResetToken(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		if roleVal.(string) != "teacher" && roleVal.(string) != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ giáo viên hoặc admin mới có quyền tạo link đặt lại mật khẩu"})
+			return
+		}
+
+		targetUserID := c.Param("id")
+		if targetUserID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Thiếu mã tài khoản người dùng"})
+			return
+		}
+
+		var targetUser User
+		if err := db.Preload("Profile").Where("id = ?", targetUserID).First(&targetUser).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng trong hệ thống"})
+			return
+		}
+
+		rawToken, tokenHash, err := GenerateSecureResetToken()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo token bảo mật ngẫu nhiên: " + err.Error()})
+			return
+		}
+
+		tokenID := uuid.New().String()
+		expiresAt := time.Now().Add(30 * time.Minute)
+
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		// Vô hiệu hóa các token cũ chưa sử dụng của user này
+		if err := tx.Model(&PasswordResetToken{}).
+			Where("user_id = ? AND used = ?", targetUserID, false).
+			Update("used", true).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể vô hiệu hóa token cũ: " + err.Error()})
+			return
+		}
+
+		// Lưu token hash mới
+		newTokenRecord := PasswordResetToken{
+			ID:        tokenID,
+			UserID:    targetUserID,
+			TokenHash: tokenHash,
+			ExpiresAt: expiresAt,
+			Used:      false,
+			CreatedAt: time.Now(),
+		}
+
+		if err := tx.Create(&newTokenRecord).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lưu thông tin token reset: " + err.Error()})
+			return
+		}
+
+		if err := tx.Commit().Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu dữ liệu: " + err.Error()})
+			return
+		}
+
+		name := targetUser.Username
+		if targetUser.Profile != nil && targetUser.Profile.Name != "" {
+			name = targetUser.Profile.Name
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":   true,
+			"token":     rawToken,
+			"expiresAt": expiresAt.Format(time.RFC3339),
+			"userId":    targetUser.ID,
+			"username":  targetUser.Username,
+			"name":      name,
+		})
+	}
+}
+
+// HandleVerifyResetToken (Public)
+// GET /api/auth/verify-reset-token?token=...
+func HandleVerifyResetToken(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		rawToken := strings.TrimSpace(c.Query("token"))
+		if rawToken == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"valid": false,
+				"error": "Thiếu mã xác nhận đặt lại mật khẩu trong liên kết",
+			})
+			return
+		}
+
+		tokenHash := HashResetToken(rawToken)
+
+		var tokenRecord PasswordResetToken
+		if err := db.Where("token_hash = ? AND used = ? AND expires_at > ?", tokenHash, false, time.Now()).First(&tokenRecord).Error; err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"valid": false,
+				"error": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ có hiệu lực trong 30 phút và dùng 1 lần). Vui lòng liên hệ giáo viên để nhận liên kết mới.",
+			})
+			return
+		}
+
+		var profile Profile
+		if err := db.Where("id = ?", tokenRecord.UserID).First(&profile).Error; err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"valid": false,
+				"error": "Không tìm thấy hồ sơ người dùng tương ứng",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"valid":    true,
+			"username": profile.Username,
+			"name":     profile.Name,
+		})
+	}
+}
+
+type ResetPasswordWithTokenRequest struct {
+	Token    string `json:"token" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+// HandleResetPasswordWithToken (Public)
+// POST /api/auth/reset-password
+func HandleResetPasswordWithToken(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req ResetPasswordWithTokenRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu gửi lên không đầy đủ hoặc không hợp lệ"})
+			return
+		}
+
+		req.Token = strings.TrimSpace(req.Token)
+		if len(req.Password) < 6 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới phải có ít nhất 6 ký tự"})
+			return
+		}
+
+		tokenHash := HashResetToken(req.Token)
+
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		var tokenRecord PasswordResetToken
+		if err := tx.Where("token_hash = ? AND used = ? AND expires_at > ?", tokenHash, false, time.Now()).First(&tokenRecord).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn (chỉ có hiệu lực trong 30 phút và dùng 1 lần). Vui lòng liên hệ giáo viên để nhận liên kết mới.",
+			})
+			return
+		}
+
+		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hóa mật khẩu mới"})
+			return
+		}
+
+		// Cập nhật mật khẩu mới của người dùng
+		if err := tx.Model(&User{}).Where("id = ?", tokenRecord.UserID).Update("password_hash", string(hashedBytes)).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật mật khẩu người dùng: " + err.Error()})
+			return
+		}
+
+		// Đánh dấu token này đã được sử dụng
+		if err := tx.Model(&PasswordResetToken{}).Where("id = ?", tokenRecord.ID).Update("used", true).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật trạng thái token: " + err.Error()})
+			return
+		}
+
+		// Vô hiệu hóa mọi token reset khác của người dùng này
+		_ = tx.Model(&PasswordResetToken{}).Where("user_id = ? AND id <> ?", tokenRecord.UserID, tokenRecord.ID).Update("used", true)
+
+		if err := tx.Commit().Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu dữ liệu: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.",
+		})
+	}
+}
+
 

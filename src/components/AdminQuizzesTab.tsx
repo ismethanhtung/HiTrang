@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Quiz, Submission, Question, QuestionType } from "../types";
 import { updateQuiz, deleteQuiz, getQuiz } from "../lib/supabaseService";
 import { renderMathHtml } from "../lib/math";
+import { matchesQuiz } from "../lib/searchUtils";
 import {
     Search,
     Edit,
@@ -141,7 +142,9 @@ export default function AdminQuizzesTab({
             setEditingQuiz(fullQuiz);
             setEditTitle(fullQuiz.title);
             setEditDescription(fullQuiz.description);
-            setEditIsPublic(fullQuiz.isPublic !== undefined ? fullQuiz.isPublic : true);
+            setEditIsPublic(
+                fullQuiz.isPublic !== undefined ? fullQuiz.isPublic : true,
+            );
             setEditSubject(fullQuiz.subject || "Toán Học");
             setEditGrade(fullQuiz.grade || "12");
             setEditDuration(fullQuiz.duration || 45);
@@ -151,7 +154,9 @@ export default function AdminQuizzesTab({
             setEditExpandedHtmlQuestions({});
             setEditFontSize(14);
 
-            const durationStr = fullQuiz.duration ? String(fullQuiz.duration) : "45";
+            const durationStr = fullQuiz.duration
+                ? String(fullQuiz.duration)
+                : "45";
             if (["15", "30", "45", "60", "90"].includes(durationStr)) {
                 setEditDurationOption(durationStr);
             } else {
@@ -162,7 +167,10 @@ export default function AdminQuizzesTab({
             setEditScoringMode(scoringType);
 
             const secPts: Record<string, number> = {};
-            if (scoringType === "SECTION_BASED" && fullQuiz.scoringConfig?.sections) {
+            if (
+                scoringType === "SECTION_BASED" &&
+                fullQuiz.scoringConfig?.sections
+            ) {
                 fullQuiz.scoringConfig.sections.forEach((sec) => {
                     secPts[sec.section_id] = sec.total_points;
                 });
@@ -385,9 +393,7 @@ export default function AdminQuizzesTab({
     // Filter and Sort Quizzes
     const filteredQuizzes = quizzes
         .filter((q) => {
-            const matchesSearch =
-                q.title.toLowerCase().includes(quizSearchQuery.toLowerCase()) ||
-                q.subject.toLowerCase().includes(quizSearchQuery.toLowerCase());
+            const matchesSearch = matchesQuiz(q, quizSearchQuery);
             const matchesSubject =
                 quizFilterSubject === "all" || q.subject === quizFilterSubject;
             const matchesGrade =
@@ -547,8 +553,8 @@ export default function AdminQuizzesTab({
             </div>
 
             {/* Quiz List Table */}
-            <div className="bg-bg-card rounded-lg overflow-hidden shadow-2xs">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-bg-card overflow-hidden shadow-2xs">
+                <table className="w-full text-left border-1 border-slate-100">
                     <thead>
                         <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
                             <th className="py-2.5 px-4 w-1/3">

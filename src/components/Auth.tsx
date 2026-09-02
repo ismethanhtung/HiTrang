@@ -21,9 +21,14 @@ import {
 interface AuthProps {
     onLogin: (user: UserType) => void;
     initialRole?: "admin" | "student";
+    initialUsername?: string;
 }
 
-export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
+export default function Auth({
+    onLogin,
+    initialRole = "student",
+    initialUsername = "",
+}: AuthProps) {
     const [isRegister, setIsRegister] = useState(false);
     const [role, setRole] = useState<"admin" | "student">("student");
 
@@ -41,8 +46,15 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
 
     // Fields
     const [name, setName] = useState("");
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useState(initialUsername);
     const [password, setPassword] = useState("");
+
+    React.useEffect(() => {
+        if (initialUsername) {
+            setUsername(initialUsername);
+            setIsRegister(false);
+        }
+    }, [initialUsername]);
     const [confirmPassword, setConfirmPassword] = useState("");
     const [grade, setGrade] = useState("10");
     const [showPassword, setShowPassword] = useState(false);
@@ -219,7 +231,7 @@ export default function Auth({ onLogin, initialRole = "student" }: AuthProps) {
                                 placeholder={
                                     isRegister
                                         ? "Nhập tên đăng nhập"
-                                        : "Tên đăng nhập hoặc Email"
+                                        : "Tên đăng nhập"
                                 }
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}

@@ -17,10 +17,17 @@ import {
     ChevronsUpDown,
     Sun,
     Moon,
-    Trophy,
     User as UserIcon,
 } from "lucide-react";
 import { User } from "../types";
+
+const TrophyIcon = ({ className }: { className?: string }) => (
+    <img
+        src="/icons/trophy.svg"
+        alt=""
+        className={`${className || "w-4 h-4"} object-contain select-none`}
+    />
+);
 
 interface SidebarProps {
     user: User;
@@ -29,8 +36,11 @@ interface SidebarProps {
     onLogout: () => void;
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
+    currentPath: string;
+    setCurrentPath: (path: string) => void;
     theme: "light" | "dark";
     setTheme: (theme: "light" | "dark") => void;
+    backendVersion?: string;
 }
 
 export default function Sidebar({
@@ -40,8 +50,11 @@ export default function Sidebar({
     onLogout,
     isOpen,
     setIsOpen,
+    currentPath,
+    setCurrentPath,
     theme,
     setTheme,
+    backendVersion,
 }: SidebarProps) {
     const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -50,7 +63,7 @@ export default function Sidebar({
         { id: "student-dashboard", label: "Bảng điều khiển", icon: LayoutDashboard },
         { id: "quizzes", label: "Quản lý Đề thi", icon: ClipboardList },
         { id: "students", label: "Tiến độ Học sinh", icon: GraduationCap },
-        { id: "leaderboard", label: "Bảng xếp hạng", icon: Trophy },
+        { id: "leaderboard", label: "Bảng xếp hạng", icon: TrophyIcon },
     ];
 
     const studentMenuItems = [
@@ -61,7 +74,7 @@ export default function Sidebar({
         },
         { id: "student-quizzes", label: "Làm bài thi", icon: ClipboardList },
         { id: "student-results", label: "Lịch sử học tập", icon: Award },
-        { id: "leaderboard", label: "Bảng xếp hạng", icon: Trophy },
+        { id: "leaderboard", label: "Bảng xếp hạng", icon: TrophyIcon },
     ];
 
     const menuItems =
@@ -233,11 +246,19 @@ export default function Sidebar({
                             <img
                                 src={user.avatarUrl}
                                 alt={user.name}
+                                referrerPolicy="no-referrer"
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (fallback) fallback.style.display = "block";
+                                }}
                             />
-                        ) : (
-                            <UserIcon className="w-4.5 h-4.5 text-brand-500 dark:text-brand-400" />
-                        )}
+                        ) : null}
+                        <UserIcon
+                            className="w-4.5 h-4.5 text-brand-500 dark:text-brand-400"
+                            style={{ display: user.avatarUrl ? "none" : "block" }}
+                        />
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate leading-tight">

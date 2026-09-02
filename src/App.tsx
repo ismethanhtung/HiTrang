@@ -10,6 +10,7 @@ import AdminPanel from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
 import Footer from "./components/Footer";
 import GoogleCallback from "./components/GoogleCallback";
+import ResetPasswordView from "./components/ResetPasswordView";
 import {
     getCurrentUser,
     signOutUser,
@@ -71,6 +72,8 @@ export default function App() {
         if (cleanPath === "/leaderboard") return { route: "leaderboard" };
         if (cleanPath === "/lich" || cleanPath === "/schedule")
             return { route: "schedule" };
+        if (cleanPath === "/reset-password")
+            return { route: "reset-password" };
 
         const gradeMatch = cleanPath.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
         if (gradeMatch) return { route: "grade", gradeId: gradeMatch[1] };
@@ -96,6 +99,7 @@ export default function App() {
     // Auth modal state
     const [authModalOpen, setAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
+    const [authPrefillUsername, setAuthPrefillUsername] = useState<string>("");
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -535,6 +539,7 @@ export default function App() {
                             initialRole={
                                 authMode === "register" ? "student" : "student"
                             }
+                            initialUsername={authPrefillUsername}
                         />
                     </div>
                 </div>
@@ -607,6 +612,17 @@ export default function App() {
                                 setGlobalContactModalOpen(true)
                             }
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                        />
+                    ) : routeInfo.route === "reset-password" ? (
+                        <ResetPasswordView
+                            onNavigate={navigateTo}
+                            onOpenAuth={(mode = "login", prefillUsername) => {
+                                setAuthMode(mode);
+                                if (prefillUsername) {
+                                    setAuthPrefillUsername(prefillUsername);
+                                }
+                                setAuthModalOpen(true);
+                            }}
                         />
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
@@ -778,7 +794,8 @@ export default function App() {
                 {!isTakingOrReviewing &&
                     currentPath !== "/admin" &&
                     currentPath !== "/trang" &&
-                    currentPath !== "/teacher" && (
+                    currentPath !== "/teacher" &&
+                    routeInfo.route !== "reset-password" && (
                         <Footer
                             onSelectGrade={(grade, category) => {
                                 setActiveTab("student-dashboard");

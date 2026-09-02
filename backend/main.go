@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.66"
+const AppVersion = "1.0.67"
 
 func main() {
 	// 1. Configuration
@@ -89,6 +89,7 @@ func main() {
 		&UserOverallStats{},
 		&BugReport{},
 		&ScheduleSlot{},
+		&PasswordResetToken{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -149,6 +150,8 @@ func main() {
 		api.POST("/auth/register", HandleRegister(db))
 		api.POST("/auth/login", HandleLogin(db))
 		api.POST("/auth/google", HandleGoogleOAuthLogin(db))
+		api.GET("/auth/verify-reset-token", HandleVerifyResetToken(db))
+		api.POST("/auth/reset-password", HandleResetPasswordWithToken(db))
 		api.GET("/version", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"version": AppVersion,
@@ -187,6 +190,7 @@ func main() {
 			protected.DELETE("/admin/users/:id", HandleDeleteUserProfile(db))
 			protected.PUT("/admin/users/:id/plan", HandleUpdateUserPlan(db))
 			protected.PUT("/admin/users/:id/grade", HandleUpdateUserGrade(db))
+			protected.POST("/admin/users/:id/reset-token", HandleGenerateResetToken(db))
 
 			// Quizzes
 			protected.GET("/quizzes", HandleGetQuizzes(db))

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-    Trophy,
     Search,
     ChevronUp,
     ChevronDown,
@@ -21,6 +20,7 @@ import {
     getOverallLeaderboard,
     refreshOverallLeaderboard,
 } from "../lib/supabaseService";
+import { matchesSearch } from "../lib/searchUtils";
 import { motion, AnimatePresence } from "motion/react";
 
 // Cute custom SVG sticker-style indicators for Crown (No bounce, clean illustration look)
@@ -94,6 +94,57 @@ interface LeaderboardViewProps {
     onNavigate: (path: string) => void;
     initialData?: OverallLeaderboardEntry[] | null;
 }
+
+const LeaderboardAvatar: React.FC<{
+    avatarUrl?: string;
+    name: string;
+    sizeClass?: string;
+    iconClass?: string;
+    useInitial?: boolean;
+    className?: string;
+}> = ({
+    avatarUrl,
+    name,
+    sizeClass = "w-8 h-8 text-xs",
+    iconClass = "w-4.5 h-4.5 text-slate-400",
+    useInitial = false,
+    className = "",
+}) => {
+    const [imgFailed, setImgFailed] = useState(false);
+
+    useEffect(() => {
+        setImgFailed(false);
+    }, [avatarUrl]);
+
+    const getInitial = (str: string) => {
+        if (!str) return "";
+        const parts = str.trim().split(/\s+/);
+        const lastWord = parts[parts.length - 1];
+        return lastWord
+            ? lastWord.charAt(0).toUpperCase()
+            : str.charAt(0).toUpperCase();
+    };
+
+    return (
+        <div
+            className={`${sizeClass} rounded-full flex items-center justify-center font-bold shrink-0 select-none overflow-hidden relative z-0 ${className}`}
+        >
+            {avatarUrl && !imgFailed ? (
+                <img
+                    src={avatarUrl}
+                    alt={name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                    onError={() => setImgFailed(true)}
+                />
+            ) : useInitial ? (
+                <span>{getInitial(name)}</span>
+            ) : (
+                <UserIcon className={iconClass} />
+            )}
+        </div>
+    );
+};
 
 export default function LeaderboardView({
     user,
@@ -190,14 +241,8 @@ export default function LeaderboardView({
     const displayData = overallData;
 
     // Filter overall data based on search input
-    const filteredOverall = displayData.filter(
-        (entry) =>
-            entry.studentName
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()) ||
-            entry.studentUsername
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()),
+    const filteredOverall = displayData.filter((entry) =>
+        matchesSearch([entry.studentName, entry.studentUsername], searchQuery),
     );
 
     const myOverallStats = displayData.find(
@@ -335,23 +380,17 @@ export default function LeaderboardView({
                                                         alt=""
                                                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11.5 h-11.5 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                     />
-                                                    <div className="w-8.5 h-8.5 rounded-full border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 flex items-center justify-center font-extrabold text-xs text-amber-600 dark:text-amber-400 shrink-0 select-none group-hover:scale-105 transition-transform overflow-hidden relative z-0">
-                                                        {champion.studentAvatarUrl ? (
-                                                            <img
-                                                                src={
-                                                                    champion.studentAvatarUrl
-                                                                }
-                                                                alt={
-                                                                    champion.studentName
-                                                                }
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            getAvatarInitial(
-                                                                champion.studentName,
-                                                            )
-                                                        )}
-                                                    </div>
+                                                    <LeaderboardAvatar
+                                                        avatarUrl={
+                                                            champion.studentAvatarUrl
+                                                        }
+                                                        name={
+                                                            champion.studentName
+                                                        }
+                                                        sizeClass="w-8.5 h-8.5 text-xs font-extrabold text-amber-600 dark:text-amber-400"
+                                                        useInitial={true}
+                                                        className="border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 group-hover:scale-105 transition-transform"
+                                                    />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-1.5">
@@ -372,14 +411,22 @@ export default function LeaderboardView({
                                                     </p>
                                                 </div>
                                                 {/* Trophy icon */}
-                                                <Trophy className="w-3.5 h-3.5 text-amber-500 group-hover:scale-110 transition-all shrink-0" />
+                                                <img
+                                                    src="/icons/trophy.svg"
+                                                    alt=""
+                                                    className="w-3.5 h-3.5 object-contain select-none group-hover:scale-110 transition-all shrink-0"
+                                                />
                                             </div>
                                         );
                                     })()}
                                 </div>
                             ) : (
                                 <div className="py-8 text-center border border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl space-y-2">
-                                    <Trophy className="w-6 h-6 text-amber-500/50 mx-auto" />
+                                    <img
+                                        src="/icons/trophy.svg"
+                                        alt=""
+                                        className="w-6 h-6 object-contain select-none mx-auto opacity-70"
+                                    />
                                     <p className="text-[11px] text-slate-450 dark:text-slate-500 italic">
                                         Chưa ghi nhận lịch sử vinh danh
                                     </p>
@@ -411,23 +458,15 @@ export default function LeaderboardView({
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden border-2 border-slate-300 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-slate-500 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
-                                            {podiumOrder[0].studentAvatarUrl ? (
-                                                <img
-                                                    src={
-                                                        podiumOrder[0]
-                                                            .studentAvatarUrl
-                                                    }
-                                                    alt={
-                                                        podiumOrder[0]
-                                                            .studentName
-                                                    }
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <UserIcon className="w-5.5 h-5.5 text-slate-400" />
-                                            )}
-                                        </div>
+                                        <LeaderboardAvatar
+                                            avatarUrl={
+                                                podiumOrder[0].studentAvatarUrl
+                                            }
+                                            name={podiumOrder[0].studentName}
+                                            sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-slate-500"
+                                            iconClass="w-5.5 h-5.5 text-slate-400"
+                                            className="border-2 border-slate-300 bg-white dark:bg-slate-900 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10"
+                                        />
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
@@ -464,23 +503,15 @@ export default function LeaderboardView({
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
-                                        <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-full overflow-hidden border-2 border-amber-400 bg-white dark:bg-slate-900 flex items-center justify-center font-black text-base text-amber-600 dark:text-amber-400 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10">
-                                            {podiumOrder[1].studentAvatarUrl ? (
-                                                <img
-                                                    src={
-                                                        podiumOrder[1]
-                                                            .studentAvatarUrl
-                                                    }
-                                                    alt={
-                                                        podiumOrder[1]
-                                                            .studentName
-                                                    }
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <UserIcon className="w-6.5 h-6.5 text-amber-500" />
-                                            )}
-                                        </div>
+                                        <LeaderboardAvatar
+                                            avatarUrl={
+                                                podiumOrder[1].studentAvatarUrl
+                                            }
+                                            name={podiumOrder[1].studentName}
+                                            sizeClass="w-13 h-13 sm:w-15 sm:h-15 text-base font-black text-amber-600 dark:text-amber-400"
+                                            iconClass="w-6.5 h-6.5 text-amber-500"
+                                            className="border-2 border-amber-400 bg-white dark:bg-slate-900 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10"
+                                        />
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
@@ -518,23 +549,15 @@ export default function LeaderboardView({
                                             />
                                         </div>
                                         <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
-                                        <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-full overflow-hidden border-2 border-orange-300/80 bg-white dark:bg-slate-900 flex items-center justify-center font-bold text-sm text-orange-700 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10">
-                                            {podiumOrder[2].studentAvatarUrl ? (
-                                                <img
-                                                    src={
-                                                        podiumOrder[2]
-                                                            .studentAvatarUrl
-                                                    }
-                                                    alt={
-                                                        podiumOrder[2]
-                                                            .studentName
-                                                    }
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <UserIcon className="w-5.5 h-5.5 text-orange-700" />
-                                            )}
-                                        </div>
+                                        <LeaderboardAvatar
+                                            avatarUrl={
+                                                podiumOrder[2].studentAvatarUrl
+                                            }
+                                            name={podiumOrder[2].studentName}
+                                            sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-orange-700"
+                                            iconClass="w-5.5 h-5.5 text-orange-700"
+                                            className="border-2 border-orange-300/80 bg-white dark:bg-slate-900 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10"
+                                        />
                                     </div>
                                     <div className="space-y-0.5 max-w-full z-10">
                                         <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
@@ -658,29 +681,21 @@ export default function LeaderboardView({
                                                                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                                 />
                                                             )}
-                                                            <div
-                                                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 select-none overflow-hidden relative z-0 ${
+                                                            <LeaderboardAvatar
+                                                                avatarUrl={
+                                                                    entry.studentAvatarUrl
+                                                                }
+                                                                name={
+                                                                    entry.studentName
+                                                                }
+                                                                sizeClass="w-8 h-8 text-xs"
+                                                                iconClass={`w-4.5 h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
+                                                                className={
                                                                     rank === 1
                                                                         ? "border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
                                                                         : "bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
-                                                                }`}
-                                                            >
-                                                                {entry.studentAvatarUrl ? (
-                                                                    <img
-                                                                        src={
-                                                                            entry.studentAvatarUrl
-                                                                        }
-                                                                        alt={
-                                                                            entry.studentName
-                                                                        }
-                                                                        className="w-full h-full object-cover"
-                                                                    />
-                                                                ) : (
-                                                                    <UserIcon
-                                                                        className={`w-4.5 h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
-                                                                    />
-                                                                )}
-                                                            </div>
+                                                                }
+                                                            />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
                                                             <p
@@ -801,15 +816,24 @@ export default function LeaderboardView({
                                                 {nextUserAbove.rankPosition})
                                             </p>
                                         ) : (
-                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                                                💡 Bạn đang đồng hạng với{" "}
-                                                <strong className="text-slate-700 dark:text-slate-300">
-                                                    {nextUserAbove.studentName}
-                                                </strong>{" "}
-                                                (Hạng #
-                                                {nextUserAbove.rankPosition}).
-                                                Hãy tích lũy thêm điểm để bứt
-                                                phá vươn lên!
+                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium flex items-center gap-1.5">
+                                                <img
+                                                    src="/icons/lightbulb.png"
+                                                    alt=""
+                                                    className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                                />
+                                                <span>
+                                                    Bạn đang đồng hạng với{" "}
+                                                    <strong className="text-slate-700 dark:text-slate-300">
+                                                        {
+                                                            nextUserAbove.studentName
+                                                        }
+                                                    </strong>{" "}
+                                                    (Hạng #
+                                                    {nextUserAbove.rankPosition}
+                                                    ). Hãy tích lũy thêm điểm để
+                                                    bứt phá vươn lên!
+                                                </span>
                                             </p>
                                         )
                                     ) : (
