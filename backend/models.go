@@ -30,12 +30,15 @@ type ScoringConfig struct {
 
 // User represents auth.users of Supabase
 type User struct {
-	ID           string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
-	Username     string    `json:"username" gorm:"uniqueIndex;type:varchar(100);not null"`
-	Email        *string   `json:"email" gorm:"uniqueIndex;type:varchar(255)"`
-	PasswordHash string    `json:"password_hash" gorm:"type:varchar(255);not null"`
-	CreatedAt    time.Time `json:"created_at"`
-	Profile      *Profile  `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	ID             string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	Username       string    `json:"username" gorm:"uniqueIndex;type:varchar(100);not null"`
+	Email          *string   `json:"email" gorm:"uniqueIndex;type:varchar(255)"`
+	PasswordHash   string    `json:"password_hash" gorm:"type:varchar(255);not null"`
+	TOTPSecret     *string   `json:"-" gorm:"column:totp_secret;type:varchar(64)"`
+	TOTPTempSecret *string   `json:"-" gorm:"column:totp_temp_secret;type:varchar(64)"`
+	TOTPEnabled    bool      `json:"totpEnabled" gorm:"column:totp_enabled;default:false;not null"`
+	CreatedAt      time.Time `json:"created_at"`
+	Profile        *Profile  `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
 }
 
 // Profile represents profiles table

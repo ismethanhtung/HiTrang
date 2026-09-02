@@ -40,6 +40,7 @@ export interface User {
   plan?: UserPlan;
   grade?: string;
   avatarUrl?: string;
+  totpEnabled?: boolean;
   createdAt?: string;
   lastActiveAt?: string;
   activeExam?: {

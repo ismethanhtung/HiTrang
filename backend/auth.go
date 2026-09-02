@@ -1,8 +1,12 @@
 package main
 
 import (
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base32"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -204,6 +208,7 @@ func HandleRegister(db *gorm.DB) gin.HandlerFunc {
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	TOTPCode string `json:"totpCode"`
 }
 
 func HandleLogin(db *gorm.DB) gin.HandlerFunc {
@@ -232,6 +237,21 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// If user has 2FA enabled, verify TOTP code
+		if user.TOTPEnabled && user.TOTPSecret != nil {
+			if strings.TrimSpace(req.TOTPCode) == "" {
+				c.JSON(http.StatusOK, gin.H{
+					"require2FA": true,
+					"message":    "Tài khoản đã kích hoạt xác thực 2 bước. Vui lòng nhập mã Google Authenticator.",
+				})
+				return
+			}
+			if !VerifyTOTP(*user.TOTPSecret, req.TOTPCode) {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Mã xác thực 2 bước (Google Authenticator) không đúng hoặc đã hết hạn."})
+				return
+			}
+		}
+
 		var profile Profile
 		if err := db.Where("id = ?", user.ID).First(&profile).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không tìm thấy hồ sơ người dùng"})
@@ -247,13 +267,14 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
 			"user": gin.H{
-				"id":        user.ID,
-				"name":      profile.Name,
-				"username":  profile.Username,
-				"role":      profile.Role,
-				"grade":     profile.Grade,
-				"plan":      profile.Plan,
-				"avatarUrl": profile.AvatarURL,
+				"id":          user.ID,
+				"name":        profile.Name,
+				"username":    profile.Username,
+				"role":        profile.Role,
+				"grade":       profile.Grade,
+				"plan":        profile.Plan,
+				"avatarUrl":   profile.AvatarURL,
+				"totpEnabled": user.TOTPEnabled,
 			},
 		})
 	}
@@ -263,24 +284,27 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, _ := c.Get("userID")
 
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
 		var profile Profile
 		if err := db.Where("id = ?", userID).First(&profile).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				c.JSON(http.StatusNotFound, gin.H{"error": "Hồ sơ người dùng không tồn tại"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi hệ thống khi tải hồ sơ: " + err.Error()})
-			}
+			c.JSON(http.StatusNotFound, gin.H{"error": "Hồ sơ người dùng không tồn tại"})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":        profile.ID,
-			"name":      profile.Name,
-			"username":  profile.Username,
-			"role":      profile.Role,
-			"grade":     profile.Grade,
-			"plan":      profile.Plan,
-			"avatarUrl": profile.AvatarURL,
+			"id":          profile.ID,
+			"name":        profile.Name,
+			"username":    profile.Username,
+			"role":        profile.Role,
+			"grade":       profile.Grade,
+			"plan":        profile.Plan,
+			"avatarUrl":   profile.AvatarURL,
+			"totpEnabled": user.TOTPEnabled,
 		})
 	}
 }
@@ -1151,5 +1175,323 @@ func HandleResetPasswordWithToken(db *gorm.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+// ----------------------------------------------------
+// 2-STEP VERIFICATION (TOTP - RFC 6238 / RFC 4226)
+// ----------------------------------------------------
+
+// GenerateTOTPSecret generates a 20-byte random Base32 string (without padding)
+func GenerateTOTPSecret() (string, error) {
+	bytes := make([]byte, 20)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(bytes), nil
+}
+
+func generateHOTP(secret []byte, counter int64) string {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(counter))
+
+	mac := hmac.New(sha1.New, secret)
+	mac.Write(buf)
+	h := mac.Sum(nil)
+
+	offset := h[len(h)-1] & 0x0f
+	truncatedHash := binary.BigEndian.Uint32(h[offset:offset+4]) & 0x7fffffff
+	code := truncatedHash % 1000000
+	return fmt.Sprintf("%06d", code)
+}
+
+// VerifyTOTP verifies a 6-digit TOTP code against a Base32 secret with +/- 1 time step window (90s)
+func VerifyTOTP(secretBase32 string, code string) bool {
+	cleanSecret := strings.ToUpper(strings.TrimSpace(secretBase32))
+	secret, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(cleanSecret)
+	if err != nil {
+		secret, err = base32.StdEncoding.DecodeString(cleanSecret)
+		if err != nil {
+			return false
+		}
+	}
+
+	cleanCode := strings.TrimSpace(code)
+	if len(cleanCode) != 6 {
+		return false
+	}
+
+	currentTime := time.Now().Unix() / 30
+	for i := int64(-1); i <= 1; i++ {
+		t := currentTime + i
+		if generateHOTP(secret, t) == cleanCode {
+			return true
+		}
+	}
+	return false
+}
+
+// HandleCheckForgotPassword (Public)
+// POST /api/auth/forgot-password/check
+func HandleCheckForgotPassword(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req struct {
+			Username string `json:"username" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập tên đăng nhập hoặc email"})
+			return
+		}
+
+		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
+
+		var user User
+		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"exists":  false,
+				"has2FA":  false,
+				"message": "Không tìm thấy tài khoản với tên đăng nhập này.",
+			})
+			return
+		}
+
+		var profile Profile
+		_ = db.Where("id = ?", user.ID).First(&profile)
+
+		name := user.Username
+		if profile.Name != "" {
+			name = profile.Name
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"exists":   true,
+			"has2FA":   user.TOTPEnabled,
+			"username": user.Username,
+			"name":     name,
+		})
+	}
+}
+
+// HandleResetWithTOTP (Public)
+// POST /api/auth/forgot-password/reset-with-totp
+func HandleResetWithTOTP(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req struct {
+			Username string `json:"username" binding:"required"`
+			TOTPCode string `json:"totpCode" binding:"required"`
+			Password string `json:"password" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ thông tin"})
+			return
+		}
+
+		if len(req.Password) < 6 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới phải có ít nhất 6 ký tự"})
+			return
+		}
+
+		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
+
+		var user User
+		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không tìm thấy tài khoản người dùng"})
+			return
+		}
+
+		if !user.TOTPEnabled || user.TOTPSecret == nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Tài khoản này chưa kích hoạt xác thực 2 bước (Google Authenticator). Vui lòng nhắn tin cho cô Trang để nhận liên kết đổi mật khẩu.",
+			})
+			return
+		}
+
+		if !VerifyTOTP(*user.TOTPSecret, req.TOTPCode) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã xác thực 2 bước không chính xác hoặc đã hết hạn (mỗi mã có hiệu lực 30 giây). Vui lòng kiểm tra lại đồng hồ điện thoại.",
+			})
+			return
+		}
+
+		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hóa mật khẩu mới"})
+			return
+		}
+
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		if err := tx.Model(&User{}).Where("id = ?", user.ID).Update("password_hash", string(hashedBytes)).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật mật khẩu: " + err.Error()})
+			return
+		}
+
+		// Vô hiệu hóa mọi token reset cũ nếu có
+		_ = tx.Model(&PasswordResetToken{}).Where("user_id = ? AND used = ?", user.ID, false).Update("used", true)
+
+		if err := tx.Commit().Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu dữ liệu: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.",
+		})
+	}
+}
+
+// HandleSetup2FA (Protected)
+// POST /api/auth/2fa/setup
+func HandleSetup2FA(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		secret, err := GenerateTOTPSecret()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo khóa bí mật 2 bước"})
+			return
+		}
+
+		// Lưu secret tạm thời vào DB
+		if err := db.Model(&User{}).Where("id = ?", user.ID).Update("totp_temp_secret", secret).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lưu khóa bí mật: " + err.Error()})
+			return
+		}
+
+		// Chuẩn bị URI cho Google Authenticator
+		// otpauth://totp/HiTrang:{username}?secret={secret}&issuer=HiTrang&algorithm=SHA1&digits=6&period=30
+		issuer := "HiTrang"
+		accountName := url.QueryEscape(user.Username)
+		otpauthURI := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&algorithm=SHA1&digits=6&period=30",
+			issuer, accountName, secret, issuer)
+
+		c.JSON(http.StatusOK, gin.H{
+			"secret":     secret,
+			"otpauthUri": otpauthURI,
+		})
+	}
+}
+
+// HandleEnable2FA (Protected)
+// POST /api/auth/2fa/enable
+func HandleEnable2FA(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+
+		var req struct {
+			Code string `json:"code" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập mã 6 số từ Google Authenticator"})
+			return
+		}
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		if user.TOTPTempSecret == nil || *user.TOTPTempSecret == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Chưa có yêu cầu cài đặt xác thực 2 bước. Vui lòng bấm 'Cài đặt' lại."})
+			return
+		}
+
+		if !VerifyTOTP(*user.TOTPTempSecret, req.Code) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Mã xác thực không chính xác hoặc đã hết hạn. Hãy kiểm tra lại ứng dụng Google Authenticator và giờ của máy.",
+			})
+			return
+		}
+
+		// Kích hoạt chính thức
+		updates := map[string]interface{}{
+			"totp_secret":      *user.TOTPTempSecret,
+			"totp_temp_secret": nil,
+			"totp_enabled":     true,
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể kích hoạt xác thực 2 bước: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Kích hoạt xác thực 2 bước (Google Authenticator) thành công!",
+		})
+	}
+}
+
+// HandleDisable2FA (Protected)
+// POST /api/auth/2fa/disable
+func HandleDisable2FA(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+
+		var req struct {
+			Code     string `json:"code"`
+			Password string `json:"password"`
+		}
+		_ = c.ShouldBindJSON(&req)
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		if !user.TOTPEnabled {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Xác thực 2 bước hiện chưa được bật."})
+			return
+		}
+
+		// Xác thực bằng mã TOTP hoặc mật khẩu
+		authorized := false
+		if strings.TrimSpace(req.Code) != "" && user.TOTPSecret != nil {
+			if VerifyTOTP(*user.TOTPSecret, req.Code) {
+				authorized = true
+			}
+		}
+		if !authorized && strings.TrimSpace(req.Password) != "" {
+			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err == nil {
+				authorized = true
+			}
+		}
+
+		if !authorized {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã xác thực hoặc mật khẩu không chính xác để tắt xác thực 2 bước."})
+			return
+		}
+
+		updates := map[string]interface{}{
+			"totp_secret":      nil,
+			"totp_temp_secret": nil,
+			"totp_enabled":     false,
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", user.ID).Updates(updates).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tắt xác thực 2 bước: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đã tắt xác thực 2 bước thành công.",
+		})
+	}
+}
+
 
 

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.67"
+const AppVersion = "1.0.68"
 
 func main() {
 	// 1. Configuration
@@ -152,6 +152,8 @@ func main() {
 		api.POST("/auth/google", HandleGoogleOAuthLogin(db))
 		api.GET("/auth/verify-reset-token", HandleVerifyResetToken(db))
 		api.POST("/auth/reset-password", HandleResetPasswordWithToken(db))
+		api.POST("/auth/forgot-password/check", HandleCheckForgotPassword(db))
+		api.POST("/auth/forgot-password/reset-with-totp", HandleResetWithTOTP(db))
 		api.GET("/version", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"version": AppVersion,
@@ -183,6 +185,11 @@ func main() {
 			protected.PUT("/auth/me/username", HandleUpdateUsername(db))
 			protected.PUT("/auth/me/password", HandleUpdatePassword(db))
 			protected.POST("/auth/me/avatar", HandleUploadAvatar(db))
+
+			// Two-Factor Authentication (2FA)
+			protected.POST("/auth/2fa/setup", HandleSetup2FA(db))
+			protected.POST("/auth/2fa/enable", HandleEnable2FA(db))
+			protected.POST("/auth/2fa/disable", HandleDisable2FA(db))
 
 			// User Management (Admin/Teacher)
 			protected.GET("/admin/users", HandleGetAllProfiles(db))

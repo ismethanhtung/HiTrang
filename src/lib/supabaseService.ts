@@ -69,13 +69,25 @@ export async function signUpUser(
   return data.user;
 }
 
-export async function signInUser(username: string, password: string): Promise<User> {
+export interface SignInResult {
+  user?: User;
+  token?: string;
+  require2FA?: boolean;
+  message?: string;
+}
+
+export async function signInUser(username: string, password: string, totpCode?: string): Promise<SignInResult> {
   const data = await apiRequest('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password, totpCode })
   });
-  localStorage.setItem('hitrang_token', data.token);
-  return data.user;
+  if (data.require2FA) {
+    return { require2FA: true, message: data.message };
+  }
+  if (data.token) {
+    localStorage.setItem('hitrang_token', data.token);
+  }
+  return { user: data.user, token: data.token };
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -463,4 +475,60 @@ export async function resetPasswordWithToken(token: string, password: string): P
     body: JSON.stringify({ token, password }),
   });
 }
+
+// ----------------------------------------------------
+// 2-STEP VERIFICATION & FORGOT PASSWORD API
+// ----------------------------------------------------
+
+export interface ForgotPasswordCheckResult {
+  exists: boolean;
+  has2FA: boolean;
+  username?: string;
+  name?: string;
+  message?: string;
+}
+
+export async function checkForgotPassword(username: string): Promise<ForgotPasswordCheckResult> {
+  return await apiRequest<ForgotPasswordCheckResult>('/auth/forgot-password/check', {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  });
+}
+
+export async function resetPasswordWithTOTP(
+  username: string,
+  totpCode: string,
+  password: string
+): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/forgot-password/reset-with-totp', {
+    method: 'POST',
+    body: JSON.stringify({ username, totpCode, password }),
+  });
+}
+
+export interface Setup2FAResult {
+  secret: string;
+  otpauthUri: string;
+}
+
+export async function setup2FA(): Promise<Setup2FAResult> {
+  return await apiRequest<Setup2FAResult>('/auth/2fa/setup', {
+    method: 'POST',
+  });
+}
+
+export async function enable2FA(code: string): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/2fa/enable', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}
+
+export async function disable2FA(code?: string, password?: string): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/2fa/disable', {
+    method: 'POST',
+    body: JSON.stringify({ code, password }),
+  });
+}
+
 
