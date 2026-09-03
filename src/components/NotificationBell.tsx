@@ -173,7 +173,6 @@ export default function NotificationBell({
                         <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white shadow-xs animate-in zoom-in-50">
                             {unreadCount > 99 ? "99+" : unreadCount}
                         </span>
-                        <span className="absolute -top-1 -right-1 h-3.5 min-w-3.5 rounded-full bg-rose-400 animate-ping opacity-75 pointer-events-none" />
                     </>
                 )}
             </button>
@@ -244,21 +243,6 @@ export default function NotificationBell({
                                                 : "bg-transparent hover:bg-slate-50/80 dark:hover:bg-slate-800/50 opacity-80 hover:opacity-100 border-l-[3px] border-l-transparent"
                                         }`}
                                     >
-                                        {/* Icon Box */}
-                                        <div
-                                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${
-                                                isNewQuiz
-                                                    ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-600 dark:text-amber-400"
-                                                    : "bg-brand-50 dark:bg-brand-950/40 border-brand-200 dark:border-brand-800/60 text-brand-600 dark:text-brand-400"
-                                            }`}
-                                        >
-                                            {isNewQuiz ? (
-                                                <BookOpen className="w-4 h-4" />
-                                            ) : (
-                                                <Sparkles className="w-4 h-4" />
-                                            )}
-                                        </div>
-
                                         {/* Content */}
                                         <div className="flex-1 min-w-0 space-y-1">
                                             <div className="flex items-center justify-between gap-2">
