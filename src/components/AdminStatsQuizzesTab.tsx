@@ -25,6 +25,7 @@ export default function AdminStatsQuizzesTab({
     quizzes,
     submissions,
     onReviewSubmission,
+    onReloadSubmissions,
 }: AdminStatsQuizzesTabProps) {
     const [search, setSearch] = useState("");
     const [filterGrade, setFilterGrade] = useState("all");
@@ -94,9 +95,13 @@ export default function AdminStatsQuizzesTab({
                 let maxScore = 0;
                 let maxScorer = "-";
                 if (count > 0) {
-                    const sortedSubs = [...quizSubmissions].sort(
-                        (a, b) => b.score - a.score,
-                    );
+                    const sortedSubs = [...quizSubmissions].sort((a, b) => {
+                        if (b.score !== a.score) return b.score - a.score;
+                        const timeA = a.timeSpent !== undefined && a.timeSpent !== null ? a.timeSpent : 999999;
+                        const timeB = b.timeSpent !== undefined && b.timeSpent !== null ? b.timeSpent : 999999;
+                        if (timeA !== timeB) return timeA - timeB;
+                        return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+                    });
                     maxScore = sortedSubs[0].score;
                     maxScorer = sortedSubs[0].studentName;
                 }
@@ -473,7 +478,13 @@ export default function AdminStatsQuizzesTab({
                                             s.quizId ===
                                             selectedQuizForDetails.id,
                                     )
-                                    .sort((a, b) => b.score - a.score);
+                                    .sort((a, b) => {
+                                        if (b.score !== a.score) return b.score - a.score;
+                                        const timeA = a.timeSpent !== undefined && a.timeSpent !== null ? a.timeSpent : 999999;
+                                        const timeB = b.timeSpent !== undefined && b.timeSpent !== null ? b.timeSpent : 999999;
+                                        if (timeA !== timeB) return timeA - timeB;
+                                        return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+                                    });
 
                                 const subPageSize = 10;
                                 const totalSubPages = Math.ceil(

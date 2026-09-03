@@ -611,7 +611,13 @@ export default function AdminPanel({
             </aside>
 
             {/* MAIN CONTENT AREA */}
-            <section className="flex-1 p-6 overflow-y-auto relative">
+            <section
+                className={`flex-1 relative ${
+                    adminReviewSubmission
+                        ? "p-3 sm:p-5 flex flex-col min-h-0 overflow-hidden h-full"
+                        : "p-6 overflow-y-auto"
+                }`}
+            >
                 {adminReviewSubmission ? (
                     <AdminSubmissionReviewer
                         submission={adminReviewSubmission}

@@ -324,7 +324,13 @@ export default function GradeView({
                             // Check if student has done this quiz
                             const bestSubmission = studentSubmissions
                                 .filter((s) => s.quizId === quiz.id)
-                                .sort((a, b) => b.score - a.score)[0];
+                                .sort((a, b) => {
+                                    if (b.score !== a.score) return b.score - a.score;
+                                    const timeA = a.timeSpent !== undefined && a.timeSpent !== null ? a.timeSpent : 999999;
+                                    const timeB = b.timeSpent !== undefined && b.timeSpent !== null ? b.timeSpent : 999999;
+                                    if (timeA !== timeB) return timeA - timeB;
+                                    return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+                                })[0];
 
                             // Count unique sections
                             const uniqueSections = new Set(
