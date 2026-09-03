@@ -66,6 +66,8 @@ export default function App() {
             return { route: "settings", tab: "profile" };
         if (cleanPath === "/history")
             return { route: "settings", tab: "history" };
+        if (cleanPath === "/notifications" || cleanPath === "/noti")
+            return { route: "settings", tab: "notifications" };
         if (cleanPath === "/trang" || cleanPath === "/teacher")
             return { route: "teacher" };
         if (cleanPath === "/admin") return { route: "admin" };
@@ -133,7 +135,7 @@ export default function App() {
     const [bugContent, setBugContent] = useState<string>("");
     const [bugSubmitted, setBugSubmitted] = useState<boolean>(false);
     const [settingsInitialTab, setSettingsInitialTab] = useState<
-        "profile" | "history"
+        "profile" | "history" | "notifications"
     >("profile");
 
     const confirmNavigation = () => {
@@ -509,7 +511,11 @@ export default function App() {
                     onNavigateSettings={(tab = "profile") => {
                         if (confirmNavigation()) {
                             navigateTo(
-                                tab === "history" ? "/history" : "/settings",
+                                tab === "notifications"
+                                    ? "/notifications"
+                                    : tab === "history"
+                                      ? "/history"
+                                      : "/settings",
                             );
                         }
                     }}
@@ -653,7 +659,9 @@ export default function App() {
                             {(() => {
                                 if (
                                     currentPath === "/settings" ||
-                                    currentPath === "/history"
+                                    currentPath === "/history" ||
+                                    currentPath === "/notifications" ||
+                                    currentPath === "/noti"
                                 ) {
                                     return (
                                         <SettingsView
@@ -666,23 +674,27 @@ export default function App() {
                                             submissions={submissions}
                                             quizzes={quizzes}
                                             initialTab={
-                                                currentPath === "/history"
-                                                    ? "history"
-                                                    : "profile"
+                                                currentPath ===
+                                                    "/notifications" ||
+                                                currentPath === "/noti"
+                                                    ? "notifications"
+                                                    : currentPath === "/history"
+                                                      ? "history"
+                                                      : "profile"
                                             }
                                             onTabChange={(tab) => {
+                                                const targetPath =
+                                                    tab === "notifications"
+                                                        ? "/notifications"
+                                                        : tab === "history"
+                                                          ? "/history"
+                                                          : "/settings";
                                                 window.history.pushState(
                                                     null,
                                                     "",
-                                                    tab === "history"
-                                                        ? "/history"
-                                                        : "/settings",
+                                                    targetPath,
                                                 );
-                                                setCurrentPath(
-                                                    tab === "history"
-                                                        ? "/history"
-                                                        : "/settings",
-                                                );
+                                                setCurrentPath(targetPath);
                                             }}
                                             onNavigate={navigateTo}
                                         />

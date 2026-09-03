@@ -10,6 +10,7 @@ import {
     Loader2,
     Check,
     Ghost,
+    ChevronRight,
 } from "lucide-react";
 import { AppNotification } from "../types";
 import {
@@ -20,10 +21,12 @@ import {
 
 interface NotificationBellProps {
     onNavigateQuiz?: (quizId: string) => void;
+    onNavigate?: (path: string) => void;
 }
 
 export default function NotificationBell({
     onNavigateQuiz,
+    onNavigate,
 }: NotificationBellProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -193,21 +196,24 @@ export default function NotificationBell({
                             )}
                         </div>
 
-                        {unreadCount > 0 && (
-                            <button
-                                type="button"
-                                onClick={handleMarkAllRead}
-                                disabled={markingAll}
-                                className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1 cursor-pointer disabled:opacity-50 transition-colors"
-                            >
-                                {markingAll ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                ) : (
-                                    <CheckCheck className="w-3.5 h-3.5" />
-                                )}
-                                <span>Đã đọc tất cả</span>
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={handleMarkAllRead}
+                            disabled={unreadCount === 0 || markingAll}
+                            className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:text-brand-600 dark:disabled:hover:text-brand-400 transition-colors select-none"
+                            title={
+                                unreadCount === 0
+                                    ? "Đã đọc tất cả thông báo"
+                                    : "Đánh dấu tất cả đã đọc"
+                            }
+                        >
+                            {markingAll ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                                <CheckCheck className="w-3.5 h-3.5" />
+                            )}
+                            <span>Đã đọc tất cả</span>
+                        </button>
                     </div>
 
                     {/* Notification List Container */}
@@ -264,24 +270,48 @@ export default function NotificationBell({
                                                 </span>
                                             </div>
 
-                                            <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">
+                                            <p className="text-[11px] text-text-secondary leading-relaxed line-clamp-2">
                                                 {notif.message}
                                             </p>
 
                                             {/* Action hint if linked to quiz */}
-                                            {notif.quizId && (
+                                            {/*{notif.quizId && (
                                                 <div className="pt-1 flex items-center gap-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 group-hover:underline">
                                                     <span>
                                                         Vào làm bài ngay
                                                     </span>
                                                     <ExternalLink className="w-3 h-3" />
                                                 </div>
-                                            )}
+                                            )}*/}
                                         </div>
                                     </div>
                                 );
                             })
                         )}
+                    </div>
+
+                    {/* Popover Footer - View All */}
+                    <div className=" border-t border-border-primary bg-bg-surface/50">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsOpen(false);
+                                if (onNavigate) {
+                                    onNavigate("/notifications");
+                                } else {
+                                    window.history.pushState(
+                                        {},
+                                        "",
+                                        "/notifications",
+                                    );
+                                    window.dispatchEvent(new Event("popstate"));
+                                }
+                            }}
+                            className="w-full py-2.5 px-3 rounded-lg text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50/60 dark:hover:bg-brand-950/30 transition-colors flex items-center justify-center gap-1 cursor-pointer select-none"
+                        >
+                            <span>Xem tất cả thông báo</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
                     </div>
                 </div>
             )}

@@ -23,7 +23,7 @@ interface TopbarProps {
     onLogout: () => void;
     onNavigateAdmin: () => void;
     onNavigateHome: () => void;
-    onNavigateSettings: (tab?: "profile" | "history") => void;
+    onNavigateSettings: (tab?: "profile" | "history" | "notifications") => void;
     currentPath: string;
     onNavigateLeaderboard: () => void;
     onNavigateSchedule: () => void;
@@ -378,7 +378,16 @@ export default function Topbar({
                     ) : (
                         <div className="flex items-center gap-2">
                             {/* Notification Bell */}
-                            <NotificationBell />
+                            <NotificationBell
+                                onNavigate={(path) => {
+                                    if (
+                                        path === "/notifications" ||
+                                        path === "/noti"
+                                    ) {
+                                        onNavigateSettings("notifications");
+                                    }
+                                }}
+                            />
 
                             <div
                                 key="user-profile-dropdown"

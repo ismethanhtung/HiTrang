@@ -42,8 +42,11 @@ import {
     Trash2,
     Eye,
     EyeOff,
+    Bell,
+    CheckCheck,
+    ExternalLink,
 } from "lucide-react";
-import { User as UserType, Quiz, Submission } from "../types";
+import { User as UserType, Quiz, Submission, AppNotification } from "../types";
 import {
     updateProfileName,
     updateUsername,
@@ -59,6 +62,9 @@ import {
     revokeSession,
     revokeAllOtherSessions,
     deleteUserAccount,
+    getNotifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
 } from "../lib/supabaseService";
 import { renderMathHtml } from "../lib/math";
 
@@ -69,8 +75,8 @@ interface SettingsViewProps {
     theme: "light" | "dark";
     submissions: Submission[];
     quizzes: Quiz[];
-    initialTab?: "profile" | "history";
-    onTabChange?: (tab: "profile" | "history") => void;
+    initialTab?: "profile" | "history" | "notifications";
+    onTabChange?: (tab: "profile" | "history" | "notifications") => void;
     onNavigate?: (path: string) => void;
 }
 
@@ -116,11 +122,100 @@ export default function SettingsView({
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [activeSettingsTab, setActiveSettingsTab] = useState<
-        "profile" | "history"
+        "profile" | "history" | "notifications"
     >(initialTab || "profile");
     const [reviewSubmission, setReviewSubmission] = useState<Submission | null>(
         null,
     );
+
+    // Notifications tab state
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
+    const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+    const [loadingNotifs, setLoadingNotifs] = useState(false);
+    const [markingAllNotifs, setMarkingAllNotifs] = useState(false);
+    const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+
+    const fetchNotifs = async () => {
+        setLoadingNotifs(true);
+        try {
+            const data = await getNotifications();
+            setNotifications(data.notifications || []);
+            setUnreadNotifCount(data.unreadCount || 0);
+        } catch (err) {
+            console.error("Lỗi khi tải thông báo:", err);
+        } finally {
+            setLoadingNotifs(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchNotifs();
+    }, []);
+
+    const handleReadNotification = async (notif: AppNotification) => {
+        if (!notif.isRead) {
+            try {
+                await markNotificationAsRead(notif.id);
+                setNotifications((prev) =>
+                    prev.map((n) =>
+                        n.id === notif.id ? { ...n, isRead: true } : n,
+                    ),
+                );
+                setUnreadNotifCount((c) => Math.max(0, c - 1));
+            } catch (err) {
+                console.error("Lỗi:", err);
+            }
+        }
+        if (notif.quizId) {
+            if (onNavigate) {
+                onNavigate(`/quiz/${notif.quizId}`);
+            } else {
+                window.history.pushState({}, "", `/quiz/${notif.quizId}`);
+                window.dispatchEvent(new Event("popstate"));
+            }
+        } else if (notif.link) {
+            if (onNavigate) {
+                onNavigate(notif.link);
+            } else {
+                window.history.pushState({}, "", notif.link);
+                window.dispatchEvent(new Event("popstate"));
+            }
+        }
+    };
+
+    const handleMarkAllNotifs = async () => {
+        if (unreadNotifCount === 0 || markingAllNotifs) return;
+        setMarkingAllNotifs(true);
+        try {
+            await markAllNotificationsAsRead();
+            setNotifications((prev) =>
+                prev.map((n) => ({ ...n, isRead: true })),
+            );
+            setUnreadNotifCount(0);
+        } catch (err) {
+            console.error("Lỗi:", err);
+        } finally {
+            setMarkingAllNotifs(false);
+        }
+    };
+
+    const formatNotifTimeAgo = (dateStr: string) => {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return "";
+        const now = new Date();
+        const diffMs = Math.max(0, now.getTime() - d.getTime());
+        const diffMin = Math.floor(diffMs / 60000);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+
+        if (diffMin < 2) return "Vừa xong";
+        if (diffMin < 60) return `${diffMin} phút trước`;
+        if (diffHour < 24) return `${diffHour} giờ trước`;
+        if (diffDay === 1) return "Hôm qua";
+        if (diffDay < 30) return `${diffDay} ngày trước`;
+        return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+    };
 
     // 2-Step Verification (Google Authenticator) states
     const [is2FAModalOpen, setIs2FAModalOpen] = useState(false);
@@ -404,10 +499,13 @@ export default function SettingsView({
         }
     };
 
-    const handleTabClick = (tab: "profile" | "history") => {
+    const handleTabClick = (tab: "profile" | "history" | "notifications") => {
         setActiveSettingsTab(tab);
         if (onTabChange) {
             onTabChange(tab);
+        }
+        if (tab === "notifications") {
+            fetchNotifs();
         }
     };
 
@@ -1149,12 +1247,16 @@ export default function SettingsView({
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {activeSettingsTab === "profile"
                         ? "Cài đặt cá nhân"
-                        : "Lịch sử làm bài"}
+                        : activeSettingsTab === "history"
+                          ? "Lịch sử làm bài"
+                          : "Thông báo"}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {activeSettingsTab === "profile"
                         ? "Cập nhật thông tin tài khoản và cấu hình hệ thống."
-                        : "Xem lại danh sách và chi tiết các đề thi bạn đã hoàn thành."}
+                        : activeSettingsTab === "history"
+                          ? "Xem lại danh sách và chi tiết các đề thi bạn đã hoàn thành."
+                          : "Xem lại toàn bộ thông báo và cập nhật mới dành cho bạn."}
                 </p>
 
                 {/* Tabs navigation */}
@@ -1178,6 +1280,21 @@ export default function SettingsView({
                         }`}
                     >
                         <span>Lịch sử làm bài</span>
+                    </button>
+                    <button
+                        onClick={() => handleTabClick("notifications")}
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                            activeSettingsTab === "notifications"
+                                ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
+                                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                    >
+                        <span>Thông báo</span>
+                        {unreadNotifCount > 0 && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-bold leading-none animate-in zoom-in-50">
+                                {unreadNotifCount}
+                            </span>
+                        )}
                     </button>
                 </div>
             </div>
@@ -1907,7 +2024,7 @@ export default function SettingsView({
                         </button>
                     </div>
                 </div>
-            ) : (
+            ) : activeSettingsTab === "history" ? (
                 /* History tab content */
                 <div className="max-w-4xl mx-auto px-6 pb-20">
                     {userSubmissions.length === 0 ? (
@@ -2077,6 +2194,155 @@ export default function SettingsView({
                                 );
                             })}
                         </div>
+                    )}
+                </div>
+            ) : (
+                /* Notifications tab content */
+                <div className="max-w-4xl mx-auto px-6 pb-20 space-y-4">
+                    {/* Action Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setNotifFilter("all")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                                    notifFilter === "all"
+                                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                Tất cả ({notifications.length})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setNotifFilter("unread")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 ${
+                                    notifFilter === "unread"
+                                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                <span>Chưa đọc</span>
+                                {unreadNotifCount > 0 && (
+                                    <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                                        {unreadNotifCount}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleMarkAllNotifs}
+                            disabled={unreadNotifCount === 0 || markingAllNotifs}
+                            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1.5 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed transition-colors select-none"
+                        >
+                            {markingAllNotifs ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                                <CheckCheck className="w-4 h-4" />
+                            )}
+                            <span>Đã đọc tất cả</span>
+                        </button>
+                    </div>
+
+                    {/* Notifications List */}
+                    {loadingNotifs && notifications.length === 0 ? (
+                        <div className="text-center py-16 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                            <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
+                            <span>Đang tải thông báo...</span>
+                        </div>
+                    ) : (
+                        (() => {
+                            const list =
+                                notifFilter === "unread"
+                                    ? notifications.filter((n) => !n.isRead)
+                                    : notifications;
+
+                            if (list.length === 0) {
+                                return (
+                                    <div className="text-center py-16 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+                                        <Bell className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                            {notifFilter === "unread"
+                                                ? "Bạn đã đọc hết tất cả thông báo!"
+                                                : "Chưa có thông báo nào."}
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="space-y-3">
+                                    {list.map((notif) => (
+                                        <div
+                                            key={notif.id}
+                                            onClick={() =>
+                                                handleReadNotification(notif)
+                                            }
+                                            className={`p-4 rounded-xl border transition-all cursor-pointer group ${
+                                                !notif.isRead
+                                                    ? "bg-brand-50/60 dark:bg-brand-950/30 border-brand-200 dark:border-brand-900/60 hover:bg-brand-100/60 dark:hover:bg-brand-900/40 shadow-xs"
+                                                    : "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                                            }`}
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div
+                                                        className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                                            !notif.isRead
+                                                                ? "bg-brand-500 animate-pulse"
+                                                                : "bg-transparent"
+                                                        }`}
+                                                    />
+                                                    <div className="space-y-1 min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <h4
+                                                                className={`text-sm ${
+                                                                    !notif.isRead
+                                                                        ? "font-bold text-slate-900 dark:text-slate-100"
+                                                                        : "font-medium text-slate-700 dark:text-slate-300"
+                                                                }`}
+                                                            >
+                                                                {notif.title}
+                                                            </h4>
+                                                            {notif.targetGrade && (
+                                                                <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                                                                    Lớp{" "}
+                                                                    {
+                                                                        notif.targetGrade
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                            {notif.message}
+                                                        </p>
+                                                        {notif.quizId && (
+                                                            <div className="pt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-brand-400 group-hover:underline">
+                                                                <span>
+                                                                    Vào làm bài
+                                                                    ngay
+                                                                </span>
+                                                                <ExternalLink className="w-3 h-3" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-right shrink-0">
+                                                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                                        {formatNotifTimeAgo(
+                                                            notif.createdAt,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()
                     )}
                 </div>
             )}
