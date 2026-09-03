@@ -72,8 +72,8 @@ func HandleGetNotifications(db *gorm.DB) gin.HandlerFunc {
 		_ = db.Where("id = ?", userID).First(&profile)
 
 		userGrade := ""
-		if profile.Grade != "" {
-			userGrade = strings.TrimSpace(profile.Grade)
+		if profile.Grade != nil && *profile.Grade != "" {
+			userGrade = strings.TrimSpace(*profile.Grade)
 		}
 
 		// Query notifications relevant to this user
@@ -188,8 +188,8 @@ func HandleMarkAllNotificationsRead(db *gorm.DB) gin.HandlerFunc {
 		_ = db.Where("id = ?", userID).First(&profile)
 
 		userGrade := ""
-		if profile.Grade != "" {
-			userGrade = strings.TrimSpace(profile.Grade)
+		if profile.Grade != nil && *profile.Grade != "" {
+			userGrade = strings.TrimSpace(*profile.Grade)
 		}
 
 		var rawNotifs []Notification
