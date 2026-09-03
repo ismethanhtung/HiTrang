@@ -24,7 +24,7 @@ export default function Footer({
     const [backendVersion, setBackendVersion] = useState("1.0.77");
     const [realPing, setRealPing] = useState<number | null>(null);
     const [stats, setStats] = useState({
-        todayVisits: 56,
+        todayVisits: 1 + new Date().getHours() * 2,
         totalVisits: 321,
         onlineCount: 4,
         totalSubmissions: 0,
@@ -49,8 +49,9 @@ export default function Footer({
                 const end = performance.now();
                 setRealPing(Math.round(end - start));
                 if (data) {
+                    const currentHourBonus = new Date().getHours() * 2;
                     setStats({
-                        todayVisits: (data.todayVisits || 1) + 55,
+                        todayVisits: (data.todayVisits || 1) + currentHourBonus,
                         totalVisits: (data.totalVisits || 1) + 320,
                         onlineCount: (data.onlineCount || 1) + 3,
                         totalSubmissions: data.totalSubmissions || 0,
@@ -71,7 +72,9 @@ export default function Footer({
     }, []);
 
     const rawPing = realPing ?? loadTimeMs ?? 45;
-    const displayPing = Math.max(15, Math.round(rawPing / 1.5));
+    const displayPing = Math.max(15, Math.round(rawPing / 1.25));
+
+
 
 
     return (
@@ -248,7 +251,7 @@ export default function Footer({
                     </div>
 
                     {/* Column 3: Links & Support */}
-                    <div className="lg:col-span-2 space-y-4">
+                    <div className="lg:col-span-2 space-y-4 lg:pl-8">
                         <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
                             Liên kết
                         </h4>
