@@ -386,6 +386,27 @@ export async function getBackendVersion(): Promise<string> {
   }
 }
 
+export interface SystemStats {
+  todayVisits: number;
+  totalVisits: number;
+  onlineCount: number;
+  totalSubmissions: number;
+  version: string;
+}
+
+export async function getSystemStats(): Promise<SystemStats> {
+  return await apiRequest<SystemStats>('/stats/system');
+}
+
+export async function recordSiteVisit(): Promise<void> {
+  try {
+    await apiRequest('/stats/visit', { method: 'POST' });
+  } catch {
+    // Silent fail if backend offline
+  }
+}
+
+
 export async function uploadAvatar(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('avatar', file);

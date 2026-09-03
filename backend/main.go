@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.76"
+const AppVersion = "1.0.77"
 
 func main() {
 	// 1. Configuration
@@ -93,6 +93,7 @@ func main() {
 		&UserSession{},
 		&Notification{},
 		&NotificationRead{},
+		&SiteVisit{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -118,26 +119,16 @@ func main() {
 	// 5. Start background worker for expired attempts
 	StartExpiredAttemptsWorker(db, 10*time.Second)
 
-	// 6. Router Setup
+	// 6. Initialize Router
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	if err := os.MkdirAll("./uploads", 0755); err != nil {
-		log.Printf("Lỗi tạo thư mục uploads: %v", err)
-	}
-	r.Static("/uploads", "./uploads")
-
-	// CORS Middleware
+	// 6. CORS & Logging Middleware
 	r.Use(func(c *gin.Context) {
-		origin := c.Request.Header.Get("Origin")
-		if origin != "" {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-		} else {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		}
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, PATCH, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -145,6 +136,11 @@ func main() {
 		}
 		c.Next()
 	})
+
+	if err := os.MkdirAll("./uploads", 0755); err != nil {
+		log.Printf("Lỗi tạo thư mục uploads: %v", err)
+	}
+	r.Static("/uploads", "./uploads")
 
 	// 7. API Routes
 	api := r.Group("/api")
@@ -162,6 +158,8 @@ func main() {
 				"version": AppVersion,
 			})
 		})
+		api.GET("/stats/system", HandleGetSystemStats(db))
+		api.POST("/stats/visit", HandleRecordVisit(db))
 		api.GET("/schedule", HandleGetSchedule(db))
 		api.POST("/auth/verify-admin", func(c *gin.Context) {
 			var req struct {

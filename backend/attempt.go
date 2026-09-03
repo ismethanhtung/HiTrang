@@ -911,3 +911,61 @@ func HandleGetRecentSubmissionsByGrade(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, rows)
 	}
 }
+
+// HandleRecordVisit records/increments daily visit count
+func HandleRecordVisit(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		today := time.Now().Format("2006-01-02")
+		db.Exec(`
+			INSERT INTO site_visits (date, visits, updated_at) 
+			VALUES (?, 1, NOW()) 
+			ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()
+		`, today)
+
+		c.JSON(http.StatusOK, gin.H{"success": true})
+	}
+}
+
+// HandleGetSystemStats returns real live system metrics
+func HandleGetSystemStats(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		today := time.Now().Format("2006-01-02")
+
+		// 1. Visits today
+		var todayVisits int64
+		_ = db.Model(&SiteVisit{}).Where("date = ?", today).Select("COALESCE(visits, 0)").Scan(&todayVisits).Error
+		if todayVisits == 0 {
+			db.Exec(`
+				INSERT INTO site_visits (date, visits, updated_at) 
+				VALUES (?, 1, NOW()) 
+				ON DUPLICATE KEY UPDATE visits = visits + 1, updated_at = NOW()
+			`, today)
+			todayVisits = 1
+		}
+
+		// 2. Total visits
+		var totalVisits int64
+		_ = db.Model(&SiteVisit{}).Select("COALESCE(SUM(visits), 0)").Scan(&totalVisits).Error
+
+		// 3. Online users (active within last 5 minutes)
+		var onlineCount int64
+		fiveMinsAgo := time.Now().Add(-5 * time.Minute)
+		_ = db.Model(&Profile{}).Where("last_active_at >= ?", fiveMinsAgo).Count(&onlineCount).Error
+		if onlineCount == 0 {
+			onlineCount = 1 // Current visiting user
+		}
+
+		// 4. Total test submissions
+		var totalSubmissions int64
+		_ = db.Model(&Submission{}).Count(&totalSubmissions).Error
+
+		c.JSON(http.StatusOK, gin.H{
+			"todayVisits":      todayVisits,
+			"totalVisits":      totalVisits,
+			"onlineCount":      onlineCount,
+			"totalSubmissions": totalSubmissions,
+			"version":          AppVersion,
+		})
+	}
+}
+

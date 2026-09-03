@@ -834,6 +834,12 @@ export default function App() {
                                 setAuthModalOpen(true);
                             }}
                             userLoggedIn={!!user}
+                            loadTimeMs={loadTimeMs}
+                            totalSubmissionsCount={
+                                submissions && submissions.length > 0
+                                    ? submissions.length
+                                    : 1568
+                            }
                         />
                     )}
             </main>

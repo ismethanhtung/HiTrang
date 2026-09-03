@@ -182,3 +182,11 @@ type NotificationRead struct {
 	UserID         string    `gorm:"column:user_id;type:varchar(36);uniqueIndex:idx_user_notif;not null"`
 	ReadAt         time.Time `gorm:"column:read_at;not null"`
 }
+
+// SiteVisit represents daily site visits
+type SiteVisit struct {
+	Date      string    `json:"date" gorm:"primaryKey;type:varchar(10)"` // YYYY-MM-DD
+	Visits    int64     `json:"visits" gorm:"default:1;not null"`
+	UpdatedAt time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
+}
+
