@@ -53,7 +53,7 @@ export default function Footer({
                     setStats({
                         todayVisits: (data.todayVisits || 1) + currentHourBonus,
                         totalVisits: (data.totalVisits || 1) + 320,
-                        onlineCount: (data.onlineCount || 1) + 3,
+                        onlineCount: (data.onlineCount || 1) + 2,
                         totalSubmissions: data.totalSubmissions || 0,
                     });
                     if (data.version) {
@@ -73,9 +73,6 @@ export default function Footer({
 
     const rawPing = realPing ?? loadTimeMs ?? 45;
     const displayPing = Math.max(15, Math.round(rawPing / 1.25));
-
-
-
 
     return (
         <footer className="w-full bg-white border-t border-slate-200 dark:border-slate-800 transition-colors duration-200 select-none">
