@@ -390,9 +390,6 @@ export default function Auth({
                                 className="space-y-4"
                             >
                                 <div className="text-center space-y-1 pb-1">
-                                    <div className="w-10 h-10 text-amber-600 rounded-xl flex items-center justify-center mx-auto mb-2">
-                                        <KeyRound className="w-5 h-5" />
-                                    </div>
                                     <h3 className="text-sm font-bold text-slate-800">
                                         Khôi Phục Mật Khẩu
                                     </h3>

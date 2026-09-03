@@ -28,6 +28,7 @@ import {
     RefreshCw,
     BookMarked,
     List,
+    Ghost,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -300,7 +301,8 @@ export default function GradeView({
                             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 rounded-xl border border-dashed border-slate-100">
+                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
+                            <Ghost className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
                             <p className="text-xs font-medium inline-flex items-center justify-center gap-1.5 flex-wrap">
                                 <span>
                                     {rawGradeQuizzes.length === 0

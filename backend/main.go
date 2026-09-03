@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.70"
+const AppVersion = "1.0.72"
 
 func main() {
 	// 1. Configuration
@@ -91,6 +91,8 @@ func main() {
 		&ScheduleSlot{},
 		&PasswordResetToken{},
 		&UserSession{},
+		&Notification{},
+		&NotificationRead{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -198,6 +200,11 @@ func main() {
 			protected.DELETE("/auth/sessions/:id", HandleRevokeSession(db))
 			protected.POST("/auth/sessions/logout-all", HandleRevokeAllOtherSessions(db))
 			protected.DELETE("/auth/account", HandleDeleteAccount(db))
+
+			// In-App Notifications
+			protected.GET("/notifications", HandleGetNotifications(db))
+			protected.POST("/notifications/:id/read", HandleMarkNotificationRead(db))
+			protected.POST("/notifications/read-all", HandleMarkAllNotificationsRead(db))
 
 			// User Management (Admin/Teacher)
 			protected.GET("/admin/users", HandleGetAllProfiles(db))

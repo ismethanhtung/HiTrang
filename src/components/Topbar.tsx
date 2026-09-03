@@ -3,6 +3,7 @@ import { User, UserPlan, Quiz } from "../types";
 import { matchesQuiz } from "../lib/searchUtils";
 import {
     LogOut,
+    Bolt,
     Shield,
     Settings,
     ChevronDown,
@@ -12,6 +13,7 @@ import {
     Calendar,
     User as UserIcon,
 } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 interface TopbarProps {
     user: User | null;
@@ -301,7 +303,7 @@ export default function Topbar({
                                     setSearchFocused(true);
                                 }}
                                 placeholder="Tìm đề thi..."
-                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
+                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-100 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
                             />
                             {searchFocused &&
                                 localSearchQuery.trim().length > 0 && (
@@ -360,7 +362,10 @@ export default function Topbar({
                     {/* AUTH ACTION / USER PROFILE BUTTON */}
                     {!user ? (
                         /* UNAUTHENTICATED ACTION BUTTONS */
-                        <div key="unauth-login-wrap" className="flex items-center">
+                        <div
+                            key="unauth-login-wrap"
+                            className="flex items-center"
+                        >
                             <button
                                 key="btn-trigger-login"
                                 type="button"
@@ -371,106 +376,124 @@ export default function Topbar({
                             </button>
                         </div>
                     ) : (
-                        <div key="user-profile-dropdown" className="relative" ref={dropdownRef}>
-                            <button
-                                key="btn-user-avatar-toggle"
-                                type="button"
-                                onClick={() =>
-                                    setUserDropdownOpen(!userDropdownOpen)
-                                }
-                                className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
+                        <div className="flex items-center gap-2">
+                            {/* Notification Bell */}
+                            <NotificationBell />
+
+                            <div
+                                key="user-profile-dropdown"
+                                className="relative"
+                                ref={dropdownRef}
                             >
-                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200/50 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
-                                    {user.avatarUrl ? (
-                                        <img
-                                            src={user.avatarUrl}
-                                            alt={user.name}
-                                            referrerPolicy="no-referrer"
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = "none";
-                                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                                                if (fallback) fallback.style.display = "block";
+                                <button
+                                    key="btn-user-avatar-toggle"
+                                    type="button"
+                                    onClick={() =>
+                                        setUserDropdownOpen(!userDropdownOpen)
+                                    }
+                                    className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+                                        {user.avatarUrl ? (
+                                            <img
+                                                src={user.avatarUrl}
+                                                alt={user.name}
+                                                referrerPolicy="no-referrer"
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display =
+                                                        "none";
+                                                    const fallback = e
+                                                        .currentTarget
+                                                        .nextElementSibling as HTMLElement;
+                                                    if (fallback)
+                                                        fallback.style.display =
+                                                            "block";
+                                                }}
+                                            />
+                                        ) : null}
+                                        <UserIcon
+                                            className="w-4 h-4 text-slate-400 dark:text-slate-500"
+                                            style={{
+                                                display: user.avatarUrl
+                                                    ? "none"
+                                                    : "block",
                                             }}
                                         />
-                                    ) : null}
-                                    <UserIcon
-                                        className="w-4 h-4 text-slate-400 dark:text-slate-500"
-                                        style={{ display: user.avatarUrl ? "none" : "block" }}
-                                    />
-                                </div>
-                                <ChevronDown
-                                    className={`w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
-                                        userDropdownOpen ? "rotate-180" : ""
-                                    }`}
-                                />
-                            </button>
-
-                            {userDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
-                                    <div className="px-4 py-2 border-b border-border-primary mb-1">
-                                        <p className="text-xs font-bold text-text-primary">
-                                            {user.name}
-                                        </p>
-                                        <p className="text-[11px] text-text-secondary truncate">
-                                            @{user.username}
-                                        </p>
-                                        <div className="mt-2 flex items-center justify-between">
-                                            <span className="text-[10px] uppercase font-semibold text-text-tertiary">
-                                                Tài khoản
-                                            </span>
-                                            {getPlanBadge(user.plan)}
-                                        </div>
                                     </div>
+                                    <ChevronDown
+                                        className={`w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
+                                            userDropdownOpen ? "rotate-180" : ""
+                                        }`}
+                                    />
+                                </button>
 
-                                    {(user.role === "admin" ||
-                                        user.username === "admin") && (
+                                {userDropdownOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                                        <div className="px-4 py-2 border-b border-border-primary mb-1">
+                                            <p className="text-xs font-bold text-text-primary">
+                                                {user.name}
+                                            </p>
+                                            <p className="text-[11px] text-text-secondary truncate">
+                                                @{user.username}
+                                            </p>
+                                            <div className="mt-2 flex items-center justify-between">
+                                                <span className="text-[10px] uppercase font-semibold text-text-tertiary">
+                                                    Tài khoản
+                                                </span>
+                                                {getPlanBadge(user.plan)}
+                                            </div>
+                                        </div>
+
+                                        {(user.role === "admin" ||
+                                            user.username === "admin") && (
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onNavigateAdmin();
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-semibold border-b border-border-primary pb-2 mb-1 cursor-pointer"
+                                            >
+                                                <Shield className="w-4 h-4 text-brand-500" />
+                                                Quản lý (Admin)
+                                            </button>
+                                        )}
+
                                         <button
                                             onClick={() => {
                                                 setUserDropdownOpen(false);
-                                                onNavigateAdmin();
+                                                onNavigateSettings("profile");
                                             }}
-                                            className="w-full px-4 py-2 text-left text-xs text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-semibold border-b border-border-primary pb-2 mb-1 cursor-pointer"
+                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
                                         >
-                                            <Shield className="w-4 h-4 text-brand-500" />
-                                            Quản lý (Admin)
+                                            <Bolt className="w-4 h-4 text-text-tertiary" />
+                                            Cài đặt cá nhân
                                         </button>
-                                    )}
 
-                                    <button
-                                        onClick={() => {
-                                            setUserDropdownOpen(false);
-                                            onNavigateSettings("profile");
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                    >
-                                        <Settings className="w-4 h-4 text-text-tertiary" />
-                                        Cài đặt cá nhân
-                                    </button>
+                                        <button
+                                            onClick={() => {
+                                                setUserDropdownOpen(false);
+                                                onNavigateSettings("history");
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                        >
+                                            <History className="w-4 h-4 text-text-tertiary" />
+                                            Lịch sử làm bài
+                                        </button>
 
-                                    <button
-                                        onClick={() => {
-                                            setUserDropdownOpen(false);
-                                            onNavigateSettings("history");
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                    >
-                                        <History className="w-4 h-4 text-text-tertiary" />
-                                        Lịch sử làm bài
-                                    </button>
-
-                                    <button
-                                        onClick={() => {
-                                            setUserDropdownOpen(false);
-                                            onLogout();
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold border-t border-border-primary mt-1 cursor-pointer"
-                                    >
-                                        <LogOut className="w-4 h-4 text-rose-500" />
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
+                                        <button
+                                            onClick={() => {
+                                                setUserDropdownOpen(false);
+                                                onLogout();
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold border-t border-border-primary mt-1 cursor-pointer"
+                                        >
+                                            <LogOut className="w-4 h-4 text-rose-500" />
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

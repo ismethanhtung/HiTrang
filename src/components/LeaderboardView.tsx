@@ -14,6 +14,7 @@ import {
     PartyPopper,
     CheckCircle2,
     User as UserIcon,
+    Ghost,
 } from "lucide-react";
 import { User, Quiz, Submission, OverallLeaderboardEntry } from "../types";
 import {
@@ -746,8 +747,9 @@ export default function LeaderboardView({
                     )}
 
                     {filteredOverall.length === 0 && (
-                        <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic">
-                            Chưa tìm thấy thông tin xếp hạng học sinh.
+                        <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic flex flex-col items-center justify-center gap-2">
+                            <Ghost className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                            <span>Chưa tìm thấy thông tin xếp hạng học sinh.</span>
                         </div>
                     )}
                 </div>
@@ -849,7 +851,8 @@ export default function LeaderboardView({
                                 </div>
                             </div>
                         ) : (
-                            <div className="text-center py-4 space-y-3">
+                            <div className="text-center py-4 space-y-2 flex flex-col items-center justify-center">
+                                <Ghost className="w-6 h-6 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
                                 <p className="text-xs text-slate-400 italic">
                                     Bạn chưa được ghi nhận trên BXH khối{" "}
                                     {activeGrade}.

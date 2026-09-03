@@ -33,13 +33,14 @@ type User struct {
 	ID             string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
 	Username       string    `json:"username" gorm:"uniqueIndex;type:varchar(100);not null"`
 	Email          *string   `json:"email" gorm:"uniqueIndex;type:varchar(255)"`
-	PasswordHash   string    `json:"password_hash" gorm:"type:varchar(255);not null"`
-	TOTPSecret      *string   `json:"-" gorm:"column:totp_secret;type:varchar(64)"`
-	TOTPTempSecret  *string   `json:"-" gorm:"column:totp_temp_secret;type:varchar(64)"`
-	TOTPEnabled     bool      `json:"totpEnabled" gorm:"column:totp_enabled;default:false;not null"`
-	Require2FALogin bool      `json:"require2FALogin" gorm:"column:require_2fa_login;default:false;not null"`
-	CreatedAt       time.Time `json:"created_at"`
-	Profile         *Profile  `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
+	PasswordHash      string     `json:"password_hash" gorm:"type:varchar(255);not null"`
+	PasswordUpdatedAt *time.Time `json:"passwordUpdatedAt" gorm:"column:password_updated_at"`
+	TOTPSecret        *string    `json:"-" gorm:"column:totp_secret;type:varchar(64)"`
+	TOTPTempSecret    *string    `json:"-" gorm:"column:totp_temp_secret;type:varchar(64)"`
+	TOTPEnabled       bool       `json:"totpEnabled" gorm:"column:totp_enabled;default:false;not null"`
+	Require2FALogin   bool       `json:"require2FALogin" gorm:"column:require_2fa_login;default:false;not null"`
+	CreatedAt         time.Time  `json:"created_at"`
+	Profile           *Profile   `json:"-" gorm:"foreignKey:ID;constraint:OnDelete:CASCADE"`
 }
 
 // Profile represents profiles table
@@ -159,6 +160,23 @@ type UserSession struct {
 	User      *User     `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
+// Notification represents in-app notifications
+type Notification struct {
+	ID          string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	UserID      *string   `json:"userId" gorm:"column:user_id;type:varchar(36);index"`
+	TargetGrade *string   `json:"targetGrade" gorm:"column:target_grade;type:varchar(10);index"`
+	Type        string    `json:"type" gorm:"type:varchar(50);not null"`
+	Title       string    `json:"title" gorm:"type:varchar(255);not null"`
+	Message     string    `json:"message" gorm:"type:text;not null"`
+	Link        string    `json:"link" gorm:"type:varchar(255)"`
+	QuizID      *string   `json:"quizId" gorm:"column:quiz_id;type:varchar(100);index"`
+	CreatedAt   time.Time `json:"createdAt" gorm:"column:created_at;index"`
+}
 
-
-
+// NotificationRead tracks whether a user has read a notification
+type NotificationRead struct {
+	ID             uint      `gorm:"primaryKey;autoIncrement"`
+	NotificationID string    `gorm:"column:notification_id;type:varchar(36);uniqueIndex:idx_user_notif;not null"`
+	UserID         string    `gorm:"column:user_id;type:varchar(36);uniqueIndex:idx_user_notif;not null"`
+	ReadAt         time.Time `gorm:"column:read_at;not null"`
+}

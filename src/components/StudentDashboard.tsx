@@ -23,6 +23,7 @@ import {
     Loader2,
     Crown,
     User as UserIcon,
+    Ghost,
 } from "lucide-react";
 import {
     Quiz,
@@ -4400,20 +4401,16 @@ export default function StudentDashboard({
                                                                             </span>
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="space-y-1">
-                                                                            <span className="text-xs italic text-slate-450 block">
-                                                                                Chưa
-                                                                                xếp
-                                                                                hạng
-                                                                            </span>
-                                                                            <span className="text-[9px] text-slate-400 leading-tight block">
-                                                                                Làm
-                                                                                bài
-                                                                                thi
-                                                                                để
-                                                                                bắt
-                                                                                đầu!
-                                                                            </span>
+                                                                        <div className="flex flex-col items-center justify-center text-center py-1.5 space-y-1">
+                                                                            <Ghost className="w-6 h-6 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                                                                            <div className="space-y-0.5">
+                                                                                <span className="text-xs italic text-slate-450 dark:text-slate-400 block font-medium">
+                                                                                    Chưa xếp hạng
+                                                                                </span>
+                                                                                <span className="text-[9px] text-slate-400 leading-tight block">
+                                                                                    Làm bài thi để bắt đầu!
+                                                                                </span>
+                                                                            </div>
                                                                         </div>
                                                                     )}
                                                                 </div>

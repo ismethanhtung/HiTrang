@@ -43,6 +43,7 @@ export interface User {
   totpEnabled?: boolean;
   totpLinked?: boolean;
   require2FALogin?: boolean;
+  passwordUpdatedAt?: string;
   createdAt?: string;
   lastActiveAt?: string;
   activeExam?: {
@@ -92,4 +93,15 @@ export interface OverallLeaderboardEntry {
   testsCompleted: number;
 }
 
-
+export interface AppNotification {
+  id: string;
+  userId?: string | null;
+  targetGrade?: string | null;
+  type: 'new_quiz' | 'system' | 'teacher_message';
+  title: string;
+  message: string;
+  link?: string;
+  quizId?: string;
+  isRead: boolean;
+  createdAt: string;
+}

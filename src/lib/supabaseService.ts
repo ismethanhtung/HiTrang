@@ -1,4 +1,4 @@
-import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderboardEntry } from '../types';
+import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderboardEntry, AppNotification } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -260,10 +260,13 @@ export async function updateUsername(newUsername: string): Promise<{ message: st
   return data;
 }
 
-export async function updatePassword(password: string): Promise<void> {
-  await apiRequest('/auth/me/password', {
+export async function updatePassword(
+  password: string,
+  currentPassword?: string
+): Promise<{ message: string; passwordUpdatedAt?: string }> {
+  return await apiRequest('/auth/me/password', {
     method: 'PUT',
-    body: JSON.stringify({ password })
+    body: JSON.stringify({ password, currentPassword }),
   });
 }
 
@@ -579,5 +582,24 @@ export async function deleteUserAccount(password?: string): Promise<{ success: b
   });
 }
 
+// ----------------------------------------------------
+// IN-APP NOTIFICATIONS
+// ----------------------------------------------------
 
+export async function getNotifications(): Promise<{ notifications: AppNotification[]; unreadCount: number }> {
+  return await apiRequest<{ notifications: AppNotification[]; unreadCount: number }>('/notifications', {
+    method: 'GET',
+  });
+}
 
+export async function markNotificationAsRead(id: string): Promise<void> {
+  await apiRequest(`/notifications/${id}/read`, {
+    method: 'POST',
+  });
+}
+
+export async function markAllNotificationsAsRead(): Promise<void> {
+  await apiRequest('/notifications/read-all', {
+    method: 'POST',
+  });
+}

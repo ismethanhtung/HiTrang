@@ -39,6 +39,8 @@ import {
     Smartphone,
     Tablet,
     Trash2,
+    Eye,
+    EyeOff,
 } from "lucide-react";
 import { User as UserType, Quiz, Submission } from "../types";
 import {
@@ -98,6 +100,12 @@ export default function SettingsView({
     const [lastName, setLastName] = useState(initialName.lastName);
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
+        useState(false);
+    const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+    const [showNewPwd, setShowNewPwd] = useState(false);
+    const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
     // UI states
     const [updatingName, setUpdatingName] = useState(false);
@@ -155,7 +163,12 @@ export default function SettingsView({
         setEnable2FAError("");
         try {
             await enable2FA(verify2FACode.trim());
-            onUpdateUser({ ...user, totpEnabled: true, totpLinked: true, require2FALogin: false });
+            onUpdateUser({
+                ...user,
+                totpEnabled: true,
+                totpLinked: true,
+                require2FALogin: false,
+            });
             setIs2FAModalOpen(false);
             alert(
                 "Đã liên kết Google Authenticator thành công! Bạn có thể dùng mã để khôi phục mật khẩu.",
@@ -182,7 +195,12 @@ export default function SettingsView({
                 disable2FACodeOrPassword.trim(),
                 disable2FACodeOrPassword.trim(),
             );
-            onUpdateUser({ ...user, totpEnabled: false, totpLinked: false, require2FALogin: false });
+            onUpdateUser({
+                ...user,
+                totpEnabled: false,
+                totpLinked: false,
+                require2FALogin: false,
+            });
             setIsDisable2FAModalOpen(false);
             setDisable2FACodeOrPassword("");
             alert("Đã hủy liên kết Google Authenticator thành công.");
@@ -215,7 +233,9 @@ export default function SettingsView({
             await setRequire2FALogin(enabled);
             onUpdateUser({ ...user, require2FALogin: enabled });
         } catch (err: any) {
-            alert(`Không thể cập nhật cấu hình: ${err.message || "Vui lòng thử lại"}`);
+            alert(
+                `Không thể cập nhật cấu hình: ${err.message || "Vui lòng thử lại"}`,
+            );
         } finally {
             setToggling2FALogin(false);
         }
@@ -225,10 +245,13 @@ export default function SettingsView({
     const [sessions, setSessions] = useState<ActiveSession[]>([]);
     const [loadingSessions, setLoadingSessions] = useState(false);
     const [loggingOutAllSessions, setLoggingOutAllSessions] = useState(false);
-    const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+    const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
+        null,
+    );
 
     // Delete Account states
-    const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+    const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] =
+        useState(false);
     const [deleteAccountPassword, setDeleteAccountPassword] = useState("");
     const [deletingAccount, setDeletingAccount] = useState(false);
     const [deleteAccountError, setDeleteAccountError] = useState("");
@@ -251,7 +274,9 @@ export default function SettingsView({
             await revokeSession(sessionId);
             setSessions((prev) => prev.filter((s) => s.id !== sessionId));
         } catch (err: any) {
-            alert(`Không thể đăng xuất thiết bị: ${err.message || "Vui lòng thử lại"}`);
+            alert(
+                `Không thể đăng xuất thiết bị: ${err.message || "Vui lòng thử lại"}`,
+            );
         } finally {
             setRevokingSessionId(null);
         }
@@ -263,7 +288,9 @@ export default function SettingsView({
             await revokeAllOtherSessions();
             setSessions((prev) => prev.filter((s) => s.isCurrent));
         } catch (err: any) {
-            alert(`Không thể đăng xuất tất cả: ${err.message || "Vui lòng thử lại"}`);
+            alert(
+                `Không thể đăng xuất tất cả: ${err.message || "Vui lòng thử lại"}`,
+            );
         } finally {
             setLoggingOutAllSessions(false);
         }
@@ -280,7 +307,8 @@ export default function SettingsView({
             onLogout();
         } catch (err: any) {
             setDeleteAccountError(
-                err.message || "Không thể xóa tài khoản. Vui lòng kiểm tra lại mật khẩu.",
+                err.message ||
+                    "Không thể xóa tài khoản. Vui lòng kiểm tra lại mật khẩu.",
             );
         } finally {
             setDeletingAccount(false);
@@ -308,6 +336,31 @@ export default function SettingsView({
         const month = d.getMonth() + 1;
         const year = d.getFullYear();
         return `Expires ${day}/${month}/${year}`;
+    };
+
+    const formatPasswordAge = (dateStr?: string | null) => {
+        if (!dateStr) return "Never changed since account creation.";
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return "Never changed since account creation.";
+        const now = new Date();
+        const diffMs = Math.max(0, now.getTime() - d.getTime());
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        const diffMonth = Math.floor(diffDay / 30);
+        const diffYear = Math.floor(diffDay / 365);
+
+        if (diffMin < 2) return "Last changed just now.";
+        if (diffMin < 60) return `Last changed ${diffMin} minutes ago.`;
+        if (diffHour < 24)
+            return `Last changed ${diffHour} ${diffHour === 1 ? "hour" : "hours"} ago.`;
+        if (diffDay === 1) return "Last changed yesterday.";
+        if (diffDay < 30) return `Last changed ${diffDay} days ago.`;
+        if (diffMonth === 1) return "Last changed 1 month ago.";
+        if (diffMonth < 12) return `Last changed ${diffMonth} months ago.`;
+        if (diffYear === 1) return "Last changed 1 year ago.";
+        return `Last changed ${diffYear} years ago.`;
     };
 
     React.useEffect(() => {
@@ -505,6 +558,10 @@ export default function SettingsView({
         setPwdError("");
         setPwdSuccess("");
 
+        if (!password) {
+            setPwdError("Vui lòng nhập mật khẩu mới.");
+            return;
+        }
         if (password.length < 6) {
             setPwdError("Mật khẩu phải chứa ít nhất 6 ký tự.");
             return;
@@ -516,11 +573,22 @@ export default function SettingsView({
 
         setUpdatingPassword(true);
         try {
-            await updatePassword(password);
+            const res = await updatePassword(password, currentPassword);
+            const updatedDate =
+                res?.passwordUpdatedAt || new Date().toISOString();
             setPwdSuccess("Đổi mật khẩu thành công!");
-            setPassword("");
-            setConfirmPassword("");
-            setTimeout(() => setShowPasswordForm(false), 2000);
+            onUpdateUser({
+                ...user,
+                passwordUpdatedAt: updatedDate,
+            });
+            setTimeout(() => {
+                setIsChangePasswordModalOpen(false);
+                setCurrentPassword("");
+                setPassword("");
+                setConfirmPassword("");
+                setPwdSuccess("");
+                setPwdError("");
+            }, 1200);
         } catch (err: any) {
             setPwdError(err.message || "Lỗi khi cập nhật mật khẩu.");
         } finally {
@@ -1512,112 +1580,44 @@ export default function SettingsView({
 
                     {/* ACCOUNT SECURITY SECTION */}
                     <div className="pt-8 pb-4">
-                        <h3 className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase select-none">
+                        <h3 className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-550 uppercase select-none">
                             ACCOUNT SECURITY
                         </h3>
                     </div>
 
                     {/* Password Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="grid grid-cols-12 gap-6 py-6 border-b border-slate-100 dark:border-slate-800">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Password (soon)
+                                Password
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Last changed 3 months ago.
+                                {formatPasswordAge(
+                                    user.passwordUpdatedAt || user.createdAt,
+                                )}
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 space-y-4">
-                            {!showPasswordForm ? (
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="password"
-                                        readOnly
-                                        value="••••••••••••"
-                                        className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-550 select-none outline-none"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setShowPasswordForm(true)
-                                        }
-                                        className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer"
-                                    >
-                                        Change password
-                                    </button>
-                                </div>
-                            ) : (
-                                <form
-                                    onSubmit={handleUpdatePassword}
-                                    className="space-y-3 max-w-xs"
-                                >
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                                            Mật khẩu mới
-                                        </span>
-                                        <input
-                                            type="password"
-                                            placeholder="Mật khẩu mới"
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(e.target.value)
-                                            }
-                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                                            Xác nhận mật khẩu mới
-                                        </span>
-                                        <input
-                                            type="password"
-                                            placeholder="Xác nhận mật khẩu mới"
-                                            value={confirmPassword}
-                                            onChange={(e) =>
-                                                setConfirmPassword(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all"
-                                        />
-                                    </div>
-
-                                    {pwdError && (
-                                        <div className="text-xs text-red-600 font-medium">
-                                            {pwdError}
-                                        </div>
-                                    )}
-                                    {pwdSuccess && (
-                                        <div className="text-xs text-emerald-600 font-medium">
-                                            {pwdSuccess}
-                                        </div>
-                                    )}
-
-                                    <div className="flex gap-2">
-                                        <button
-                                            type="submit"
-                                            disabled={updatingPassword}
-                                            className="py-1.5 px-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 flex items-center gap-1"
-                                        >
-                                            {updatingPassword && (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            )}
-                                            Lưu mật khẩu
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowPasswordForm(false);
-                                                setPwdError("");
-                                                setPwdSuccess("");
-                                            }}
-                                            className="py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all"
-                                        >
-                                            Hủy
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
+                        <div className="col-span-12 md:col-span-8 flex items-center gap-3">
+                            <input
+                                type="password"
+                                readOnly
+                                value="•••••••••••••"
+                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-500 select-none outline-none tracking-widest cursor-default"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setCurrentPassword("");
+                                    setPassword("");
+                                    setConfirmPassword("");
+                                    setPwdError("");
+                                    setPwdSuccess("");
+                                    setIsChangePasswordModalOpen(true);
+                                }}
+                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 shadow-xs"
+                            >
+                                Change password
+                            </button>
                         </div>
                     </div>
 
@@ -1625,11 +1625,12 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6 border-b border-slate-100 dark:border-slate-800">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                <Shield className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                                 Google Authenticator
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
-                                Dùng ứng dụng Google Authenticator để tự khôi phục mật khẩu khi quên hoặc bảo vệ 2 bước khi đăng nhập.
+                                Dùng ứng dụng Google Authenticator để tự khôi
+                                phục mật khẩu khi quên hoặc bảo vệ 2 bước khi
+                                đăng nhập.
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
@@ -1650,7 +1651,9 @@ export default function SettingsView({
                                                         : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
                                                 }`}
                                             >
-                                                {user.totpEnabled ? "Đã liên kết" : "Chưa liên kết"}
+                                                {user.totpEnabled
+                                                    ? "Đã liên kết"
+                                                    : "Chưa liên kết"}
                                             </span>
                                         </div>
                                         <p className="text-[11px] text-slate-400 mt-0.5">
@@ -1695,17 +1698,25 @@ export default function SettingsView({
                                 <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4 shadow-xs">
                                     <div className="space-y-0.5">
                                         <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                            Bắt buộc xác thực 2 bước khi đăng nhập
+                                            Bắt buộc xác thực 2 bước khi đăng
+                                            nhập
                                         </h5>
                                         <p className="text-[11px] text-slate-400 dark:text-slate-550">
-                                            Mặc định tắt: Bạn vẫn dùng Google Authenticator để tự khôi phục mật khẩu mà không bị hỏi mã mỗi khi đăng nhập.
+                                            Mặc định tắt: Bạn vẫn dùng Google
+                                            Authenticator để tự khôi phục mật
+                                            khẩu mà không bị hỏi mã mỗi khi đăng
+                                            nhập.
                                         </p>
                                     </div>
 
                                     <button
                                         type="button"
                                         disabled={toggling2FALogin}
-                                        onClick={() => handleToggle2FALogin(!user.require2FALogin)}
+                                        onClick={() =>
+                                            handleToggle2FALogin(
+                                                !user.require2FALogin,
+                                            )
+                                        }
                                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                             user.require2FALogin
                                                 ? "bg-brand-600"
@@ -1714,7 +1725,9 @@ export default function SettingsView({
                                     >
                                         <span
                                             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                                user.require2FALogin ? "translate-x-5" : "translate-x-0"
+                                                user.require2FALogin
+                                                    ? "translate-x-5"
+                                                    : "translate-x-0"
                                             }`}
                                         />
                                     </button>
@@ -1737,7 +1750,8 @@ export default function SettingsView({
                                 Log out of all devices
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Log out of all other active sessions on other devices besides this one.
+                                Log out of all other active sessions on other
+                                devices besides this one.
                             </p>
                         </div>
 
@@ -1751,7 +1765,8 @@ export default function SettingsView({
                                 onClick={handleLogOutAllOtherSessions}
                                 disabled={
                                     loggingOutAllSessions ||
-                                    sessions.filter((s) => !s.isCurrent).length === 0
+                                    sessions.filter((s) => !s.isCurrent)
+                                        .length === 0
                                 }
                                 className="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-xs"
                             >
@@ -1763,7 +1778,7 @@ export default function SettingsView({
                         </div>
 
                         {/* Active Sessions List Container */}
-                        <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900/40 overflow-hidden shadow-xs">
+                        <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900/40 overflow-hidden shadow-xs">
                             {loadingSessions && sessions.length === 0 ? (
                                 <div className="p-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
                                     <Loader2 className="w-4 h-4 animate-spin text-brand-600" />
@@ -1775,7 +1790,8 @@ export default function SettingsView({
                                 </div>
                             ) : (
                                 sessions.map((sess) => {
-                                    const isRevoking = revokingSessionId === sess.id;
+                                    const isRevoking =
+                                        revokingSessionId === sess.id;
                                     return (
                                         <div
                                             key={sess.id}
@@ -1783,10 +1799,12 @@ export default function SettingsView({
                                         >
                                             <div className="flex items-start gap-3.5 min-w-0">
                                                 {/* Device icon box */}
-                                                <div className="w-10 h-10 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center justify-center shrink-0 bg-slate-50/50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-0">
-                                                    {sess.device === "Mobile" ? (
+                                                <div className="w-10 h-10 rounded-lg border border-slate-200 dark:border-slate-700/80 flex items-center justify-center shrink-0 bg-slate-50/50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-0">
+                                                    {sess.device ===
+                                                    "Mobile" ? (
                                                         <Smartphone className="w-4 h-4" />
-                                                    ) : sess.device === "Tablet" ? (
+                                                    ) : sess.device ===
+                                                      "Tablet" ? (
                                                         <Tablet className="w-4 h-4" />
                                                     ) : (
                                                         <Laptop className="w-4 h-4" />
@@ -1797,21 +1815,33 @@ export default function SettingsView({
                                                 <div className="space-y-1 min-w-0">
                                                     <div className="flex items-center flex-wrap gap-2">
                                                         <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                                            {sess.browser || "Chrome 152.0.0.0"}
+                                                            {sess.browser ||
+                                                                "Chrome 152.0.0.0"}
                                                         </span>
                                                         {sess.isCurrent && (
-                                                            <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] tracking-wide border border-emerald-200/60 dark:border-emerald-800/60">
+                                                            <span className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] tracking-wide border border-emerald-200/60 dark:border-emerald-800/60">
                                                                 THIS DEVICE
                                                             </span>
                                                         )}
                                                     </div>
 
                                                     <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                        {sess.os || "macOS 10.15.7"} · {sess.device || "Desktop"}
+                                                        {sess.os ||
+                                                            "macOS 10.15.7"}{" "}
+                                                        ·{" "}
+                                                        {sess.device ||
+                                                            "Desktop"}
                                                     </p>
 
                                                     <p className="text-xs text-slate-400 dark:text-slate-500">
-                                                        {sess.location || "VN"} · {sess.ipAddress || "127.0.0.1"} · Last seen {formatLastSeen(sess.lastSeen)}
+                                                        {sess.location || "VN"}{" "}
+                                                        ·{" "}
+                                                        {sess.ipAddress ||
+                                                            "127.0.0.1"}{" "}
+                                                        · Last seen{" "}
+                                                        {formatLastSeen(
+                                                            sess.lastSeen,
+                                                        )}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1819,12 +1849,18 @@ export default function SettingsView({
                                             {/* Right side: Expires & Log out button */}
                                             <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
                                                 <span className="text-xs text-slate-400 dark:text-slate-500">
-                                                    {formatExpires(sess.expiresAt)}
+                                                    {formatExpires(
+                                                        sess.expiresAt,
+                                                    )}
                                                 </span>
                                                 {!sess.isCurrent && (
                                                     <button
                                                         type="button"
-                                                        onClick={() => handleRevokeSession(sess.id)}
+                                                        onClick={() =>
+                                                            handleRevokeSession(
+                                                                sess.id,
+                                                            )
+                                                        }
                                                         disabled={isRevoking}
                                                         className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-98 cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-xs"
                                                     >
@@ -1849,7 +1885,8 @@ export default function SettingsView({
                                 Delete account
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Permanently delete your account and all associated data.
+                                Permanently delete your account and all
+                                associated data.
                             </p>
                         </div>
                         <button
@@ -2263,7 +2300,7 @@ export default function SettingsView({
             {/* DELETE ACCOUNT CONFIRMATION MODAL */}
             {isDeleteAccountModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-rose-100 dark:border-rose-950 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-rose-100 dark:border-rose-950 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center shrink-0">
                                 <Trash2 className="w-5 h-5" />
@@ -2279,10 +2316,15 @@ export default function SettingsView({
                         </div>
 
                         <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                            Toàn bộ dữ liệu tài khoản <b>@{user.username}</b>, kết quả thi, lịch sử bài làm và cài đặt liên quan sẽ bị xóa vĩnh viễn khỏi hệ thống.
+                            Toàn bộ dữ liệu tài khoản <b>@{user.username}</b>,
+                            kết quả thi, lịch sử bài làm và cài đặt liên quan sẽ
+                            bị xóa vĩnh viễn khỏi hệ thống.
                         </p>
 
-                        <form onSubmit={handleDeleteAccount} className="space-y-3 pt-1">
+                        <form
+                            onSubmit={handleDeleteAccount}
+                            className="space-y-3 pt-1"
+                        >
                             <div className="space-y-1">
                                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                                     Nhập mật khẩu để xác nhận xóa:
@@ -2291,7 +2333,9 @@ export default function SettingsView({
                                     type="password"
                                     placeholder="Nhập mật khẩu của bạn"
                                     value={deleteAccountPassword}
-                                    onChange={(e) => setDeleteAccountPassword(e.target.value)}
+                                    onChange={(e) =>
+                                        setDeleteAccountPassword(e.target.value)
+                                    }
                                     className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-rose-400 text-slate-800 dark:text-slate-100"
                                 />
                             </div>
@@ -2305,7 +2349,9 @@ export default function SettingsView({
                             <div className="flex gap-2 pt-2">
                                 <button
                                     type="button"
-                                    onClick={() => setIsDeleteAccountModalOpen(false)}
+                                    onClick={() =>
+                                        setIsDeleteAccountModalOpen(false)
+                                    }
                                     className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold cursor-pointer"
                                 >
                                     Hủy
@@ -2315,8 +2361,179 @@ export default function SettingsView({
                                     disabled={deletingAccount}
                                     className="flex-1 py-2 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
                                 >
-                                    {deletingAccount && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                                    {deletingAccount && (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
                                     <span>Xóa vĩnh viễn</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CHANGE PASSWORD MODAL */}
+            {isChangePasswordModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                        Đổi Mật Khẩu
+                                    </h3>
+                                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                        Cập nhật mật khẩu tài khoản của bạn
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsChangePasswordModalOpen(false)
+                                }
+                                className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={handleUpdatePassword}
+                            className="space-y-3 pt-1"
+                        >
+                            {/* Current Password */}
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    Mật khẩu hiện tại:
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={
+                                            showCurrentPwd ? "text" : "password"
+                                        }
+                                        placeholder="Nhập mật khẩu hiện tại"
+                                        value={currentPassword}
+                                        onChange={(e) =>
+                                            setCurrentPassword(e.target.value)
+                                        }
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-brand-400 text-slate-800 dark:text-slate-100 pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowCurrentPwd(!showCurrentPwd)
+                                        }
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        {showCurrentPwd ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* New Password */}
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    Mật khẩu mới:
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={showNewPwd ? "text" : "password"}
+                                        placeholder="Tối thiểu 6 ký tự"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-brand-400 text-slate-800 dark:text-slate-100 pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowNewPwd(!showNewPwd)
+                                        }
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        {showNewPwd ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Confirm New Password */}
+                            <div className="space-y-1">
+                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                    Xác nhận mật khẩu mới:
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type={
+                                            showConfirmPwd ? "text" : "password"
+                                        }
+                                        placeholder="Nhập lại mật khẩu mới"
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)
+                                        }
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-brand-400 text-slate-800 dark:text-slate-100 pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowConfirmPwd(!showConfirmPwd)
+                                        }
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    >
+                                        {showConfirmPwd ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {pwdError && (
+                                <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-200/50 rounded-xl font-medium">
+                                    {pwdError}
+                                </div>
+                            )}
+
+                            {pwdSuccess && (
+                                <div className="p-2.5 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 rounded-xl font-medium">
+                                    {pwdSuccess}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsChangePasswordModalOpen(false);
+                                        setPwdError("");
+                                        setPwdSuccess("");
+                                    }}
+                                    className="flex-1 py-2 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold cursor-pointer"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        updatingPassword || !password.trim()
+                                    }
+                                    className="flex-1 py-2 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
+                                >
+                                    {updatingPassword && (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
+                                    <span>Lưu mật khẩu</span>
                                 </button>
                             </div>
                         </form>

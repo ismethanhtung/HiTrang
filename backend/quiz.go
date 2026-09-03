@@ -134,6 +134,9 @@ func HandleCreateQuiz(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Tự động tạo thông báo đề thi mới cho học sinh thuộc Khối lớp tương ứng
+		go CreateQuizNotification(db, &quiz)
+
 		c.JSON(http.StatusCreated, gin.H{"message": "Tạo đề thi thành công"})
 	}
 }

@@ -297,9 +297,10 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 				"grade":           profile.Grade,
 				"plan":            profile.Plan,
 				"avatarUrl":       profile.AvatarURL,
-				"totpEnabled":     user.TOTPSecret != nil,
-				"totpLinked":      user.TOTPSecret != nil,
-				"require2FALogin": user.Require2FALogin,
+				"totpEnabled":       user.TOTPSecret != nil,
+				"totpLinked":        user.TOTPSecret != nil,
+				"require2FALogin":   user.Require2FALogin,
+				"passwordUpdatedAt": user.PasswordUpdatedAt,
 			},
 		})
 	}
@@ -322,16 +323,17 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"id":              profile.ID,
-			"name":            profile.Name,
-			"username":        profile.Username,
-			"role":            profile.Role,
-			"grade":           profile.Grade,
-			"plan":            profile.Plan,
-			"avatarUrl":       profile.AvatarURL,
-			"totpEnabled":     user.TOTPSecret != nil,
-			"totpLinked":      user.TOTPSecret != nil,
-			"require2FALogin": user.Require2FALogin,
+			"id":                profile.ID,
+			"name":              profile.Name,
+			"username":          profile.Username,
+			"role":              profile.Role,
+			"grade":             profile.Grade,
+			"plan":              profile.Plan,
+			"avatarUrl":         profile.AvatarURL,
+			"totpEnabled":       user.TOTPSecret != nil,
+			"totpLinked":        user.TOTPSecret != nil,
+			"require2FALogin":   user.Require2FALogin,
+			"passwordUpdatedAt": user.PasswordUpdatedAt,
 		})
 	}
 }
@@ -677,7 +679,8 @@ func HandleUpdateUsername(db *gorm.DB) gin.HandlerFunc {
 }
 
 type UpdatePasswordRequest struct {
-	Password string `json:"password" binding:"required"`
+	CurrentPassword string `json:"currentPassword"`
+	Password        string `json:"password" binding:"required"`
 }
 
 func HandleUpdatePassword(db *gorm.DB) gin.HandlerFunc {
@@ -686,8 +689,27 @@ func HandleUpdatePassword(db *gorm.DB) gin.HandlerFunc {
 
 		var req UpdatePasswordRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới không hợp lệ"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập mật khẩu mới"})
 			return
+		}
+
+		if len(req.Password) < 6 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới phải có ít nhất 6 ký tự"})
+			return
+		}
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		// Nếu người dùng cung cấp mật khẩu hiện tại, kiểm tra tính chính xác
+		if strings.TrimSpace(req.CurrentPassword) != "" {
+			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu hiện tại không chính xác"})
+				return
+			}
 		}
 
 		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
@@ -696,12 +718,21 @@ func HandleUpdatePassword(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if err := db.Model(&User{}).Where("id = ?", userID).Update("password_hash", string(hashedBytes)).Error; err != nil {
+		now := time.Now()
+		updates := map[string]interface{}{
+			"password_hash":       string(hashedBytes),
+			"password_updated_at": &now,
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", userID).Updates(updates).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cập nhật mật khẩu thất bại: " + err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Cập nhật mật khẩu thành công"})
+		c.JSON(http.StatusOK, gin.H{
+			"message":           "Cập nhật mật khẩu thành công",
+			"passwordUpdatedAt": now,
+		})
 	}
 }
 
