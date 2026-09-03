@@ -22,6 +22,9 @@ import {
     KeyRound,
     Copy,
     Check,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown,
 } from "lucide-react";
 
 interface AdminPlansTabProps {
@@ -32,6 +35,16 @@ interface AdminPlansTabProps {
     fetchProfiles: () => Promise<void>;
 }
 
+type SortField =
+    | "stt"
+    | "name"
+    | "username"
+    | "role"
+    | "plan"
+    | "grade"
+    | "lastActive";
+type SortDirection = "asc" | "desc";
+
 export default function AdminPlansTab({
     userProfiles,
     loadingProfiles,
@@ -39,13 +52,15 @@ export default function AdminPlansTab({
     setUpdatingUserId,
     fetchProfiles,
 }: AdminPlansTabProps) {
-    // User Management filters, search and pagination
+    // User Management filters, search, sorting and pagination
     const [searchQuery, setSearchQuery] = useState("");
     const [filterRole, setFilterRole] = useState<"all" | "admin" | "student">(
         "all",
     );
     const [filterPlan, setFilterPlan] = useState<"all" | UserPlan>("all");
     const [filterGrade, setFilterGrade] = useState<string>("all");
+    const [sortField, setSortField] = useState<SortField | null>(null);
+    const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
 
@@ -123,6 +138,19 @@ export default function AdminPlansTab({
         }
     };
 
+    // Sorting and Pagination
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+        } else {
+            setSortField(field);
+            setSortDirection(
+                field === "lastActive" || field === "plan" ? "desc" : "asc",
+            );
+        }
+        setCurrentPage(1);
+    };
+
     // Filtering logic
     const filteredUsers = userProfiles.filter((u) => {
         const matchesSearch = matchesSearchFn(
@@ -141,8 +169,52 @@ export default function AdminPlansTab({
         return matchesSearch && matchesRole && matchesPlan && matchesGrade;
     });
 
-    const totalPages = Math.ceil(filteredUsers.length / pageSize);
-    const paginatedUsers = filteredUsers.slice(
+    // Sorted users
+    const sortedUsers = [...filteredUsers].sort((a, b) => {
+        if (!sortField) return 0;
+        let comparison = 0;
+        if (sortField === "stt") {
+            comparison = userProfiles.indexOf(a) - userProfiles.indexOf(b);
+        } else if (sortField === "name") {
+            comparison = (a.name || "").localeCompare(b.name || "", "vi", {
+                sensitivity: "base",
+                numeric: true,
+            });
+        } else if (sortField === "username") {
+            comparison = (a.username || "").localeCompare(
+                b.username || "",
+                "vi",
+                {
+                    sensitivity: "base",
+                    numeric: true,
+                },
+            );
+        } else if (sortField === "role") {
+            comparison = (a.role || "").localeCompare(b.role || "");
+        } else if (sortField === "plan") {
+            const getPlanWeight = (p?: string) => {
+                if (p === "vip") return 3;
+                if (p === "basic") return 2;
+                return 1;
+            };
+            comparison = getPlanWeight(a.plan) - getPlanWeight(b.plan);
+        } else if (sortField === "grade") {
+            const getGradeVal = (g?: string) => (g ? parseInt(g, 10) || 0 : 0);
+            comparison = getGradeVal(a.grade) - getGradeVal(b.grade);
+        } else if (sortField === "lastActive") {
+            const getActivityScore = (u: User) => {
+                if (u.activeExam) return Date.now() + 100000000;
+                if (!u.lastActiveAt) return 0;
+                return new Date(u.lastActiveAt).getTime() || 0;
+            };
+            comparison = getActivityScore(a) - getActivityScore(b);
+        }
+
+        return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    const totalPages = Math.ceil(sortedUsers.length / pageSize);
+    const paginatedUsers = sortedUsers.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize,
     );
@@ -360,6 +432,61 @@ export default function AdminPlansTab({
         );
     };
 
+    const renderSortHeader = (
+        field: SortField,
+        label: string,
+        align: "left" | "center" | "right" = "left",
+        className: string = "",
+    ) => {
+        const isActive = sortField === field;
+        return (
+            <th
+                onClick={() => handleSort(field)}
+                className={`py-2.5 px-4 cursor-pointer select-none transition-colors group ${
+                    align === "center"
+                        ? "text-center"
+                        : align === "right"
+                          ? "text-right"
+                          : "text-left"
+                } ${className} ${
+                    isActive
+                        ? "text-brand-600 dark:text-brand-400 font-bold bg-brand-50/20 dark:bg-brand-950/20"
+                        : "hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                }`}
+                title={`Sắp xếp theo ${label} (${
+                    isActive
+                        ? sortDirection === "asc"
+                            ? "Đang tăng dần - Nhấn để đảo chiều"
+                            : "Đang giảm dần - Nhấn để đảo chiều"
+                        : "Nhấn để sắp xếp"
+                })`}
+            >
+                <div
+                    className={`inline-flex items-center gap-1.5 ${
+                        align === "center"
+                            ? "justify-center"
+                            : align === "right"
+                              ? "justify-end"
+                              : "justify-start"
+                    }`}
+                >
+                    <span>{label}</span>
+                    <span className="inline-flex items-center">
+                        {isActive ? (
+                            sortDirection === "asc" ? (
+                                <ArrowUp className="w-3 h-3 text-brand-600 dark:text-brand-400 stroke-[2.5]" />
+                            ) : (
+                                <ArrowDown className="w-3 h-3 text-brand-600 dark:text-brand-400 stroke-[2.5]" />
+                            )
+                        ) : (
+                            <ArrowUpDown className="w-3 h-3 opacity-30 group-hover:opacity-80 transition-opacity" />
+                        )}
+                    </span>
+                </div>
+            </th>
+        );
+    };
+
     return (
         <div className="space-y-6 animate-in fade-in duration-200">
             {/* Header */}
@@ -407,9 +534,9 @@ export default function AdminPlansTab({
                         </span>
 
                         {testingCount > 0 && (
-                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-lg px-2.5 py-1 animate-pulse">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 whitespace-nowrap bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 rounded-lg px-2.5 py-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                đang thi: {testingCount}
+                                testing: {testingCount}
                             </span>
                         )}
                     </div>
@@ -468,15 +595,13 @@ export default function AdminPlansTab({
                 <table className="w-full text-left border-1 border-slate-100">
                     <thead>
                         <tr className="border-b border-border-primary/50 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/30">
-                            <th className="py-2.5 px-4 text-center w-12">
-                                STT
-                            </th>
-                            <th className="py-2.5 px-4">Tên Người Dùng</th>
-                            <th className="py-2.5 px-4">Username</th>
-                            <th className="py-2.5 px-4">Vai Trò</th>
-                            <th className="py-2.5 px-4">Plan</th>
-                            <th className="py-2.5 px-4">Lớp</th>
-                            <th className="py-2.5 px-4">Hoạt động</th>
+                            {renderSortHeader("stt", "STT", "center", "w-14")}
+                            {renderSortHeader("name", "Tên Người Dùng")}
+                            {renderSortHeader("username", "Username")}
+                            {renderSortHeader("role", "Vai Trò")}
+                            {renderSortHeader("plan", "Plan")}
+                            {renderSortHeader("grade", "Lớp")}
+                            {renderSortHeader("lastActive", "Hoạt động")}
                             <th className="py-2.5 px-4 text-right">Thao tác</th>
                         </tr>
                     </thead>
