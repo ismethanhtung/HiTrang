@@ -198,12 +198,7 @@ func CalculateScore(quiz *Quiz, answers map[string]interface{}) (float64, int) {
 // RefreshOverallLeaderboard recalculates overall ranks grouped by grade
 func RefreshOverallLeaderboard(db *gorm.DB) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		// A. Copy current ranks to previous ranks
-		if err := tx.Exec("UPDATE user_overall_stats SET previous_rank = current_rank").Error; err != nil {
-			return err
-		}
-
-		// B. Fetch profiles and their attempts
+		// A. Fetch profiles and their attempts
 		var students []Profile
 		if err := tx.Where("role = 'student'").Find(&students).Error; err != nil {
 			return err
@@ -244,7 +239,7 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			}
 			testsCompleted := len(firstAttempts)
 
-			// Update UserOverallStats without erasing previous_rank
+			// Update UserOverallStats (total_exp & tests_completed) without touching previous_rank or current_rank
 			upsertQuery := `
 				INSERT INTO user_overall_stats (user_id, total_exp, tests_completed, updated_at)
 				VALUES (?, ?, ?, NOW())
@@ -258,7 +253,7 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			}
 		}
 
-		// C. Remove stats of users who have no valid submitted attempts in their grade
+		// B. Remove stats of users who have no valid submitted attempts in their grade
 		deleteStatsQuery := `
 			DELETE FROM user_overall_stats 
 			WHERE tests_completed = 0 OR total_exp <= 0
@@ -267,16 +262,18 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			return err
 		}
 
-		// D. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
+		// C. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
 		var statsWithGrade []struct {
 			UserID         string
 			Grade          string
 			TotalExp       float64
 			TestsCompleted int
+			CurrentRank    *int
+			PreviousRank   *int
 		}
 
 		selectQuery := `
-			SELECT uos.user_id, COALESCE(p.grade, '') as grade, uos.total_exp, uos.tests_completed
+			SELECT uos.user_id, COALESCE(p.grade, '') as grade, uos.total_exp, uos.tests_completed, uos.current_rank, uos.previous_rank
 			FROM user_overall_stats uos
 			JOIN profiles p ON p.id = uos.user_id
 			WHERE p.role = 'student'
@@ -312,10 +309,19 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 				// If tied, rank stays the same
 			}
 
-			// Update current rank
-			if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ? WHERE user_id = ?", rank, row.UserID).Error; err != nil {
-				return err
+			newRank := rank
+			if row.CurrentRank == nil {
+				// Newly ranked student on leaderboard
+				if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ?, previous_rank = NULL WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
+					return err
+				}
+			} else if *row.CurrentRank != newRank {
+				// Rank changed: previous_rank becomes the old current_rank, and current_rank is updated to newRank
+				if err := tx.Exec("UPDATE user_overall_stats SET previous_rank = current_rank, current_rank = ? WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
+					return err
+				}
 			}
+			// If *row.CurrentRank == newRank, rank is unchanged, so keep both current_rank and previous_rank intact
 		}
 
 		return nil

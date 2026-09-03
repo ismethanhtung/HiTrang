@@ -259,7 +259,7 @@ export default function LeaderboardView({
     const renderTrend = (current: number, previous: number | null) => {
         if (previous === null) {
             return (
-                <span className="text-[8px] font-black text-blue-650 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/30 px-1 py-0.2 rounded-md uppercase tracking-wider scale-90">
+                <span className="text-[8px] font-black text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border border-sky-200/50 dark:border-sky-800/40 px-1 py-0.5 rounded uppercase tracking-wider scale-90 inline-flex items-center justify-center">
                     Mới
                 </span>
             );
@@ -267,21 +267,30 @@ export default function LeaderboardView({
         const diff = previous - current;
         if (diff > 0) {
             return (
-                <span className="flex items-center text-[11px] font-black text-emerald-600 dark:text-emerald-450 gap-0.5">
+                <span
+                    className="inline-flex items-center text-[11px] font-black text-emerald-600 dark:text-emerald-400 gap-0.5"
+                    title={`Tăng ${diff} bậc xếp hạng (từ #${previous} lên #${current})`}
+                >
                     <ChevronUp className="w-3 h-3 stroke-[3]" />
                     <span>{diff}</span>
                 </span>
             );
         } else if (diff < 0) {
             return (
-                <span className="flex items-center text-[11px] font-black text-rose-500 gap-0.5">
+                <span
+                    className="inline-flex items-center text-[11px] font-black text-rose-500 dark:text-rose-400 gap-0.5"
+                    title={`Giảm ${Math.abs(diff)} bậc xếp hạng (từ #${previous} xuống #${current})`}
+                >
                     <ChevronDown className="w-3 h-3 stroke-[3]" />
                     <span>{Math.abs(diff)}</span>
                 </span>
             );
         }
         return (
-            <span className="flex items-center text-slate-350 dark:text-slate-650">
+            <span
+                className="inline-flex items-center text-slate-350 dark:text-slate-600"
+                title="Thứ hạng giữ nguyên"
+            >
                 <Minus className="w-3.5 h-3.5" />
             </span>
         );
@@ -475,9 +484,15 @@ export default function LeaderboardView({
                                         </h4>
                                     </div>
                                     <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all">
-                                        <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
-                                            HẠNG 2
-                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
+                                                HẠNG 2
+                                            </span>
+                                            {renderTrend(
+                                                podiumOrder[0].rankPosition,
+                                                podiumOrder[0].previousRankPosition,
+                                            )}
+                                        </div>
                                         <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[0].totalPoints} điểm
                                         </span>
@@ -520,9 +535,15 @@ export default function LeaderboardView({
                                         </h4>
                                     </div>
                                     <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
-                                        <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
-                                            Hạng nhất
-                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
+                                                Hạng nhất
+                                            </span>
+                                            {renderTrend(
+                                                podiumOrder[1].rankPosition,
+                                                podiumOrder[1].previousRankPosition,
+                                            )}
+                                        </div>
                                         <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints} điểm
                                         </span>
@@ -566,9 +587,15 @@ export default function LeaderboardView({
                                         </h4>
                                     </div>
                                     <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all">
-                                        <span className="text-[8px] font-black text-orange-600 tracking-wider">
-                                            HẠNG 3
-                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[8px] font-black text-orange-600 tracking-wider">
+                                                HẠNG 3
+                                            </span>
+                                            {renderTrend(
+                                                podiumOrder[2].rankPosition,
+                                                podiumOrder[2].previousRankPosition,
+                                            )}
+                                        </div>
                                         <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[2].totalPoints} điểm
                                         </span>
