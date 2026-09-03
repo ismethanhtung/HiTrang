@@ -17,12 +17,15 @@ type NotificationResponse struct {
 	ID          string    `json:"id"`
 	UserID      *string   `json:"userId"`
 	TargetGrade *string   `json:"targetGrade"`
+	TargetPlan  *string   `json:"targetPlan"`
 	Type        string    `json:"type"`
 	Title       string    `json:"title"`
 	Message     string    `json:"message"`
 	Link        string    `json:"link"`
 	QuizID      *string   `json:"quizId"`
+	CreatedBy   *string   `json:"createdBy,omitempty"`
 	IsRead      bool      `json:"isRead"`
+	ReadCount   int       `json:"readCount,omitempty"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
@@ -45,15 +48,18 @@ func CreateQuizNotification(db *gorm.DB, quiz *Quiz) {
 		quizTitle = "Đề ôn tập mới"
 	}
 
+	allPlan := "all"
 	notif := Notification{
 		ID:          uuid.New().String(),
 		UserID:      nil, // Broadcast to target grade
 		TargetGrade: &targetGrade,
+		TargetPlan:  &allPlan,
 		Type:        "new_quiz",
 		Title:       "Đề thi mới từ Cô Trang 📝",
 		Message:     fmt.Sprintf("Cô Trang vừa đăng đề thi mới cho %s: \"%s\". Vào test ngay nhé!", gradeDisplay, quizTitle),
 		Link:        fmt.Sprintf("/quiz/%s", quiz.ID),
 		QuizID:      &quiz.ID,
+		CreatedBy:   quiz.CreatedBy,
 		CreatedAt:   time.Now(),
 	}
 
@@ -67,13 +73,17 @@ func HandleGetNotifications(db *gorm.DB) gin.HandlerFunc {
 		userIDVal, _ := c.Get("userID")
 		userID := userIDVal.(string)
 
-		// Get user's profile to check their grade
+		// Get user's profile to check their grade and plan
 		var profile Profile
 		_ = db.Where("id = ?", userID).First(&profile)
 
 		userGrade := ""
 		if profile.Grade != nil && *profile.Grade != "" {
 			userGrade = strings.TrimSpace(*profile.Grade)
+		}
+		userPlan := strings.TrimSpace(profile.Plan)
+		if userPlan == "" {
+			userPlan = "nothing"
 		}
 
 		// Query notifications relevant to this user
@@ -86,19 +96,18 @@ func HandleGetNotifications(db *gorm.DB) gin.HandlerFunc {
 		} else {
 			// Students see:
 			// 1. Personal notifications (user_id = userID)
-			// 2. Broadcast to all grades (target_grade = 'all' OR target_grade IS NULL OR target_grade = '')
-			// 3. Broadcast to user's grade (target_grade = userGrade)
+			// 2. Broadcast matching grade AND matching plan
+			gradeCondition := "(target_grade = 'all' OR target_grade IS NULL OR target_grade = '')"
 			if userGrade != "" {
-				query = query.Where(
-					"user_id = ? OR (user_id IS NULL AND (target_grade = ? OR target_grade = 'all' OR target_grade IS NULL OR target_grade = ''))",
-					userID, userGrade,
-				)
-			} else {
-				query = query.Where(
-					"user_id = ? OR (user_id IS NULL AND (target_grade = 'all' OR target_grade IS NULL OR target_grade = ''))",
-					userID,
-				)
+				gradeCondition = fmt.Sprintf("(target_grade = '%s' OR target_grade = 'all' OR target_grade IS NULL OR target_grade = '')", userGrade)
 			}
+
+			planCondition := fmt.Sprintf("(target_plan = '%s' OR target_plan = 'all' OR target_plan IS NULL OR target_plan = '')", userPlan)
+
+			query = query.Where(
+				fmt.Sprintf("user_id = ? OR (user_id IS NULL AND %s AND %s)", gradeCondition, planCondition),
+				userID,
+			)
 		}
 
 		if err := query.Find(&rawNotifs).Error; err != nil {
@@ -130,15 +139,21 @@ func HandleGetNotifications(db *gorm.DB) gin.HandlerFunc {
 			if !isRead {
 				unreadCount++
 			}
+			linkStr := ""
+			if n.Link != "" {
+				linkStr = n.Link
+			}
 			notifications = append(notifications, NotificationResponse{
 				ID:          n.ID,
 				UserID:      n.UserID,
 				TargetGrade: n.TargetGrade,
+				TargetPlan:  n.TargetPlan,
 				Type:        n.Type,
 				Title:       n.Title,
 				Message:     n.Message,
-				Link:        n.Link,
+				Link:        linkStr,
 				QuizID:      n.QuizID,
+				CreatedBy:   n.CreatedBy,
 				IsRead:      isRead,
 				CreatedAt:   n.CreatedAt,
 			})
@@ -191,20 +206,25 @@ func HandleMarkAllNotificationsRead(db *gorm.DB) gin.HandlerFunc {
 		if profile.Grade != nil && *profile.Grade != "" {
 			userGrade = strings.TrimSpace(*profile.Grade)
 		}
+		userPlan := strings.TrimSpace(profile.Plan)
+		if userPlan == "" {
+			userPlan = "nothing"
+		}
 
 		var rawNotifs []Notification
 		query := db.Select("id").Limit(100)
 
 		if profile.Role == "teacher" || profile.Role == "admin" {
 			query = query.Where("user_id = ? OR user_id IS NULL", userID)
-		} else if userGrade != "" {
-			query = query.Where(
-				"user_id = ? OR (user_id IS NULL AND (target_grade = ? OR target_grade = 'all' OR target_grade IS NULL OR target_grade = ''))",
-				userID, userGrade,
-			)
 		} else {
+			gradeCondition := "(target_grade = 'all' OR target_grade IS NULL OR target_grade = '')"
+			if userGrade != "" {
+				gradeCondition = fmt.Sprintf("(target_grade = '%s' OR target_grade = 'all' OR target_grade IS NULL OR target_grade = '')", userGrade)
+			}
+			planCondition := fmt.Sprintf("(target_plan = '%s' OR target_plan = 'all' OR target_plan IS NULL OR target_plan = '')", userPlan)
+
 			query = query.Where(
-				"user_id = ? OR (user_id IS NULL AND (target_grade = 'all' OR target_grade IS NULL OR target_grade = ''))",
+				fmt.Sprintf("user_id = ? OR (user_id IS NULL AND %s AND %s)", gradeCondition, planCondition),
 				userID,
 			)
 		}
@@ -222,5 +242,212 @@ func HandleMarkAllNotificationsRead(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"success": true})
+	}
+}
+
+// ----------------------------------------------------
+// ADMIN NOTIFICATION DISPATCHER HANDLERS
+// ----------------------------------------------------
+
+type AdminSendNotificationRequest struct {
+	Title       string  `json:"title" binding:"required"`
+	Message     string  `json:"message" binding:"required"`
+	Type        string  `json:"type" binding:"required"` // "new_quiz", "teacher_message", "reminder", "system"
+	TargetGrade *string `json:"targetGrade"`            // "all", "8", "9", "10", "11", "12"
+	TargetPlan  *string `json:"targetPlan"`             // "all", "nothing", "basic", "vip"
+	UserID      *string `json:"userId"`                 // Specific recipient
+	Link        *string `json:"link"`
+	QuizID      *string `json:"quizId"`
+}
+
+// HandleAdminSendNotification (Admin/Teacher only)
+// POST /api/admin/notifications
+func HandleAdminSendNotification(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		role := roleVal.(string)
+		if role != "admin" && role != "teacher" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ quản trị viên hoặc giáo viên mới có quyền phát thông báo"})
+			return
+		}
+
+		userIDVal, _ := c.Get("userID")
+		adminUserID := userIDVal.(string)
+
+		var req AdminSendNotificationRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu không hợp lệ: " + err.Error()})
+			return
+		}
+
+		title := strings.TrimSpace(req.Title)
+		message := strings.TrimSpace(req.Message)
+		notifType := strings.TrimSpace(req.Type)
+		if title == "" || message == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tiêu đề và nội dung không được để trống"})
+			return
+		}
+		if notifType == "" {
+			notifType = "teacher_message"
+		}
+
+		var targetGrade *string
+		if req.TargetGrade != nil && strings.TrimSpace(*req.TargetGrade) != "" {
+			val := strings.TrimSpace(*req.TargetGrade)
+			targetGrade = &val
+		} else {
+			allGrade := "all"
+			targetGrade = &allGrade
+		}
+
+		var targetPlan *string
+		if req.TargetPlan != nil && strings.TrimSpace(*req.TargetPlan) != "" {
+			val := strings.TrimSpace(*req.TargetPlan)
+			targetPlan = &val
+		} else {
+			allPlan := "all"
+			targetPlan = &allPlan
+		}
+
+		var targetUserID *string
+		if req.UserID != nil && strings.TrimSpace(*req.UserID) != "" {
+			val := strings.TrimSpace(*req.UserID)
+			targetUserID = &val
+			// If sending to specific user, clear broadcast grade/plan
+			targetGrade = nil
+			targetPlan = nil
+		}
+
+		var linkVal string
+		if req.Link != nil {
+			linkVal = strings.TrimSpace(*req.Link)
+		}
+
+		var quizIDVal *string
+		if req.QuizID != nil && strings.TrimSpace(*req.QuizID) != "" {
+			val := strings.TrimSpace(*req.QuizID)
+			quizIDVal = &val
+		}
+
+		notif := Notification{
+			ID:          uuid.New().String(),
+			UserID:      targetUserID,
+			TargetGrade: targetGrade,
+			TargetPlan:  targetPlan,
+			Type:        notifType,
+			Title:       title,
+			Message:     message,
+			Link:        linkVal,
+			QuizID:      quizIDVal,
+			CreatedBy:   &adminUserID,
+			CreatedAt:   time.Now(),
+		}
+
+		if err := db.Create(&notif).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lưu thông báo: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{
+			"success":      true,
+			"message":      "Đã gửi thông báo thành công",
+			"notification": notif,
+		})
+	}
+}
+
+// HandleAdminGetNotifications (Admin/Teacher only)
+// GET /api/admin/notifications
+func HandleAdminGetNotifications(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		role := roleVal.(string)
+		if role != "admin" && role != "teacher" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền truy cập"})
+			return
+		}
+
+		var notifs []Notification
+		if err := db.Order("created_at desc").Limit(100).Find(&notifs).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tải danh sách thông báo"})
+			return
+		}
+
+		if len(notifs) == 0 {
+			c.JSON(http.StatusOK, gin.H{"notifications": []NotificationResponse{}})
+			return
+		}
+
+		notifIDs := make([]string, len(notifs))
+		for i, n := range notifs {
+			notifIDs[i] = n.ID
+		}
+
+		// Count reads per notification
+		type ReadStat struct {
+			NotificationID string `gorm:"column:notification_id"`
+			Count          int    `gorm:"column:read_count"`
+		}
+		var stats []ReadStat
+		_ = db.Model(&NotificationRead{}).
+			Select("notification_id, COUNT(*) as read_count").
+			Where("notification_id IN ?", notifIDs).
+			Group("notification_id").
+			Find(&stats).Error
+
+		readCountMap := make(map[string]int)
+		for _, s := range stats {
+			readCountMap[s.NotificationID] = s.Count
+		}
+
+		result := make([]NotificationResponse, len(notifs))
+		for i, n := range notifs {
+			result[i] = NotificationResponse{
+				ID:          n.ID,
+				UserID:      n.UserID,
+				TargetGrade: n.TargetGrade,
+				TargetPlan:  n.TargetPlan,
+				Type:        n.Type,
+				Title:       n.Title,
+				Message:     n.Message,
+				Link:        n.Link,
+				QuizID:      n.QuizID,
+				CreatedBy:   n.CreatedBy,
+				ReadCount:   readCountMap[n.ID],
+				CreatedAt:   n.CreatedAt,
+			}
+		}
+
+		c.JSON(http.StatusOK, gin.H{"notifications": result})
+	}
+}
+
+// HandleAdminDeleteNotification (Admin/Teacher only)
+// DELETE /api/admin/notifications/:id
+func HandleAdminDeleteNotification(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		role := roleVal.(string)
+		if role != "admin" && role != "teacher" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền thực hiện thao tác"})
+			return
+		}
+
+		id := c.Param("id")
+		if strings.TrimSpace(id) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID không hợp lệ"})
+			return
+		}
+
+		// Delete notification reads first
+		_ = db.Where("notification_id = ?", id).Delete(&NotificationRead{}).Error
+
+		// Delete the notification
+		if err := db.Where("id = ?", id).Delete(&Notification{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể xóa thông báo: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Đã xóa thông báo thành công"})
 	}
 }

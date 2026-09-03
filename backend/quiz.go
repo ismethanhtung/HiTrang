@@ -202,6 +202,7 @@ func HandleUpdateQuiz(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+
 func HandleDeleteQuiz(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleVal, _ := c.Get("role")
@@ -219,3 +220,71 @@ func HandleDeleteQuiz(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Xóa đề thi thành công"})
 	}
 }
+
+// HandleRescoreQuiz recalculates scores for all submitted attempts and submissions of a quiz
+func HandleRescoreQuiz(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		if roleVal.(string) != "teacher" && roleVal.(string) != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ giáo viên hoặc admin mới có quyền tính lại điểm đề thi"})
+			return
+		}
+
+		quizID := c.Param("id")
+		var quiz Quiz
+		if err := db.Where("id = ?", quizID).First(&quiz).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Không tìm thấy đề thi"})
+			return
+		}
+
+		// Fetch all submitted attempts for this quiz
+		var attempts []ExamAttempt
+		if err := db.Where("quiz_id = ? AND status = 'submitted'", quizID).Find(&attempts).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi truy vấn bài thi: " + err.Error()})
+			return
+		}
+
+		rescoredCount := 0
+		err := db.Transaction(func(tx *gorm.DB) error {
+			for _, att := range attempts {
+				newScore, totalQs := CalculateScore(&quiz, att.Answers)
+
+				// 1. Update exam_attempts
+				if err := tx.Model(&ExamAttempt{}).Where("id = ?", att.ID).Updates(map[string]interface{}{
+					"score":           newScore,
+					"total_questions": totalQs,
+				}).Error; err != nil {
+					return err
+				}
+
+				// 2. Update submissions
+				if err := tx.Model(&Submission{}).Where("id = ?", att.ID).Updates(map[string]interface{}{
+					"score":           newScore,
+					"total_questions": totalQs,
+					"quiz_title":      quiz.Title,
+				}).Error; err != nil {
+					return err
+				}
+
+				rescoredCount++
+			}
+			return nil
+		})
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi khi cập nhật lại điểm: " + err.Error()})
+			return
+		}
+
+		// Recalculate leaderboard immediately
+		go func() {
+			_ = RefreshOverallLeaderboard(db)
+		}()
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":       "Tính lại toàn bộ điểm đề thi thành công",
+			"rescoredCount": rescoredCount,
+		})
+	}
+}
+

@@ -25,6 +25,7 @@ import {
     Activity,
     Bug,
     Calendar,
+    Bell,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -36,6 +37,7 @@ import AdminSubmissionReviewer from "./AdminSubmissionReviewer";
 import AdminApiTab from "./AdminApiTab";
 import AdminBugsTab from "./AdminBugsTab";
 import AdminScheduleTab from "./AdminScheduleTab";
+import AdminNotificationsTab from "./AdminNotificationsTab";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -43,6 +45,7 @@ interface AdminPanelProps {
     onAddQuiz: (newQuiz: Quiz) => void;
     onDeleteQuiz: (quizId: string) => void;
     onUpdateQuiz: (updatedQuiz: Quiz) => void;
+    onReloadSubmissions?: () => Promise<void>;
 }
 
 export default function AdminPanel({
@@ -51,6 +54,7 @@ export default function AdminPanel({
     onAddQuiz,
     onDeleteQuiz,
     onUpdateQuiz,
+    onReloadSubmissions,
 }: AdminPanelProps) {
     // Persist admin verification across reloads
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -69,6 +73,7 @@ export default function AdminPanel({
         | "api-monitor"
         | "bugs"
         | "schedule"
+        | "notifications"
     >("plans");
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
@@ -107,7 +112,8 @@ export default function AdminPanel({
             | "stats-students"
             | "api-monitor"
             | "bugs"
-            | "schedule",
+            | "schedule"
+            | "notifications",
     ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
@@ -348,6 +354,20 @@ export default function AdminPanel({
                                     <UserIcon className="w-4 h-4 shrink-0" />
                                     <span>Tài khoản</span>
                                 </button>
+
+                                {matchSetting(["thông báo", "gửi thông báo", "notification", "notifications"]) && (
+                                    <button
+                                        onClick={() => handleTabClick("notifications")}
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "notifications"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <Bell className="w-4 h-4 shrink-0" />
+                                        <span>Gửi thông báo</span>
+                                    </button>
+                                )}
                             </div>
                         )}
 
@@ -631,6 +651,7 @@ export default function AdminPanel({
                                 quizzes={quizzes}
                                 submissions={submissions}
                                 onReviewSubmission={setAdminReviewSubmission}
+                                onReloadSubmissions={onReloadSubmissions}
                             />
                         )}
 
@@ -653,6 +674,13 @@ export default function AdminPanel({
                         )}
 
                         {activeTab === "schedule" && <AdminScheduleTab />}
+
+                        {activeTab === "notifications" && (
+                            <AdminNotificationsTab
+                                userProfiles={userProfiles}
+                                quizzes={quizzes}
+                            />
+                        )}
                     </>
                 )}
             </section>

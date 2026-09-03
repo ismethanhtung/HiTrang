@@ -21,6 +21,7 @@ import {
     Loader2,
     Clock,
     BookOpen,
+    Lightbulb,
     ChevronLeft,
     ChevronDown,
     ChevronUp,
@@ -1054,7 +1055,11 @@ export default function SettingsView({
                                             {q.explanation && (
                                                 <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/60 rounded-xl p-4 text-xs space-y-2 mt-4">
                                                     <div className="flex items-center gap-1.5 text-[#3B6D85] dark:text-brand-400 font-extrabold">
-                                                        <BookOpen className="w-4 h-4 text-[#3B6D85] dark:text-brand-400" />
+                                                        <img
+                                                            src="/icons/lightbulb.png"
+                                                            alt="Lời giải"
+                                                            className="w-4 h-4 object-contain select-none flex-shrink-0"
+                                                        />
                                                         <span>
                                                             Lời giải chi tiết:
                                                         </span>

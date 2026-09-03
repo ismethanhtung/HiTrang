@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.72"
+const AppVersion = "1.0.75"
 
 func main() {
 	// 1. Configuration
@@ -205,6 +205,9 @@ func main() {
 			protected.GET("/notifications", HandleGetNotifications(db))
 			protected.POST("/notifications/:id/read", HandleMarkNotificationRead(db))
 			protected.POST("/notifications/read-all", HandleMarkAllNotificationsRead(db))
+			protected.POST("/admin/notifications", HandleAdminSendNotification(db))
+			protected.GET("/admin/notifications", HandleAdminGetNotifications(db))
+			protected.DELETE("/admin/notifications/:id", HandleAdminDeleteNotification(db))
 
 			// User Management (Admin/Teacher)
 			protected.GET("/admin/users", HandleGetAllProfiles(db))
@@ -220,6 +223,7 @@ func main() {
 			protected.POST("/quizzes", HandleCreateQuiz(db))
 			protected.PUT("/quizzes/:id", HandleUpdateQuiz(db))
 			protected.DELETE("/quizzes/:id", HandleDeleteQuiz(db))
+			protected.POST("/quizzes/:id/rescore", HandleRescoreQuiz(db))
 
 			// Exam Attempts
 			protected.GET("/attempts/active", HandleGetActiveAttempt(db))

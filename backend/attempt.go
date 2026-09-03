@@ -210,24 +210,31 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 		}
 
 		for _, student := range students {
-			// Find earliest successful submission for each quiz for this student
+			studentGrade := ""
+			if student.Grade != nil {
+				studentGrade = strings.TrimSpace(*student.Grade)
+			}
+
+			// Find earliest successful submission for each quiz for this student.
+			// Only count quizzes that match the student's grade or are for all grades.
 			var firstAttempts []struct {
 				QuizID string
 				Score  float64
 			}
 
-			// Subquery/Grouping: Group by quiz_id, pick the one with earliest started_at
 			query := `
-				SELECT quiz_id, score 
+				SELECT ea.quiz_id, ea.score 
 				FROM exam_attempts ea
-				WHERE user_id = ? AND status = 'submitted'
-				AND started_at = (
+				JOIN quizzes q ON q.id = ea.quiz_id
+				WHERE ea.user_id = ? AND ea.status = 'submitted'
+				AND (q.grade = ? OR q.grade IS NULL OR q.grade = '' OR ? = '')
+				AND ea.started_at = (
 					SELECT MIN(started_at) 
 					FROM exam_attempts 
 					WHERE user_id = ea.user_id AND quiz_id = ea.quiz_id AND status = 'submitted'
 				)
 			`
-			if err := tx.Raw(query, student.ID).Scan(&firstAttempts).Error; err != nil {
+			if err := tx.Raw(query, student.ID, studentGrade, studentGrade).Scan(&firstAttempts).Error; err != nil {
 				return err
 			}
 
@@ -237,30 +244,30 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			}
 			testsCompleted := len(firstAttempts)
 
-			// Update UserOverallStats
-			stat := UserOverallStats{
-				UserID:         student.ID,
-				TotalExp:       totalExp,
-				TestsCompleted: testsCompleted,
-			}
-			if err := tx.Save(&stat).Error; err != nil {
+			// Update UserOverallStats without erasing previous_rank
+			upsertQuery := `
+				INSERT INTO user_overall_stats (user_id, total_exp, tests_completed, updated_at)
+				VALUES (?, ?, ?, NOW())
+				ON DUPLICATE KEY UPDATE 
+					total_exp = VALUES(total_exp),
+					tests_completed = VALUES(tests_completed),
+					updated_at = NOW()
+			`
+			if err := tx.Exec(upsertQuery, student.ID, totalExp, testsCompleted).Error; err != nil {
 				return err
 			}
 		}
 
-		// C. Remove stats of users who have no submitted attempts
+		// C. Remove stats of users who have no valid submitted attempts in their grade
 		deleteStatsQuery := `
 			DELETE FROM user_overall_stats 
-			WHERE user_id NOT IN (
-				SELECT DISTINCT user_id FROM exam_attempts WHERE status = 'submitted'
-			)
+			WHERE tests_completed = 0 OR total_exp <= 0
 		`
 		if err := tx.Exec(deleteStatsQuery).Error; err != nil {
 			return err
 		}
 
-		// D. Recalculate ranks partitioned by grade
-		// We'll query all stats joined with profile, group by grade, rank them, and update
+		// D. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
 		var statsWithGrade []struct {
 			UserID         string
 			Grade          string
@@ -279,25 +286,30 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			return err
 		}
 
-		// Dense Rank calculation in Go
 		currentGrade := "__none__"
-		rank := 0
+		rank := 1
+		positionInGrade := 0
 		var lastExp float64 = -1.0
 		lastTests := -1
 
 		for _, row := range statsWithGrade {
 			if row.Grade != currentGrade {
 				currentGrade = row.Grade
+				positionInGrade = 1
 				rank = 1
 				lastExp = row.TotalExp
 				lastTests = row.TestsCompleted
 			} else {
-				// Only increment rank if score or tests completed differs (dense rank behavior)
+				positionInGrade++
+				// Standard Competition Ranking (1224):
+				// If score or tests completed differs from previous student,
+				// the rank jumps to the 1-based index (positionInGrade)
 				if row.TotalExp != lastExp || row.TestsCompleted != lastTests {
-					rank++
+					rank = positionInGrade
 					lastExp = row.TotalExp
 					lastTests = row.TestsCompleted
 				}
+				// If tied, rank stays the same
 			}
 
 			// Update current rank
@@ -817,12 +829,30 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			FROM user_overall_stats uos
 			JOIN profiles p ON p.id = uos.user_id
 			WHERE p.role = 'student' AND p.grade = ?
-			ORDER BY uos.current_rank ASC
+			ORDER BY uos.total_exp DESC, uos.tests_completed DESC
 		`
 
 		if err := db.Raw(query, grade).Scan(&rows).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lấy BXH tổng hợp"})
 			return
+		}
+
+		// Dynamically compute Standard Competition Ranking (1224 rank) on the returned rows.
+		// This guarantees that:
+		// 1. Two students tied at 11 will be followed by 13 (not 12).
+		// 2. If a student was recently moved from another grade, they will be ranked
+		//    strictly according to their actual points in this grade, never stuck at Top 1.
+		rank := 1
+		var lastExp float64 = -1.0
+		var lastTests int = -1
+
+		for i, r := range rows {
+			if r.TotalPoints != lastExp || r.TestsCompleted != lastTests {
+				rank = i + 1
+				lastExp = r.TotalPoints
+				lastTests = r.TestsCompleted
+			}
+			rows[i].RankPosition = rank
 		}
 
 		c.JSON(http.StatusOK, rows)

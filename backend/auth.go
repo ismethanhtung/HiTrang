@@ -488,6 +488,11 @@ func HandleUpdateUserProfile(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// Asynchronously refresh leaderboard ranks
+		go func() {
+			_ = RefreshOverallLeaderboard(db)
+		}()
+
 		c.JSON(http.StatusOK, gin.H{"message": "Cập nhật tài khoản thành công"})
 	}
 }
@@ -507,6 +512,11 @@ func HandleDeleteUserProfile(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Xóa người dùng thất bại: " + err.Error()})
 			return
 		}
+
+		// Asynchronously refresh leaderboard ranks
+		go func() {
+			_ = RefreshOverallLeaderboard(db)
+		}()
 
 		c.JSON(http.StatusOK, gin.H{"message": "Xóa người dùng thành công"})
 	}
@@ -566,6 +576,11 @@ func HandleUpdateUserGrade(db *gorm.DB) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật khối lớp: " + err.Error()})
 			return
 		}
+
+		// Asynchronously refresh leaderboard ranks
+		go func() {
+			_ = RefreshOverallLeaderboard(db)
+		}()
 
 		c.JSON(http.StatusOK, gin.H{"message": "Cập nhật khối lớp thành công"})
 	}

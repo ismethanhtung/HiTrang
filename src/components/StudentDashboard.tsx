@@ -24,6 +24,7 @@ import {
     Crown,
     User as UserIcon,
     Ghost,
+    Lightbulb,
 } from "lucide-react";
 import {
     Quiz,
@@ -1224,7 +1225,11 @@ export default function StudentDashboard({
                                                     }}
                                                 >
                                                     <div className="flex items-center gap-1.5 text-[#3B6D85] font-extrabold">
-                                                        <BookOpen className="w-4 h-4 text-[#3B6D85]" />
+                                                        <img
+                                                            src="/icons/lightbulb.png"
+                                                            alt="Lời giải"
+                                                            className="w-4 h-4 object-contain select-none flex-shrink-0"
+                                                        />
                                                         <span>
                                                             Lời giải chi tiết:
                                                         </span>

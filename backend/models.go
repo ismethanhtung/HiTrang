@@ -165,11 +165,13 @@ type Notification struct {
 	ID          string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
 	UserID      *string   `json:"userId" gorm:"column:user_id;type:varchar(36);index"`
 	TargetGrade *string   `json:"targetGrade" gorm:"column:target_grade;type:varchar(10);index"`
+	TargetPlan  *string   `json:"targetPlan" gorm:"column:target_plan;type:varchar(20);index"`
 	Type        string    `json:"type" gorm:"type:varchar(50);not null"`
 	Title       string    `json:"title" gorm:"type:varchar(255);not null"`
 	Message     string    `json:"message" gorm:"type:text;not null"`
 	Link        string    `json:"link" gorm:"type:varchar(255)"`
 	QuizID      *string   `json:"quizId" gorm:"column:quiz_id;type:varchar(100);index"`
+	CreatedBy   *string   `json:"createdBy" gorm:"column:created_by;type:varchar(36)"`
 	CreatedAt   time.Time `json:"createdAt" gorm:"column:created_at;index"`
 }
 

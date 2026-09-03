@@ -10,6 +10,7 @@ import {
     Trash2,
     RefreshCw,
     BookOpen,
+    Lightbulb,
     Edit,
     CheckCircle2,
     ChevronLeft,
@@ -2506,7 +2507,11 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                                         {q.explanation && (
                                             <div className="pt-4 border-t border-slate-200/60 space-y-2 text-left">
                                                 <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-700">
-                                                    <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                                                    <img
+                                                        src="/icons/lightbulb.png"
+                                                        alt="Lời giải"
+                                                        className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                                    />
                                                     <span>
                                                         Lời giải chi tiết:
                                                     </span>

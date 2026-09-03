@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Quiz, Submission } from "../types";
-import { BarChart3, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, Search, X, ChevronLeft, ChevronRight, RotateCcw, Loader2 } from "lucide-react";
 import { matchesSearch } from "../lib/searchUtils";
+import { rescoreQuiz } from "../lib/supabaseService";
 
 interface AdminStatsQuizzesTabProps {
     quizzes: Quiz[];
     submissions: Submission[];
     onReviewSubmission: (sub: Submission) => void;
+    onReloadSubmissions?: () => Promise<void>;
 }
 
 const SORT_OPTIONS = [
@@ -31,6 +33,26 @@ export default function AdminStatsQuizzesTab({
     >("newest");
     const [selectedQuizForDetails, setSelectedQuizForDetails] =
         useState<Quiz | null>(null);
+    const [rescoringQuizId, setRescoringQuizId] = useState<string | null>(null);
+
+    const handleRescore = async (quizId: string, quizTitle: string) => {
+        const confirmMsg = `Bạn có chắc chắn muốn tính lại điểm cho toàn bộ bài nộp của đề thi "${quizTitle}" không?\nHệ thống sẽ đối chiếu lại bài làm của tất cả học sinh theo đáp án mới nhất và cập nhật lại điểm số cũng như Bảng xếp hạng.`;
+        if (!window.confirm(confirmMsg)) return;
+
+        setRescoringQuizId(quizId);
+        try {
+            const res = await rescoreQuiz(quizId);
+            if (onReloadSubmissions) {
+                await onReloadSubmissions();
+            }
+            alert(`Thành công: Đã tính lại điểm cho ${res.rescoredCount || 0} bài nộp của đề thi!`);
+        } catch (err: any) {
+            console.error("Lỗi khi tính lại điểm:", err);
+            alert(`Lỗi khi tính lại điểm: ${err.message || "Không xác định"}`);
+        } finally {
+            setRescoringQuizId(null);
+        }
+    };
 
     const [currentPage, setCurrentPage] = useState(1);
     const [subPage, setSubPage] = useState(1);
@@ -295,24 +317,54 @@ export default function AdminStatsQuizzesTab({
                                             : "—"}
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const originalQuiz =
-                                                    quizzes.find(
-                                                        (q) =>
-                                                            q.id ===
-                                                            quizData.id,
-                                                    );
-                                                if (originalQuiz)
-                                                    setSelectedQuizForDetails(
-                                                        originalQuiz,
-                                                    );
-                                            }}
-                                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold transition-all active:scale-[0.98] cursor-pointer"
-                                        >
-                                            Chi tiết
-                                        </button>
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const originalQuiz =
+                                                        quizzes.find(
+                                                            (q) =>
+                                                                q.id ===
+                                                                quizData.id,
+                                                        );
+                                                    if (originalQuiz)
+                                                        setSelectedQuizForDetails(
+                                                            originalQuiz,
+                                                        );
+                                                }}
+                                                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-semibold transition-all active:scale-[0.98] cursor-pointer"
+                                            >
+                                                Chi tiết
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={rescoringQuizId === quizData.id || quizData.submissionsCount === 0}
+                                                onClick={() =>
+                                                    handleRescore(
+                                                        quizData.id,
+                                                        quizData.title,
+                                                    )
+                                                }
+                                                title={
+                                                    quizData.submissionsCount === 0
+                                                        ? "Chưa có bài nộp nào để tính lại điểm"
+                                                        : "Tính lại toàn bộ điểm cho đề thi này theo đáp án mới nhất"
+                                                }
+                                                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer active:scale-[0.98] ${
+                                                    quizData.submissionsCount === 0
+                                                        ? "opacity-40 bg-slate-100 text-slate-400 cursor-not-allowed"
+                                                        : "bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40"
+                                                }`}
+                                            >
+                                                {rescoringQuizId === quizData.id ? (
+                                                    <Loader2 className="w-3 h-3 animate-spin text-amber-600" />
+                                                ) : (
+                                                    <RotateCcw className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                                )}
+                                                <span>Tính lại điểm</span>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -383,12 +435,33 @@ export default function AdminStatsQuizzesTab({
                                     {selectedQuizForDetails.title}
                                 </h3>
                             </div>
-                            <button
-                                onClick={() => setSelectedQuizForDetails(null)}
-                                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    disabled={rescoringQuizId === selectedQuizForDetails.id}
+                                    onClick={() =>
+                                        handleRescore(
+                                            selectedQuizForDetails.id,
+                                            selectedQuizForDetails.title,
+                                        )
+                                    }
+                                    className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-97 disabled:opacity-50"
+                                >
+                                    {rescoringQuizId === selectedQuizForDetails.id ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                                    ) : (
+                                        <RotateCcw className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                    )}
+                                    <span>Tính lại điểm đề này</span>
+                                </button>
+
+                                <button
+                                    onClick={() => setSelectedQuizForDetails(null)}
+                                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Modal Content */}

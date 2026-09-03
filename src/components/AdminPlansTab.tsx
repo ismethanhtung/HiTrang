@@ -79,7 +79,9 @@ export default function AdminPlansTab({
         username: string;
         name: string;
     } | null>(null);
-    const [generatingResetId, setGeneratingResetId] = useState<string | null>(null);
+    const [generatingResetId, setGeneratingResetId] = useState<string | null>(
+        null,
+    );
     const [copiedResetLink, setCopiedResetLink] = useState(false);
 
     const handleGenerateResetLink = async (targetUser: User) => {
@@ -95,7 +97,9 @@ export default function AdminPlansTab({
             setCopiedResetLink(false);
         } catch (err: any) {
             console.error("Lỗi tạo link reset:", err);
-            alert(`Lỗi tạo link đặt lại mật khẩu: ${err.message || "Vui lòng thử lại"}`);
+            alert(
+                `Lỗi tạo link đặt lại mật khẩu: ${err.message || "Vui lòng thử lại"}`,
+            );
         } finally {
             setGeneratingResetId(null);
         }
@@ -121,7 +125,10 @@ export default function AdminPlansTab({
 
     // Filtering logic
     const filteredUsers = userProfiles.filter((u) => {
-        const matchesSearch = matchesSearchFn([u.name, u.username], searchQuery);
+        const matchesSearch = matchesSearchFn(
+            [u.name, u.username],
+            searchQuery,
+        );
         const matchesRole = filterRole === "all" || u.role === filterRole;
         const matchesPlan =
             filterPlan === "all" || (u.plan || "nothing") === filterPlan;
@@ -295,11 +302,9 @@ export default function AdminPlansTab({
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                         </span>
                         <span className="truncate">
-                            Đang thi: {prof.activeExam.quizTitle}
+                            {prof.activeExam.durationMinutes}p -{" "}
+                            {prof.activeExam.quizTitle}
                         </span>
-                    </span>
-                    <span className="text-[9px] text-amber-600/80 dark:text-amber-400/80 font-medium pl-0.5">
-                        Thời lượng {prof.activeExam.durationMinutes}p
                     </span>
                 </div>
             );
@@ -515,14 +520,19 @@ export default function AdminPlansTab({
                                                         referrerPolicy="no-referrer"
                                                         className="w-full h-full object-cover"
                                                         onError={(e) => {
-                                                            e.currentTarget.style.display = "none";
+                                                            e.currentTarget.style.display =
+                                                                "none";
                                                         }}
                                                     />
                                                 ) : (
-                                                    (prof.name || "U").charAt(0).toUpperCase()
+                                                    (prof.name || "U")
+                                                        .charAt(0)
+                                                        .toUpperCase()
                                                 )}
                                             </div>
-                                            <span className="truncate">{prof.name}</span>
+                                            <span className="truncate">
+                                                {prof.name}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="py-3 px-4 text-slate-400">
@@ -1022,7 +1032,9 @@ export default function AdminPlansTab({
                                     </p>
                                 </div>
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300">
-                                    {resetModalUser.role === "admin" ? "Admin" : "Học sinh"}
+                                    {resetModalUser.role === "admin"
+                                        ? "Admin"
+                                        : "Học sinh"}
                                 </span>
                             </div>
 
@@ -1037,7 +1049,11 @@ export default function AdminPlansTab({
                                         readOnly
                                         value={resetLinkData.link}
                                         className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none select-all truncate"
-                                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                                        onClick={(e) =>
+                                            (
+                                                e.target as HTMLInputElement
+                                            ).select()
+                                        }
                                     />
                                     <button
                                         type="button"
@@ -1069,9 +1085,17 @@ export default function AdminPlansTab({
                                     ⚡ Quy tắc bảo mật:
                                 </p>
                                 <ul className="list-disc list-inside space-y-0.5 text-[10px] text-amber-700 dark:text-amber-400 pl-1">
-                                    <li>Link chỉ có hiệu lực trong <b>30 phút</b>.</li>
-                                    <li>Chỉ sử dụng được <b>1 lần duy nhất</b>.</li>
-                                    <li>Sau khi học sinh đổi MK thành công, link lập tức vô hiệu hóa.</li>
+                                    <li>
+                                        Link chỉ có hiệu lực trong{" "}
+                                        <b>30 phút</b>.
+                                    </li>
+                                    <li>
+                                        Chỉ sử dụng được <b>1 lần duy nhất</b>.
+                                    </li>
+                                    <li>
+                                        Sau khi học sinh đổi MK thành công, link
+                                        lập tức vô hiệu hóa.
+                                    </li>
                                 </ul>
                             </div>
 

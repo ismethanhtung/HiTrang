@@ -216,6 +216,12 @@ export async function deleteQuiz(quizId: string): Promise<void> {
   });
 }
 
+export async function rescoreQuiz(quizId: string): Promise<{ message: string; rescoredCount: number }> {
+  return await apiRequest<{ message: string; rescoredCount: number }>(`/quizzes/${quizId}/rescore`, {
+    method: 'POST'
+  });
+}
+
 /**
  * ----------------------------------------------------
  * 3. QUẢN LÝ BÀI NỘP (SUBMISSIONS OPERATIONS)
@@ -603,3 +609,34 @@ export async function markAllNotificationsAsRead(): Promise<void> {
     method: 'POST',
   });
 }
+
+export interface SendAdminNotificationPayload {
+  title: string;
+  message: string;
+  type: 'new_quiz' | 'teacher_message' | 'reminder' | 'system';
+  targetGrade?: string;
+  targetPlan?: string;
+  userId?: string | null;
+  link?: string;
+  quizId?: string;
+}
+
+export async function sendAdminNotification(payload: SendAdminNotificationPayload): Promise<{ success: boolean; notification: AppNotification }> {
+  return await apiRequest<{ success: boolean; notification: AppNotification }>('/admin/notifications', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAdminNotifications(): Promise<{ notifications: AppNotification[] }> {
+  return await apiRequest<{ notifications: AppNotification[] }>('/admin/notifications', {
+    method: 'GET',
+  });
+}
+
+export async function deleteAdminNotification(id: string): Promise<{ success: boolean }> {
+  return await apiRequest<{ success: boolean }>(`/admin/notifications/${id}`, {
+    method: 'DELETE',
+  });
+}
+

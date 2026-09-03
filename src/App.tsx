@@ -410,6 +410,18 @@ export default function App() {
         setSubmissions([newSub, ...submissions]);
     };
 
+    const handleReloadSubmissions = async () => {
+        try {
+            if (!user) return;
+            const subs = await getSubmissions(user.role, user.id);
+            if (subs) {
+                setSubmissions(subs);
+            }
+        } catch (err) {
+            console.error("Lỗi khi tải lại danh sách bài nộp:", err);
+        }
+    };
+
     const handleLogin = async (loggedInUser: User) => {
         setUser(loggedInUser);
         setAuthModalOpen(false);
@@ -565,6 +577,7 @@ export default function App() {
                                 onAddQuiz={handleAddQuiz}
                                 onDeleteQuiz={handleDeleteQuiz}
                                 onUpdateQuiz={handleUpdateQuiz}
+                                onReloadSubmissions={handleReloadSubmissions}
                             />
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">

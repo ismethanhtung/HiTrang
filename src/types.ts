@@ -97,11 +97,14 @@ export interface AppNotification {
   id: string;
   userId?: string | null;
   targetGrade?: string | null;
-  type: 'new_quiz' | 'system' | 'teacher_message';
+  targetPlan?: string | null;
+  type: 'new_quiz' | 'system' | 'teacher_message' | 'reminder';
   title: string;
   message: string;
   link?: string;
   quizId?: string;
+  createdBy?: string | null;
   isRead: boolean;
+  readCount?: number;
   createdAt: string;
 }

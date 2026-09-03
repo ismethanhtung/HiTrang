@@ -276,71 +276,7 @@ export default function ScheduleView({
 
             {/* THREE-COLUMN LAYOUT: CONTACT & SOCIALS (LEFT) | QUOTE (CENTER) | INTERNAL LINKS (RIGHT) */}
             {/* Using grid-cols-3 to ensure the middle quote column is mathematically and visually centered */}
-            <div className="pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                {/* Left Column: Contact info & Socials */}
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
-                            Liên hệ Cô Trang
-                        </h4>
-                        <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                            <div>
-                                <span>
-                                    Địa chỉ: Hẻm 111 Phùng Hưng, PleiKu, Gia Lai
-                                </span>
-                            </div>
-                            <div>
-                                <span>Điện thoại: </span>
-                                <a
-                                    href="tel:0914765601"
-                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline text-slate-555 dark:text-slate-400"
-                                >
-                                    0914 765 601
-                                </a>
-                            </div>
-                            <div>
-                                <span>Email: </span>
-                                <a
-                                    href="mailto:ismethanhtung@gmail.com"
-                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline text-slate-555 dark:text-slate-400"
-                                >
-                                    ismethanhtung@gmail.com
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Social links block exactly like footer column 1 */}
-                    <div className="flex items-center gap-2.5 pt-1 text-xs font-semibold text-slate-400 dark:text-slate-500">
-                        <a
-                            href="https://zalo.me/0914765601"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline text-slate-400 dark:text-slate-500"
-                        >
-                            Zalo
-                        </a>
-                        <span>&bull;</span>
-                        <a
-                            href="https://www.facebook.com/nguyen.trang.724265"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline text-slate-400 dark:text-slate-500"
-                        >
-                            Facebook
-                        </a>
-                        <span>&bull;</span>
-                        <a
-                            href="https://m.me/nguyen.trang.724265"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline text-slate-400 dark:text-slate-500"
-                        >
-                            Messenger
-                        </a>
-                    </div>
-                </div>
-
+            <div className="pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-8 items-center">
                 {/* Center Column: Quote - aligned perfectly centered visually */}
                 <div className="flex items-center justify-center text-center md:h-full py-4 md:py-6">
                     <p className="text-xs sm:text-sm italic text-slate-550 dark:text-slate-455 font-medium leading-relaxed max-w-xs inline-flex items-center justify-center gap-1.5 flex-wrap">
@@ -352,44 +288,6 @@ export default function ScheduleView({
                         />
                         <span>"</span>
                     </p>
-                </div>
-
-                {/* Right Column: Internal Links (Right-aligned, no self Lịch học link) */}
-                <div className="flex flex-col md:items-end md:text-right space-y-2">
-                    <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
-                        Liên kết
-                    </h4>
-                    <div className="flex flex-col md:items-end gap-2.5 text-xs font-semibold">
-                        <button
-                            onClick={() => onNavigate("/")}
-                            className="text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left md:text-right border-0 bg-transparent p-0 outline-none"
-                        >
-                            Trang chủ
-                        </button>
-
-                        {user && (
-                            <button
-                                onClick={() => onNavigate("/leaderboard")}
-                                className="text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left md:text-right border-0 bg-transparent p-0 outline-none"
-                            >
-                                Bảng xếp hạng
-                            </button>
-                        )}
-
-                        <button
-                            onClick={onOpenContactModal}
-                            className="text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left md:text-right border-0 bg-transparent p-0 outline-none"
-                        >
-                            Đăng ký học cô Trang
-                        </button>
-
-                        <button
-                            onClick={onOpenBugModal}
-                            className="text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left md:text-right border-0 bg-transparent p-0 outline-none"
-                        >
-                            Báo lỗi hệ thống
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

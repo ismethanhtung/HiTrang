@@ -179,7 +179,7 @@ export default function NotificationBell({
 
             {/* Notification Popover Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-76 bg-bg-card rounded-xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 mt-2 w-80 sm:w-86 bg-bg-card rounded-xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     {/* Header */}
                     <div className="p-3.5 border-b border-border-primary flex items-center justify-between bg-bg-surface/50">
                         <div className="flex items-center gap-2">
@@ -256,11 +256,6 @@ export default function NotificationBell({
                                                     >
                                                         {notif.title}
                                                     </h4>
-                                                    {!notif.isRead && (
-                                                        <span className="px-1 py-0.2 rounded bg-brand-500 text-[9px] font-extrabold text-white shrink-0 leading-tight">
-                                                            MỚI
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 <span className="text-[10px] text-text-tertiary shrink-0 whitespace-nowrap">
                                                     {formatTimeAgo(
