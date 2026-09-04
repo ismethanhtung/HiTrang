@@ -238,8 +238,6 @@ export default function AdminPanel({
         }
     };
 
-
-
     if (!isAuthenticated) {
         return (
             <div className="max-w-md mx-auto my-16 p-8 bg-white border-none space-y-6 text-center animate-in fade-in duration-300">
@@ -313,7 +311,14 @@ export default function AdminPanel({
                     {/* Nav Categories */}
                     <div className="flex-1 overflow-y-auto py-2">
                         {/* Group 1: General Settings */}
-                        {matchSetting(["quản lý chung", "tài khoản", "account", "plans", "người dùng", "học sinh"]) && (
+                        {matchSetting([
+                            "quản lý chung",
+                            "tài khoản",
+                            "account",
+                            "plans",
+                            "người dùng",
+                            "học sinh",
+                        ]) && (
                             <div className="space-y-0.5 mb-4">
                                 <div className="flex items-center justify-between px-6 py-2">
                                     <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">
@@ -333,9 +338,16 @@ export default function AdminPanel({
                                     <span>Tài khoản</span>
                                 </button>
 
-                                {matchSetting(["thông báo", "gửi thông báo", "notification", "notifications"]) && (
+                                {matchSetting([
+                                    "thông báo",
+                                    "gửi thông báo",
+                                    "notification",
+                                    "notifications",
+                                ]) && (
                                     <button
-                                        onClick={() => handleTabClick("notifications")}
+                                        onClick={() =>
+                                            handleTabClick("notifications")
+                                        }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "notifications"
                                                 ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -367,7 +379,12 @@ export default function AdminPanel({
                                     <ChevronDown className="w-3 h-3 text-slate-400" />
                                 </div>
 
-                                {matchSetting(["tạo / sửa đề thi", "tạo đề", "sửa đề", "create quiz"]) && (
+                                {matchSetting([
+                                    "tạo / sửa đề thi",
+                                    "tạo đề",
+                                    "sửa đề",
+                                    "create quiz",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("create-quiz")
@@ -383,7 +400,11 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["danh sách đề thi", "danh sách đề", "quizzes"]) && (
+                                {matchSetting([
+                                    "danh sách đề thi",
+                                    "danh sách đề",
+                                    "quizzes",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("quizzes")
@@ -399,7 +420,12 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["quản lý lịch học", "lịch học", "lịch", "schedule"]) && (
+                                {matchSetting([
+                                    "quản lý lịch học",
+                                    "lịch học",
+                                    "lịch",
+                                    "schedule",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("schedule")
@@ -415,7 +441,11 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["chống gian lận", "gian lận", "anti cheat"]) && (
+                                {matchSetting([
+                                    "chống gian lận",
+                                    "gian lận",
+                                    "anti cheat",
+                                ]) && (
                                     <div className="w-full flex items-center justify-between pr-4 py-2 hover:bg-slate-50/50 transition-all cursor-default">
                                         <div className="flex items-center gap-3 pl-[24px]">
                                             <Shield className="w-4 h-4 text-[#70757A] shrink-0" />
@@ -465,7 +495,11 @@ export default function AdminPanel({
                                     <ChevronDown className="w-3 h-3 text-slate-400" />
                                 </div>
 
-                                {matchSetting(["thống kê đề thi", "thống kê đề", "stats quiz"]) && (
+                                {matchSetting([
+                                    "thống kê đề thi",
+                                    "thống kê đề",
+                                    "stats quiz",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("stats-quizzes")
@@ -481,7 +515,11 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["thống kê học sinh", "thống kê điểm", "stats students"]) && (
+                                {matchSetting([
+                                    "thống kê học sinh",
+                                    "thống kê điểm",
+                                    "stats students",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("stats-students")
@@ -518,7 +556,12 @@ export default function AdminPanel({
                                     </span>
                                 </div>
 
-                                {matchSetting(["báo cáo lỗi", "lỗi hệ thống", "bug", "lỗi"]) && (
+                                {matchSetting([
+                                    "báo cáo lỗi",
+                                    "lỗi hệ thống",
+                                    "bug",
+                                    "lỗi",
+                                ]) && (
                                     <button
                                         onClick={() => handleTabClick("bugs")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
@@ -532,7 +575,12 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["giám sát api", "api", "hệ thống api", "monitor"]) && (
+                                {matchSetting([
+                                    "giám sát api",
+                                    "api",
+                                    "hệ thống api",
+                                    "monitor",
+                                ]) && (
                                     <button
                                         onClick={() =>
                                             handleTabClick("api-monitor")
@@ -587,9 +635,7 @@ export default function AdminPanel({
                                     "ổ đĩa",
                                 ]) && (
                                     <button
-                                        onClick={() =>
-                                            handleTabClick("system")
-                                        }
+                                        onClick={() => handleTabClick("system")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "system"
                                                 ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
@@ -597,7 +643,7 @@ export default function AdminPanel({
                                         }`}
                                     >
                                         <Server className="w-4 h-4 shrink-0" />
-                                        <span>Hạ tầng & Máy chủ EC2</span>
+                                        <span>Hạ tầng & Máy chủ</span>
                                     </button>
                                 )}
                             </div>

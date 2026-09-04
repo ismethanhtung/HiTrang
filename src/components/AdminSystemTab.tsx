@@ -44,7 +44,9 @@ export default function AdminSystemTab() {
             setError(null);
         } catch (err: any) {
             console.error("Lỗi khi tải thông số máy chủ EC2:", err);
-            setError(err.message || "Không thể kết nối đến API giám sát hệ thống.");
+            setError(
+                err.message || "Không thể kết nối đến API giám sát hệ thống.",
+            );
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -73,7 +75,9 @@ export default function AdminSystemTab() {
         }, 2000);
     };
 
-    const getStatusColorClass = (status: "healthy" | "warning" | "critical" | "error" | string) => {
+    const getStatusColorClass = (
+        status: "healthy" | "warning" | "critical" | "error" | string,
+    ) => {
         switch (status) {
             case "healthy":
                 return "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/40";
@@ -99,12 +103,9 @@ export default function AdminSystemTab() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border-primary/60">
                 <div>
                     <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
-                            <Server className="w-5 h-5" />
-                        </div>
                         <div>
                             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                Hạ Tầng Máy Chủ & Hệ Thống EC2
+                                Hạ Tầng Máy Chủ & Hệ Thống
                                 {metrics && (
                                     <span
                                         className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${getStatusColorClass(
@@ -113,14 +114,17 @@ export default function AdminSystemTab() {
                                     >
                                         {metrics.overallHealth === "healthy"
                                             ? "Hoạt động tốt"
-                                            : metrics.overallHealth === "warning"
-                                            ? "Cảnh báo"
-                                            : "Cần chú ý"}
+                                            : metrics.overallHealth ===
+                                                "warning"
+                                              ? "Cảnh báo"
+                                              : "Cần chú ý"}
                                     </span>
                                 )}
                             </h2>
                             <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 font-medium">
-                                Giám sát trực tiếp dung lượng ổ đĩa, RAM, CPU, mạng I/O, MySQL và tình trạng container trên máy chủ.
+                                Giám sát trực tiếp dung lượng ổ đĩa, RAM, CPU,
+                                mạng I/O, MySQL và tình trạng container trên máy
+                                chủ.
                             </p>
                         </div>
                     </div>
@@ -134,7 +138,9 @@ export default function AdminSystemTab() {
                         </span>
                         <select
                             value={autoRefreshInterval}
-                            onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+                            onChange={(e) =>
+                                setAutoRefreshInterval(Number(e.target.value))
+                            }
                             aria-label="Tần suất tự động cập nhật"
                             className="bg-transparent text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer pr-1"
                         >
@@ -153,7 +159,9 @@ export default function AdminSystemTab() {
                         className="px-3 py-2 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                         title="Làm mới thông số ngay"
                     >
-                        <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                        <RefreshCw
+                            className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
+                        />
                         <span>Làm mới</span>
                     </button>
                 </div>
@@ -164,8 +172,12 @@ export default function AdminSystemTab() {
                 <div className="p-4 rounded-xl text-xs bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 flex items-start gap-3">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <div>
-                        <div className="font-bold">Không thể tải thông số hệ thống</div>
-                        <div className="mt-0.5 text-rose-600 dark:text-rose-400">{error}</div>
+                        <div className="font-bold">
+                            Không thể tải thông số hệ thống
+                        </div>
+                        <div className="mt-0.5 text-rose-600 dark:text-rose-400">
+                            {error}
+                        </div>
                     </div>
                 </div>
             )}
@@ -215,7 +227,9 @@ export default function AdminSystemTab() {
                                     className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
                                         metrics.disk.usedPercent,
                                     )}`}
-                                    style={{ width: `${Math.min(metrics.disk.usedPercent, 100)}%` }}
+                                    style={{
+                                        width: `${Math.min(metrics.disk.usedPercent, 100)}%`,
+                                    }}
                                 />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
@@ -252,12 +266,18 @@ export default function AdminSystemTab() {
                                     className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
                                         metrics.memory.usedPercent,
                                     )}`}
-                                    style={{ width: `${Math.min(metrics.memory.usedPercent, 100)}%` }}
+                                    style={{
+                                        width: `${Math.min(metrics.memory.usedPercent, 100)}%`,
+                                    }}
                                 />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
-                                <span>Khả dụng: {metrics.memory.freeFormatted}</span>
-                                <span>Go Heap: {metrics.memory.heapAllocFormatted}</span>
+                                <span>
+                                    Khả dụng: {metrics.memory.freeFormatted}
+                                </span>
+                                <span>
+                                    Go Heap: {metrics.memory.heapAllocFormatted}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -289,12 +309,16 @@ export default function AdminSystemTab() {
                                     className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
                                         metrics.cpu.usagePercent,
                                     )}`}
-                                    style={{ width: `${Math.min(metrics.cpu.usagePercent, 100)}%` }}
+                                    style={{
+                                        width: `${Math.min(metrics.cpu.usagePercent, 100)}%`,
+                                    }}
                                 />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
                                 <span>5m: {metrics.cpu.load5.toFixed(2)}</span>
-                                <span>15m: {metrics.cpu.load15.toFixed(2)}</span>
+                                <span>
+                                    15m: {metrics.cpu.load15.toFixed(2)}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -345,19 +369,26 @@ export default function AdminSystemTab() {
                         {/* Storage breakdown table */}
                         <div className="grid grid-cols-3 gap-3 text-center">
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Tổng Dung Lượng</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Tổng Dung Lượng
+                                </div>
                                 <div className="text-sm font-black text-slate-700 dark:text-slate-200 mt-1">
                                     {metrics.disk.totalFormatted}
                                 </div>
                             </div>
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Đã Sử Dụng</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Đã Sử Dụng
+                                </div>
                                 <div className="text-sm font-black text-amber-600 dark:text-amber-400 mt-1">
-                                    {metrics.disk.usedFormatted} ({metrics.disk.usedPercent}%)
+                                    {metrics.disk.usedFormatted} (
+                                    {metrics.disk.usedPercent}%)
                                 </div>
                             </div>
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Còn Trống</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Còn Trống
+                                </div>
                                 <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">
                                     {metrics.disk.freeFormatted}
                                 </div>
@@ -371,17 +402,23 @@ export default function AdminSystemTab() {
                                     Số lượng tệp tin (Inodes) đã dùng:
                                 </span>
                                 <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
-                                    {metrics.disk.inodesUsed.toLocaleString()} / {metrics.disk.inodesTotal.toLocaleString()} ({metrics.disk.inodesUsedPercent}%)
+                                    {metrics.disk.inodesUsed.toLocaleString()} /{" "}
+                                    {metrics.disk.inodesTotal.toLocaleString()}{" "}
+                                    ({metrics.disk.inodesUsedPercent}%)
                                 </span>
                             </div>
                             <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full ${getProgressColor(metrics.disk.inodesUsedPercent)}`}
-                                    style={{ width: `${Math.min(metrics.disk.inodesUsedPercent, 100)}%` }}
+                                    style={{
+                                        width: `${Math.min(metrics.disk.inodesUsedPercent, 100)}%`,
+                                    }}
                                 />
                             </div>
                             <div className="text-[11px] text-slate-400 dark:text-slate-500">
-                                * Lưu ý: Khi Inodes hoặc Dung lượng đạt 100%, Docker build sẽ gặp lỗi <code>no space left on device</code>.
+                                * Lưu ý: Khi Inodes hoặc Dung lượng đạt 100%,
+                                Docker build sẽ gặp lỗi{" "}
+                                <code>no space left on device</code>.
                             </div>
                         </div>
                     </div>
@@ -403,19 +440,26 @@ export default function AdminSystemTab() {
                         {/* RAM metrics breakdown */}
                         <div className="grid grid-cols-3 gap-3 text-center">
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Tổng RAM</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Tổng RAM
+                                </div>
                                 <div className="text-sm font-black text-slate-700 dark:text-slate-200 mt-1">
                                     {metrics.memory.totalFormatted}
                                 </div>
                             </div>
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Đang Dùng</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Đang Dùng
+                                </div>
                                 <div className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                                    {metrics.memory.usedFormatted} ({metrics.memory.usedPercent}%)
+                                    {metrics.memory.usedFormatted} (
+                                    {metrics.memory.usedPercent}%)
                                 </div>
                             </div>
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Khả Dụng</div>
+                                <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                    Khả Dụng
+                                </div>
                                 <div className="text-sm font-black text-slate-700 dark:text-slate-200 mt-1">
                                     {metrics.memory.freeFormatted}
                                 </div>
@@ -425,25 +469,33 @@ export default function AdminSystemTab() {
                         {/* Go Runtime memory specifics */}
                         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">Bộ nhớ Heap Backend cấp phát:</span>
+                                <span className="text-slate-500 dark:text-slate-400">
+                                    Bộ nhớ Heap Backend cấp phát:
+                                </span>
                                 <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
                                     {metrics.memory.heapAllocFormatted}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">Bộ nhớ Sys yêu cầu từ OS:</span>
+                                <span className="text-slate-500 dark:text-slate-400">
+                                    Bộ nhớ Sys yêu cầu từ OS:
+                                </span>
                                 <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
                                     {metrics.memory.sysFormatted}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">Goroutines đang hoạt động:</span>
+                                <span className="text-slate-500 dark:text-slate-400">
+                                    Goroutines đang hoạt động:
+                                </span>
                                 <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
                                     {metrics.memory.goroutinesCount} threads
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500 dark:text-slate-400">Số lần thu dọn rác (GC Count):</span>
+                                <span className="text-slate-500 dark:text-slate-400">
+                                    Số lần thu dọn rác (GC Count):
+                                </span>
                                 <span className="font-mono font-bold text-slate-700 dark:text-slate-200">
                                     {metrics.memory.numGc.toLocaleString()} lần
                                 </span>
@@ -465,7 +517,9 @@ export default function AdminSystemTab() {
                                     metrics.database.status,
                                 )}`}
                             >
-                                {metrics.database.status === "healthy" ? "ĐÃ KẾT NỐI" : "LỖI KẾT NỐI"}
+                                {metrics.database.status === "healthy"
+                                    ? "ĐÃ KẾT NỐI"
+                                    : "LỖI KẾT NỐI"}
                             </span>
                         </div>
 
@@ -473,7 +527,9 @@ export default function AdminSystemTab() {
                         <div className="grid grid-cols-2 gap-3">
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase">Độ trễ Ping DB</div>
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                        Độ trễ Ping DB
+                                    </div>
                                     <div className="text-base font-black text-slate-700 dark:text-slate-200 mt-0.5">
                                         {metrics.database.pingLatencyMs} ms
                                     </div>
@@ -483,9 +539,13 @@ export default function AdminSystemTab() {
 
                             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                                 <div>
-                                    <div className="text-[10px] font-bold text-slate-400 uppercase">Connection Pool</div>
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase">
+                                        Connection Pool
+                                    </div>
                                     <div className="text-base font-black text-slate-700 dark:text-slate-200 mt-0.5">
-                                        {metrics.database.inUseConnections} in-use / {metrics.database.openConnections} open
+                                        {metrics.database.inUseConnections}{" "}
+                                        in-use /{" "}
+                                        {metrics.database.openConnections} open
                                     </div>
                                 </div>
                                 <Database className="w-5 h-5 text-sky-500/80" />
@@ -497,18 +557,23 @@ export default function AdminSystemTab() {
                             <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
                                 <span className="flex items-center gap-1.5">
                                     <Wifi className="w-3.5 h-3.5 text-slate-400" />
-                                    Lưu lượng truyền tải qua mạng (Network Traffic):
+                                    Lưu lượng truyền tải qua mạng (Network
+                                    Traffic):
                                 </span>
                             </div>
                             <div className="grid grid-cols-2 gap-2 font-mono text-[11px] pt-1">
                                 <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
-                                    <div className="text-slate-400 text-[10px]">Tải xuống (RX Received)</div>
+                                    <div className="text-slate-400 text-[10px]">
+                                        Tải xuống (RX Received)
+                                    </div>
                                     <div className="text-slate-800 dark:text-slate-100 font-bold mt-0.5">
                                         {metrics.network.totalRxFormatted}
                                     </div>
                                 </div>
                                 <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
-                                    <div className="text-slate-400 text-[10px]">Tải lên (TX Sent)</div>
+                                    <div className="text-slate-400 text-[10px]">
+                                        Tải lên (TX Sent)
+                                    </div>
                                     <div className="text-slate-800 dark:text-slate-100 font-bold mt-0.5">
                                         {metrics.network.totalTxFormatted}
                                     </div>
@@ -533,31 +598,41 @@ export default function AdminSystemTab() {
 
                         <div className="space-y-2.5 text-xs">
                             <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                                <span className="text-slate-400">Tên Máy Chủ (Hostname):</span>
+                                <span className="text-slate-400">
+                                    Tên Máy Chủ (Hostname):
+                                </span>
                                 <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">
                                     {metrics.hostname}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                                <span className="text-slate-400">Kiến trúc & Hệ điều hành:</span>
+                                <span className="text-slate-400">
+                                    Kiến trúc & Hệ điều hành:
+                                </span>
                                 <span className="font-mono font-semibold text-slate-700 dark:text-slate-200 uppercase">
                                     {metrics.cpu.os} / {metrics.cpu.arch}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                                <span className="text-slate-400">Phiên bản Core Backend:</span>
+                                <span className="text-slate-400">
+                                    Phiên bản Core Backend:
+                                </span>
                                 <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
                                     v{metrics.appVersion}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-                                <span className="text-slate-400">Thời gian bắt đầu Backend:</span>
+                                <span className="text-slate-400">
+                                    Thời gian bắt đầu Backend:
+                                </span>
                                 <span className="font-mono text-slate-600 dark:text-slate-300">
                                     {metrics.uptime.processStartTime}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between py-1.5">
-                                <span className="text-slate-400">Cập nhật lần cuối lúc:</span>
+                                <span className="text-slate-400">
+                                    Cập nhật lần cuối lúc:
+                                </span>
                                 <span className="font-mono text-slate-600 dark:text-slate-300">
                                     {lastUpdated.toLocaleTimeString("vi-VN")}
                                 </span>
@@ -568,65 +643,76 @@ export default function AdminSystemTab() {
             )}
 
             {/* Maintenance & Docker Cleanup Commands */}
-            {metrics && metrics.maintenanceTips && metrics.maintenanceTips.length > 0 && (
-                <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
-                    <div className="flex items-center gap-2 pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
-                        <Terminal className="w-4 h-4 text-brand-500" />
-                        <div>
-                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                Lệnh Dọn Dẹp & Tối Ưu Hóa Ổ Đĩa Docker Trên EC2
-                            </h3>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                                Sao chép và chạy các lệnh này qua SSH vào máy chủ EC2 khi ổ đĩa báo đầy hoặc Docker build lỗi.
-                            </p>
+            {metrics &&
+                metrics.maintenanceTips &&
+                metrics.maintenanceTips.length > 0 && (
+                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                        <div className="flex items-center gap-2 pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
+                            <Terminal className="w-4 h-4 text-brand-500" />
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                    Lệnh Dọn Dẹp & Tối Ưu Hóa Ổ Đĩa Docker Trên
+                                    EC2
+                                </h3>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                                    Sao chép và chạy các lệnh này qua SSH vào
+                                    máy chủ EC2 khi ổ đĩa báo đầy hoặc Docker
+                                    build lỗi.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {metrics.maintenanceTips.map(
+                                (tip: SystemMaintenanceTip, index: number) => (
+                                    <div
+                                        key={index}
+                                        className={`p-3.5 rounded-xl border transition-all ${
+                                            tip.severity === "urgent"
+                                                ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/50"
+                                                : tip.severity === "warning"
+                                                  ? "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50"
+                                                  : "bg-slate-50/70 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800"
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                                                {tip.title}
+                                            </span>
+                                            {tip.severity === "urgent" && (
+                                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded">
+                                                    Cấp bách
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
+                                            {tip.description}
+                                        </p>
+                                        <div className="flex items-center justify-between bg-slate-900 dark:bg-black/80 rounded-lg p-2 font-mono text-[11px] text-emerald-400">
+                                            <span className="truncate mr-2">
+                                                $ {tip.command}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleCopy(tip.command)
+                                                }
+                                                className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+                                                title="Sao chép lệnh"
+                                            >
+                                                {copiedCmd === tip.command ? (
+                                                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                                ) : (
+                                                    <Copy className="w-3.5 h-3.5" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ),
+                            )}
                         </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {metrics.maintenanceTips.map((tip: SystemMaintenanceTip, index: number) => (
-                            <div
-                                key={index}
-                                className={`p-3.5 rounded-xl border transition-all ${
-                                    tip.severity === "urgent"
-                                        ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/50"
-                                        : tip.severity === "warning"
-                                        ? "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50"
-                                        : "bg-slate-50/70 dark:bg-slate-800/40 border-slate-100 dark:border-slate-800"
-                                }`}
-                            >
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                                        {tip.title}
-                                    </span>
-                                    {tip.severity === "urgent" && (
-                                        <span className="text-[10px] font-bold text-rose-600 bg-rose-100 dark:bg-rose-900/60 px-1.5 py-0.5 rounded">
-                                            Cấp bách
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
-                                    {tip.description}
-                                </p>
-                                <div className="flex items-center justify-between bg-slate-900 dark:bg-black/80 rounded-lg p-2 font-mono text-[11px] text-emerald-400">
-                                    <span className="truncate mr-2">$ {tip.command}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleCopy(tip.command)}
-                                        className="text-slate-400 hover:text-white p-1 rounded hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
-                                        title="Sao chép lệnh"
-                                    >
-                                        {copiedCmd === tip.command ? (
-                                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                        ) : (
-                                            <Copy className="w-3.5 h-3.5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                )}
         </div>
     );
 }
