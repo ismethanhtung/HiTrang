@@ -26,6 +26,7 @@ import {
     Bug,
     Calendar,
     Bell,
+    Database,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -38,6 +39,7 @@ import AdminApiTab from "./AdminApiTab";
 import AdminBugsTab from "./AdminBugsTab";
 import AdminScheduleTab from "./AdminScheduleTab";
 import AdminNotificationsTab from "./AdminNotificationsTab";
+import AdminBackupTab from "./AdminBackupTab";
 
 interface AdminPanelProps {
     quizzes: Quiz[];
@@ -74,6 +76,7 @@ export default function AdminPanel({
         | "bugs"
         | "schedule"
         | "notifications"
+        | "backups"
     >("plans");
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
@@ -113,7 +116,8 @@ export default function AdminPanel({
             | "api-monitor"
             | "bugs"
             | "schedule"
-            | "notifications",
+            | "notifications"
+            | "backups",
     ) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
@@ -191,76 +195,7 @@ export default function AdminPanel({
         }
     };
 
-    const handleDownloadBackup = async () => {
-        const pass = prompt("Nhập mật khẩu cấp 2 để tải bản sao lưu:");
-        if (!pass) return;
 
-        try {
-            const token = localStorage.getItem("hitrang_token");
-            const apiUrl = import.meta.env.VITE_API_URL || "/api";
-            const response = await fetch(
-                `${apiUrl}/admin/backup?passkey=${encodeURIComponent(pass)}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                },
-            );
-            if (!response.ok) {
-                if (response.status === 403) {
-                    throw new Error("Mật khẩu cấp 2 không chính xác!");
-                }
-                throw new Error("Không thể tải file backup");
-            }
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `hitrang_backup_${new Date().toISOString().slice(0, 10)}.zip`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        } catch (err: any) {
-            alert("Lỗi khi tải file backup: " + err.message);
-        }
-    };
-
-    const handleUploadRestore = async (
-        e: React.ChangeEvent<HTMLInputElement>,
-    ) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        const file = files[0];
-        if (
-            !window.confirm(
-                `Bạn có chắc chắn muốn phục hồi cơ sở dữ liệu từ file "${file.name}" không?\nHÀNH ĐỘNG NÀY SẼ XÓA TOÀN BỘ dữ liệu hiện tại trên database mới và thay thế bằng dữ liệu trong file backup!`,
-            )
-        ) {
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("backup_file", file);
-
-        try {
-            const token = localStorage.getItem("hitrang_token");
-            const apiUrl = import.meta.env.VITE_API_URL || "/api";
-            const response = await fetch(`${apiUrl}/admin/restore`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            });
-            const data = await response.json();
-            if (!response.ok)
-                throw new Error(data.error || "Lỗi khôi phục dữ liệu");
-            alert("Phục hồi dữ liệu thành công!");
-            fetchProfiles();
-        } catch (err: any) {
-            alert("Lỗi khi khôi phục dữ liệu: " + err.message);
-        }
-    };
 
     if (!isAuthenticated) {
         return (
@@ -570,27 +505,28 @@ export default function AdminPanel({
                                     </button>
                                 )}
 
-                                {matchSetting(["sao lưu dữ liệu", "sao lưu", "backup", "tải bản sao lưu"]) && (
+                                {matchSetting([
+                                    "sao lưu & phục hồi",
+                                    "sao lưu dữ liệu",
+                                    "sao lưu",
+                                    "phục hồi",
+                                    "backup",
+                                    "restore",
+                                    "dữ liệu",
+                                ]) && (
                                     <button
-                                        onClick={handleDownloadBackup}
-                                        className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left"
+                                        onClick={() =>
+                                            handleTabClick("backups")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "backups"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
                                     >
-                                        <Download className="w-4 h-4 shrink-0 text-[#70757A]" />
-                                        <span>Tải bản sao lưu (Backup)</span>
+                                        <Database className="w-4 h-4 shrink-0" />
+                                        <span>Quản lý sao lưu & Phục hồi</span>
                                     </button>
-                                )}
-
-                                {matchSetting(["phục hồi dữ liệu", "phục hồi", "restore", "khôi phục"]) && (
-                                    <label className="w-full flex items-center gap-3 py-2.5 text-xs text-[#70757A] hover:text-slate-850 hover:bg-slate-50/50 font-medium pl-[24px] pr-6 transition-all cursor-pointer text-left">
-                                        <Upload className="w-4 h-4 shrink-0 text-[#70757A]" />
-                                        <span>Phục hồi dữ liệu (Restore)</span>
-                                        <input
-                                            type="file"
-                                            accept=".zip"
-                                            onChange={handleUploadRestore}
-                                            className="hidden"
-                                        />
-                                    </label>
                                 )}
                             </div>
                         )}
@@ -687,6 +623,8 @@ export default function AdminPanel({
                                 quizzes={quizzes}
                             />
                         )}
+
+                        {activeTab === "backups" && <AdminBackupTab />}
                     </>
                 )}
             </section>

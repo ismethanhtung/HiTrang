@@ -661,3 +661,92 @@ export async function deleteAdminNotification(id: string): Promise<{ success: bo
   });
 }
 
+// ----------------------------------------------------
+// BACKUP & RESTORE MANAGEMENT
+// ----------------------------------------------------
+
+export interface BackupSnapshot {
+  id: string;
+  filename: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  createdAt: string;
+  type: 'auto' | 'manual';
+  checksumSha256: string;
+  totalUsers: number;
+  totalQuizzes: number;
+  totalSubmissions: number;
+  totalBugReports: number;
+  isValid: boolean;
+}
+
+export interface BackupListResponse {
+  backups: BackupSnapshot[];
+  totalCount: number;
+  maxLimit: number;
+  totalSizeBytes: number;
+  totalSizeFormatted: string;
+  autoInterval: string;
+}
+
+export async function getBackupList(): Promise<BackupListResponse> {
+  return await apiRequest<BackupListResponse>('/admin/backups', {
+    method: 'GET',
+  });
+}
+
+export async function createManualBackup(): Promise<{ message: string; backup: BackupSnapshot }> {
+  return await apiRequest<{ message: string; backup: BackupSnapshot }>('/admin/backups/create', {
+    method: 'POST',
+  });
+}
+
+export async function downloadBackupFile(filename: string, passkey: string): Promise<Blob> {
+  const token = getToken();
+  const apiUrl = getApiUrl();
+  const res = await fetch(`${apiUrl}/admin/backups/${encodeURIComponent(filename)}/download?passkey=${encodeURIComponent(passkey)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Không thể tải file sao lưu' }));
+    throw new Error(err.error || 'Mật khẩu cấp 2 không chính xác hoặc file không tồn tại');
+  }
+  return await res.blob();
+}
+
+export async function deleteBackupFile(filename: string, passkey: string): Promise<{ message: string }> {
+  return await apiRequest<{ message: string }>(`/admin/backups/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ passkey }),
+  });
+}
+
+export async function restoreBackupFile(filename: string, passkey: string): Promise<{ message: string; metadata?: any }> {
+  return await apiRequest<{ message: string; metadata?: any }>(`/admin/backups/${encodeURIComponent(filename)}/restore`, {
+    method: 'POST',
+    body: JSON.stringify({ passkey }),
+  });
+}
+
+export async function uploadAndRestoreBackup(file: File, passkey: string): Promise<{ message: string; metadata?: any }> {
+  const token = getToken();
+  const apiUrl = getApiUrl();
+  const formData = new FormData();
+  formData.append('backup_file', file);
+  formData.append('passkey', passkey);
+
+  const res = await fetch(`${apiUrl}/admin/backups/upload-restore`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Không thể phục hồi từ file tải lên' }));
+    throw new Error(err.error || 'Phục hồi dữ liệu thất bại');
+  }
+
+  return await res.json();
+}
+
+

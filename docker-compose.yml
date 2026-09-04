@@ -40,8 +40,10 @@ services:
       - PORT=8080
       - VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+      - BACKUP_DIR=/app/backups
     volumes:
       - ./backup:/app/backup
+      - ./backups:/app/backups
       - ./uploads:/app/uploads
     depends_on:
       db:

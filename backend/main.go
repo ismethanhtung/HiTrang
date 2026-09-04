@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.77"
+const AppVersion = "1.0.78"
 
 func main() {
 	// 1. Configuration
@@ -113,11 +113,18 @@ func main() {
 	// Seed Schedule
 	SeedScheduleIfEmpty(db)
 
-	// 4. Auto Restore if Empty Database
-	AutoRestoreIfEmpty(db, "/app/backup")
+	backupDir := os.Getenv("BACKUP_DIR")
+	if backupDir == "" {
+		backupDir = "./backups"
+	}
+	_ = os.MkdirAll(backupDir, 0755)
 
-	// 5. Start background worker for expired attempts
+	// 4. Auto Restore if Empty Database
+	AutoRestoreIfEmpty(db, backupDir)
+
+	// 5. Start background worker for expired attempts & auto-backups
 	StartExpiredAttemptsWorker(db, 10*time.Second)
+	StartAutoBackupWorker(db, backupDir, 1*time.Hour)
 
 	// 6. Initialize Router
 	gin.SetMode(gin.ReleaseMode)
@@ -246,8 +253,13 @@ func main() {
 			// Schedule & Settings
 			protected.PUT("/admin/schedule", HandleUpdateSchedule(db))
 
-			// Backups
-			protected.GET("/admin/backup", HandleDownloadBackup(db))
+			// Backups & Restores
+			protected.GET("/admin/backups", HandleGetBackupList(backupDir))
+			protected.POST("/admin/backups/create", HandleCreateManualBackup(db, backupDir))
+			protected.GET("/admin/backups/:filename/download", HandleDownloadBackupFile(backupDir))
+			protected.DELETE("/admin/backups/:filename", HandleDeleteBackupFile(backupDir))
+			protected.POST("/admin/backups/:filename/restore", HandleRestoreBackupFile(db, backupDir))
+			protected.POST("/admin/backups/upload-restore", HandleUploadRestore(db))
 			protected.POST("/admin/restore", HandleUploadRestore(db))
 		}
 	}
