@@ -24,9 +24,9 @@ export default function Footer({
     const [backendVersion, setBackendVersion] = useState("1.0.77");
     const [realPing, setRealPing] = useState<number | null>(null);
     const [stats, setStats] = useState({
-        todayVisits: 1 + new Date().getHours() * 2,
-        totalVisits: 321,
-        onlineCount: 4,
+        todayVisits: 1,
+        totalVisits: 1,
+        onlineCount: 1,
         totalSubmissions: 0,
     });
 
@@ -49,12 +49,11 @@ export default function Footer({
                 const end = performance.now();
                 setRealPing(Math.round(end - start));
                 if (data) {
-                    const currentHourBonus = new Date().getHours() * 2;
                     setStats({
-                        todayVisits: (data.todayVisits || 1) + currentHourBonus,
-                        totalVisits: (data.totalVisits || 1) + 320,
-                        onlineCount: (data.onlineCount || 1) + 2,
-                        totalSubmissions: data.totalSubmissions || 0,
+                        todayVisits: data.todayVisits ?? 1,
+                        totalVisits: data.totalVisits ?? 1,
+                        onlineCount: data.onlineCount ?? 1,
+                        totalSubmissions: data.totalSubmissions ?? 0,
                     });
                     if (data.version) {
                         setBackendVersion(data.version);
@@ -301,28 +300,28 @@ export default function Footer({
                             <div className="flex items-center gap-1.5">
                                 <span>Đang trực tuyến:</span>
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                                <span className="font-mono text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                <span className=" text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                                     {stats.onlineCount}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
                                 <span>Truy cập hôm nay:</span>
-                                <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                                     {stats.todayVisits.toLocaleString("vi-VN")}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
                                 <span>Tổng lượt truy cập:</span>
-                                <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                                     {stats.totalVisits.toLocaleString("vi-VN")}
                                 </span>
                             </div>
 
                             <div className="flex items-center gap-1.5">
                                 <span>Tổng lượt làm bài:</span>
-                                <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
                                     {stats.totalSubmissions.toLocaleString(
                                         "vi-VN",
                                     )}
@@ -331,7 +330,7 @@ export default function Footer({
 
                             <div className="flex items-center gap-1.5">
                                 <span>Tốc độ phản hồi:</span>
-                                <span className="font-mono text-[11px] font-semibold flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                                <span className=" text-[11px] font-semibold flex items-center gap-1 text-slate-700 dark:text-slate-300">
                                     <span
                                         className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                             displayPing < 300
@@ -347,7 +346,7 @@ export default function Footer({
 
                             <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500">
                                 <span>Ver:</span>
-                                <span className="font-mono text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                                <span className=" text-[10px] font-semibold text-slate-600 dark:text-slate-400">
                                     v{FRONTEND_VERSION} (Core {backendVersion})
                                 </span>
                             </div>
