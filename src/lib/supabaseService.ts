@@ -427,6 +427,9 @@ export interface BugReport {
   createdAt: string;
   username: string | null;
   userRole: string | null;
+  avatarUrl?: string | null;
+  grade?: string | null;
+  email?: string | null;
 }
 
 export async function submitBugReport(reporterName: string, description: string): Promise<void> {
@@ -443,6 +446,12 @@ export async function getBugReports(): Promise<BugReport[]> {
     console.error('Lỗi khi tải danh sách báo cáo lỗi:', err);
     return [];
   }
+}
+
+export async function deleteBugReport(id: string): Promise<void> {
+  await apiRequest(`/admin/bugs/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 export interface ScheduleSlot {

@@ -170,7 +170,10 @@ export default function AdminStatsStudentsTab({
             return false;
 
         // Filter by search query
-        return matchesSearch([u.name, u.username, u.email || ""], studentSearchQuery);
+        return matchesSearch(
+            [u.name, u.username, u.email || ""],
+            studentSearchQuery,
+        );
     });
 
     // Handle lazy load infinite scrolling on list scroll
@@ -320,12 +323,22 @@ export default function AdminStatsStudentsTab({
                                                         : `Lớp ${student.grade || "10"}`}{" "}
                                                     • @{student.username}
                                                 </span>
-                                                {isUserGoogleAccount(student) && (
-                                                    <span title={student.email ? `Đăng nhập Google: ${student.email}` : "Tài khoản Google"}>
+                                                {isUserGoogleAccount(
+                                                    student,
+                                                ) && (
+                                                    <span
+                                                        title={
+                                                            student.email
+                                                                ? `Đăng nhập Google: ${student.email}`
+                                                                : "Tài khoản Google"
+                                                        }
+                                                    >
                                                         <GoogleIcon className="w-2.5 h-2.5 inline-block" />
                                                     </span>
                                                 )}
-                                                <span>• {studentSubs.length} bài</span>
+                                                <span>
+                                                    • {studentSubs.length} bài
+                                                </span>
                                             </div>
                                         </div>
                                     </button>
@@ -424,7 +437,9 @@ export default function AdminStatsStudentsTab({
                                                         : `Lớp ${student.grade || "10"}`}{" "}
                                                     • @{student.username}
                                                 </span>
-                                                {isUserGoogleAccount(student) && (
+                                                {isUserGoogleAccount(
+                                                    student,
+                                                ) && (
                                                     <span
                                                         className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs"
                                                         title={
@@ -606,7 +621,10 @@ export default function AdminStatsStudentsTab({
                                                         {completedCount ===
                                                         0 ? (
                                                             <div className="py-8 flex items-center justify-center text-slate-400 text-xs italic gap-1">
-                                                                <span>Chưa có lịch sử điểm số</span>
+                                                                <span>
+                                                                    Chưa có lịch
+                                                                    sử điểm số
+                                                                </span>
                                                                 <img
                                                                     src="/icons/sakura.png"
                                                                     alt=""
@@ -1194,7 +1212,8 @@ export default function AdminStatsStudentsTab({
                                                                 Chưa xếp hạng
                                                             </span>
                                                             <span className="text-[9px] text-slate-400 leading-tight block">
-                                                                Làm bài thi để bắt đầu!
+                                                                Làm bài thi để
+                                                                bắt đầu!
                                                             </span>
                                                         </div>
                                                     </div>
@@ -1419,7 +1438,10 @@ export default function AdminStatsStudentsTab({
                                             {uncompletedQuizzes.length ===
                                                 0 && (
                                                 <p className="text-xs text-slate-400 italic py-4 flex items-center gap-1">
-                                                    <span>Đã hoàn thành xuất sắc tất cả đề thi!</span>
+                                                    <span>
+                                                        Đã hoàn thành xuất sắc
+                                                        tất cả đề thi!
+                                                    </span>
                                                     <img
                                                         src="/icons/sakura.png"
                                                         alt=""

@@ -170,15 +170,18 @@ export default function AdminPanel({
         handleTabClick("stats-students");
     };
 
-    // Fetch profiles and version on mount if already authenticated
+    // Fetch profiles, bugs and version on mount or tab change if already authenticated
     React.useEffect(() => {
         if (isAuthenticated) {
             fetchProfiles();
+            if (activeTab === "bugs") {
+                fetchBugs();
+            }
             getBackendVersion()
                 .then(setBackendVersion)
                 .catch(() => setBackendVersion("unknown"));
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, activeTab]);
 
     const [adminUser] = useState<User | null>(() => {
         const saved = localStorage.getItem("hvt_user");
@@ -650,6 +653,8 @@ export default function AdminPanel({
                             <AdminBugsTab
                                 bugReports={bugReports}
                                 loading={loadingBugs}
+                                onRefreshBugs={fetchBugs}
+                                onSelectUserForStats={handleSelectUserForStats}
                             />
                         )}
 

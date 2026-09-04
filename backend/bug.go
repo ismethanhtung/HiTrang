@@ -61,12 +61,16 @@ func HandleGetBugReports(db *gorm.DB) gin.HandlerFunc {
 			CreatedAt    time.Time `json:"createdAt"`
 			Username     *string   `json:"username"`
 			UserRole     *string   `json:"userRole"`
+			AvatarURL    *string   `json:"avatarUrl"`
+			Grade        *string   `json:"grade"`
+			Email        *string   `json:"email"`
 		}
 
 		var reports []BugReportItem
 		err := db.Model(&BugReport{}).
-			Select("bug_reports.*, profiles.username as username, profiles.role as user_role").
+			Select("bug_reports.*, profiles.username as username, profiles.role as user_role, profiles.avatar_url as avatar_url, profiles.grade as grade, users.email as email").
 			Joins("left join profiles on profiles.id = bug_reports.user_id").
+			Joins("left join users on users.id = bug_reports.user_id").
 			Order("bug_reports.created_at desc").
 			Scan(&reports).Error
 
@@ -78,3 +82,27 @@ func HandleGetBugReports(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, reports)
 	}
 }
+
+func HandleDeleteBugReport(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		if roleVal.(string) != "teacher" && roleVal.(string) != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Chỉ quản trị viên mới có quyền xóa báo cáo lỗi"})
+			return
+		}
+
+		bugID := c.Param("id")
+		if bugID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Thiếu mã báo cáo lỗi cần xóa"})
+			return
+		}
+
+		if err := db.Where("id = ?", bugID).Delete(&BugReport{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi xóa báo cáo lỗi: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Đã xóa báo cáo lỗi thành công!"})
+	}
+}
+

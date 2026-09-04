@@ -4409,7 +4409,7 @@ export default function StudentDashboard({
                                                                             <img
                                                                                 src="/icons/ghost.png"
                                                                                 alt=""
-                                                                                className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
+                                                                                className="w-5 h-5 object-contain opacity-40 dark:opacity-60 select-none"
                                                                             />
                                                                             <div className="space-y-0.5">
                                                                                 <span className="text-xs italic text-slate-450 dark:text-slate-400 block font-medium">

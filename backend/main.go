@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.81"
+const AppVersion = "1.0.82"
 
 func main() {
 	// 1. Configuration
@@ -252,6 +252,7 @@ func main() {
 			// Bug Reports
 			protected.POST("/bugs", HandleCreateBugReport(db))
 			protected.GET("/admin/bugs", HandleGetBugReports(db))
+			protected.DELETE("/admin/bugs/:id", HandleDeleteBugReport(db))
 
 			// Schedule & Settings
 			protected.PUT("/admin/schedule", HandleUpdateSchedule(db))
