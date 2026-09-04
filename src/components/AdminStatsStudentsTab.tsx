@@ -3,6 +3,7 @@ import { User, Quiz, Submission } from "../types";
 import { Search, Users, Clock } from "lucide-react";
 import { getOverallLeaderboard } from "../lib/supabaseService";
 import { matchesSearch } from "../lib/searchUtils";
+import { GoogleIcon, isUserGoogleAccount } from "./GoogleIcon";
 
 interface AdminStatsStudentsTabProps {
     quizzes: Quiz[];
@@ -169,7 +170,7 @@ export default function AdminStatsStudentsTab({
             return false;
 
         // Filter by search query
-        return matchesSearch([u.name, u.username], studentSearchQuery);
+        return matchesSearch([u.name, u.username, u.email || ""], studentSearchQuery);
     });
 
     // Handle lazy load infinite scrolling on list scroll
@@ -312,12 +313,19 @@ export default function AdminStatsStudentsTab({
                                             >
                                                 {student.name}
                                             </div>
-                                            <div className="text-[10px] truncate text-slate-400">
-                                                {student.role === "admin"
-                                                    ? "Admin"
-                                                    : `Lớp ${student.grade || "10"}`}{" "}
-                                                • @{student.username} •{" "}
-                                                {studentSubs.length} bài
+                                            <div className="text-[10px] truncate text-slate-400 flex items-center gap-1">
+                                                <span>
+                                                    {student.role === "admin"
+                                                        ? "Admin"
+                                                        : `Lớp ${student.grade || "10"}`}{" "}
+                                                    • @{student.username}
+                                                </span>
+                                                {isUserGoogleAccount(student) && (
+                                                    <span title={student.email ? `Đăng nhập Google: ${student.email}` : "Tài khoản Google"}>
+                                                        <GoogleIcon className="w-2.5 h-2.5 inline-block" />
+                                                    </span>
+                                                )}
+                                                <span>• {studentSubs.length} bài</span>
                                             </div>
                                         </div>
                                     </button>
@@ -409,12 +417,29 @@ export default function AdminStatsStudentsTab({
                                             <h3 className="text-base font-black text-slate-900 dark:text-slate-100 truncate">
                                                 {student.name}
                                             </h3>
-                                            <p className="text-[11px] text-slate-400 font-medium truncate">
-                                                {student.role === "admin"
-                                                    ? "Admin"
-                                                    : `Lớp ${student.grade || "10"}`}{" "}
-                                                • @{student.username}
-                                            </p>
+                                            <div className="text-[11px] text-slate-400 font-medium truncate flex items-center gap-1.5">
+                                                <span>
+                                                    {student.role === "admin"
+                                                        ? "Admin"
+                                                        : `Lớp ${student.grade || "10"}`}{" "}
+                                                    • @{student.username}
+                                                </span>
+                                                {isUserGoogleAccount(student) && (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs"
+                                                        title={
+                                                            student.email
+                                                                ? `Đăng nhập qua Google (${student.email})`
+                                                                : "Đăng nhập bằng tài khoản Google"
+                                                        }
+                                                    >
+                                                        <GoogleIcon className="w-2.5 h-2.5 flex-shrink-0" />
+                                                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">
+                                                            Google
+                                                        </span>
+                                                    </span>
+                                                )}
+                                            </div>
                                             {student.plan && (
                                                 <span
                                                     className={`inline-block text-[8px] font-bold px-2 py-0.5 rounded-full mt-1 border uppercase tracking-wider ${

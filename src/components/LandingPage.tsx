@@ -60,7 +60,7 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                     >
                         {/* Giant Serif Title with Cycling Words & Dot */}
                         <div className="h-16 sm:h-24 lg:h-28 flex items-center relative overflow-visible">
-                            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-[84px] font-serif italic text-slate-900 dark:text-slate-100 tracking-tight leading-tight whitespace-nowrap">
+                            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-[76px] font-serif italic text-slate-900 dark:text-slate-100 tracking-tight leading-tight whitespace-nowrap">
                                 <AnimatePresence mode="popLayout">
                                     <motion.span
                                         key={wordIdx % cyclingWords.length}

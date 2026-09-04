@@ -346,8 +346,25 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		var profiles []Profile
-		if err := db.Order("created_at desc").Find(&profiles).Error; err != nil {
+		type UserRow struct {
+			ID           string     `json:"id"`
+			Name         string     `json:"name"`
+			Username     string     `json:"username"`
+			Email        *string    `json:"email"`
+			Role         string     `json:"role"`
+			Plan         string     `json:"plan"`
+			Grade        *string    `json:"grade"`
+			AvatarURL    *string    `json:"avatarUrl"`
+			CreatedAt    time.Time  `json:"created_at"`
+			LastActiveAt *time.Time `json:"lastActiveAt"`
+		}
+
+		var userRows []UserRow
+		if err := db.Table("profiles").
+			Select("profiles.id, profiles.name, profiles.username, users.email, profiles.role, profiles.plan, profiles.grade, profiles.avatar_url, profiles.created_at, profiles.last_active_at").
+			Joins("LEFT JOIN users ON users.id = profiles.id").
+			Order("profiles.created_at desc").
+			Scan(&userRows).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể lấy danh sách người dùng"})
 			return
 		}
@@ -358,12 +375,15 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			StartedAt       string `json:"startedAt"`
 			ExpiresAt       string `json:"expiresAt"`
 			DurationMinutes int    `json:"durationMinutes"`
+			AttemptNumber   int    `json:"attemptNumber"`
 		}
 
 		type UserResponse struct {
 			ID           string          `json:"id"`
 			Name         string          `json:"name"`
 			Username     string          `json:"username"`
+			Email        *string         `json:"email,omitempty"`
+			IsGoogle     bool            `json:"isGoogle"`
 			Role         string          `json:"role"`
 			Plan         string          `json:"plan"`
 			Grade        *string         `json:"grade"`
@@ -390,25 +410,53 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			Order("exam_attempts.started_at desc").
 			Scan(&activeAttempts)
 
+		// Count previous submissions for these active attempts
+		submissionCountMap := make(map[string]int)
+		if len(activeAttempts) > 0 {
+			var counts []struct {
+				StudentID string `gorm:"column:student_id"`
+				QuizID    string `gorm:"column:quiz_id"`
+				Count     int    `gorm:"column:count"`
+			}
+			_ = db.Table("submissions").
+				Select("student_id, quiz_id, COUNT(*) as count").
+				Group("student_id, quiz_id").
+				Scan(&counts)
+			for _, c := range counts {
+				submissionCountMap[c.StudentID+"_"+c.QuizID] = c.Count
+			}
+		}
+
 		activeMap := make(map[string]*ActiveExamInfo)
 		for _, a := range activeAttempts {
 			if _, exists := activeMap[a.UserID]; !exists {
+				attemptNum := submissionCountMap[a.UserID+"_"+a.QuizID] + 1
 				activeMap[a.UserID] = &ActiveExamInfo{
 					QuizID:          a.QuizID,
 					QuizTitle:       a.QuizTitle,
 					StartedAt:       a.StartedAt.Format(time.RFC3339),
 					ExpiresAt:       a.ExpiresAt.Format(time.RFC3339),
 					DurationMinutes: a.DurationMinutes,
+					AttemptNumber:   attemptNum,
 				}
 			}
 		}
 
-		resp := make([]UserResponse, len(profiles))
-		for i, p := range profiles {
+		resp := make([]UserResponse, len(userRows))
+		for i, p := range userRows {
+			isGoogle := false
+			if p.Email != nil && strings.TrimSpace(*p.Email) != "" {
+				isGoogle = true
+			} else if p.AvatarURL != nil && strings.Contains(*p.AvatarURL, "googleusercontent.com") {
+				isGoogle = true
+			}
+
 			resp[i] = UserResponse{
 				ID:           p.ID,
 				Name:         p.Name,
 				Username:     p.Username,
+				Email:        p.Email,
+				IsGoogle:     isGoogle,
 				Role:         p.Role,
 				Plan:         p.Plan,
 				Grade:        p.Grade,

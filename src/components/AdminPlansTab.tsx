@@ -27,6 +27,7 @@ import {
     ArrowDown,
     BarChart3,
 } from "lucide-react";
+import { GoogleIcon, isUserGoogleAccount } from "./GoogleIcon";
 
 interface AdminPlansTabProps {
     userProfiles: User[];
@@ -157,7 +158,7 @@ export default function AdminPlansTab({
     // Filtering logic
     const filteredUsers = userProfiles.filter((u) => {
         const matchesSearch = matchesSearchFn(
-            [u.name, u.username],
+            [u.name, u.username, u.email || ""],
             searchQuery,
         );
         const matchesRole = filterRole === "all" || u.role === filterRole;
@@ -366,21 +367,67 @@ export default function AdminPlansTab({
 
     const formatLastActive = (prof: User) => {
         if (prof.activeExam) {
+            const now = Date.now();
+            const startMs = prof.activeExam.startedAt
+                ? new Date(prof.activeExam.startedAt).getTime()
+                : now;
+            const elapsedMins = Math.max(
+                0,
+                Math.floor((now - startMs) / (1000 * 60)),
+            );
+            const durationMins = prof.activeExam.durationMinutes || 0;
+            const attemptNum = prof.activeExam.attemptNumber || 1;
+            const progressPercent =
+                durationMins > 0
+                    ? Math.min(
+                          100,
+                          Math.round((elapsedMins / durationMins) * 100),
+                      )
+                    : 0;
+
+            const tooltipTitle = `Đề thi: ${prof.activeExam.quizTitle}\nLần thi: Lần ${attemptNum}\nThời gian: Đã làm ${elapsedMins} phút / ${durationMins} phút`;
+
             return (
-                <div
-                    className="flex flex-col gap-0.5 max-w-[200px]"
-                    title={`Đang thi: ${prof.activeExam.quizTitle} (${prof.activeExam.durationMinutes} phút)`}
-                >
-                    <span className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border border-amber-200/70 dark:border-amber-700/50 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit shadow-2xs">
-                        <span className="relative flex h-2 w-2">
+                <div className="relative group/testing inline-block">
+                    <span
+                        title={tooltipTitle}
+                        className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-700/60 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit shadow-2xs cursor-help select-none transition-all hover:border-amber-300 dark:hover:border-amber-600"
+                    >
+                        <span className="relative flex h-2 w-2 flex-shrink-0">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                         </span>
                         <span className="truncate">
-                            {prof.activeExam.durationMinutes}p -{" "}
-                            {prof.activeExam.quizTitle}
+                            testing {elapsedMins} / {durationMins}p
                         </span>
                     </span>
+
+                    {/* Popover Card on Hover */}
+                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover/testing:flex flex-col gap-1.5 z-50 w-64 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 text-xs pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                        <div className="flex items-start justify-between gap-2">
+                            <span className="font-bold text-slate-800 dark:text-slate-100 text-[11px] leading-snug line-clamp-2">
+                                {prof.activeExam.quizTitle}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold whitespace-nowrap flex-shrink-0">
+                                Lần {attemptNum}
+                            </span>
+                        </div>
+                        <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                            <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                                <span>Thời gian làm bài:</span>
+                                <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                    {elapsedMins} / {durationMins} phút (
+                                    {progressPercent}%)
+                                </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-amber-500 rounded-full transition-all"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -670,17 +717,33 @@ export default function AdminPlansTab({
                                             </span>
                                         </button>
                                     </td>
-                                    <td className="py-3 px-4 text-slate-400">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                onSelectUserForStats?.(prof.id)
-                                            }
-                                            className="text-left text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 hover:underline cursor-pointer transition-colors"
-                                            title="Nhấn để xem thống kê học sinh này"
-                                        >
-                                            @{prof.username}
-                                        </button>
+                                    <td className="py-3 px-4">
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    onSelectUserForStats?.(
+                                                        prof.id,
+                                                    )
+                                                }
+                                                className="text-left text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 hover:underline cursor-pointer transition-colors"
+                                                title="Nhấn để xem thống kê học sinh này"
+                                            >
+                                                @{prof.username}
+                                            </button>
+                                            {isUserGoogleAccount(prof) && (
+                                                <span
+                                                    className="inline-flex items-center gap-1 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-medium"
+                                                    title={
+                                                        prof.email
+                                                            ? `Đăng nhập bằng Google (${prof.email})`
+                                                            : "Đăng nhập bằng Google"
+                                                    }
+                                                >
+                                                    <GoogleIcon className="w-3 h-3 flex-shrink-0" />
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="py-3 px-4">
                                         <select

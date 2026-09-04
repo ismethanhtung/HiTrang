@@ -36,6 +36,8 @@ export interface User {
   id: string;
   name: string;
   username: string;
+  email?: string;
+  isGoogle?: boolean;
   role: 'admin' | 'student';
   plan?: UserPlan;
   grade?: string;
@@ -52,6 +54,7 @@ export interface User {
     startedAt: string;
     expiresAt: string;
     durationMinutes: number;
+    attemptNumber?: number;
   } | null;
 }
 

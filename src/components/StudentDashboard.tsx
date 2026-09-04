@@ -2351,7 +2351,7 @@ export default function StudentDashboard({
                                     style={{ fontSize: `${fontSize}px` }}
                                 >
                                     {/* Question Box Card */}
-                                    <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-4 sm:p-6 rounded-lg sm:rounded-xl space-y-4">
+                                    <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-4 sm:p-6   space-y-4">
                                         {activeQuiz.questions[
                                             currentQuestionIdx
                                         ].sectionTitle && (
@@ -2609,7 +2609,7 @@ export default function StudentDashboard({
                                                                 )
                                                             }
                                                             placeholder="Ví dụ: 150, 24, 2,05, -3..."
-                                                            className="w-full px-4 py-3 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900 rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                                                            className="w-full px-4 py-2.5 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900  focus:outline-none transition-all placeholder:text-slate-400"
                                                             style={{
                                                                 fontSize: `${fontSize}px`,
                                                             }}
@@ -4413,10 +4413,17 @@ export default function StudentDashboard({
                                                                             />
                                                                             <div className="space-y-0.5">
                                                                                 <span className="text-xs italic text-slate-450 dark:text-slate-400 block font-medium">
-                                                                                    Chưa xếp hạng
+                                                                                    Chưa
+                                                                                    xếp
+                                                                                    hạng
                                                                                 </span>
                                                                                 <span className="text-[9px] text-slate-400 leading-tight block">
-                                                                                    Làm bài thi để bắt đầu!
+                                                                                    Làm
+                                                                                    bài
+                                                                                    thi
+                                                                                    để
+                                                                                    bắt
+                                                                                    đầu!
                                                                                 </span>
                                                                             </div>
                                                                         </div>
