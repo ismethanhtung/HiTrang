@@ -9,7 +9,6 @@ import {
     ExternalLink,
     Loader2,
     Check,
-    Ghost,
     ChevronRight,
 } from "lucide-react";
 import { AppNotification } from "../types";
@@ -226,7 +225,11 @@ export default function NotificationBell({
                         ) : notifications.length === 0 ? (
                             <div className="py-12 text-center space-y-2">
                                 <div className="w-10 h-10 rounded-2xl mx-auto flex items-center justify-center text-text-tertiary">
-                                    <Ghost className="w-6 h-6 text-slate-400 dark:text-slate-500 stroke-[1.5]" />
+                                    <img
+                                        src="/icons/ghost.png"
+                                        alt=""
+                                        className="w-6 h-6 object-contain opacity-50 dark:opacity-60 select-none"
+                                    />
                                 </div>
                                 <p className="text-xs text-text-secondary font-medium">
                                     Chưa có thông báo nào.

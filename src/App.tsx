@@ -469,7 +469,7 @@ export default function App() {
             className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} ${!user ? "bg-[#FAF6EE] dark:bg-[#1A2536]" : "bg-[#F9F8F6] dark:bg-bg-base"} text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
-            {!isTakingQuiz && (user || currentPath !== "/") && (
+            {!isTakingQuiz && (user ? true : routeInfo.route === "schedule") && (
                 <Topbar
                     user={user}
                     selectedGrade={selectedGrade}

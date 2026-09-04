@@ -31,7 +31,7 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                     <img
                         src="/logos/lotus.gif"
                         alt="HiTrang Logo"
-                        className="w-6 h-6 sm:w-6.5 sm:h-6.5 object-contain"
+                        className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
                     />
                     <span className="font-calligraphy text-xl sm:text-2xl text-brand-600 dark:text-brand-300 font-semibold tracking-tight leading-none">
                         HiTrang
@@ -120,7 +120,7 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
                         gì?&rdquo;
                     </p>
                     <p className="text-xs sm:text-sm text-slate-400 dark:text-slate-500 font-medium font-mono">
-                        — Lớp Toán Cô Trang · Tư duy · Tốc độ · Kiến thức
+                        Toán Cô Trang · Tư duy · Tốc độ · Kiến thức
                     </p>
                 </div>
             </section>

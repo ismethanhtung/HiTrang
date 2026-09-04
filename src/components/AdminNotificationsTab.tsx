@@ -24,7 +24,6 @@ import {
     User as UserIcon,
     Users,
     ChevronDown,
-    Ghost,
     ArrowRight,
     Eye,
 } from "lucide-react";
@@ -832,7 +831,11 @@ export default function AdminNotificationsTab({
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="py-12 text-center space-y-2 flex flex-col items-center justify-center">
-                        <Ghost className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                        <img
+                            src="/icons/ghost.png"
+                            alt=""
+                            className="w-8 h-8 object-contain opacity-40 dark:opacity-60 select-none"
+                        />
                         <p className="text-xs text-text-secondary font-medium">
                             Chưa có thông báo nào được gửi.
                         </p>

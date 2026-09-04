@@ -540,43 +540,77 @@ func SaveBackupSnapshot(db *gorm.DB, backupDir string, backupType string) (*Back
 	return info, nil
 }
 
-// StartAutoBackupWorker runs a background goroutine every interval (e.g. 1 hour)
+// StartAutoBackupWorker runs a background worker checking every 1 minute if a backup is due
 func StartAutoBackupWorker(db *gorm.DB, backupDir string, interval time.Duration) {
 	go func() {
 		log.Printf("Khởi chạy tiến trình Auto-Backup định kỳ mỗi %v (Lưu tối đa %d bản tại %s)", interval, MaxBackupFiles, backupDir)
 
-		// Wait 10 seconds before initial snapshot check
-		time.Sleep(10 * time.Second)
+		isBackingUp := false
 
-		// Check if any backup exists in backupDir. If none, create initial auto backup snapshot.
-		if entries, err := os.ReadDir(backupDir); err == nil {
-			hasBackup := false
+		runCheck := func() {
+			if isBackingUp {
+				return
+			}
+			isBackingUp = true
+			defer func() { isBackingUp = false }()
+
+			if err := os.MkdirAll(backupDir, 0755); err != nil {
+				return
+			}
+
+			entries, err := os.ReadDir(backupDir)
+			if err != nil {
+				return
+			}
+
+			var newestBackupTime time.Time
 			for _, e := range entries {
-				if !e.IsDir() && strings.HasSuffix(e.Name(), ".zip") {
-					hasBackup = true
-					break
+				if e.IsDir() || !strings.HasSuffix(e.Name(), ".zip") {
+					continue
+				}
+				filePath := filepath.Join(backupDir, e.Name())
+				// Check metadata or file modification time
+				if info, err := InspectBackupFile(filePath); err == nil && info != nil {
+					if info.CreatedAt.After(newestBackupTime) {
+						newestBackupTime = info.CreatedAt
+					}
+				} else if fi, err := e.Info(); err == nil {
+					if fi.ModTime().After(newestBackupTime) {
+						newestBackupTime = fi.ModTime()
+					}
 				}
 			}
-			if !hasBackup {
-				log.Println("Chưa có bản sao lưu nào. Đang tạo bản sao lưu tự động ban đầu...")
-				if _, err := SaveBackupSnapshot(db, backupDir, "auto"); err != nil {
-					log.Printf("Lỗi tạo bản sao lưu ban đầu: %v", err)
+
+			// If no backup exists or last backup was created longer than interval ago -> trigger auto backup
+			if newestBackupTime.IsZero() || time.Since(newestBackupTime) >= interval {
+				if newestBackupTime.IsZero() {
+					log.Println("Chưa có bản sao lưu nào. Đang tiến hành tạo bản sao lưu tự động ban đầu...")
 				} else {
-					log.Println("Đã tạo bản sao lưu tự động ban đầu thành công!")
+					log.Printf("Bản sao lưu gần nhất (%s) đã qua %v (vượt mốc chu kỳ %v). Đang tiến hành sao lưu tự động bù...",
+						newestBackupTime.Format("15:04:05 02/01/2006"),
+						time.Since(newestBackupTime).Truncate(time.Second),
+						interval,
+					)
+				}
+
+				if _, err := SaveBackupSnapshot(db, backupDir, "auto"); err != nil {
+					log.Printf("Lỗi trong quá trình sao lưu tự động: %v", err)
+				} else {
+					log.Printf("Sao lưu dữ liệu tự động thành công vào lúc %s", time.Now().Format("15:04:05 02/01/2006"))
 				}
 			}
 		}
 
-		ticker := time.NewTicker(interval)
+		// Initial check after 5 seconds on startup
+		time.Sleep(5 * time.Second)
+		runCheck()
+
+		// Periodic check every 1 minute
+		ticker := time.NewTicker(1 * time.Minute)
 		defer ticker.Stop()
 
 		for range ticker.C {
-			log.Println("Đang thực hiện chu kỳ sao lưu dữ liệu tự động...")
-			if _, err := SaveBackupSnapshot(db, backupDir, "auto"); err != nil {
-				log.Printf("Lỗi trong quá trình sao lưu tự động: %v", err)
-			} else {
-				log.Printf("Sao lưu dữ liệu tự động thành công vào lúc %s", time.Now().Format("15:04:05 02/01/2006"))
-			}
+			runCheck()
 		}
 	}()
 }

@@ -28,7 +28,6 @@ import {
     RefreshCw,
     BookMarked,
     List,
-    Ghost,
 } from "lucide-react";
 
 interface GradeViewProps {
@@ -302,7 +301,11 @@ export default function GradeView({
                         </div>
                     ) : processedQuizzes.length === 0 ? (
                         <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
-                            <Ghost className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                            <img
+                                src="/icons/ghost.png"
+                                alt=""
+                                className="w-7 h-7 object-contain opacity-40 dark:opacity-60 select-none"
+                            />
                             <p className="text-xs font-medium inline-flex items-center justify-center gap-1.5 flex-wrap">
                                 <span>
                                     {rawGradeQuizzes.length === 0
@@ -325,11 +328,23 @@ export default function GradeView({
                             const bestSubmission = studentSubmissions
                                 .filter((s) => s.quizId === quiz.id)
                                 .sort((a, b) => {
-                                    if (b.score !== a.score) return b.score - a.score;
-                                    const timeA = a.timeSpent !== undefined && a.timeSpent !== null ? a.timeSpent : 999999;
-                                    const timeB = b.timeSpent !== undefined && b.timeSpent !== null ? b.timeSpent : 999999;
+                                    if (b.score !== a.score)
+                                        return b.score - a.score;
+                                    const timeA =
+                                        a.timeSpent !== undefined &&
+                                        a.timeSpent !== null
+                                            ? a.timeSpent
+                                            : 999999;
+                                    const timeB =
+                                        b.timeSpent !== undefined &&
+                                        b.timeSpent !== null
+                                            ? b.timeSpent
+                                            : 999999;
                                     if (timeA !== timeB) return timeA - timeB;
-                                    return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime();
+                                    return (
+                                        new Date(a.submittedAt).getTime() -
+                                        new Date(b.submittedAt).getTime()
+                                    );
                                 })[0];
 
                             // Count unique sections

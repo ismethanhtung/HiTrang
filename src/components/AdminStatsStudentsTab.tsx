@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { User, Quiz, Submission } from "../types";
-import { Search, Users, Clock, Ghost } from "lucide-react";
+import { Search, Users, Clock } from "lucide-react";
 import { getOverallLeaderboard } from "../lib/supabaseService";
 import { matchesSearch } from "../lib/searchUtils";
 
@@ -1142,7 +1142,11 @@ export default function AdminStatsStudentsTab({
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col items-center justify-center text-center py-1.5 space-y-1 font-sans">
-                                                        <Ghost className="w-6 h-6 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                                                        <img
+                                                            src="/icons/ghost.png"
+                                                            alt=""
+                                                            className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
+                                                        />
                                                         <div className="space-y-0.5">
                                                             <span className="text-xs italic text-slate-400 block font-medium">
                                                                 Chưa xếp hạng

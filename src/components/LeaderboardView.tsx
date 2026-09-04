@@ -14,7 +14,6 @@ import {
     PartyPopper,
     CheckCircle2,
     User as UserIcon,
-    Ghost,
 } from "lucide-react";
 import { User, Quiz, Submission, OverallLeaderboardEntry } from "../types";
 import {
@@ -490,7 +489,8 @@ export default function LeaderboardView({
                                             </span>
                                             {renderTrend(
                                                 podiumOrder[0].rankPosition,
-                                                podiumOrder[0].previousRankPosition,
+                                                podiumOrder[0]
+                                                    .previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
@@ -541,7 +541,8 @@ export default function LeaderboardView({
                                             </span>
                                             {renderTrend(
                                                 podiumOrder[1].rankPosition,
-                                                podiumOrder[1].previousRankPosition,
+                                                podiumOrder[1]
+                                                    .previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
@@ -593,7 +594,8 @@ export default function LeaderboardView({
                                             </span>
                                             {renderTrend(
                                                 podiumOrder[2].rankPosition,
-                                                podiumOrder[2].previousRankPosition,
+                                                podiumOrder[2]
+                                                    .previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
@@ -775,8 +777,14 @@ export default function LeaderboardView({
 
                     {filteredOverall.length === 0 && (
                         <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic flex flex-col items-center justify-center gap-2">
-                            <Ghost className="w-8 h-8 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
-                            <span>Chưa tìm thấy thông tin xếp hạng học sinh.</span>
+                            <img
+                                src="/icons/ghost.png"
+                                alt=""
+                                className="w-8 h-8 object-contain opacity-40 dark:opacity-60 select-none"
+                            />
+                            <span>
+                                Chưa tìm thấy thông tin xếp hạng học sinh.
+                            </span>
                         </div>
                     )}
                 </div>
@@ -879,7 +887,11 @@ export default function LeaderboardView({
                             </div>
                         ) : (
                             <div className="text-center py-4 space-y-2 flex flex-col items-center justify-center">
-                                <Ghost className="w-6 h-6 text-slate-300 dark:text-slate-600 stroke-[1.5]" />
+                                <img
+                                    src="/icons/ghost.png"
+                                    alt=""
+                                    className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
+                                />
                                 <p className="text-xs text-slate-400 italic">
                                     Bạn chưa được ghi nhận trên BXH khối{" "}
                                     {activeGrade}.
