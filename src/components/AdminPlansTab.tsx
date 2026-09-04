@@ -1141,9 +1141,6 @@ export default function AdminPlansTab({
                     <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-xl border border-border-primary/80 animate-in zoom-in-95 duration-200 font-sans">
                         <div className="flex items-center justify-between pb-3 border-b border-border-primary/60 mb-4">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                    <KeyRound className="w-4 h-4" />
-                                </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                                         Link Đặt Lại Mật Khẩu
