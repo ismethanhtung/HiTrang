@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.78"
+const AppVersion = "1.0.79"
 
 func main() {
 	// 1. Configuration
@@ -109,6 +109,9 @@ func main() {
 	if err := db.Exec("ALTER TABLE users MODIFY email VARCHAR(255) NULL").Error; err != nil {
 		log.Printf("Cảnh báo: Không thể MODIFY email: %v", err)
 	}
+
+	// Đảm bảo cột rank_date tồn tại trong user_overall_stats cho Daily Baseline Leaderboard
+	_ = db.Exec("ALTER TABLE user_overall_stats ADD COLUMN rank_date VARCHAR(10) DEFAULT ''")
 
 	// Seed Schedule
 	SeedScheduleIfEmpty(db)

@@ -110,6 +110,7 @@ type UserOverallStats struct {
 	TestsCompleted int       `json:"tests_completed" gorm:"default:0"`
 	CurrentRank    *int      `json:"current_rank"`
 	PreviousRank   *int      `json:"previous_rank"`
+	RankDate       string    `json:"rank_date" gorm:"column:rank_date;type:varchar(10);default:''"`
 	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 	Profile        Profile   `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }

@@ -263,6 +263,8 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 		}
 
 		// C. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
+		today := time.Now().Format("2006-01-02")
+
 		var statsWithGrade []struct {
 			UserID         string
 			Grade          string
@@ -270,10 +272,11 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			TestsCompleted int
 			CurrentRank    *int
 			PreviousRank   *int
+			RankDate       string
 		}
 
 		selectQuery := `
-			SELECT uos.user_id, COALESCE(p.grade, '') as grade, uos.total_exp, uos.tests_completed, uos.current_rank, uos.previous_rank
+			SELECT uos.user_id, COALESCE(p.grade, '') as grade, uos.total_exp, uos.tests_completed, uos.current_rank, uos.previous_rank, COALESCE(uos.rank_date, '') as rank_date
 			FROM user_overall_stats uos
 			JOIN profiles p ON p.id = uos.user_id
 			WHERE p.role = 'student'
@@ -311,17 +314,23 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 
 			newRank := rank
 			if row.CurrentRank == nil {
-				// Newly ranked student on leaderboard
-				if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ?, previous_rank = NULL WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
+				// Newly ranked student on leaderboard for the first time
+				if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ?, previous_rank = NULL, rank_date = ? WHERE user_id = ?", newRank, today, row.UserID).Error; err != nil {
 					return err
 				}
-			} else if *row.CurrentRank != newRank {
-				// Rank changed: previous_rank becomes the old current_rank, and current_rank is updated to newRank
-				if err := tx.Exec("UPDATE user_overall_stats SET previous_rank = current_rank, current_rank = ? WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
+			} else if row.RankDate != today {
+				// Daily rollover: lock previous_rank as the student's ending rank from previous day, and update rank_date to today
+				if err := tx.Exec("UPDATE user_overall_stats SET previous_rank = current_rank, current_rank = ?, rank_date = ? WHERE user_id = ?", newRank, today, row.UserID).Error; err != nil {
 					return err
+				}
+			} else {
+				// Same day: Keep the locked daily baseline (previous_rank), only update current_rank if changed
+				if *row.CurrentRank != newRank {
+					if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ? WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
+						return err
+					}
 				}
 			}
-			// If *row.CurrentRank == newRank, rank is unchanged, so keep both current_rank and previous_rank intact
 		}
 
 		return nil
@@ -808,12 +817,15 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 		grade := c.Query("p_grade")
 
 		// Retrieve ranking from precomputed user_overall_stats table joined with profiles
+		today := time.Now().Format("2006-01-02")
+
 		type OverallRow struct {
 			RankPosition         int     `json:"rankPosition"`
 			PreviousRankPosition *int    `json:"previousRankPosition"`
+			RankDate             string  `json:"-"`
 			StudentID            string  `json:"studentId"`
 			StudentName          string  `json:"studentName"`
-			StudentUsername       string  `json:"studentUsername"`
+			StudentUsername      string  `json:"studentUsername"`
 			StudentGrade         *string `json:"studentGrade"`
 			StudentAvatarURL     *string `json:"studentAvatarUrl"`
 			TotalPoints          float64 `json:"totalPoints"`
@@ -825,6 +837,7 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			SELECT 
 				uos.current_rank as rank_position,
 				uos.previous_rank as previous_rank_position,
+				COALESCE(uos.rank_date, '') as rank_date,
 				uos.user_id as student_id,
 				p.name as student_name,
 				p.username as student_username,
@@ -859,6 +872,11 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 				lastTests = r.TestsCompleted
 			}
 			rows[i].RankPosition = rank
+
+			// If it's a new day and rank hasn't moved yet today, daily baseline defaults to current rank
+			if r.RankDate != "" && r.RankDate != today && r.PreviousRankPosition == nil {
+				rows[i].PreviousRankPosition = &rank
+			}
 		}
 
 		c.JSON(http.StatusOK, rows)
