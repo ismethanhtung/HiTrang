@@ -10,9 +10,8 @@ RUN npm run build
 # Stage 2: Build Go Backend
 FROM golang:1.21-alpine AS backend-builder
 WORKDIR /app
-COPY backend/go.mod backend/go.sum* ./
-RUN go mod download
 COPY backend/ ./
+RUN go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /app/server .
 
 # Stage 3: Runner
