@@ -13,7 +13,7 @@ WORKDIR /app
 COPY backend/go.mod backend/go.sum* ./
 RUN go mod download
 COPY backend/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /app/server .
 
 # Stage 3: Runner
 FROM alpine:latest
