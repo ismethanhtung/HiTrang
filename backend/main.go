@@ -12,9 +12,11 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.82"
+const AppVersion = "1.0.83"
 
 func main() {
+	serverStartTime := time.Now()
+
 	// 1. Configuration
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -265,6 +267,9 @@ func main() {
 			protected.POST("/admin/backups/:filename/restore", HandleRestoreBackupFile(db, backupDir))
 			protected.POST("/admin/backups/upload-restore", HandleUploadRestore(db))
 			protected.POST("/admin/restore", HandleUploadRestore(db))
+
+			// System & EC2 Monitoring
+			protected.GET("/admin/system-metrics", HandleGetSystemMetrics(db, serverStartTime))
 		}
 	}
 

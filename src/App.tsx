@@ -75,6 +75,7 @@ export default function App() {
             let tab = rawSub || "plans";
             if (tab === "users" || tab === "accounts") tab = "plans";
             if (tab === "students") tab = "stats-students";
+            if (tab === "server" || tab === "ec2" || tab === "metrics" || tab === "infrastructure") tab = "system";
             return { route: "admin", tab };
         }
         if (cleanPath === "/leaderboard") return { route: "leaderboard" };

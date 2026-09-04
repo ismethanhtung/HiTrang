@@ -27,6 +27,7 @@ import {
     Calendar,
     Bell,
     Database,
+    Server,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
@@ -40,6 +41,7 @@ import AdminBugsTab from "./AdminBugsTab";
 import AdminScheduleTab from "./AdminScheduleTab";
 import AdminNotificationsTab from "./AdminNotificationsTab";
 import AdminBackupTab from "./AdminBackupTab";
+import AdminSystemTab from "./AdminSystemTab";
 
 export type AdminTab =
     | "plans"
@@ -51,7 +53,8 @@ export type AdminTab =
     | "bugs"
     | "schedule"
     | "notifications"
-    | "backups";
+    | "backups"
+    | "system";
 
 const VALID_ADMIN_TABS: AdminTab[] = [
     "plans",
@@ -64,6 +67,7 @@ const VALID_ADMIN_TABS: AdminTab[] = [
     "schedule",
     "notifications",
     "backups",
+    "system",
 ];
 
 interface AdminPanelProps {
@@ -567,6 +571,35 @@ export default function AdminPanel({
                                         <span>Quản lý sao lưu & Phục hồi</span>
                                     </button>
                                 )}
+
+                                {matchSetting([
+                                    "hạ tầng & máy chủ ec2",
+                                    "hạ tầng máy chủ",
+                                    "máy chủ ec2",
+                                    "máy chủ",
+                                    "hạ tầng",
+                                    "ec2",
+                                    "system",
+                                    "server",
+                                    "dung lượng",
+                                    "ram",
+                                    "cpu",
+                                    "ổ đĩa",
+                                ]) && (
+                                    <button
+                                        onClick={() =>
+                                            handleTabClick("system")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "system"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <Server className="w-4 h-4 shrink-0" />
+                                        <span>Hạ tầng & Máy chủ EC2</span>
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -668,6 +701,8 @@ export default function AdminPanel({
                         )}
 
                         {activeTab === "backups" && <AdminBackupTab />}
+
+                        {activeTab === "system" && <AdminSystemTab />}
                     </>
                 )}
             </section>

@@ -758,4 +758,128 @@ export async function uploadAndRestoreBackup(file: File, passkey: string): Promi
   return await res.json();
 }
 
+// ----------------------------------------------------
+// SYSTEM & EC2 METRICS API
+// ----------------------------------------------------
+
+export interface DiskStats {
+  totalBytes: number;
+  usedBytes: number;
+  freeBytes: number;
+  usedPercent: number;
+  totalFormatted: string;
+  usedFormatted: string;
+  freeFormatted: string;
+  inodesTotal: number;
+  inodesUsed: number;
+  inodesFree: number;
+  inodesUsedPercent: number;
+  mountPoint: string;
+  status: "healthy" | "warning" | "critical";
+  warningMessage?: string;
+}
+
+export interface MemoryStats {
+  totalBytes: number;
+  usedBytes: number;
+  freeBytes: number;
+  availableBytes: number;
+  usedPercent: number;
+  totalFormatted: string;
+  usedFormatted: string;
+  freeFormatted: string;
+  swapTotalBytes: number;
+  swapUsedBytes: number;
+  swapFreeBytes: number;
+  swapUsedPercent: number;
+  swapTotalFormatted: string;
+  swapUsedFormatted: string;
+  heapAllocBytes: number;
+  heapAllocFormatted: string;
+  sysBytes: number;
+  sysFormatted: string;
+  numGc: number;
+  goroutinesCount: number;
+  status: "healthy" | "warning" | "critical";
+}
+
+export interface CPUStats {
+  cores: number;
+  arch: string;
+  os: string;
+  load1: number;
+  load5: number;
+  load15: number;
+  usagePercent: number;
+  status: "healthy" | "warning" | "critical";
+}
+
+export interface NetworkInterfaceStats {
+  interface: string;
+  rxBytes: number;
+  txBytes: number;
+  rxBytesFormatted: string;
+  txBytesFormatted: string;
+  rxPackets: number;
+  txPackets: number;
+}
+
+export interface NetworkStats {
+  totalRxBytes: number;
+  totalTxBytes: number;
+  totalRxFormatted: string;
+  totalTxFormatted: string;
+  interfaces: NetworkInterfaceStats[];
+}
+
+export interface DatabaseStats {
+  status: "healthy" | "warning" | "error";
+  pingLatencyMs: number;
+  openConnections: number;
+  inUseConnections: number;
+  idleConnections: number;
+  waitCount: number;
+  maxOpenConnections: number;
+}
+
+export interface ServerUptimeStats {
+  systemUptimeSeconds: number;
+  systemUptimeFormatted: string;
+  processUptimeSeconds: number;
+  processUptimeFormatted: string;
+  processStartTime: string;
+  bootTimeFormatted: string;
+  availabilityStatus: string;
+  availabilityPercent: number;
+}
+
+export interface SystemMaintenanceTip {
+  title: string;
+  command: string;
+  description: string;
+  severity: "info" | "warning" | "urgent";
+}
+
+export interface SystemMetricsResponse {
+  timestamp: string;
+  hostname: string;
+  appVersion: string;
+  goVersion: string;
+  overallHealth: "healthy" | "warning" | "critical";
+  disk: DiskStats;
+  memory: MemoryStats;
+  cpu: CPUStats;
+  network: NetworkStats;
+  database: DatabaseStats;
+  uptime: ServerUptimeStats;
+  maintenanceTips: SystemMaintenanceTip[];
+  alerts: string[];
+}
+
+export async function getSystemMetrics(): Promise<SystemMetricsResponse> {
+  return await apiRequest<SystemMetricsResponse>('/admin/system-metrics', {
+    method: 'GET',
+  });
+}
+
 
