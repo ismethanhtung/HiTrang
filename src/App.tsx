@@ -466,10 +466,10 @@ export default function App() {
 
     return (
         <div
-            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} bg-[#F9F8F6] dark:bg-bg-base text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
+            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} ${!user ? "bg-[#FAF6EE] dark:bg-[#1A2536]" : "bg-[#F9F8F6] dark:bg-bg-base"} text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
-            {!isTakingQuiz && (
+            {!isTakingQuiz && (user || currentPath !== "/") && (
                 <Topbar
                     user={user}
                     selectedGrade={selectedGrade}
@@ -650,6 +650,7 @@ export default function App() {
                                 setAuthMode(mode);
                                 setAuthModalOpen(true);
                             }}
+                            onNavigate={navigateTo}
                         />
                     ) : (
                         /* 3. AUTHENTICATED USER DASHBOARD VIEW (TOPBAR BASED) */

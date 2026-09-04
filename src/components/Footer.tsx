@@ -74,7 +74,9 @@ export default function Footer({
     const displayPing = Math.max(15, Math.round(rawPing / 1.25));
 
     return (
-        <footer className="w-full bg-white border-t border-slate-200 dark:border-slate-800 transition-colors duration-200 select-none">
+        <footer
+            className={`w-full ${userLoggedIn ? "bg-white dark:bg-slate-900" : "bg-[#FAF6EE] dark:bg-[#1A2536]"} border-t border-slate-300/40 dark:border-slate-800 transition-colors duration-200 select-none`}
+        >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10">
                     {/* Column 1: Teacher Contact Info */}
