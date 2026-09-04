@@ -41,6 +41,31 @@ import AdminScheduleTab from "./AdminScheduleTab";
 import AdminNotificationsTab from "./AdminNotificationsTab";
 import AdminBackupTab from "./AdminBackupTab";
 
+export type AdminTab =
+    | "plans"
+    | "create-quiz"
+    | "quizzes"
+    | "stats-quizzes"
+    | "stats-students"
+    | "api-monitor"
+    | "bugs"
+    | "schedule"
+    | "notifications"
+    | "backups";
+
+const VALID_ADMIN_TABS: AdminTab[] = [
+    "plans",
+    "create-quiz",
+    "quizzes",
+    "stats-quizzes",
+    "stats-students",
+    "api-monitor",
+    "bugs",
+    "schedule",
+    "notifications",
+    "backups",
+];
+
 interface AdminPanelProps {
     quizzes: Quiz[];
     submissions: Submission[];
@@ -48,6 +73,8 @@ interface AdminPanelProps {
     onDeleteQuiz: (quizId: string) => void;
     onUpdateQuiz: (updatedQuiz: Quiz) => void;
     onReloadSubmissions?: () => Promise<void>;
+    initialTab?: AdminTab;
+    onTabChange?: (tab: AdminTab) => void;
 }
 
 export default function AdminPanel({
@@ -57,6 +84,8 @@ export default function AdminPanel({
     onDeleteQuiz,
     onUpdateQuiz,
     onReloadSubmissions,
+    initialTab = "plans",
+    onTabChange,
 }: AdminPanelProps) {
     // Persist admin verification across reloads
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -66,18 +95,26 @@ export default function AdminPanel({
     const [authError, setAuthError] = useState<string | null>(null);
     const [verifying, setVerifying] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<
-        | "plans"
-        | "create-quiz"
-        | "quizzes"
-        | "stats-quizzes"
-        | "stats-students"
-        | "api-monitor"
-        | "bugs"
-        | "schedule"
-        | "notifications"
-        | "backups"
-    >("plans");
+    const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+        if (initialTab && VALID_ADMIN_TABS.includes(initialTab)) {
+            return initialTab;
+        }
+        return "plans";
+    });
+
+    React.useEffect(() => {
+        if (
+            initialTab &&
+            VALID_ADMIN_TABS.includes(initialTab) &&
+            initialTab !== activeTab
+        ) {
+            setActiveTab(initialTab);
+            setAdminReviewSubmission(null);
+            if (initialTab === "bugs") {
+                fetchBugs();
+            }
+        }
+    }, [initialTab]);
 
     const [antiCheatEnabled, setAntiCheatEnabled] = useState<boolean>(() => {
         return localStorage.getItem("hitrang_anti_cheat_enabled") !== "false";
@@ -106,23 +143,14 @@ export default function AdminPanel({
         }
     };
 
-    const handleTabClick = (
-        tab:
-            | "plans"
-            | "create-quiz"
-            | "quizzes"
-            | "stats-quizzes"
-            | "stats-students"
-            | "api-monitor"
-            | "bugs"
-            | "schedule"
-            | "notifications"
-            | "backups",
-    ) => {
+    const handleTabClick = (tab: AdminTab) => {
         setActiveTab(tab);
         setAdminReviewSubmission(null);
         if (tab === "bugs") {
             fetchBugs();
+        }
+        if (onTabChange) {
+            onTabChange(tab);
         }
     };
 
@@ -133,6 +161,14 @@ export default function AdminPanel({
 
     const [adminReviewSubmission, setAdminReviewSubmission] =
         useState<Submission | null>(null);
+    const [selectedStudentForStats, setSelectedStudentForStats] = useState<
+        string | null
+    >(null);
+
+    const handleSelectUserForStats = (userId: string) => {
+        setSelectedStudentForStats(userId);
+        handleTabClick("stats-students");
+    };
 
     // Fetch profiles and version on mount if already authenticated
     React.useEffect(() => {
@@ -569,13 +605,14 @@ export default function AdminPanel({
                                 updatingUserId={updatingUserId}
                                 setUpdatingUserId={setUpdatingUserId}
                                 fetchProfiles={fetchProfiles}
+                                onSelectUserForStats={handleSelectUserForStats}
                             />
                         )}
 
                         {activeTab === "create-quiz" && (
                             <AdminCreateQuizTab
                                 onAddQuiz={onAddQuiz}
-                                setActiveTab={setActiveTab}
+                                setActiveTab={handleTabClick}
                             />
                         )}
 
@@ -603,6 +640,7 @@ export default function AdminPanel({
                                 userProfiles={userProfiles}
                                 submissions={submissions}
                                 onReviewSubmission={setAdminReviewSubmission}
+                                initialStudentId={selectedStudentForStats}
                             />
                         )}
 

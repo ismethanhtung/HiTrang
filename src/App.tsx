@@ -6,7 +6,7 @@ import LandingPage from "./components/LandingPage";
 import Auth from "./components/Auth";
 import StudentDashboard from "./components/StudentDashboard";
 import AdminDashboard from "./components/AdminDashboard";
-import AdminPanel from "./components/AdminPanel";
+import AdminPanel, { AdminTab } from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
 import Footer from "./components/Footer";
 import GoogleCallback from "./components/GoogleCallback";
@@ -70,7 +70,13 @@ export default function App() {
             return { route: "settings", tab: "notifications" };
         if (cleanPath === "/trang" || cleanPath === "/teacher")
             return { route: "teacher" };
-        if (cleanPath === "/admin") return { route: "admin" };
+        if (cleanPath === "/admin" || cleanPath.startsWith("/admin/")) {
+            const rawSub = cleanPath.replace(/^\/admin\/?/, "");
+            let tab = rawSub || "plans";
+            if (tab === "users" || tab === "accounts") tab = "plans";
+            if (tab === "students") tab = "stats-students";
+            return { route: "admin", tab };
+        }
         if (cleanPath === "/leaderboard") return { route: "leaderboard" };
         if (cleanPath === "/lich" || cleanPath === "/schedule")
             return { route: "schedule" };
@@ -565,17 +571,17 @@ export default function App() {
 
             {/* MAIN CONTENT CANVAS */}
             <main
-                className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing || currentPath === "/admin" ? "min-h-0 overflow-hidden" : ""}`}
+                className={`flex-1 flex flex-col min-w-0 ${isTakingOrReviewing || routeInfo.route === "admin" ? "min-h-0 overflow-hidden" : ""}`}
             >
                 <div
                     className={
-                        isTakingOrReviewing || currentPath === "/admin"
+                        isTakingOrReviewing || routeInfo.route === "admin"
                             ? "flex-1 flex flex-col min-h-0 overflow-hidden"
                             : "flex-1 flex flex-col bg-bg-base"
                     }
                 >
                     {/* 1. ADMIN PANEL ROUTE */}
-                    {currentPath === "/admin" ? (
+                    {routeInfo.route === "admin" ? (
                         user && user.role === "admin" ? (
                             <AdminPanel
                                 quizzes={quizzes}
@@ -584,6 +590,21 @@ export default function App() {
                                 onDeleteQuiz={handleDeleteQuiz}
                                 onUpdateQuiz={handleUpdateQuiz}
                                 onReloadSubmissions={handleReloadSubmissions}
+                                initialTab={
+                                    (routeInfo.tab || "plans") as AdminTab
+                                }
+                                onTabChange={(tab) => {
+                                    const targetPath =
+                                        tab === "plans"
+                                            ? "/admin"
+                                            : `/admin/${tab}`;
+                                    window.history.pushState(
+                                        null,
+                                        "",
+                                        targetPath,
+                                    );
+                                    setCurrentPath(targetPath);
+                                }}
                             />
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
@@ -818,7 +839,8 @@ export default function App() {
                     )}
                 </div>
                 {!isTakingOrReviewing &&
-                    currentPath !== "/admin" &&
+                    routeInfo.route !== "admin" &&
+                    !currentPath.startsWith("/admin") &&
                     currentPath !== "/trang" &&
                     currentPath !== "/teacher" &&
                     routeInfo.route !== "reset-password" && (

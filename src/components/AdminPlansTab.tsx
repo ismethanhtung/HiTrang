@@ -25,6 +25,7 @@ import {
     ArrowUpDown,
     ArrowUp,
     ArrowDown,
+    BarChart3,
 } from "lucide-react";
 
 interface AdminPlansTabProps {
@@ -33,6 +34,7 @@ interface AdminPlansTabProps {
     updatingUserId: string | null;
     setUpdatingUserId: React.Dispatch<React.SetStateAction<string | null>>;
     fetchProfiles: () => Promise<void>;
+    onSelectUserForStats?: (userId: string) => void;
 }
 
 type SortField =
@@ -51,6 +53,7 @@ export default function AdminPlansTab({
     updatingUserId,
     setUpdatingUserId,
     fetchProfiles,
+    onSelectUserForStats,
 }: AdminPlansTabProps) {
     // User Management filters, search, sorting and pagination
     const [searchQuery, setSearchQuery] = useState("");
@@ -636,8 +639,15 @@ export default function AdminPlansTab({
                                             1}
                                     </td>
                                     <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200/50 dark:border-slate-700/50 shadow-2xs">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                onSelectUserForStats?.(prof.id)
+                                            }
+                                            className="flex items-center gap-2.5 text-left group cursor-pointer hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+                                            title="Nhấn để xem thống kê học sinh này"
+                                        >
+                                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] flex items-center justify-center flex-shrink-0 overflow-hidden border border-slate-200/50 dark:border-slate-700/50 shadow-2xs group-hover:scale-105 transition-transform">
                                                 {prof.avatarUrl ? (
                                                     <img
                                                         src={prof.avatarUrl}
@@ -655,13 +665,22 @@ export default function AdminPlansTab({
                                                         .toUpperCase()
                                                 )}
                                             </div>
-                                            <span className="truncate">
+                                            <span className="truncate underline-offset-2 group-hover:underline font-bold">
                                                 {prof.name}
                                             </span>
-                                        </div>
+                                        </button>
                                     </td>
                                     <td className="py-3 px-4 text-slate-400">
-                                        @{prof.username}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                onSelectUserForStats?.(prof.id)
+                                            }
+                                            className="text-left text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 hover:underline cursor-pointer transition-colors"
+                                            title="Nhấn để xem thống kê học sinh này"
+                                        >
+                                            @{prof.username}
+                                        </button>
                                     </td>
                                     <td className="py-3 px-4">
                                         <select

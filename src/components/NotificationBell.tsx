@@ -246,7 +246,7 @@ export default function NotificationBell({
                                     <div
                                         key={notif.id}
                                         onClick={() => handleMarkAsRead(notif)}
-                                        className={`p-3.5 sm:p-4 flex items-start gap-3 transition-colors cursor-pointer group ${
+                                        className={`p-2.5 sm:p-2.5 flex items-start gap-3 transition-colors cursor-pointer group ${
                                             !notif.isRead
                                                 ? "bg-brand-50/75 dark:bg-brand-950/50 hover:bg-brand-100/70 dark:hover:bg-brand-900/60 border-l-[3px] border-l-brand-500"
                                                 : "bg-transparent hover:bg-slate-50/80 dark:hover:bg-slate-800/50 opacity-80 hover:opacity-100 border-l-[3px] border-l-transparent"

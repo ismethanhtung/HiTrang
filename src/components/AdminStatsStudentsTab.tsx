@@ -9,6 +9,7 @@ interface AdminStatsStudentsTabProps {
     userProfiles: User[];
     submissions: Submission[];
     onReviewSubmission: (sub: Submission) => void;
+    initialStudentId?: string | null;
 }
 
 const safeParseDate = (dateVal: any): Date => {
@@ -65,13 +66,14 @@ export default function AdminStatsStudentsTab({
     userProfiles,
     submissions,
     onReviewSubmission,
+    initialStudentId,
 }: AdminStatsStudentsTabProps) {
     const [studentSearchQuery, setStudentSearchQuery] = useState("");
     const [selectedGradeFilter, setSelectedGradeFilter] =
         useState<string>("all"); // "all", "10", "11", "12"
     const [selectedStatsStudentId, setSelectedStatsStudentId] = useState<
         string | null
-    >(null);
+    >(initialStudentId || null);
     const [adminStudentHoveredPointIdx, setAdminStudentHoveredPointIdx] =
         useState<number | null>(null);
     const [studentRank, setStudentRank] = useState<{
@@ -81,6 +83,21 @@ export default function AdminStatsStudentsTab({
 
     // Lazy loading state for student navigation list
     const [visibleCount, setVisibleCount] = useState(25);
+
+    // Sync when initialStudentId changes from external navigation (e.g. from AdminPlansTab)
+    useEffect(() => {
+        if (initialStudentId) {
+            setSelectedStatsStudentId(initialStudentId);
+            setSelectedGradeFilter("all");
+            setStudentSearchQuery("");
+            const targetIdx = userProfiles.findIndex(
+                (u) => u.id === initialStudentId,
+            );
+            if (targetIdx >= 0) {
+                setVisibleCount((prev) => Math.max(prev, targetIdx + 15));
+            }
+        }
+    }, [initialStudentId, userProfiles]);
 
     const formatTimeFriendly = (secs?: number) => {
         if (secs === undefined || secs === null) return "Chưa rõ";
