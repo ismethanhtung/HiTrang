@@ -248,109 +248,112 @@ export default function Footer({
                         </div>
                     </div>
 
-                    {/* Column 3: Links & Support */}
-                    <div className="lg:col-span-2 space-y-4 lg:pl-8">
-                        <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
-                            Liên kết
-                        </h4>
-                        <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                            <button
-                                onClick={() => onNavigate("/")}
-                                className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
-                            >
-                                Trang chủ
-                            </button>
-
-                            {userLoggedIn && (
+                    {/* Combined Column 3 & 4 for Mobile (2 columns in 1 row) & PC (lg:contents unboxed to 12-col grid) */}
+                    <div className="col-span-1 sm:col-span-2 lg:contents grid grid-cols-2 gap-4 sm:gap-6">
+                        {/* Column 3: Links & Support */}
+                        <div className="space-y-4 lg:col-span-2 lg:pl-8">
+                            <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+                                Liên kết
+                            </h4>
+                            <div className="flex flex-col gap-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                                 <button
-                                    onClick={() => onNavigate("/leaderboard")}
+                                    onClick={() => onNavigate("/")}
                                     className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
                                 >
-                                    Bảng xếp hạng
+                                    Trang chủ
                                 </button>
-                            )}
 
-                            <button
-                                onClick={() => onNavigate("/lich")}
-                                className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
-                            >
-                                Lịch học
-                            </button>
+                                {userLoggedIn && (
+                                    <button
+                                        onClick={() => onNavigate("/leaderboard")}
+                                        className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
+                                    >
+                                        Bảng xếp hạng
+                                    </button>
+                                )}
 
-                            <button
-                                onClick={onOpenContactModal}
-                                className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
-                            >
-                                Đăng ký học cô Trang
-                            </button>
+                                <button
+                                    onClick={() => onNavigate("/lich")}
+                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
+                                >
+                                    Lịch học
+                                </button>
 
-                            <button
-                                onClick={onOpenBugModal}
-                                className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
-                            >
-                                Báo lỗi hệ thống
-                            </button>
+                                <button
+                                    onClick={onOpenContactModal}
+                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
+                                >
+                                    Đăng ký học cô Trang
+                                </button>
+
+                                <button
+                                    onClick={onOpenBugModal}
+                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
+                                >
+                                    Báo lỗi hệ thống
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Column 4: System Stats */}
-                    <div className="lg:col-span-3 space-y-4 lg:ml-auto w-fit">
-                        <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
-                            HỆ THỐNG
-                        </h4>
-                        <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            <div className="flex items-center gap-1.5">
-                                <span>Đang trực tuyến:</span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                                <span className=" text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                                    {stats.onlineCount}
-                                </span>
-                            </div>
+                        {/* Column 4: System Stats */}
+                        <div className="space-y-4 lg:col-span-3 lg:ml-auto w-full lg:w-fit">
+                            <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
+                                HỆ THỐNG
+                            </h4>
+                            <div className="space-y-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                <div className="flex items-center gap-1.5">
+                                    <span>Đang trực tuyến:</span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                                    <span className=" text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                                        {stats.onlineCount}
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <span>Truy cập hôm nay:</span>
-                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                                    {stats.todayVisits.toLocaleString("vi-VN")}
-                                </span>
-                            </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span>Truy cập hôm nay:</span>
+                                    <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                        {stats.todayVisits.toLocaleString("vi-VN")}
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <span>Tổng lượt truy cập:</span>
-                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                                    {stats.totalVisits.toLocaleString("vi-VN")}
-                                </span>
-                            </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span>Tổng lượt truy cập:</span>
+                                    <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                        {stats.totalVisits.toLocaleString("vi-VN")}
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <span>Tổng lượt làm bài:</span>
-                                <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                                    {stats.totalSubmissions.toLocaleString(
-                                        "vi-VN",
-                                    )}
-                                </span>
-                            </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span>Tổng lượt làm bài:</span>
+                                    <span className=" text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                                        {stats.totalSubmissions.toLocaleString(
+                                            "vi-VN",
+                                        )}
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-1.5">
-                                <span>Tốc độ phản hồi:</span>
-                                <span className=" text-[11px] font-semibold flex items-center gap-1 text-slate-700 dark:text-slate-300">
-                                    <span
-                                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                            displayPing < 300
-                                                ? "bg-emerald-500"
-                                                : displayPing < 800
-                                                  ? "bg-amber-500"
-                                                  : "bg-rose-500"
-                                        }`}
-                                    />
-                                    <span>{displayPing}ms</span>
-                                </span>
-                            </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span>Tốc độ phản hồi:</span>
+                                    <span className=" text-[11px] font-semibold flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                                        <span
+                                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                                displayPing < 300
+                                                    ? "bg-emerald-500"
+                                                    : displayPing < 800
+                                                      ? "bg-amber-500"
+                                                      : "bg-rose-500"
+                                            }`}
+                                        />
+                                        <span>{displayPing}ms</span>
+                                    </span>
+                                </div>
 
-                            <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500">
-                                <span>Ver:</span>
-                                <span className=" text-[10px] font-semibold text-slate-600 dark:text-slate-400">
-                                    v{FRONTEND_VERSION} (Core {backendVersion})
-                                </span>
+                                <div className="flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500 flex-wrap">
+                                    <span>Ver:</span>
+                                    <span className=" text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                                        v{FRONTEND_VERSION} (Core {backendVersion})
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

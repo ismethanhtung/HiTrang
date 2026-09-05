@@ -565,6 +565,9 @@ export default function App() {
                                 authMode === "register" ? "student" : "student"
                             }
                             initialUsername={authPrefillUsername}
+                            onOpenContactModal={() =>
+                                setGlobalContactModalOpen(true)
+                            }
                         />
                     </div>
                 </div>

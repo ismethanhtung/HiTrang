@@ -369,7 +369,7 @@ export default function AdminPanel({
                             "quản lý lịch học",
                             "lịch học",
                             "lịch",
-                            "chống gian lận",
+                            "chống chuyển trang",
                         ]) && (
                             <div className="space-y-0.5 mb-4">
                                 <div className="flex items-center justify-between px-6 py-2">
@@ -442,7 +442,7 @@ export default function AdminPanel({
                                 )}
 
                                 {matchSetting([
-                                    "chống gian lận",
+                                    "chống chuyển trang",
                                     "gian lận",
                                     "anti cheat",
                                 ]) && (
@@ -450,7 +450,7 @@ export default function AdminPanel({
                                         <div className="flex items-center gap-3 pl-[24px]">
                                             <Shield className="w-4 h-4 text-[#70757A] shrink-0" />
                                             <span className="text-xs font-semibold text-[#70757A]">
-                                                Chống gian lận
+                                                Chống chuyển trang
                                             </span>
                                         </div>
                                         <button

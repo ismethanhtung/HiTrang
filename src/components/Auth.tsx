@@ -18,6 +18,7 @@ import {
     CheckCircle2,
     HelpCircle,
     MessageCircle,
+    X,
 } from "lucide-react";
 import { User as UserType } from "../types";
 import {
@@ -32,12 +33,14 @@ interface AuthProps {
     onLogin: (user: UserType) => void;
     initialRole?: "admin" | "student";
     initialUsername?: string;
+    onOpenContactModal?: () => void;
 }
 
 export default function Auth({
     onLogin,
     initialRole = "student",
     initialUsername = "",
+    onOpenContactModal,
 }: AuthProps) {
     const [authMode, setAuthMode] = useState<
         "login" | "register" | "forgot" | "2fa_login"
@@ -68,6 +71,15 @@ export default function Auth({
     const [forgotNewPassword, setForgotNewPassword] = useState("");
     const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
     const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
+    const [showContactModal, setShowContactModal] = useState(false);
+
+    const handleOpenContact = () => {
+        if (onOpenContactModal) {
+            onOpenContactModal();
+        } else {
+            setShowContactModal(true);
+        }
+    };
 
     // Feedback states
     const [error, setError] = useState("");
@@ -286,7 +298,7 @@ export default function Auth({
             >
                 {/* Brand Header */}
                 <div className="text-center mb-6">
-                    <h1 className="font-calligraphy text-4xl text-brand-400 select-none tracking-wide drop-shadow-xs">
+                    <h1 className="font-calligraphy text-4xl text-brand-500 select-none tracking-wide drop-shadow-xs">
                         HiTrang
                     </h1>
                     <p className="text-xs text-slate-400 mt-2 italic font-medium flex items-center justify-center gap-1.5">
@@ -466,25 +478,31 @@ export default function Auth({
                                     <div className="flex items-center gap-2 text-amber-700 font-bold text-xs">
                                         <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
                                         <span>
-                                            Chưa kích hoạt Google Authenticator
+                                            Chưa thiết lập phương thức khôi phục
                                         </span>
                                     </div>
                                     <p className="text-xs text-amber-800 leading-relaxed">
                                         Tài khoản{" "}
                                         <b>@{forgotUserData?.username}</b> chưa
-                                        cài đặt xác thực 2 bước (Google
-                                        Authenticator) nên không thể tự đặt lại
-                                        mật khẩu.
+                                        thiết lập phương thức xác thực bảo mật
+                                        nên không thể đặt lại mật khẩu.
                                     </p>
                                     <div className="p-3 bg-white/80 rounded-xl border border-amber-200/50 text-xs text-slate-700 space-y-1.5">
                                         <p className="font-bold text-slate-800 flex items-center gap-1">
                                             <HelpCircle className="w-3.5 h-3.5 text-brand-600" />
                                             Cách giải quyết:
                                         </p>
-                                        <p className="text-slate-600">
-                                            Bạn vui lòng nhắn tin trực tiếp cho{" "}
-                                            <b>cô Trang</b> (qua Zalo hoặc
-                                            Messenger). Cô Trang sẽ giúp đỡ bạn!
+                                        <p className="text-slate-600 leading-relaxed">
+                                            Bạn vui lòng{" "}
+                                            <button
+                                                type="button"
+                                                onClick={handleOpenContact}
+                                                className="font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2 cursor-pointer transition-colors inline"
+                                            >
+                                                nhắn tin trực tiếp
+                                            </button>{" "}
+                                            cho <b>cô Trang</b>. Cô Trang sẽ hỗ
+                                            trợ bạn cấp lại mật khẩu nhé!
                                         </p>
                                     </div>
                                 </div>
@@ -547,8 +565,8 @@ export default function Auth({
                                         className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
                                     />
                                     <p className="text-[10px] text-slate-400">
-                                        Mở app Google Authenticator trên điện
-                                        thoại để lấy mã này.
+                                        Mở app Authenticator trên điện thoại để
+                                        lấy mã này.
                                     </p>
                                 </div>
 
@@ -1000,13 +1018,99 @@ export default function Auth({
                                 >
                                     {authMode === "register"
                                         ? "Đăng nhập ngay"
-                                        : "Đăng ký miễn phí"}
+                                        : "Đăng ký ngay"}
                                 </button>
                             </p>
                         </div>
                     </>
                 )}
             </motion.div>
+
+            {/* Local Contact Modal Fallback */}
+            {showContactModal && (
+                <div
+                    onClick={() => setShowContactModal(false)}
+                    className="fixed inset-0 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center z-[100] animate-in fade-in duration-200 cursor-pointer"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white rounded-2xl p-6 w-full max-w-xs border border-slate-100 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95 duration-150 relative cursor-default"
+                    >
+                        <button
+                            type="button"
+                            onClick={() => setShowContactModal(false)}
+                            className="absolute top-4 right-4 text-slate-400 hover:text-slate-655 hover:bg-slate-100 p-1 rounded-full transition-all cursor-pointer flex items-center justify-center"
+                            title="Đóng"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mt-2">
+                            <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg relative z-10 bg-amber-50">
+                                <img
+                                    src="/images/trang.jpg"
+                                    alt="Cô Trang"
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                                Liên hệ cô Trang
+                            </h3>
+                            <p className="text-[11px] text-slate-400">
+                                Chọn phương thức liên hệ thuận tiện nhất:
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-2 pt-1 text-left">
+                            <a
+                                href="https://zalo.me/0914765601"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
+                            >
+                                <span>Zalo (Cô Trang)</span>
+                                <span className="text-[10px] text-slate-400 font-normal">
+                                    Mở Zalo →
+                                </span>
+                            </a>
+                            <a
+                                href="https://m.me/nguyen.trang.724265"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
+                            >
+                                <span>Messenger</span>
+                                <span className="text-[10px] text-slate-400 font-normal">
+                                    Mở chat →
+                                </span>
+                            </a>
+                            <a
+                                href="https://www.facebook.com/nguyen.trang.724265"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
+                            >
+                                <span>Facebook Cô Trang</span>
+                                <span className="text-[10px] text-slate-400 font-normal">
+                                    Ghé thăm →
+                                </span>
+                            </a>
+                            <a
+                                href="tel:0914765601"
+                                className="w-full px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-lg text-xs font-semibold text-slate-700 flex items-center justify-between transition-colors cursor-pointer"
+                            >
+                                <span>Phone / SĐT</span>
+                                <span className="text-[10px] text-slate-400 font-normal">
+                                    Gọi ngay →
+                                </span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

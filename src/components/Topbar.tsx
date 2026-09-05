@@ -303,7 +303,7 @@ export default function Topbar({
                                     setSearchFocused(true);
                                 }}
                                 placeholder="Tìm đề thi..."
-                                className="w-full pl-8 pr-3.5 py-1.5 text-[11px] bg-white dark:bg-bg-card border border-slate-100 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
+                                className="w-full h-[30px] pl-8 pr-3.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
                             />
                             {searchFocused &&
                                 localSearchQuery.trim().length > 0 && (
