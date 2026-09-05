@@ -19,6 +19,9 @@ import {
     HelpCircle,
     MessageCircle,
     X,
+    Mail,
+    Smartphone,
+    RefreshCw,
 } from "lucide-react";
 import { User as UserType } from "../types";
 import {
@@ -26,6 +29,8 @@ import {
     signInUser,
     signInWithGoogle,
     checkForgotPassword,
+    sendForgotPasswordEmailOTP,
+    resetPasswordWithEmailOTP,
     resetPasswordWithTOTP,
 } from "../lib/supabaseService";
 
@@ -60,14 +65,18 @@ export default function Auth({
 
     // Forgot Password states
     const [forgotStep, setForgotStep] = useState<
-        "enter_user" | "no_2fa" | "has_2fa" | "success"
+        "enter_user" | "choose_method" | "email_otp" | "has_2fa" | "no_method" | "success"
     >("enter_user");
     const [forgotUserData, setForgotUserData] = useState<{
         name?: string;
         username?: string;
         has2FA?: boolean;
+        hasEmail?: boolean;
+        maskedEmail?: string;
     } | null>(null);
     const [forgotTOTPCode, setForgotTOTPCode] = useState("");
+    const [forgotEmailOTP, setForgotEmailOTP] = useState("");
+    const [forgotResendTimer, setForgotResendTimer] = useState(0);
     const [forgotNewPassword, setForgotNewPassword] = useState("");
     const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
     const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
@@ -204,6 +213,16 @@ export default function Auth({
         }
     };
 
+    React.useEffect(() => {
+        let timer: any;
+        if (forgotResendTimer > 0) {
+            timer = setInterval(() => {
+                setForgotResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [forgotResendTimer]);
+
     const handleForgotCheckSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -225,16 +244,33 @@ export default function Auth({
                 return;
             }
 
-            setForgotUserData({
+            const userData = {
                 name: res.name,
                 username: res.username || username.trim(),
                 has2FA: res.has2FA,
-            });
+                hasEmail: res.hasEmail,
+                maskedEmail: res.maskedEmail,
+            };
+            setForgotUserData(userData);
+            setForgotTOTPCode("");
+            setForgotEmailOTP("");
+            setForgotNewPassword("");
+            setForgotConfirmPassword("");
 
-            if (res.has2FA) {
+            if (res.has2FA && res.hasEmail) {
+                setForgotStep("choose_method");
+            } else if (res.hasEmail) {
+                // Auto send email OTP
+                await sendForgotPasswordEmailOTP(userData.username);
+                setForgotResendTimer(60);
+                setForgotStep("email_otp");
+                setSuccess(
+                    `Mã xác thực đã được gửi tới ${res.maskedEmail || "email của bạn"}.`,
+                );
+            } else if (res.has2FA) {
                 setForgotStep("has_2fa");
             } else {
-                setForgotStep("no_2fa");
+                setForgotStep("no_method");
             }
         } catch (err: any) {
             setError(
@@ -246,7 +282,86 @@ export default function Auth({
         }
     };
 
-    const handleForgotResetSubmit = async (e: React.FormEvent) => {
+    const handleSelectEmailMethod = async () => {
+        if (!forgotUserData?.username) return;
+        setError("");
+        setSuccess("");
+        setLoading(true);
+        try {
+            await sendForgotPasswordEmailOTP(forgotUserData.username);
+            setForgotResendTimer(60);
+            setForgotStep("email_otp");
+            setSuccess(
+                `Mã xác thực đã được gửi tới ${forgotUserData.maskedEmail || "email của bạn"}.`,
+            );
+        } catch (err: any) {
+            setError(
+                err.message ||
+                    "Không thể gửi mã xác thực qua email. Vui lòng thử lại.",
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendForgotEmailOTP = async () => {
+        if (forgotResendTimer > 0 || !forgotUserData?.username || loading) return;
+        setError("");
+        setSuccess("");
+        setLoading(true);
+        try {
+            await sendForgotPasswordEmailOTP(forgotUserData.username);
+            setForgotResendTimer(60);
+            setSuccess(
+                `Đã gửi lại mã xác thực tới ${forgotUserData.maskedEmail || "email của bạn"}!`,
+            );
+        } catch (err: any) {
+            setError(err.message || "Không thể gửi lại mã xác thực.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotResetWithEmail = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+        setSuccess("");
+
+        if (forgotEmailOTP.trim().length !== 6) {
+            setError("Mã xác thực Email phải có đúng 6 chữ số.");
+            return;
+        }
+
+        if (forgotNewPassword.length < 6) {
+            setError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+            return;
+        }
+
+        if (forgotNewPassword !== forgotConfirmPassword) {
+            setError("Mật khẩu xác nhận không trùng khớp.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await resetPasswordWithEmailOTP(
+                forgotUserData?.username || username.trim(),
+                forgotEmailOTP.trim(),
+                forgotNewPassword,
+            );
+            setForgotStep("success");
+            setSuccess("Đổi mật khẩu thành công!");
+        } catch (err: any) {
+            setError(
+                err.message ||
+                    "Không thể đặt lại mật khẩu. Vui lòng kiểm tra lại mã OTP.",
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotResetWithTOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setSuccess("");
@@ -471,61 +586,303 @@ export default function Auth({
                             </form>
                         )}
 
-                        {/* Step 1.5: Account exists but NO 2FA -> Contact Teacher */}
-                        {forgotStep === "no_2fa" && (
+                        {/* Step 1.2: Choose Method (When user has BOTH Email and Google Authenticator) */}
+                        {forgotStep === "choose_method" && (
                             <div className="space-y-4">
-                                <div className="p-4 bg-amber-50/80 border border-amber-200/60 rounded-2xl space-y-3">
-                                    <div className="flex items-center gap-2 text-amber-700 font-bold text-xs">
-                                        <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                                        <span>
-                                            Chưa thiết lập phương thức khôi phục
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-amber-800 leading-relaxed">
-                                        Tài khoản{" "}
-                                        <b>@{forgotUserData?.username}</b> chưa
-                                        thiết lập phương thức xác thực bảo mật
-                                        nên không thể đặt lại mật khẩu.
-                                    </p>
-                                    <div className="p-3 bg-white/80 rounded-xl border border-amber-200/50 text-xs text-slate-700 space-y-1.5">
-                                        <p className="font-bold text-slate-800 flex items-center gap-1">
-                                            <HelpCircle className="w-3.5 h-3.5 text-brand-600" />
-                                            Cách giải quyết:
+                                <div className="p-3 bg-brand-50/60 border border-brand-100 rounded-2xl flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-800">
+                                            {forgotUserData?.name ||
+                                                forgotUserData?.username}
                                         </p>
-                                        <p className="text-slate-600 leading-relaxed">
-                                            Bạn vui lòng{" "}
-                                            <button
-                                                type="button"
-                                                onClick={handleOpenContact}
-                                                className="font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2 cursor-pointer transition-colors inline"
-                                            >
-                                                nhắn tin trực tiếp
-                                            </button>{" "}
-                                            cho <b>cô Trang</b>. Cô Trang sẽ hỗ
-                                            trợ bạn cấp lại mật khẩu nhé!
+                                        <p className="text-[11px] text-slate-400 font-mono">
+                                            @{forgotUserData?.username}
                                         </p>
                                     </div>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-100 text-brand-700">
+                                        2 phương thức
+                                    </span>
                                 </div>
+
+                                <div className="text-center space-y-1">
+                                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                        Chọn phương thức xác thực
+                                    </h3>
+                                    <p className="text-[11px] text-slate-400">
+                                        Chọn cách bạn muốn xác nhận để đặt lại mật khẩu:
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2.5">
+                                    {/* Option 1: Email OTP */}
+                                    <button
+                                        type="button"
+                                        onClick={handleSelectEmailMethod}
+                                        disabled={loading}
+                                        className="w-full p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-300 rounded-2xl flex items-center gap-3 transition-all text-left group shadow-xs cursor-pointer disabled:opacity-50"
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                            <Mail className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
+                                                Xác thực qua Email
+                                            </p>
+                                            <p className="text-[11px] text-slate-400 truncate">
+                                                Gửi mã OTP đến {forgotUserData?.maskedEmail || "email đã liên kết"}
+                                            </p>
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors shrink-0" />
+                                    </button>
+
+                                    {/* Option 2: Google Authenticator TOTP */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setError("");
+                                            setSuccess("");
+                                            setForgotStep("has_2fa");
+                                        }}
+                                        disabled={loading}
+                                        className="w-full p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-300 rounded-2xl flex items-center gap-3 transition-all text-left group shadow-xs cursor-pointer disabled:opacity-50"
+                                    >
+                                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                            <ShieldCheck className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
+                                                Google Authenticator
+                                            </p>
+                                            <p className="text-[11px] text-slate-400 truncate">
+                                                Nhập mã 6 số từ ứng dụng xác thực
+                                            </p>
+                                        </div>
+                                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors shrink-0" />
+                                    </button>
+                                </div>
+
+                                {error && (
+                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                        {error}
+                                    </div>
+                                )}
 
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setAuthMode("login");
                                         setForgotStep("enter_user");
                                         setError("");
+                                        setSuccess("");
                                     }}
-                                    className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
                                 >
-                                    <ArrowLeft className="w-4 h-4" />
-                                    <span>Quay lại Trang Đăng nhập</span>
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Chọn tài khoản khác</span>
                                 </button>
                             </div>
                         )}
 
-                        {/* Step 2: Account has 2FA -> Enter TOTP code & new password */}
+                        {/* Step 2A: Email OTP -> Enter OTP & New Password */}
+                        {forgotStep === "email_otp" && (
+                            <form
+                                onSubmit={handleForgotResetWithEmail}
+                                className="space-y-4"
+                            >
+                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs font-bold text-slate-800">
+                                            {forgotUserData?.name ||
+                                                forgotUserData?.username}
+                                        </p>
+                                        <p className="text-[11px] text-slate-500 font-mono">
+                                            {forgotUserData?.maskedEmail ||
+                                                "Email xác thực"}
+                                        </p>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">
+                                        <Mail className="w-3 h-3" />
+                                        Mã OTP Email
+                                    </span>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-bold text-slate-700">
+                                            Mã OTP (6 chữ số)
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={handleResendForgotEmailOTP}
+                                            disabled={
+                                                forgotResendTimer > 0 || loading
+                                            }
+                                            className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
+                                        >
+                                            <RefreshCw
+                                                className={`w-3 h-3 ${
+                                                    loading
+                                                        ? "animate-spin"
+                                                        : ""
+                                                }`}
+                                            />
+                                            {forgotResendTimer > 0
+                                                ? `Gửi lại sau (${forgotResendTimer}s)`
+                                                : "Gửi lại mã"}
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        autoFocus
+                                        placeholder="000000"
+                                        value={forgotEmailOTP}
+                                        onChange={(e) =>
+                                            setForgotEmailOTP(
+                                                e.target.value.replace(
+                                                    /\D/g,
+                                                    "",
+                                                ),
+                                            )
+                                        }
+                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                    />
+                                    <p className="text-[10px] text-slate-400">
+                                        Kiểm tra hộp thư đến (hoặc thư rác/Spam)
+                                        của bạn để lấy mã OTP.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-700">
+                                        Mật khẩu mới
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={
+                                                showForgotNewPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            placeholder="Tối thiểu 6 ký tự"
+                                            value={forgotNewPassword}
+                                            onChange={(e) =>
+                                                setForgotNewPassword(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowForgotNewPassword(
+                                                    !showForgotNewPassword,
+                                                )
+                                            }
+                                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                        >
+                                            {showForgotNewPassword ? (
+                                                <EyeOff className="w-4 h-4" />
+                                            ) : (
+                                                <Eye className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-slate-700">
+                                        Xác nhận mật khẩu mới
+                                    </label>
+                                    <input
+                                        type={
+                                            showForgotNewPassword
+                                                ? "text"
+                                                : "password"
+                                        }
+                                        placeholder="Nhập lại mật khẩu mới"
+                                        value={forgotConfirmPassword}
+                                        onChange={(e) =>
+                                            setForgotConfirmPassword(
+                                                e.target.value,
+                                            )
+                                        }
+                                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                    />
+                                </div>
+
+                                {error && (
+                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                        {error}
+                                    </div>
+                                )}
+
+                                {success && (
+                                    <div className="p-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl font-medium">
+                                        {success}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        loading ||
+                                        forgotEmailOTP.trim().length !== 6
+                                    }
+                                    className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            <span>
+                                                Đang đặt lại mật khẩu...
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Lock className="w-4 h-4" />
+                                            <span>Đặt lại mật khẩu</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                {forgotUserData?.has2FA && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setError("");
+                                            setSuccess("");
+                                            setForgotStep("has_2fa");
+                                        }}
+                                        className="w-full py-1 text-xs text-brand-600 hover:underline font-medium text-center cursor-pointer"
+                                    >
+                                        Dùng mã Google Authenticator thay thế
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setForgotStep(
+                                            forgotUserData?.has2FA
+                                                ? "choose_method"
+                                                : "enter_user",
+                                        );
+                                        setError("");
+                                        setSuccess("");
+                                    }}
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Quay lại</span>
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Step 2B: Account has 2FA -> Enter TOTP code & new password */}
                         {forgotStep === "has_2fa" && (
                             <form
-                                onSubmit={handleForgotResetSubmit}
+                                onSubmit={handleForgotResetWithTOTP}
                                 className="space-y-4"
                             >
                                 <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
@@ -597,7 +954,7 @@ export default function Auth({
                                                     !showForgotNewPassword,
                                                 )
                                             }
-                                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
                                         >
                                             {showForgotNewPassword ? (
                                                 <EyeOff className="w-4 h-4" />
@@ -635,6 +992,12 @@ export default function Auth({
                                     </div>
                                 )}
 
+                                {success && (
+                                    <div className="p-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl font-medium">
+                                        {success}
+                                    </div>
+                                )}
+
                                 <button
                                     type="submit"
                                     disabled={
@@ -657,7 +1020,86 @@ export default function Auth({
                                         </>
                                     )}
                                 </button>
+
+                                {forgotUserData?.hasEmail && (
+                                    <button
+                                        type="button"
+                                        onClick={handleSelectEmailMethod}
+                                        className="w-full py-1 text-xs text-brand-600 hover:underline font-medium text-center cursor-pointer"
+                                    >
+                                        Nhận mã qua Email thay thế
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setForgotStep(
+                                            forgotUserData?.hasEmail
+                                                ? "choose_method"
+                                                : "enter_user",
+                                        );
+                                        setError("");
+                                        setSuccess("");
+                                    }}
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                    <ArrowLeft className="w-3.5 h-3.5" />
+                                    <span>Quay lại</span>
+                                </button>
                             </form>
+                        )}
+
+                        {/* Step 1.5: Account exists but NO Email AND NO 2FA -> Contact Teacher */}
+                        {forgotStep === "no_method" && (
+                            <div className="space-y-4">
+                                <div className="p-4 bg-amber-50/80 border border-amber-200/60 rounded-2xl space-y-3">
+                                    <div className="flex items-center gap-2 text-amber-700 font-bold text-xs">
+                                        <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                                        <span>
+                                            Chưa thiết lập phương thức khôi phục
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-amber-800 leading-relaxed">
+                                        Tài khoản{" "}
+                                        <b>@{forgotUserData?.username}</b> chưa
+                                        liên kết Email hoặc Google Authenticator
+                                        nên không thể tự đặt lại mật khẩu trực
+                                        tuyến.
+                                    </p>
+                                    <div className="p-3 bg-white/80 rounded-xl border border-amber-200/50 text-xs text-slate-700 space-y-1.5">
+                                        <p className="font-bold text-slate-800 flex items-center gap-1">
+                                            <HelpCircle className="w-3.5 h-3.5 text-brand-600" />
+                                            Cách giải quyết:
+                                        </p>
+                                        <p className="text-slate-600 leading-relaxed">
+                                            Bạn vui lòng{" "}
+                                            <button
+                                                type="button"
+                                                onClick={handleOpenContact}
+                                                className="font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2 cursor-pointer transition-colors inline"
+                                            >
+                                                nhắn tin trực tiếp
+                                            </button>{" "}
+                                            cho <b>cô Trang</b> để được hỗ trợ
+                                            cấp lại mật khẩu nhé!
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setAuthMode("login");
+                                        setForgotStep("enter_user");
+                                        setError("");
+                                    }}
+                                    className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    <span>Quay lại Trang Đăng nhập</span>
+                                </button>
+                            </div>
                         )}
 
                         {/* Step 3: Success */}

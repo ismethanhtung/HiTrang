@@ -1383,6 +1383,144 @@ func VerifyTOTP(secretBase32 string, code string) bool {
 	return false
 }
 
+// HandleSendEmailVerificationOTP (Protected)
+// POST /api/auth/email/send-verification-otp
+func HandleSendEmailVerificationOTP(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDVal, _ := c.Get("userID")
+		userID := userIDVal.(string)
+
+		var req struct {
+			Email string `json:"email" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập địa chỉ email hợp lệ"})
+			return
+		}
+
+		cleanEmail := strings.ToLower(strings.TrimSpace(req.Email))
+		if !strings.Contains(cleanEmail, "@") || !strings.Contains(cleanEmail, ".") || strings.Contains(cleanEmail, " ") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Địa chỉ email không đúng định dạng"})
+			return
+		}
+
+		// Check if another user already linked this email
+		var existingUser User
+		if err := db.Where("email = ? AND id <> ?", cleanEmail, userID).First(&existingUser).Error; err == nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Địa chỉ email này đã được liên kết với một tài khoản khác"})
+			return
+		}
+
+		var profile Profile
+		_ = db.Where("id = ?", userID).First(&profile)
+
+		otpCode := GenerateNumericOTP(6)
+
+		// Delete old OTPs for this email and purpose
+		_ = db.Where("email = ? AND purpose = ?", cleanEmail, "link_email").Delete(&EmailVerification{})
+
+		verification := EmailVerification{
+			ID:        uuid.New().String(),
+			UserID:    &userID,
+			Email:     cleanEmail,
+			Code:      otpCode,
+			Purpose:   "link_email",
+			ExpiresAt: time.Now().Add(10 * time.Minute),
+			CreatedAt: time.Now(),
+		}
+
+		if err := db.Create(&verification).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã xác thực: " + err.Error()})
+			return
+		}
+
+		if err := SendEmailOTP(cleanEmail, otpCode, "link_email", profile.Name); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể gửi email OTP: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đã gửi mã xác thực 6 số đến " + MaskEmail(cleanEmail) + ". Mã có hiệu lực trong 10 phút.",
+		})
+	}
+}
+
+// HandleVerifyAndLinkEmail (Protected)
+// POST /api/auth/email/verify-and-link
+func HandleVerifyAndLinkEmail(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDVal, _ := c.Get("userID")
+		userID := userIDVal.(string)
+
+		var req struct {
+			Email string `json:"email" binding:"required"`
+			Code  string `json:"code" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ email và mã xác thực"})
+			return
+		}
+
+		cleanEmail := strings.ToLower(strings.TrimSpace(req.Email))
+		cleanCode := strings.TrimSpace(req.Code)
+
+		var verif EmailVerification
+		if err := db.Where("email = ? AND code = ? AND purpose = ? AND expires_at > ?", cleanEmail, cleanCode, "link_email", time.Now()).First(&verif).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã xác thực không chính xác hoặc đã hết hạn"})
+			return
+		}
+
+		// Update user email
+		if err := db.Model(&User{}).Where("id = ?", userID).Update("email", cleanEmail).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể liên kết email: " + err.Error()})
+			return
+		}
+
+		// Clean up verification records
+		_ = db.Where("email = ? AND purpose = ?", cleanEmail, "link_email").Delete(&EmailVerification{})
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đã liên kết email thành công!",
+			"email":   cleanEmail,
+		})
+	}
+}
+
+// HandleUnlinkEmail (Protected)
+// DELETE /api/auth/email/unlink
+func HandleUnlinkEmail(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDVal, _ := c.Get("userID")
+		userID := userIDVal.(string)
+
+		var user User
+		if err := db.Where("id = ?", userID).First(&user).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không tìm thấy người dùng"})
+			return
+		}
+
+		// Check if user is Google-authenticated account
+		var profile Profile
+		_ = db.Where("id = ?", userID).First(&profile)
+		if profile.AvatarURL != nil && strings.Contains(*profile.AvatarURL, "googleusercontent.com") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tài khoản đăng nhập bằng Google không thể gỡ email liên kết"})
+			return
+		}
+
+		if err := db.Model(&User{}).Where("id = ?", userID).Update("email", nil).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi gỡ liên kết email: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đã gỡ liên kết email thành công.",
+		})
+	}
+}
+
 // HandleCheckForgotPassword (Public)
 // POST /api/auth/forgot-password/check
 func HandleCheckForgotPassword(db *gorm.DB) gin.HandlerFunc {
@@ -1400,9 +1538,10 @@ func HandleCheckForgotPassword(db *gorm.DB) gin.HandlerFunc {
 		var user User
 		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
 			c.JSON(http.StatusOK, gin.H{
-				"exists":  false,
-				"has2FA":  false,
-				"message": "Không tìm thấy tài khoản với tên đăng nhập này.",
+				"exists":   false,
+				"has2FA":   false,
+				"hasEmail": false,
+				"message":  "Không tìm thấy tài khoản với tên đăng nhập này.",
 			})
 			return
 		}
@@ -1416,12 +1555,161 @@ func HandleCheckForgotPassword(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		hasGoogleAuth := user.TOTPSecret != nil && *user.TOTPSecret != ""
+		hasEmail := user.Email != nil && strings.TrimSpace(*user.Email) != ""
+		maskedEmail := ""
+		if hasEmail {
+			maskedEmail = MaskEmail(*user.Email)
+		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"exists":   true,
-			"has2FA":   hasGoogleAuth,
-			"username": user.Username,
-			"name":     name,
+			"exists":      true,
+			"has2FA":      hasGoogleAuth,
+			"hasEmail":    hasEmail,
+			"maskedEmail": maskedEmail,
+			"username":    user.Username,
+			"name":        name,
+		})
+	}
+}
+
+// HandleForgotPasswordSendOTP (Public)
+// POST /api/auth/forgot-password/send-otp
+func HandleForgotPasswordSendOTP(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req struct {
+			Username string `json:"username" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập tên đăng nhập hoặc email"})
+			return
+		}
+
+		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
+
+		var user User
+		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không tìm thấy tài khoản người dùng"})
+			return
+		}
+
+		if user.Email == nil || strings.TrimSpace(*user.Email) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tài khoản này chưa liên kết địa chỉ email. Vui lòng sử dụng Google Authenticator hoặc liên hệ cô Trang."})
+			return
+		}
+
+		toEmail := strings.TrimSpace(*user.Email)
+		var profile Profile
+		_ = db.Where("id = ?", user.ID).First(&profile)
+
+		otpCode := GenerateNumericOTP(6)
+
+		// Delete old OTPs for this email and reset_password
+		_ = db.Where("email = ? AND purpose = ?", toEmail, "reset_password").Delete(&EmailVerification{})
+
+		verification := EmailVerification{
+			ID:        uuid.New().String(),
+			UserID:    &user.ID,
+			Email:     toEmail,
+			Code:      otpCode,
+			Purpose:   "reset_password",
+			ExpiresAt: time.Now().Add(10 * time.Minute),
+			CreatedAt: time.Now(),
+		}
+
+		if err := db.Create(&verification).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể tạo mã OTP: " + err.Error()})
+			return
+		}
+
+		if err := SendEmailOTP(toEmail, otpCode, "reset_password", profile.Name); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể gửi email OTP: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success":     true,
+			"maskedEmail": MaskEmail(toEmail),
+			"message":     "Đã gửi mã khôi phục mật khẩu 6 số đến " + MaskEmail(toEmail) + ". Mã có hiệu lực trong 10 phút.",
+		})
+	}
+}
+
+// HandleResetWithEmailOTP (Public)
+// POST /api/auth/forgot-password/reset-with-email-otp
+func HandleResetWithEmailOTP(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req struct {
+			Username string `json:"username" binding:"required"`
+			EmailOTP string `json:"emailOtp" binding:"required"`
+			Password string `json:"password" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Vui lòng nhập đầy đủ thông tin"})
+			return
+		}
+
+		if len(req.Password) < 6 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mật khẩu mới phải có ít nhất 6 ký tự"})
+			return
+		}
+
+		cleanUsername := strings.ToLower(strings.TrimSpace(req.Username))
+		cleanOTP := strings.TrimSpace(req.EmailOTP)
+
+		var user User
+		if err := db.Where("username = ? OR (email IS NOT NULL AND email = ?)", cleanUsername, cleanUsername).First(&user).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Không tìm thấy tài khoản người dùng"})
+			return
+		}
+
+		if user.Email == nil || strings.TrimSpace(*user.Email) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Tài khoản chưa có email xác thực"})
+			return
+		}
+
+		var verif EmailVerification
+		if err := db.Where("email = ? AND code = ? AND purpose = ? AND expires_at > ?", *user.Email, cleanOTP, "reset_password", time.Now()).First(&verif).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Mã xác thực email không chính xác hoặc đã hết hạn"})
+			return
+		}
+
+		hashedBytes, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi mã hóa mật khẩu mới"})
+			return
+		}
+
+		now := time.Now()
+		tx := db.Begin()
+		defer func() {
+			if r := recover(); r != nil {
+				tx.Rollback()
+			}
+		}()
+
+		if err := tx.Model(&User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+			"password_hash":       string(hashedBytes),
+			"password_updated_at": &now,
+		}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể cập nhật mật khẩu: " + err.Error()})
+			return
+		}
+
+		// Delete used verification OTP
+		_ = tx.Where("email = ? AND purpose = ?", *user.Email, "reset_password").Delete(&EmailVerification{})
+
+		// Invalidate previous reset tokens
+		_ = tx.Model(&PasswordResetToken{}).Where("user_id = ? AND used = ?", user.ID, false).Update("used", true)
+
+		if err := tx.Commit().Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu dữ liệu: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập ngay bằng mật khẩu mới.",
 		})
 	}
 }

@@ -531,12 +531,14 @@ export async function resetPasswordWithToken(token: string, password: string): P
 }
 
 // ----------------------------------------------------
-// 2-STEP VERIFICATION & FORGOT PASSWORD API
+// 2-STEP VERIFICATION & EMAIL OTP & FORGOT PASSWORD API
 // ----------------------------------------------------
 
 export interface ForgotPasswordCheckResult {
   exists: boolean;
-  has2FA: boolean;
+  has2FA?: boolean;
+  hasEmail?: boolean;
+  maskedEmail?: string;
   username?: string;
   name?: string;
   message?: string;
@@ -549,6 +551,24 @@ export async function checkForgotPassword(username: string): Promise<ForgotPassw
   });
 }
 
+export async function sendForgotPasswordEmailOTP(username: string): Promise<{ success: boolean; maskedEmail: string; message: string }> {
+  return await apiRequest('/auth/forgot-password/send-otp', {
+    method: 'POST',
+    body: JSON.stringify({ username }),
+  });
+}
+
+export async function resetPasswordWithEmailOTP(
+  username: string,
+  emailOtp: string,
+  password: string
+): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/forgot-password/reset-with-email-otp', {
+    method: 'POST',
+    body: JSON.stringify({ username, emailOtp, password }),
+  });
+}
+
 export async function resetPasswordWithTOTP(
   username: string,
   totpCode: string,
@@ -557,6 +577,26 @@ export async function resetPasswordWithTOTP(
   return await apiRequest('/auth/forgot-password/reset-with-totp', {
     method: 'POST',
     body: JSON.stringify({ username, totpCode, password }),
+  });
+}
+
+export async function sendEmailVerificationOTP(email: string): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/email/send-verification-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function verifyAndLinkEmail(email: string, code: string): Promise<{ success: boolean; email: string; message: string }> {
+  return await apiRequest('/auth/email/verify-and-link', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+export async function unlinkEmail(): Promise<{ success: boolean; message: string }> {
+  return await apiRequest('/auth/email/unlink', {
+    method: 'DELETE',
   });
 }
 

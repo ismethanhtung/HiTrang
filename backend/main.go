@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.86"
+const AppVersion = "1.0.87"
 
 func main() {
 	serverStartTime := time.Now()
@@ -96,6 +96,7 @@ func main() {
 		&Notification{},
 		&NotificationRead{},
 		&SiteVisit{},
+		&EmailVerification{},
 	)
 	if err != nil {
 		log.Fatalf("Migration thất bại: %v", err)
@@ -164,6 +165,8 @@ func main() {
 		api.GET("/auth/verify-reset-token", HandleVerifyResetToken(db))
 		api.POST("/auth/reset-password", HandleResetPasswordWithToken(db))
 		api.POST("/auth/forgot-password/check", HandleCheckForgotPassword(db))
+		api.POST("/auth/forgot-password/send-otp", HandleForgotPasswordSendOTP(db))
+		api.POST("/auth/forgot-password/reset-with-email-otp", HandleResetWithEmailOTP(db))
 		api.POST("/auth/forgot-password/reset-with-totp", HandleResetWithTOTP(db))
 		api.GET("/version", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
@@ -200,6 +203,11 @@ func main() {
 			protected.POST("/auth/me/avatar", HandleUploadAvatar(db))
 			protected.PUT("/auth/me/avatar-url", HandleUpdateAvatarURL(db))
 			protected.PUT("/auth/me/avatar", HandleUpdateAvatarURL(db))
+
+			// Email Verification & Linking
+			protected.POST("/auth/email/send-verification-otp", HandleSendEmailVerificationOTP(db))
+			protected.POST("/auth/email/verify-and-link", HandleVerifyAndLinkEmail(db))
+			protected.DELETE("/auth/email/unlink", HandleUnlinkEmail(db))
 
 			// Two-Factor Authentication (2FA)
 			protected.POST("/auth/2fa/setup", HandleSetup2FA(db))

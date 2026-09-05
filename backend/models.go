@@ -191,3 +191,15 @@ type SiteVisit struct {
 	UpdatedAt time.Time `json:"updatedAt" gorm:"autoUpdateTime"`
 }
 
+// EmailVerification stores OTP codes for email linking and password reset
+type EmailVerification struct {
+	ID        string    `json:"id" gorm:"primaryKey;type:varchar(36)"`
+	UserID    *string   `json:"userId" gorm:"column:user_id;type:varchar(36);index"`
+	Email     string    `json:"email" gorm:"type:varchar(255);index;not null"`
+	Code      string    `json:"code" gorm:"type:varchar(10);not null"`
+	Purpose   string    `json:"purpose" gorm:"type:varchar(50);not null"` // "link_email", "reset_password"
+	ExpiresAt time.Time `json:"expiresAt" gorm:"column:expires_at;index;not null"`
+	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at"`
+}
+
+

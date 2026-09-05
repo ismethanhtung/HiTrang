@@ -54,6 +54,9 @@ import {
     Search,
     Sparkles,
     AlertTriangle,
+    Mail,
+    MailCheck,
+    MailX,
 } from "lucide-react";
 import { User as UserType, Quiz, Submission, AppNotification } from "../types";
 import { PREDEFINED_AVATARS } from "../constants/avatars";
@@ -77,6 +80,9 @@ import {
     getNotifications,
     markNotificationAsRead,
     markAllNotificationsAsRead,
+    sendEmailVerificationOTP,
+    verifyAndLinkEmail,
+    unlinkEmail,
 } from "../lib/supabaseService";
 import { renderMathHtml } from "../lib/math";
 
@@ -312,6 +318,128 @@ export default function SettingsView({
         if (diffDay === 1) return "Hôm qua";
         if (diffDay < 30) return `${diffDay} ngày trước`;
         return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+    };
+
+    // Email Linking states
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [emailInput, setEmailInput] = useState("");
+    const [emailOTP, setEmailOTP] = useState("");
+    const [emailStep, setEmailStep] = useState<"input" | "verify">("input");
+    const [sendingEmailOTP, setSendingEmailOTP] = useState(false);
+    const [verifyingEmailOTP, setVerifyingEmailOTP] = useState(false);
+    const [unlinkingEmailState, setUnlinkingEmailState] = useState(false);
+    const [emailModalError, setEmailModalError] = useState("");
+    const [emailModalSuccess, setEmailModalSuccess] = useState("");
+    const [emailCountdown, setEmailCountdown] = useState(0);
+
+    // Email countdown timer effect
+    React.useEffect(() => {
+        if (emailCountdown > 0) {
+            const timer = setTimeout(
+                () => setEmailCountdown(emailCountdown - 1),
+                1000,
+            );
+            return () => clearTimeout(timer);
+        }
+    }, [emailCountdown]);
+
+    const handleOpenLinkEmailModal = () => {
+        setEmailInput(user.email || "");
+        setEmailOTP("");
+        setEmailStep("input");
+        setEmailModalError("");
+        setEmailModalSuccess("");
+        setIsEmailModalOpen(true);
+    };
+
+    const handleSendEmailOTP = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        setEmailModalError("");
+        setEmailModalSuccess("");
+
+        const cleanEmail = emailInput.trim().toLowerCase();
+        if (
+            !cleanEmail ||
+            !cleanEmail.includes("@") ||
+            !cleanEmail.includes(".")
+        ) {
+            setEmailModalError("Vui lòng nhập địa chỉ email hợp lệ.");
+            return;
+        }
+
+        setSendingEmailOTP(true);
+        try {
+            const res = await sendEmailVerificationOTP(cleanEmail);
+            setEmailStep("verify");
+            setEmailModalSuccess(
+                res.message || "Đã gửi mã xác thực 6 số đến email của bạn.",
+            );
+            setEmailCountdown(60);
+        } catch (err: any) {
+            setEmailModalError(
+                err.message ||
+                    "Không thể gửi mã xác thực email. Vui lòng kiểm tra lại cấu hình SMTP.",
+            );
+        } finally {
+            setSendingEmailOTP(false);
+        }
+    };
+
+    const handleVerifyEmailOTP = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setEmailModalError("");
+        setEmailModalSuccess("");
+
+        const cleanEmail = emailInput.trim().toLowerCase();
+        const cleanCode = emailOTP.trim();
+
+        if (cleanCode.length !== 6) {
+            setEmailModalError("Mã xác thực phải gồm đúng 6 chữ số.");
+            return;
+        }
+
+        setVerifyingEmailOTP(true);
+        try {
+            const res = await verifyAndLinkEmail(cleanEmail, cleanCode);
+            onUpdateUser({
+                ...user,
+                email: res.email || cleanEmail,
+            });
+            alert(
+                "Đã liên kết email thành công! Bạn có thể sử dụng email này để khôi phục mật khẩu khi cần.",
+            );
+            setIsEmailModalOpen(false);
+        } catch (err: any) {
+            setEmailModalError(
+                err.message || "Mã xác thực không chính xác hoặc đã hết hạn.",
+            );
+        } finally {
+            setVerifyingEmailOTP(false);
+        }
+    };
+
+    const handleUnlinkEmailAction = async () => {
+        if (
+            !confirm(
+                "Bạn có chắc chắn muốn gỡ liên kết email khỏi tài khoản không?",
+            )
+        ) {
+            return;
+        }
+
+        setUnlinkingEmailState(true);
+        try {
+            await unlinkEmail();
+            onUpdateUser({
+                ...user,
+                email: undefined,
+            });
+            alert("Đã gỡ liên kết email thành công.");
+        } catch (err: any) {
+            alert(`Lỗi gỡ liên kết email: ${err.message || "Vui lòng thử lại"}`);
+        } finally {
+            setUnlinkingEmailState(false);
+        }
     };
 
     // 2-Step Verification (Google Authenticator) states
@@ -1884,6 +2012,94 @@ export default function SettingsView({
                                     💡 Bạn đăng nhập trực tiếp qua Google OAuth nên không bắt buộc phải dùng mật khẩu riêng. Bạn có thể đặt mật khẩu nếu muốn đăng nhập bằng cả tên định danh.
                                 </p>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Recovery Email Row */}
+                    <div className="grid grid-cols-12 gap-6 py-6">
+                        <div className="col-span-12 md:col-span-4 space-y-1">
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                <Mail className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                                <span>Email khôi phục</span>
+                            </h4>
+                            <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
+                                Dùng để nhận mã OTP lấy lại mật khẩu khi quên.
+                            </p>
+                        </div>
+                        <div className="col-span-12 md:col-span-8 space-y-3">
+                            <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200/60 dark:border-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                        {user.email ? (
+                                            <MailCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                        ) : (
+                                            <Mail className="w-5 h-5 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                {user.email ||
+                                                    "Chưa liên kết email khôi phục"}
+                                            </span>
+                                            {user.email && (
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                                    {isGoogleUser
+                                                        ? "Google OAuth"
+                                                        : "Đã xác thực"}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-0.5">
+                                            {user.email
+                                                ? "Mã OTP 6 số sẽ được gửi về hộp thư này khi bạn yêu cầu quên mật khẩu."
+                                                : "Liên kết email để dễ dàng nhận mã OTP đặt lại mật khẩu khi cần."}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                                    {isGoogleUser ? (
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-550 italic">
+                                            Tự động qua Google
+                                        </span>
+                                    ) : user.email ? (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={
+                                                    handleOpenLinkEmailModal
+                                                }
+                                                className="py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                                            >
+                                                Đổi email
+                                            </button>
+                                            <button
+                                                type="button"
+                                                disabled={unlinkingEmailState}
+                                                onClick={
+                                                    handleUnlinkEmailAction
+                                                }
+                                                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                                                title="Gỡ liên kết email"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={
+                                                handleOpenLinkEmailModal
+                                            }
+                                            className="py-2 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm"
+                                        >
+                                            <Mail className="w-3.5 h-3.5" />
+                                            <span>Liên kết Email</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -3465,6 +3681,187 @@ export default function SettingsView({
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* LINK / VERIFY EMAIL MODAL */}
+            {isEmailModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200 font-sans">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                                    <Mail className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                        {user.email
+                                            ? "Thay đổi Email khôi phục"
+                                            : "Liên kết Email khôi phục"}
+                                    </h3>
+                                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                        {emailStep === "input"
+                                            ? "Nhập email của bạn để nhận mã OTP xác thực"
+                                            : `Nhập mã OTP 6 số đã gửi tới ${emailInput}`}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsEmailModalOpen(false)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {emailStep === "input" ? (
+                            <form
+                                onSubmit={handleSendEmailOTP}
+                                className="space-y-4"
+                            >
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                        Địa chỉ Email của bạn:
+                                    </label>
+                                    <input
+                                        type="email"
+                                        placeholder="vidu@gmail.com"
+                                        required
+                                        value={emailInput}
+                                        onChange={(e) =>
+                                            setEmailInput(e.target.value)
+                                        }
+                                        className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-400"
+                                    />
+                                    <p className="text-[10px] text-slate-400 dark:text-slate-550">
+                                        Hệ thống sẽ gửi một mã OTP 6 số để xác
+                                        minh bạn là chủ sở hữu email này.
+                                    </p>
+                                </div>
+
+                                {emailModalError && (
+                                    <div className="p-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-200/50 rounded-xl font-medium">
+                                        {emailModalError}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setIsEmailModalOpen(false)
+                                        }
+                                        className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            sendingEmailOTP ||
+                                            !emailInput.trim()
+                                        }
+                                        className="flex-1 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                                    >
+                                        {sendingEmailOTP && (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        )}
+                                        <span>Gửi mã xác thực</span>
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <form
+                                onSubmit={handleVerifyEmailOTP}
+                                className="space-y-4"
+                            >
+                                <div className="p-3 bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/60 dark:border-brand-800/50 rounded-xl space-y-1">
+                                    <div className="text-[11px] text-brand-800 dark:text-brand-300 font-medium">
+                                        Mã OTP 6 số đã được gửi đến:
+                                    </div>
+                                    <div className="text-xs font-bold font-mono text-brand-900 dark:text-brand-200">
+                                        {emailInput}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                                        Nhập mã OTP 6 số:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        maxLength={6}
+                                        placeholder="000000"
+                                        value={emailOTP}
+                                        onChange={(e) =>
+                                            setEmailOTP(
+                                                e.target.value.replace(
+                                                    /\D/g,
+                                                    "",
+                                                ),
+                                            )
+                                        }
+                                        className="w-full px-3.5 py-3 text-center text-xl tracking-[6px] font-mono font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-300"
+                                    />
+                                    <div className="flex items-center justify-between text-[11px] pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setEmailStep("input")
+                                            }
+                                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 underline cursor-pointer"
+                                        >
+                                            Đổi email khác
+                                        </button>
+                                        <button
+                                            type="button"
+                                            disabled={
+                                                emailCountdown > 0 ||
+                                                sendingEmailOTP
+                                            }
+                                            onClick={() => handleSendEmailOTP()}
+                                            className="text-brand-600 dark:text-brand-400 hover:underline font-medium cursor-pointer disabled:opacity-50 disabled:no-underline"
+                                        >
+                                            {emailCountdown > 0
+                                                ? `Gửi lại sau (${emailCountdown}s)`
+                                                : "Gửi lại mã"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {emailModalError && (
+                                    <div className="p-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-200/50 rounded-xl font-medium">
+                                        {emailModalError}
+                                    </div>
+                                )}
+
+                                <div className="flex gap-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setIsEmailModalOpen(false)
+                                        }
+                                        className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            verifyingEmailOTP ||
+                                            emailOTP.trim().length !== 6
+                                        }
+                                        className="flex-1 py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                                    >
+                                        {verifyingEmailOTP && (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        )}
+                                        <span>Xác nhận & Liên kết</span>
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
