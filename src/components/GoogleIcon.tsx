@@ -28,7 +28,6 @@ export const isUserGoogleAccount = (u?: User | null): boolean => {
     if (!u) return false;
     return Boolean(
         u.isGoogle ||
-        (u.email && u.email.trim().length > 0) ||
         (u.avatarUrl &&
             (u.avatarUrl.includes("googleusercontent.com") ||
                 u.avatarUrl.includes("google.com"))),

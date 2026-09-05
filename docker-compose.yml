@@ -27,6 +27,8 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     environment:
       - DB_HOST=db
       - DB_PORT=3306
@@ -38,6 +40,11 @@ services:
       - PORT=8080
       - VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
       - GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+      - SMTP_HOST=$SMTP_HOST
+      - SMTP_PORT=$SMTP_PORT
+      - SMTP_USER=$SMTP_USER
+      - SMTP_PASS=$SMTP_PASS
+      - SMTP_FROM_NAME=$SMTP_FROM_NAME
       - BACKUP_DIR=/app/backups
     volumes:
       - ./backup:/app/backup

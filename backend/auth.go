@@ -287,16 +287,23 @@ func HandleLogin(db *gorm.DB) gin.HandlerFunc {
 
 		RecordUserSession(db, c, user.ID, token)
 
+		isGoogle := false
+		if profile.AvatarURL != nil && (strings.Contains(*profile.AvatarURL, "googleusercontent.com") || strings.Contains(*profile.AvatarURL, "google.com")) {
+			isGoogle = true
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"token": token,
 			"user": gin.H{
-				"id":              user.ID,
-				"name":            profile.Name,
-				"username":        profile.Username,
-				"role":            profile.Role,
-				"grade":           profile.Grade,
-				"plan":            profile.Plan,
-				"avatarUrl":       profile.AvatarURL,
+				"id":                user.ID,
+				"name":              profile.Name,
+				"username":          profile.Username,
+				"email":             user.Email,
+				"isGoogle":          isGoogle,
+				"role":              profile.Role,
+				"grade":             profile.Grade,
+				"plan":              profile.Plan,
+				"avatarUrl":         profile.AvatarURL,
 				"totpEnabled":       user.TOTPSecret != nil,
 				"totpLinked":        user.TOTPSecret != nil,
 				"require2FALogin":   user.Require2FALogin,
@@ -322,10 +329,17 @@ func HandleMe(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		isGoogle := false
+		if profile.AvatarURL != nil && (strings.Contains(*profile.AvatarURL, "googleusercontent.com") || strings.Contains(*profile.AvatarURL, "google.com")) {
+			isGoogle = true
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"id":                profile.ID,
 			"name":              profile.Name,
 			"username":          profile.Username,
+			"email":             user.Email,
+			"isGoogle":          isGoogle,
 			"role":              profile.Role,
 			"grade":             profile.Grade,
 			"plan":              profile.Plan,
@@ -445,9 +459,7 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 		resp := make([]UserResponse, len(userRows))
 		for i, p := range userRows {
 			isGoogle := false
-			if p.Email != nil && strings.TrimSpace(*p.Email) != "" {
-				isGoogle = true
-			} else if p.AvatarURL != nil && strings.Contains(*p.AvatarURL, "googleusercontent.com") {
+			if p.AvatarURL != nil && (strings.Contains(*p.AvatarURL, "googleusercontent.com") || strings.Contains(*p.AvatarURL, "google.com")) {
 				isGoogle = true
 			}
 
