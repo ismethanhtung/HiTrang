@@ -124,7 +124,7 @@ func SendEmailOTP(toEmail, otpCode, purpose, recipientName string) error {
                                 Xin chào <b>%s</b>,<br>
                                 %s
                             </p>
-                            
+
                             <!-- OTP Box -->
                             <div style="background-color: #f8fafc; border: 2px dashed #0284c7; border-radius: 14px; padding: 20px; text-align: center; margin: 24px 0;">
                                 <span style="display: block; color: #64748b; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Mã xác thực của bạn</span>
@@ -144,7 +144,7 @@ func SendEmailOTP(toEmail, otpCode, purpose, recipientName string) error {
                     <tr>
                         <td style="padding: 20px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
                             <p style="margin: 0; color: #94a3b8; font-size: 11px;">
-                                © %d %s. Mọi quyền được bảo lưu.
+                                © %d %s.
                             </p>
                         </td>
                     </tr>

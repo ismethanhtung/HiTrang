@@ -3799,14 +3799,14 @@ export default function SettingsView({
                                 onSubmit={handleVerifyEmailOTP}
                                 className="space-y-4"
                             >
-                                <div className="p-3 bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/60 dark:border-brand-800/50 rounded-xl space-y-1">
+                                {/*<div className="p-3 bg-brand-50/60 dark:bg-brand-950/30 border border-brand-200/60 dark:border-brand-800/50 rounded-xl space-y-1">
                                     <div className="text-[11px] text-brand-800 dark:text-brand-300 font-medium">
                                         Mã OTP 6 số đã được gửi đến:
                                     </div>
                                     <div className="text-xs font-bold font-mono text-brand-900 dark:text-brand-200">
                                         {emailInput}
                                     </div>
-                                </div>
+                                </div>*/}
 
                                 <div className="space-y-1.5">
                                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
