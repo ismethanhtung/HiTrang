@@ -108,7 +108,7 @@ export default function AdminSystemTab() {
                                 Hạ Tầng Máy Chủ & Hệ Thống
                                 {metrics && (
                                     <span
-                                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${getStatusColorClass(
+                                        className={`text-[11px] font-semibold px-2 py-0.5  border ${getStatusColorClass(
                                             metrics.overallHealth,
                                         )}`}
                                     >
@@ -132,7 +132,7 @@ export default function AdminSystemTab() {
 
                 {/* Actions & Auto-refresh */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 text-xs">
+                    <div className="flex items-center bg-slate-100 dark:bg-slate-800  p-1 text-xs">
                         <span className="text-[11px] text-slate-400 dark:text-slate-500 px-2 font-medium">
                             Tự động cập nhật:
                         </span>
@@ -156,7 +156,7 @@ export default function AdminSystemTab() {
                         type="button"
                         onClick={() => fetchMetrics(true)}
                         disabled={refreshing}
-                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200/60 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-600 dark:text-slate-300  text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                         title="Làm mới thông số ngay"
                     >
                         <RefreshCw
@@ -169,7 +169,7 @@ export default function AdminSystemTab() {
 
             {/* Error Message */}
             {error && (
-                <div className="p-4 rounded-xl text-xs bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 flex items-start gap-3">
+                <div className="p-4  text-xs bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40 flex items-start gap-3">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <div>
                         <div className="font-bold">
@@ -188,7 +188,7 @@ export default function AdminSystemTab() {
                     {metrics.alerts.map((alert, idx) => (
                         <div
                             key={idx}
-                            className="p-3.5 rounded-xl text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2.5"
+                            className="p-3.5  text-xs bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2.5"
                         >
                             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                             <div className="flex-1 font-medium">{alert}</div>
@@ -201,14 +201,14 @@ export default function AdminSystemTab() {
             {metrics && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Card 1: Ổ đĩa (Disk) */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
+                    <div className="p-4  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <HardDrive className="w-4 h-4 text-brand-500" />
                                 Ổ đĩa máy chủ
                             </span>
                             <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getStatusColorClass(
+                                className={`text-[10px] font-bold px-2 py-0.5  border ${getStatusColorClass(
                                     metrics.disk.status,
                                 )}`}
                             >
@@ -222,9 +222,9 @@ export default function AdminSystemTab() {
                                     / {metrics.disk.totalFormatted}
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-2.5 overflow-hidden">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2  mt-2.5 overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
+                                    className={`h-full  transition-all duration-500 ${getProgressColor(
                                         metrics.disk.usedPercent,
                                     )}`}
                                     style={{
@@ -240,14 +240,14 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Card 2: Bộ nhớ RAM */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
+                    <div className="p-4  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <Activity className="w-4 h-4 text-emerald-500" />
                                 Bộ nhớ RAM
                             </span>
                             <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getStatusColorClass(
+                                className={`text-[10px] font-bold px-2 py-0.5  border ${getStatusColorClass(
                                     metrics.memory.status,
                                 )}`}
                             >
@@ -261,9 +261,9 @@ export default function AdminSystemTab() {
                                     / {metrics.memory.totalFormatted}
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-2.5 overflow-hidden">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2  mt-2.5 overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
+                                    className={`h-full  transition-all duration-500 ${getProgressColor(
                                         metrics.memory.usedPercent,
                                     )}`}
                                     style={{
@@ -283,14 +283,14 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Card 3: CPU & Tải xử lý */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
+                    <div className="p-4  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <Cpu className="w-4 h-4 text-indigo-500" />
                                 Tải CPU ({metrics.cpu.cores} Cores)
                             </span>
                             <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getStatusColorClass(
+                                className={`text-[10px] font-bold px-2 py-0.5  border ${getStatusColorClass(
                                     metrics.cpu.status,
                                 )}`}
                             >
@@ -304,9 +304,9 @@ export default function AdminSystemTab() {
                                     (Load 1m)
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-2.5 overflow-hidden">
+                            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2  mt-2.5 overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full transition-all duration-500 ${getProgressColor(
+                                    className={`h-full  transition-all duration-500 ${getProgressColor(
                                         metrics.cpu.usagePercent,
                                     )}`}
                                     style={{
@@ -324,13 +324,13 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Card 4: Uptime & Hoạt động */}
-                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
+                    <div className="p-4  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs flex flex-col justify-between">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                 <Clock className="w-4 h-4 text-teal-500" />
                                 Thời gian máy chủ chạy
                             </span>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800/40">
+                            <span className="text-[10px] font-bold px-2 py-0.5  border text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800/40">
                                 99.99% ONLINE
                             </span>
                         </div>
@@ -353,7 +353,7 @@ export default function AdminSystemTab() {
             {metrics && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Panel 1: Chi tiết Ổ đĩa & Inodes */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                    <div className="p-5  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
                             <div className="flex items-center gap-2">
                                 <HardDrive className="w-4 h-4 text-brand-500" />
@@ -368,7 +368,7 @@ export default function AdminSystemTab() {
 
                         {/* Storage breakdown table */}
                         <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Tổng Dung Lượng
                                 </div>
@@ -376,7 +376,7 @@ export default function AdminSystemTab() {
                                     {metrics.disk.totalFormatted}
                                 </div>
                             </div>
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Đã Sử Dụng
                                 </div>
@@ -385,7 +385,7 @@ export default function AdminSystemTab() {
                                     {metrics.disk.usedPercent}%)
                                 </div>
                             </div>
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Còn Trống
                                 </div>
@@ -396,7 +396,7 @@ export default function AdminSystemTab() {
                         </div>
 
                         {/* Inode stats */}
-                        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-2">
+                        <div className="p-3.5  bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-2">
                             <div className="flex items-center justify-between font-medium">
                                 <span className="text-slate-600 dark:text-slate-300">
                                     Số lượng tệp tin (Inodes) đã dùng:
@@ -407,9 +407,9 @@ export default function AdminSystemTab() {
                                     ({metrics.disk.inodesUsedPercent}%)
                                 </span>
                             </div>
-                            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5  overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full ${getProgressColor(metrics.disk.inodesUsedPercent)}`}
+                                    className={`h-full  ${getProgressColor(metrics.disk.inodesUsedPercent)}`}
                                     style={{
                                         width: `${Math.min(metrics.disk.inodesUsedPercent, 100)}%`,
                                     }}
@@ -424,7 +424,7 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Panel 2: Chi tiết Bộ nhớ RAM & Go Runtime */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                    <div className="p-5  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
                             <div className="flex items-center gap-2">
                                 <Layers className="w-4 h-4 text-emerald-500" />
@@ -439,7 +439,7 @@ export default function AdminSystemTab() {
 
                         {/* RAM metrics breakdown */}
                         <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Tổng RAM
                                 </div>
@@ -447,7 +447,7 @@ export default function AdminSystemTab() {
                                     {metrics.memory.totalFormatted}
                                 </div>
                             </div>
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Đang Dùng
                                 </div>
@@ -456,7 +456,7 @@ export default function AdminSystemTab() {
                                     {metrics.memory.usedPercent}%)
                                 </div>
                             </div>
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60">
                                 <div className="text-[10px] font-bold text-slate-400 uppercase">
                                     Khả Dụng
                                 </div>
@@ -467,7 +467,7 @@ export default function AdminSystemTab() {
                         </div>
 
                         {/* Go Runtime memory specifics */}
-                        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                        <div className="p-3.5  bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <span className="text-slate-500 dark:text-slate-400">
                                     Bộ nhớ Heap Backend cấp phát:
@@ -504,7 +504,7 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Panel 3: Cơ sở dữ liệu MySQL & Mạng */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                    <div className="p-5  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
                             <div className="flex items-center gap-2">
                                 <Database className="w-4 h-4 text-sky-500" />
@@ -513,7 +513,7 @@ export default function AdminSystemTab() {
                                 </h3>
                             </div>
                             <span
-                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getStatusColorClass(
+                                className={`text-[10px] font-bold px-2 py-0.5  border ${getStatusColorClass(
                                     metrics.database.status,
                                 )}`}
                             >
@@ -525,7 +525,7 @@ export default function AdminSystemTab() {
 
                         {/* Database metrics */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                                 <div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase">
                                         Độ trễ Ping DB
@@ -537,7 +537,7 @@ export default function AdminSystemTab() {
                                 <Zap className="w-5 h-5 text-amber-500/80" />
                             </div>
 
-                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
+                            <div className="p-3  bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
                                 <div>
                                     <div className="text-[10px] font-bold text-slate-400 uppercase">
                                         Connection Pool
@@ -553,7 +553,7 @@ export default function AdminSystemTab() {
                         </div>
 
                         {/* Network Stats */}
-                        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-2">
+                        <div className="p-3.5  bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs space-y-2">
                             <div className="flex items-center justify-between font-semibold text-slate-700 dark:text-slate-200">
                                 <span className="flex items-center gap-1.5">
                                     <Wifi className="w-3.5 h-3.5 text-slate-400" />
@@ -562,7 +562,7 @@ export default function AdminSystemTab() {
                                 </span>
                             </div>
                             <div className="grid grid-cols-2 gap-2 font-mono text-[11px] pt-1">
-                                <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
+                                <div className="p-2  bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
                                     <div className="text-slate-400 text-[10px]">
                                         Tải xuống (RX Received)
                                     </div>
@@ -570,7 +570,7 @@ export default function AdminSystemTab() {
                                         {metrics.network.totalRxFormatted}
                                     </div>
                                 </div>
-                                <div className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
+                                <div className="p-2  bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700">
                                     <div className="text-slate-400 text-[10px]">
                                         Tải lên (TX Sent)
                                     </div>
@@ -583,7 +583,7 @@ export default function AdminSystemTab() {
                     </div>
 
                     {/* Panel 4: Thông tin Node EC2 & Hệ thống */}
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                    <div className="p-5  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-teal-500" />
@@ -646,7 +646,7 @@ export default function AdminSystemTab() {
             {metrics &&
                 metrics.maintenanceTips &&
                 metrics.maintenanceTips.length > 0 && (
-                    <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
+                    <div className="p-5  bg-white dark:bg-slate-900 border border-border-primary/60 dark:border-slate-800/80 shadow-xs space-y-4">
                         <div className="flex items-center gap-2 pb-3 border-b border-border-primary/40 dark:border-slate-800/60">
                             <Terminal className="w-4 h-4 text-brand-500" />
                             <div>
@@ -667,7 +667,7 @@ export default function AdminSystemTab() {
                                 (tip: SystemMaintenanceTip, index: number) => (
                                     <div
                                         key={index}
-                                        className={`p-3.5 rounded-xl border transition-all ${
+                                        className={`p-3.5  border transition-all ${
                                             tip.severity === "urgent"
                                                 ? "bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/50"
                                                 : tip.severity === "warning"
@@ -688,7 +688,7 @@ export default function AdminSystemTab() {
                                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">
                                             {tip.description}
                                         </p>
-                                        <div className="flex items-center justify-between bg-slate-900 dark:bg-black/80 rounded-lg p-2 font-mono text-[11px] text-emerald-400">
+                                        <div className="flex items-center justify-between bg-slate-900 dark:bg-black/80  p-2 font-mono text-[11px] text-emerald-400">
                                             <span className="truncate mr-2">
                                                 $ {tip.command}
                                             </span>

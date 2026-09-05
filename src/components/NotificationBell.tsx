@@ -181,7 +181,7 @@ export default function NotificationBell({
 
             {/* Notification Popover Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-86 bg-bg-card rounded-xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="fixed left-3 right-3 top-[58px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-86 max-w-[calc(100vw-24px)] sm:max-w-none bg-bg-card rounded-xl shadow-2xl border border-border-primary overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                     {/* Header */}
                     <div className="p-3.5 border-b border-border-primary flex items-center justify-between bg-bg-surface/50">
                         <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function NotificationBell({
                     </div>
 
                     {/* Notification List Container */}
-                    <div className="max-h-[380px] overflow-y-auto divide-y divide-border-primary/40">
+                    <div className="max-h-[calc(100vh-140px)] sm:max-h-[380px] overflow-y-auto divide-y divide-border-primary/40">
                         {loading && notifications.length === 0 ? (
                             <div className="py-12 text-center text-xs text-text-tertiary flex items-center justify-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin text-brand-500" />

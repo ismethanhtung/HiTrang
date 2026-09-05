@@ -3130,35 +3130,6 @@ export default function StudentDashboard({
                                             đang làm gì?
                                         </p>
                                     </div>
-
-                                    {/* Stats Grid */}
-                                    <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6 p-4 rounded-2xl">
-                                        <div className="text-center min-w-[50px]">
-                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                Số đề thi
-                                            </span>
-                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                {gradeQuizzes.length}
-                                            </span>
-                                        </div>
-                                        <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
-                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                Hoàn thành
-                                            </span>
-                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                {completionRate}%
-                                            </span>
-                                        </div>
-
-                                        <div className="text-center border-l border-gray-200 dark:border-slate-800 pl-3 min-w-[50px]">
-                                            <span className="text-[8px] sm:text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase block tracking-wider">
-                                                Điểm TB
-                                            </span>
-                                            <span className="text-xs sm:text-sm lg:text-base font-black text-slate-800 dark:text-slate-200 block mt-0.5">
-                                                {averageScore}/10
-                                            </span>
-                                        </div>
-                                    </div>
                                 </div>
 
                                 {/* ULTRA-CLEAN FLAT SAGE-WHITE DASHBOARD */}
@@ -3397,26 +3368,18 @@ export default function StudentDashboard({
                                                                             .includes(
                                                                                 "chuyên",
                                                                             );
-                                                                    const badgeText =
-                                                                        isVip
-                                                                            ? "Nâng cao"
-                                                                            : "Cơ bản";
-                                                                    const badgeStyles =
-                                                                        isVip
-                                                                            ? "bg-rose-50 text-rose-700 border-rose-100"
-                                                                            : "bg-slate-100 text-slate-600 border-slate-200/60";
 
                                                                     return (
                                                                         <div
                                                                             key={
                                                                                 quiz.id
                                                                             }
-                                                                            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200/50 last:border-0 last:pb-0 gap-4 text-left transition-all"
+                                                                            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 last:pb-0 gap-3 sm:gap-4 text-left transition-all"
                                                                         >
                                                                             {/* Left info */}
                                                                             <div className="space-y-1.5 flex-1 w-full">
                                                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                                                    <h4 className="text-[13px] font-extrabold text-slate-800 group-hover:text-[#3B6D85] transition-colors leading-snug">
+                                                                                    <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-[#3B6D85] transition-colors leading-snug">
                                                                                         {
                                                                                             quiz.title
                                                                                         }
@@ -3429,18 +3392,18 @@ export default function StudentDashboard({
                                                                                 </p>
 
                                                                                 {/* Metas and real quiz data */}
-                                                                                <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold flex-wrap pt-0.5">
-                                                                                    <span className="flex items-center gap-1">
+                                                                                <div className="flex items-center gap-x-3 gap-y-1 sm:gap-4 text-[10px] text-slate-400 font-bold flex-wrap pt-0.5">
+                                                                                    <span className="flex items-center gap-1 shrink-0">
                                                                                         <Clock className="w-3.5 h-3.5 text-slate-400" />
                                                                                         {
                                                                                             quiz.duration
                                                                                         }{" "}
                                                                                         phút
                                                                                     </span>
-                                                                                    <span>
+                                                                                    <span className="hidden sm:inline select-none">
                                                                                         •
                                                                                     </span>
-                                                                                    <span className="flex items-center gap-1">
+                                                                                    <span className="flex items-center gap-1 shrink-0">
                                                                                         <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
                                                                                         {
                                                                                             quiz
@@ -3450,20 +3413,20 @@ export default function StudentDashboard({
                                                                                         câu
                                                                                         hỏi
                                                                                     </span>
-                                                                                    <span>
+                                                                                    <span className="hidden sm:inline select-none">
                                                                                         •
                                                                                     </span>
-                                                                                    <span className="flex items-center gap-1">
+                                                                                    <span className="flex items-center gap-1 shrink-0">
                                                                                         <List className="w-3.5 h-3.5 text-slate-400" />
                                                                                         {
                                                                                             sectionCount
                                                                                         }{" "}
                                                                                         phần
                                                                                     </span>
-                                                                                    <span>
+                                                                                    <span className="hidden sm:inline select-none">
                                                                                         •
                                                                                     </span>
-                                                                                    <span className="flex items-center gap-1 text-slate-400 font-medium">
+                                                                                    <span className="flex items-center gap-1 text-slate-400 font-medium shrink-0">
                                                                                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                                                                                         Ngày:{" "}
                                                                                         {
@@ -3474,12 +3437,12 @@ export default function StudentDashboard({
                                                                             </div>
 
                                                                             {/* Right Action */}
-                                                                            <div className="flex items-center justify-between md:justify-end gap-5 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-slate-100/50">
+                                                                            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-5 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100/70 dark:border-slate-800/60 shrink-0">
                                                                                 <span
-                                                                                    className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${
+                                                                                    className={`text-[10px] font-extrabold px-3 py-1 rounded-full shrink-0 ${
                                                                                         hasDone
-                                                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                                                                                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                                                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
+                                                                                            : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
                                                                                     }`}
                                                                                 >
                                                                                     {hasDone

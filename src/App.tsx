@@ -1047,7 +1047,7 @@ export default function App() {
                     )}
             </main>
             {!isSupportDismissed && (
-                <div className="fixed bottom-4 left-4 z-40 w-46 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
+                <div className="hidden lg:block fixed bottom-4 left-4 z-40 w-46 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/60 dark:border-slate-800 rounded-xl p-3.5 shadow-lg space-y-3 animate-in fade-in slide-in-from-bottom-5 duration-200">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 text-blue-500 dark:text-blue-300">
@@ -1401,21 +1401,6 @@ export default function App() {
                 </div>
             )}
 
-            {/* Performance / Latency Indicator */}
-            {loadTimeMs !== null && (
-                <div className="fixed bottom-1.5 right-4 z-40 flex items-center gap-1 px-1.5 py-0.5 text-[6px] font-mono text-slate-400 dark:text-slate-500 select-none pointer-events-none">
-                    <span
-                        className={`w-0.5 h-0.5 rounded-full ${
-                            loadTimeMs < 300
-                                ? "bg-emerald-500"
-                                : loadTimeMs < 800
-                                  ? "bg-amber-500"
-                                  : "bg-rose-500"
-                        }`}
-                    />
-                    <span>{loadTimeMs}ms</span>
-                </div>
-            )}
         </div>
     );
 }
