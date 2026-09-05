@@ -161,7 +161,13 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 export async function signOutUser(): Promise<void> {
-  localStorage.removeItem('hitrang_token');
+  try {
+    await apiRequest('/auth/logout', { method: 'POST' });
+  } catch (err) {
+    // Ignore if offline or already expired
+  } finally {
+    localStorage.removeItem('hitrang_token');
+  }
 }
 
 /**
@@ -414,6 +420,15 @@ export async function uploadAvatar(file: File): Promise<string> {
   const data = await apiRequest<{ avatarUrl: string }>('/auth/me/avatar', {
     method: 'POST',
     body: formData,
+  });
+
+  return data.avatarUrl;
+}
+
+export async function updateAvatarUrl(avatarUrl: string): Promise<string> {
+  const data = await apiRequest<{ avatarUrl: string }>('/auth/me/avatar-url', {
+    method: 'PUT',
+    body: JSON.stringify({ avatarUrl }),
   });
 
   return data.avatarUrl;

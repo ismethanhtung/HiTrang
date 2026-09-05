@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.83"
+const AppVersion = "1.0.85"
 
 func main() {
 	serverStartTime := time.Now()
@@ -198,6 +198,8 @@ func main() {
 			protected.PUT("/auth/me/username", HandleUpdateUsername(db))
 			protected.PUT("/auth/me/password", HandleUpdatePassword(db))
 			protected.POST("/auth/me/avatar", HandleUploadAvatar(db))
+			protected.PUT("/auth/me/avatar-url", HandleUpdateAvatarURL(db))
+			protected.PUT("/auth/me/avatar", HandleUpdateAvatarURL(db))
 
 			// Two-Factor Authentication (2FA)
 			protected.POST("/auth/2fa/setup", HandleSetup2FA(db))
@@ -206,6 +208,7 @@ func main() {
 			protected.PUT("/auth/2fa/login-required", HandleToggle2FALogin(db))
 
 			// Active Sessions & Account Deletion
+			protected.POST("/auth/logout", HandleLogout(db))
 			protected.GET("/auth/sessions", HandleGetSessions(db))
 			protected.DELETE("/auth/sessions/:id", HandleRevokeSession(db))
 			protected.POST("/auth/sessions/logout-all", HandleRevokeAllOtherSessions(db))

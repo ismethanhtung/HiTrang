@@ -23,6 +23,7 @@ import {
     BookOpen,
     Lightbulb,
     ChevronLeft,
+    ChevronRight,
     ChevronDown,
     ChevronUp,
     CheckCircle2,
@@ -45,14 +46,23 @@ import {
     Bell,
     CheckCheck,
     ExternalLink,
+    Palette,
+    Sun,
+    Moon,
+    Monitor,
+    Type,
+    Search,
+    Sparkles,
 } from "lucide-react";
 import { User as UserType, Quiz, Submission, AppNotification } from "../types";
+import { PREDEFINED_AVATARS } from "../constants/avatars";
 import {
     updateProfileName,
     updateUsername,
     updatePassword,
     signOutAllDevices,
     uploadAvatar,
+    updateAvatarUrl,
     setup2FA,
     enable2FA,
     disable2FA,
@@ -72,11 +82,24 @@ interface SettingsViewProps {
     user: UserType;
     onUpdateUser: (updatedUser: UserType) => void;
     onLogout: () => void;
-    theme: "light" | "dark";
+    theme: "light" | "dark" | "system";
+    onThemeChange?: (theme: "light" | "dark" | "system") => void;
     submissions: Submission[];
     quizzes: Quiz[];
-    initialTab?: "profile" | "history" | "notifications";
-    onTabChange?: (tab: "profile" | "history" | "notifications") => void;
+    initialTab?:
+        | "profile"
+        | "security"
+        | "appearance"
+        | "history"
+        | "notifications";
+    onTabChange?: (
+        tab:
+            | "profile"
+            | "security"
+            | "appearance"
+            | "history"
+            | "notifications",
+    ) => void;
     onNavigate?: (path: string) => void;
 }
 
@@ -85,6 +108,7 @@ export default function SettingsView({
     onUpdateUser,
     onLogout,
     theme,
+    onThemeChange,
     submissions,
     quizzes,
     initialTab,
@@ -120,10 +144,80 @@ export default function SettingsView({
     const [updatingPassword, setUpdatingPassword] = useState(false);
     const [loggingOutAll, setLoggingOutAll] = useState(false);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+    const [selectingPredefined, setSelectingPredefined] = useState(false);
     const [avatarError, setAvatarError] = useState<string | null>(null);
     const [activeSettingsTab, setActiveSettingsTab] = useState<
-        "profile" | "history" | "notifications"
+        "profile" | "security" | "appearance" | "history" | "notifications"
     >(initialTab || "profile");
+    const [historyFilter, setHistoryFilter] = useState<
+        "all" | "high" | "medium" | "low"
+    >("all");
+    const [historySearch, setHistorySearch] = useState("");
+    const [selectedFont, setSelectedFont] = useState<string>(() => {
+        return localStorage.getItem("hitrang_font_family") || "plus-jakarta";
+    });
+
+    const fontOptions = [
+        {
+            id: "plus-jakarta",
+            name: "Plus Jakarta Sans",
+            cssVal: "'Plus Jakarta Sans', sans-serif",
+            desc: "Hiện đại, thanh lịch & cân đối (Mặc định)",
+        },
+        {
+            id: "be-vietnam",
+            name: "Be Vietnam Pro",
+            cssVal: "'Be Vietnam Pro', sans-serif",
+            desc: "Tối ưu hóa hiển thị dấu tiếng Việt hoàn hảo",
+        },
+        {
+            id: "inter",
+            name: "Inter",
+            cssVal: "'Inter', sans-serif",
+            desc: "Tối giản, trung tính, cấu trúc chuẩn quốc tế",
+        },
+        {
+            id: "jetbrains-mono",
+            name: "JetBrains Mono",
+            cssVal: "'JetBrains Mono', monospace",
+            desc: "Chuyên dụng cho ký hiệu & kỹ thuật",
+        },
+    ];
+
+    const handleSelectFont = (fontId: string) => {
+        setSelectedFont(fontId);
+        localStorage.setItem("hitrang_font_family", fontId);
+        const opt = fontOptions.find((f) => f.id === fontId);
+        if (opt) {
+            document.body.style.fontFamily = opt.cssVal;
+            document.documentElement.style.setProperty(
+                "--font-sans",
+                opt.cssVal,
+            );
+        }
+    };
+
+    const handleSelectTheme = (newTheme: "light" | "dark" | "system") => {
+        if (onThemeChange) {
+            onThemeChange(newTheme);
+        } else {
+            const root = window.document.documentElement;
+            if (newTheme === "system") {
+                const systemPrefersDark = window.matchMedia(
+                    "(prefers-color-scheme: dark)",
+                ).matches;
+                if (systemPrefersDark) root.classList.add("dark");
+                else root.classList.remove("dark");
+            } else if (newTheme === "dark") {
+                root.classList.add("dark");
+            } else {
+                root.classList.remove("dark");
+            }
+            localStorage.setItem("hitrang_theme", newTheme);
+        }
+    };
+
     const [reviewSubmission, setReviewSubmission] = useState<Submission | null>(
         null,
     );
@@ -460,7 +554,7 @@ export default function SettingsView({
     };
 
     React.useEffect(() => {
-        if (activeSettingsTab === "profile") {
+        if (activeSettingsTab === "security") {
             loadSessions();
         }
     }, [activeSettingsTab]);
@@ -499,13 +593,42 @@ export default function SettingsView({
         }
     };
 
-    const handleTabClick = (tab: "profile" | "history" | "notifications") => {
+    const handleSelectPredefinedAvatar = async (avatarUrl: string) => {
+        setAvatarError(null);
+        setSelectingPredefined(true);
+        try {
+            const savedUrl = await updateAvatarUrl(avatarUrl);
+            const updatedUser = { ...user, avatarUrl: savedUrl };
+            onUpdateUser(updatedUser);
+            localStorage.setItem("hvt_user", JSON.stringify(updatedUser));
+            setIsAvatarPickerOpen(false);
+        } catch (err: any) {
+            console.error("Lỗi khi chọn ảnh đại diện:", err);
+            setAvatarError(
+                err.message || "Không thể cập nhật ảnh đại diện mẫu",
+            );
+        } finally {
+            setSelectingPredefined(false);
+        }
+    };
+
+    const handleTabClick = (
+        tab:
+            | "profile"
+            | "security"
+            | "appearance"
+            | "history"
+            | "notifications",
+    ) => {
         setActiveSettingsTab(tab);
         if (onTabChange) {
             onTabChange(tab);
         }
         if (tab === "notifications") {
             fetchNotifs();
+        }
+        if (tab === "security") {
+            loadSessions();
         }
     };
 
@@ -514,10 +637,19 @@ export default function SettingsView({
     >({});
 
     const toggleQuizExpand = (quizId: string) => {
-        setExpandedQuizzes((prev) => ({
-            ...prev,
-            [quizId]: !prev[quizId],
-        }));
+        setExpandedQuizzes((prev) => {
+            const current = prev[quizId] !== false;
+            return {
+                ...prev,
+                [quizId]: !current,
+            };
+        });
+    };
+
+    const getScoreTextColor = (score: number) => {
+        if (score >= 8) return "text-emerald-600 dark:text-emerald-400";
+        if (score >= 5) return "text-amber-600 dark:text-amber-400";
+        return "text-rose-600 dark:text-rose-400";
     };
 
     // Helper functions
@@ -764,7 +896,7 @@ export default function SettingsView({
             : 0;
 
         return (
-            <div className="flex-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none p-6">
+            <div className="flex-1 bg-white dark:bg-bg-card text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none p-6">
                 <div className="max-w-4xl mx-auto space-y-6">
                     {/* Header */}
                     {quiz ? (
@@ -1187,15 +1319,15 @@ export default function SettingsView({
         );
     }
 
-    const userSubmissions = submissions
-        .filter((sub) => sub.studentId === user.id)
-        .sort(
-            (a, b) =>
-                safeParseDate(
-                    safeParseDate(b.submittedAt).getTime(),
-                ).getTime() -
-                safeParseDate(safeParseDate(a.submittedAt).getTime()).getTime(),
-        );
+    const userSubmissions = React.useMemo(() => {
+        return submissions
+            .filter((sub) => sub.studentId === user.id)
+            .sort(
+                (a, b) =>
+                    safeParseDate(b.submittedAt).getTime() -
+                    safeParseDate(a.submittedAt).getTime(),
+            );
+    }, [submissions, user.id]);
 
     // Group submissions by quizId, sorted by latest submission time
     const groupedSubmissions = React.useMemo(() => {
@@ -1203,12 +1335,8 @@ export default function SettingsView({
 
         // Sort chronologically (oldest first) to assign attempt numbers (Lượt 1, Lượt 2, ...)
         const chronological = [...userSubmissions].sort((a, b) => {
-            const timeA = safeParseDate(
-                safeParseDate(a.submittedAt).getTime(),
-            ).getTime();
-            const timeB = safeParseDate(
-                safeParseDate(b.submittedAt).getTime(),
-            ).getTime();
+            const timeA = safeParseDate(a.submittedAt).getTime();
+            const timeB = safeParseDate(b.submittedAt).getTime();
             return timeA - timeB;
         });
 
@@ -1222,13 +1350,12 @@ export default function SettingsView({
         const groupedArray = Object.entries(groups).map(
             ([quizId, attempts]) => {
                 const latestAttempt = attempts[attempts.length - 1];
-                // Find highest score among all attempts for this quiz
                 const maxScore = Math.max(...attempts.map((a) => a.score));
                 return {
                     quizId,
                     quizTitle: latestAttempt.quizTitle,
                     latestTime: safeParseDate(
-                        safeParseDate(latestAttempt.submittedAt).getTime(),
+                        latestAttempt.submittedAt,
                     ).getTime(),
                     latestSubmittedAt: latestAttempt.submittedAt,
                     maxScore,
@@ -1240,23 +1367,64 @@ export default function SettingsView({
         return groupedArray.sort((a, b) => b.latestTime - a.latestTime);
     }, [userSubmissions]);
 
+    const highCount = React.useMemo(
+        () => groupedSubmissions.filter((g) => g.maxScore >= 8).length,
+        [groupedSubmissions],
+    );
+    const mediumCount = React.useMemo(
+        () =>
+            groupedSubmissions.filter((g) => g.maxScore >= 5 && g.maxScore < 8)
+                .length,
+        [groupedSubmissions],
+    );
+    const lowCount = React.useMemo(
+        () => groupedSubmissions.filter((g) => g.maxScore < 5).length,
+        [groupedSubmissions],
+    );
+
+    const filteredGroups = React.useMemo(() => {
+        return groupedSubmissions.filter((group) => {
+            if (historyFilter === "high" && group.maxScore < 8) return false;
+            if (
+                historyFilter === "medium" &&
+                (group.maxScore < 5 || group.maxScore >= 8)
+            )
+                return false;
+            if (historyFilter === "low" && group.maxScore >= 5) return false;
+
+            if (historySearch.trim()) {
+                const q = historySearch.toLowerCase().trim();
+                return group.quizTitle.toLowerCase().includes(q);
+            }
+            return true;
+        });
+    }, [groupedSubmissions, historyFilter, historySearch]);
+
     return (
-        <div className="flex-1 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
+        <div className="flex-1 bg-white dark:bg-bg-card text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
             {/* Title Header with Tabs */}
             <div className="max-w-4xl mx-auto pt-8 pb-6 px-6   dark:border-slate-800/80">
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {activeSettingsTab === "profile"
-                        ? "Cài đặt cá nhân"
-                        : activeSettingsTab === "history"
-                          ? "Lịch sử làm bài"
-                          : "Thông báo"}
+                        ? "Hồ sơ cá nhân"
+                        : activeSettingsTab === "security"
+                          ? "Bảo mật tài khoản"
+                          : activeSettingsTab === "appearance"
+                            ? "Tùy chỉnh giao diện"
+                            : activeSettingsTab === "history"
+                              ? "Lịch sử làm bài"
+                              : "Thông báo"}
                 </h1>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {activeSettingsTab === "profile"
-                        ? "Cập nhật thông tin tài khoản và cấu hình hệ thống."
-                        : activeSettingsTab === "history"
-                          ? "Xem lại danh sách và chi tiết các đề thi bạn đã hoàn thành."
-                          : "Xem lại toàn bộ thông báo và cập nhật mới dành cho bạn."}
+                        ? "Cập nhật thông tin tài khoản và định danh cá nhân."
+                        : activeSettingsTab === "security"
+                          ? "Quản lý mật khẩu, xác thực hai bước và các thiết bị đăng nhập."
+                          : activeSettingsTab === "appearance"
+                            ? "Tùy chỉnh phông chữ, chủ đề màu sắc và phong cách hiển thị."
+                            : activeSettingsTab === "history"
+                              ? "Xem lại danh sách và chi tiết các đề thi bạn đã hoàn thành."
+                              : "Xem lại toàn bộ thông báo và cập nhật mới dành cho bạn."}
                 </p>
 
                 {/* Tabs navigation */}
@@ -1270,6 +1438,26 @@ export default function SettingsView({
                         }`}
                     >
                         Hồ sơ cá nhân
+                    </button>
+                    <button
+                        onClick={() => handleTabClick("security")}
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                            activeSettingsTab === "security"
+                                ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
+                                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                    >
+                        <span>Bảo mật</span>
+                    </button>
+                    <button
+                        onClick={() => handleTabClick("appearance")}
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                            activeSettingsTab === "appearance"
+                                ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
+                                : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        }`}
+                    >
+                        <span>Giao diện</span>
                     </button>
                     <button
                         onClick={() => handleTabClick("history")}
@@ -1300,112 +1488,99 @@ export default function SettingsView({
             </div>
 
             {activeSettingsTab === "profile" ? (
-                /* Main Settings Grid */
+                /* Profile Settings Grid */
                 <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
                     {/* Profile Photo Row */}
                     <div className="grid grid-cols-12 gap-6 py-6 items-center">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Profile photo
+                                Ảnh đại diện
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-500">
-                                Your avatar shown across the app.
+                                Ảnh đại diện hiển thị trên trang cá nhân và bảng
+                                xếp hạng.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 flex items-center gap-5">
-                            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-200/50 dark:border-slate-700/50 shadow-2xs">
+                        <div className="col-span-12 md:col-span-8 flex flex-col sm:flex-row sm:items-center gap-5">
+                            <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
                                 {user.avatarUrl ? (
                                     <img
                                         src={user.avatarUrl}
                                         alt={user.name}
-                                        referrerPolicy="no-referrer"
                                         className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.currentTarget.style.display =
-                                                "none";
-                                            const fallback = e.currentTarget
-                                                .nextElementSibling as HTMLElement;
-                                            if (fallback)
-                                                fallback.style.display =
-                                                    "block";
-                                        }}
                                     />
-                                ) : null}
-                                <User
-                                    className="w-6 h-6"
-                                    style={{
-                                        display: user.avatarUrl
-                                            ? "none"
-                                            : "block",
-                                    }}
-                                />
-                                {uploadingAvatar && (
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white z-10">
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                ) : (
+                                    <span className="text-2xl font-bold uppercase select-none text-slate-500 dark:text-slate-400">
+                                        {(user.name || "U")[0]}
+                                    </span>
+                                )}
+                                {(uploadingAvatar || selectingPredefined) && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                        <Loader2 className="w-5 h-5 text-white animate-spin" />
                                     </div>
                                 )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
-                                <div className="flex items-center gap-3">
-                                    <label className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 active:scale-97 text-white text-[11px] font-bold rounded-xl cursor-pointer transition-all shadow-xs flex items-center gap-1.5">
-                                        {uploadingAvatar ? (
-                                            <>
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                Đang tải...
-                                            </>
-                                        ) : (
-                                            "Tải ảnh lên"
-                                        )}
+                            <div className="space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setIsAvatarPickerOpen(true)
+                                        }
+                                        disabled={
+                                            uploadingAvatar ||
+                                            selectingPredefined
+                                        }
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                                    >
+                                        <span>Chọn ảnh có sẵn</span>
+                                    </button>
+                                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs">
+                                        <span>Tải ảnh từ máy</span>
                                         <input
                                             type="file"
                                             accept="image/*"
-                                            onChange={handleAvatarChange}
-                                            disabled={uploadingAvatar}
                                             className="hidden"
+                                            disabled={
+                                                uploadingAvatar ||
+                                                selectingPredefined
+                                            }
+                                            onChange={handleAvatarChange}
                                         />
                                     </label>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                                        JPG, PNG, WEBP (Tối đa 2MB)
-                                    </span>
                                 </div>
+                                <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                    Chọn ảnh có sẵn hoặc tải ảnh định dạng JPG,
+                                    PNG, WebP (tối đa 2MB).
+                                </p>
                                 {avatarError && (
-                                    <p className="text-[10px] text-rose-500 font-semibold mt-0.5">
+                                    <p className="text-xs text-rose-500 font-medium mt-1">
                                         {avatarError}
                                     </p>
                                 )}
-                                <div className="text-[10px] text-slate-400 dark:text-slate-550 font-medium mt-0.5">
-                                    {user.avatarUrl &&
-                                    user.avatarUrl.includes(
-                                        "googleusercontent.com",
-                                    )
-                                        ? "Ảnh đại diện đồng bộ từ Google"
-                                        : user.avatarUrl
-                                          ? "Ảnh đại diện tự tải lên"
-                                          : "Chưa có ảnh đại diện (Đang dùng mặc định)"}
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Full Name Row */}
+                    {/* First & Last Name Row */}
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Full name
+                                Họ và Tên
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Your display name across HiTrang.
+                                Họ tên hiển thị trên bảng xếp hạng.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 space-y-3">
-                            <div className="flex flex-col sm:flex-row gap-3 max-w-lg">
-                                <div className="flex-1 space-y-1">
-                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                                        First name
-                                    </span>
+                        <div className="col-span-12 md:col-span-8 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        Họ và tên lót
+                                    </label>
                                     <input
                                         type="text"
-                                        placeholder="First name"
+                                        placeholder="Nguyễn Văn"
                                         value={firstName}
                                         onChange={(e) =>
                                             setFirstName(e.target.value)
@@ -1413,13 +1588,13 @@ export default function SettingsView({
                                         className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
-                                <div className="flex-1 space-y-1">
-                                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                                        Last name
-                                    </span>
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                        Tên
+                                    </label>
                                     <input
                                         type="text"
-                                        placeholder="Last name"
+                                        placeholder="A"
                                         value={lastName}
                                         onChange={(e) =>
                                             setLastName(e.target.value)
@@ -1443,40 +1618,17 @@ export default function SettingsView({
                             <button
                                 type="button"
                                 onClick={handleUpdateName}
-                                disabled={updatingName}
-                                className="py-1.5 px-3.5 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                disabled={
+                                    updatingName ||
+                                    (firstName === initialName.firstName &&
+                                        lastName === initialName.lastName)
+                                }
+                                className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                             >
                                 {updatingName && (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                 )}
                                 <span>Lưu họ tên</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Email Address Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
-                        <div className="col-span-12 md:col-span-4 space-y-1">
-                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Email address (soon)
-                            </h4>
-                            <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Used for notifications and login.
-                            </p>
-                        </div>
-                        <div className="col-span-12 md:col-span-8 flex items-center gap-3">
-                            <input
-                                type="text"
-                                readOnly
-                                value={user.avatarUrl ? "Đăng nhập Google" : ``}
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
-                            />
-                            <button
-                                type="button"
-                                disabled
-                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-xl text-xs font-semibold cursor-not-allowed"
-                            >
-                                Change email
                             </button>
                         </div>
                     </div>
@@ -1519,7 +1671,7 @@ export default function SettingsView({
                                 </button>
                             </div>
 
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                            <p className="text-[10px] text-slate-400 dark:text-slate-550 font-medium">
                                 Quy tắc: 4-30 ký tự (a-z, 0-9, dấu _ hoặc .).
                                 Không dấu, không khoảng trắng, không kí tự đặc
                                 biệt.
@@ -1542,7 +1694,7 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Timezone (soon)
+                                Timezone
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
                                 Used for time-based alerts and reports.
@@ -1553,20 +1705,16 @@ export default function SettingsView({
                                 type="text"
                                 readOnly
                                 value="GMT+7 — Indochina Time"
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-500 select-none outline-none"
+                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-550 select-none outline-none"
                             />
                         </div>
                     </div>
-
-                    {/* ACCOUNT SECURITY SECTION */}
-                    <div className="pt-8 pb-4">
-                        <h3 className="text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-550 uppercase select-none">
-                            ACCOUNT SECURITY
-                        </h3>
-                    </div>
-
+                </div>
+            ) : activeSettingsTab === "security" ? (
+                /* Security Settings Grid */
+                <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
                     {/* Password Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                                 Password
@@ -1602,7 +1750,7 @@ export default function SettingsView({
                     </div>
 
                     {/* Google Authenticator & 2-Step Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 Two-factor Authenticator
@@ -1638,7 +1786,7 @@ export default function SettingsView({
                                         </div>
                                         <p className="text-[11px] text-slate-400 mt-0.5">
                                             {user.totpEnabled
-                                                ? "Bạn có thể dùng mã 6 số từ Google Authenticator để tự đổi mật khẩu khi quên bất kỳ lúc nào."
+                                                ? "Bạn có thể dùng mã 6 số từ Google Authenticator để tự đổi mật khẩu khi quên."
                                                 : "Khuyên dùng để có thể tự khôi phục mật khẩu khi quên mà không cần nhắn tin cho cô Trang."}
                                         </p>
                                     </div>
@@ -1682,10 +1830,9 @@ export default function SettingsView({
                                             nhập
                                         </h5>
                                         <p className="text-[11px] text-slate-400 dark:text-slate-550">
-                                            Mặc định tắt: Bạn vẫn dùng Google
+                                            Bạn vẫn có thể dùng Google
                                             Authenticator để tự khôi phục mật
-                                            khẩu mà không bị hỏi mã mỗi khi đăng
-                                            nhập.
+                                            khẩu khi tắt.
                                         </p>
                                     </div>
 
@@ -1731,7 +1878,7 @@ export default function SettingsView({
 
                         {/* Subheader: "Active sessions" label + "Log out all" button */}
                         <div className="flex items-center justify-between pt-1">
-                            <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-500">
+                            <span className="text-xs sm:text-sm font-normal text-slate-400 dark:text-slate-550">
                                 Active sessions
                             </span>
                             <button
@@ -1892,165 +2039,480 @@ export default function SettingsView({
                         </button>
                     </div>
                 </div>
+            ) : activeSettingsTab === "appearance" ? (
+                /* Appearance Settings Grid */
+                <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
+                    {/* Font Family Selection Row */}
+                    <div className="grid grid-cols-12 gap-6 py-6">
+                        <div className="col-span-12 md:col-span-4 space-y-1">
+                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                <Type className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                                Phông chữ giao diện
+                            </h4>
+                            <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
+                                Chọn kiểu phông chữ hiển thị phù hợp nhất với
+                                mắt bạn trên toàn hệ thống.
+                            </p>
+                        </div>
+                        <div className="col-span-12 md:col-span-8 space-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {fontOptions.map((f) => {
+                                    const isSelected = selectedFont === f.id;
+                                    return (
+                                        <button
+                                            key={f.id}
+                                            type="button"
+                                            onClick={() =>
+                                                handleSelectFont(f.id)
+                                            }
+                                            style={{ fontFamily: f.cssVal }}
+                                            className={`p-4 rounded-2xl border text-left transition-all relative cursor-pointer ${
+                                                isSelected
+                                                    ? "border-brand-600 bg-brand-50/30 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-600"
+                                                    : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
+                                            }`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                    {f.name}
+                                                </span>
+                                                {isSelected && (
+                                                    <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs">
+                                                        <Check className="w-3 h-3 stroke-[2.5]" />
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-normal">
+                                                {f.desc}
+                                            </p>
+                                            {/*<div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                                                Học Toán cùng cô Huyền Trang 123
+                                            </div>*/}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Dark Mode / Theme Row */}
+                    <div className="grid grid-cols-12 gap-6 py-6">
+                        <div className="col-span-12 md:col-span-4 space-y-1">
+                            <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                    <Sun className="w-4 h-4 text-amber-500" />
+                                    Theme - Đang phát triển
+                                </h4>
+                            </div>
+                            <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
+                                Tùy chọn giao diện Sáng (Flat Sage-White), Tối
+                                (Midnight Steel Navy) hoặc tự động.
+                            </p>
+                        </div>
+                        <div className="col-span-12 md:col-span-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {/* Light Mode card */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelectTheme("light")}
+                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                        theme === "light"
+                                            ? "border-amber-500/80 bg-white dark:bg-slate-800 shadow-xs ring-2 ring-amber-500/20"
+                                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Sun className="w-4 h-4 text-amber-500" />
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                Giao diện Sáng
+                                            </span>
+                                        </div>
+                                        {theme === "light" && (
+                                            <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
+                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal">
+                                        Flat Sage-White thanh lịch, sáng sủa và
+                                        tập trung.
+                                    </p>
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <span
+                                            className={`text-[10px] font-bold ${
+                                                theme === "light"
+                                                    ? "text-amber-600 dark:text-amber-400"
+                                                    : "text-slate-400"
+                                            }`}
+                                        >
+                                            {theme === "light"
+                                                ? "Đang sử dụng"
+                                                : "Nhấn để bật"}
+                                        </span>
+                                    </div>
+                                </button>
+
+                                {/* Dark Mode card */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelectTheme("dark")}
+                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                        theme === "dark"
+                                            ? "border-indigo-400 bg-[#233448] shadow-xs ring-2 ring-indigo-500/30 text-white"
+                                            : "border-slate-700/80 bg-[#233448]/90 text-white hover:border-indigo-400"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Moon className="w-4 h-4 text-indigo-300" />
+                                            <span className="text-xs font-bold text-white">
+                                                Giao diện Tối
+                                            </span>
+                                        </div>
+                                        {theme === "dark" && (
+                                            <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs shadow-xs">
+                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-300 mt-2 font-normal">
+                                        Midnight Steel Navy dịu mắt ban đêm
+                                        (Đang phát triển).
+                                    </p>
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <span
+                                            className={`text-[10px] font-bold ${
+                                                theme === "dark"
+                                                    ? "text-indigo-300"
+                                                    : "text-slate-400"
+                                            }`}
+                                        >
+                                            {theme === "dark"
+                                                ? "Đang sử dụng"
+                                                : "Nhấn để bật"}
+                                        </span>
+                                    </div>
+                                </button>
+
+                                {/* Auto System card */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelectTheme("system")}
+                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                        theme === "system"
+                                            ? "border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 shadow-xs ring-2 ring-brand-500/20"
+                                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Monitor className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                                Theo thiết bị
+                                            </span>
+                                        </div>
+                                        {theme === "system" && (
+                                            <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs shadow-xs">
+                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal">
+                                        Tự động đồng bộ theo hệ điều hành.
+                                    </p>
+                                    <div className="mt-3 flex items-center justify-between">
+                                        <span
+                                            className={`text-[10px] font-bold ${
+                                                theme === "system"
+                                                    ? "text-brand-600 dark:text-brand-400"
+                                                    : "text-slate-400"
+                                            }`}
+                                        >
+                                            {theme === "system"
+                                                ? "Đang sử dụng"
+                                                : "Nhấn để bật"}
+                                        </span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             ) : activeSettingsTab === "history" ? (
                 /* History tab content */
-                <div className="max-w-4xl mx-auto px-6 pb-20">
-                    {userSubmissions.length === 0 ? (
-                        <div className="text-center py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
+                <div className="max-w-4xl mx-auto px-6 pb-20 space-y-4">
+                    {/* Action & Filter Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 select-none">
+                            <button
+                                type="button"
+                                onClick={() => setHistoryFilter("all")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${
+                                    historyFilter === "all"
+                                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                Tất cả ({userSubmissions.length})
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setHistoryFilter("high")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    historyFilter === "high"
+                                        ? "bg-emerald-600 text-white shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                <span>Điểm ≥ 8.0</span>
+                                {highCount > 0 && (
+                                    <span
+                                        className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                                            historyFilter === "high"
+                                                ? "bg-white/25 text-white"
+                                                : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                        }`}
+                                    >
+                                        {highCount}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setHistoryFilter("medium")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    historyFilter === "medium"
+                                        ? "bg-amber-600 text-white shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                <span>Điểm 5.0 - 7.9</span>
+                                {mediumCount > 0 && (
+                                    <span
+                                        className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                                            historyFilter === "medium"
+                                                ? "bg-white/25 text-white"
+                                                : "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                                        }`}
+                                    >
+                                        {mediumCount}
+                                    </span>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setHistoryFilter("low")}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                    historyFilter === "low"
+                                        ? "bg-rose-600 text-white shadow-xs"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                }`}
+                            >
+                                <span>Điểm &lt; 5.0</span>
+                                {lowCount > 0 && (
+                                    <span
+                                        className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold ${
+                                            historyFilter === "low"
+                                                ? "bg-white/25 text-white"
+                                                : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
+                                        }`}
+                                    >
+                                        {lowCount}
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+
+                        {userSubmissions.length > 3 && (
+                            <div className="relative w-full sm:w-56">
+                                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={historySearch}
+                                    onChange={(e) =>
+                                        setHistorySearch(e.target.value)
+                                    }
+                                    placeholder="Tìm bài thi đã làm..."
+                                    className="w-full pl-8.5 pr-3 py-1.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Grouped Quiz List */}
+                    {groupedSubmissions.length === 0 ? (
+                        <div className="text-center py-16 space-y-3 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
                             <BookOpenCheck className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                            <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
                                 Bạn chưa thực hiện bài thi nào.
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => onNavigate && onNavigate("/")}
+                                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                            >
+                                <span>Làm bài thi ngay</span>
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    ) : filteredGroups.length === 0 ? (
+                        <div className="text-center py-16 space-y-3">
+                            <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                Không tìm thấy bài làm phù hợp với điều kiện
+                                lọc.
                             </p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-slate-100/70 dark:divide-slate-800/80">
-                            {groupedSubmissions.map((group) => {
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                            {filteredGroups.map((group) => {
                                 const isExpanded =
-                                    !!expandedQuizzes[group.quizId];
-                                const latestAttempt =
-                                    group.attempts[group.attempts.length - 1];
-
-                                // Determine score color for the highest score badge
-                                let scoreColor =
-                                    "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/50";
-                                if (group.maxScore >= 8) {
-                                    scoreColor =
-                                        "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50";
-                                } else if (group.maxScore >= 5) {
-                                    scoreColor =
-                                        "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50";
-                                }
+                                    expandedQuizzes[group.quizId] !== false;
+                                const maxScoreColor = getScoreTextColor(
+                                    group.maxScore,
+                                );
 
                                 return (
                                     <div
                                         key={group.quizId}
-                                        className="py-5 space-y-4 animate-in fade-in duration-200"
+                                        className="py-4 space-y-2.5 transition-colors"
                                     >
-                                        {/* Main Group Header Row */}
+                                        {/* Quiz Group Header */}
                                         <div
                                             onClick={() =>
                                                 toggleQuizExpand(group.quizId)
                                             }
-                                            className="flex items-center justify-between gap-4 cursor-pointer group"
+                                            className="flex items-start justify-between gap-4 cursor-pointer group select-none -mx-2 px-2 py-1.5 rounded-xl hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors"
                                         >
-                                            <div className="space-y-1.5 flex-1 min-w-0">
-                                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors truncate">
+                                            <div className="space-y-1 min-w-0 flex-1">
+                                                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors line-clamp-1">
                                                     {group.quizTitle}
                                                 </h4>
-                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400 dark:text-slate-500 font-medium">
-                                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px] font-bold">
-                                                        Đã làm{" "}
+                                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                                    <span className="font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">
                                                         {group.attempts.length}{" "}
-                                                        lần
+                                                        lượt làm
                                                     </span>
-                                                    <span className="flex items-center gap-1.5">
-                                                        <Clock className="w-3.5 h-3.5" />
+                                                    <span className="opacity-40">
+                                                        •
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
                                                         Mới nhất:{" "}
                                                         {
-                                                            latestAttempt.submittedAt
+                                                            group.latestSubmittedAt
                                                         }
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3 shrink-0">
+                                            <div className="flex items-center gap-3 sm:gap-4 shrink-0 pt-0.5">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider scale-90">
+                                                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                                         Điểm cao nhất
                                                     </span>
-                                                    <span
-                                                        className={`px-2.5 py-0.5 rounded text-xs font-black mt-0.5 ${scoreColor}`}
+                                                    <div
+                                                        className={`text-xs sm:text-sm font-black font-mono ${maxScoreColor}`}
                                                     >
-                                                        {group.maxScore} / 10
-                                                    </span>
+                                                        <span>
+                                                            {group.maxScore}
+                                                        </span>
+                                                        <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
+                                                            /10
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="p-1 text-slate-400 dark:text-slate-500 group-hover:text-slate-655 dark:group-hover:text-slate-300 transition-colors">
-                                                    {isExpanded ? (
-                                                        <ChevronUp className="w-4 h-4" />
-                                                    ) : (
-                                                        <ChevronDown className="w-4 h-4" />
-                                                    )}
+                                                <div className="p-1 rounded-lg text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-200 transition-colors">
+                                                    <ChevronDown
+                                                        className={`w-4 h-4 transition-transform duration-200 ${
+                                                            isExpanded
+                                                                ? "rotate-180"
+                                                                : ""
+                                                        }`}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Expandable sub-list of attempts */}
+                                        {/* Attempts Sub-list */}
                                         {isExpanded && (
-                                            <div className="space-y-2 border-l border-slate-100 dark:border-slate-800 ml-2 pl-4 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                            <div className="space-y-1 pl-2 sm:pl-4 border-l-2 border-slate-100 dark:border-slate-800/80 ml-2">
                                                 {group.attempts.map(
                                                     (attempt, index) => {
-                                                        let attemptScoreColor =
-                                                            "bg-rose-50 text-rose-700 border border-rose-150 dark:bg-rose-950/20 dark:text-rose-450 dark:border-rose-900/30";
-                                                        if (
-                                                            attempt.score >= 8
-                                                        ) {
-                                                            attemptScoreColor =
-                                                                "bg-emerald-50 text-emerald-700 border border-emerald-150 dark:bg-emerald-950/20 dark:text-emerald-455 dark:border-emerald-900/30";
-                                                        } else if (
-                                                            attempt.score >= 5
-                                                        ) {
-                                                            attemptScoreColor =
-                                                                "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-450 dark:border-amber-900/30";
-                                                        }
+                                                        const attemptScoreColor =
+                                                            getScoreTextColor(
+                                                                attempt.score,
+                                                            );
 
                                                         return (
                                                             <div
                                                                 key={attempt.id}
-                                                                className="flex items-center justify-between gap-4 py-2 hover:bg-slate-50/30 dark:hover:bg-slate-800/10 rounded-lg px-2 transition-colors"
+                                                                onClick={() =>
+                                                                    onNavigate &&
+                                                                    onNavigate(
+                                                                        "/result/" +
+                                                                            attempt.id,
+                                                                    )
+                                                                }
+                                                                className="py-2.5 px-3 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 rounded-xl transition-colors cursor-pointer group/attempt"
                                                             >
-                                                                <div className="space-y-1">
-                                                                    <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                                                                        Lượt làm
-                                                                        #
+                                                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 min-w-0 flex-1">
+                                                                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 shrink-0">
+                                                                        Lượt #
                                                                         {index +
                                                                             1}
-                                                                    </div>
-                                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-slate-400 dark:text-slate-550 font-medium">
-                                                                        <span className="flex items-center gap-1">
-                                                                            <Clock className="w-3 h-3" />
-                                                                            Nộp:{" "}
-                                                                            {
-                                                                                attempt.submittedAt
-                                                                            }
-                                                                        </span>
-                                                                        {attempt.timeSpent !==
-                                                                            undefined && (
-                                                                            <span>
-                                                                                Thời
-                                                                                gian:{" "}
-                                                                                {formatTime(
-                                                                                    attempt.timeSpent,
-                                                                                )}
-                                                                            </span>
+                                                                    </span>
+                                                                    <span className="opacity-30">
+                                                                        •
+                                                                    </span>
+                                                                    <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-medium">
+                                                                        <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                        {
+                                                                            attempt.submittedAt
+                                                                        }
+                                                                    </span>
+                                                                    {attempt.timeSpent !==
+                                                                        undefined &&
+                                                                        attempt.timeSpent >
+                                                                            0 && (
+                                                                            <>
+                                                                                <span className="opacity-30 hidden sm:inline">
+                                                                                    •
+                                                                                </span>
+                                                                                <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
+                                                                                    Thời
+                                                                                    gian:{" "}
+                                                                                    {formatTime(
+                                                                                        attempt.timeSpent,
+                                                                                    )}
+                                                                                </span>
+                                                                            </>
                                                                         )}
-                                                                    </div>
                                                                 </div>
 
-                                                                <div className="flex items-center gap-3 shrink-0">
-                                                                    <span
-                                                                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${attemptScoreColor}`}
+                                                                <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                                                                    {/* Score without border or bg */}
+                                                                    <div
+                                                                        className={`text-xs sm:text-sm font-black font-mono ${attemptScoreColor}`}
                                                                     >
-                                                                        {
-                                                                            attempt.score
-                                                                        }{" "}
-                                                                        / 10
+                                                                        <span>
+                                                                            {
+                                                                                attempt.score
+                                                                            }
+                                                                        </span>
+                                                                        <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">
+                                                                            /10
+                                                                        </span>
+                                                                    </div>
+
+                                                                    <span className="text-xs font-bold text-brand-600 dark:text-brand-300 group-hover/attempt:underline flex items-center gap-0.5 whitespace-nowrap">
+                                                                        <span>
+                                                                            Xem
+                                                                            lại
+                                                                        </span>
+                                                                        <ChevronRight className="w-3.5 h-3.5 group-hover/attempt:translate-x-0.5 transition-transform" />
                                                                     </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            if (
-                                                                                onNavigate
-                                                                            )
-                                                                                onNavigate(
-                                                                                    "/result/" +
-                                                                                        attempt.id,
-                                                                                );
-                                                                        }}
-                                                                        className="py-1 px-2.5 bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-[10px] font-semibold transition-all active:scale-[0.98] cursor-pointer"
-                                                                    >
-                                                                        Xem chi
-                                                                        tiết
-                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         );
@@ -2217,7 +2679,7 @@ export default function SettingsView({
             {/* 2FA SETUP MODAL */}
             {is2FAModalOpen && setup2FAData && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center">
@@ -2359,7 +2821,7 @@ export default function SettingsView({
             {/* 2FA DISABLE CONFIRMATION MODAL */}
             {isDisable2FAModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 flex items-center justify-center shrink-0">
                                 <ShieldAlert className="w-5 h-5" />
@@ -2438,7 +2900,7 @@ export default function SettingsView({
             {/* DELETE ACCOUNT CONFIRMATION MODAL */}
             {isDeleteAccountModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-rose-100 dark:border-rose-950 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-rose-100 dark:border-rose-950 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3">
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
@@ -2510,7 +2972,7 @@ export default function SettingsView({
             {/* CHANGE PASSWORD MODAL */}
             {isChangePasswordModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div>
@@ -2672,6 +3134,88 @@ export default function SettingsView({
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* PREDEFINED AVATAR SELECTION MODAL */}
+            {isAvatarPickerOpen && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5 animate-in zoom-in-95 duration-200 font-sans">
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2.5">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                        Ảnh đại diện
+                                    </h3>
+                                    <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                        Chọn linh vật yêu thích để làm ảnh đại
+                                        diện của bạn
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsAvatarPickerOpen(false)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                            {PREDEFINED_AVATARS.map((item) => {
+                                const isSelected = user.avatarUrl === item.url;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        onClick={() =>
+                                            handleSelectPredefinedAvatar(
+                                                item.url,
+                                            )
+                                        }
+                                        disabled={selectingPredefined}
+                                        className={`group relative p-2.5  border flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                                            isSelected
+                                                ? "border-brand-500 bg-brand-50/50 dark:bg-brand-950/30 ring-2 ring-brand-500/20 shadow-xs"
+                                                : "border-slate-200/80 dark:border-slate-800 hover:border-brand-300 dark:hover:border-brand-700 bg-slate-50/40 dark:bg-slate-800/30 hover:bg-white dark:hover:bg-slate-800/60"
+                                        }`}
+                                    >
+                                        <div className="w-12 h-12 overflow-hidden dark:bg-slate-900 p-1 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                            <img
+                                                src={item.url}
+                                                alt={item.name}
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <span
+                                            className={`text-[11px] font-bold truncate max-w-full ${
+                                                isSelected
+                                                    ? "text-brand-600 dark:text-brand-300"
+                                                    : "text-slate-700 dark:text-slate-300"
+                                            }`}
+                                        >
+                                            {item.name}
+                                        </span>
+                                        {isSelected && (
+                                            <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-brand-500 text-white flex items-center justify-center text-[9px] shadow-xs">
+                                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="pt-2 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setIsAvatarPickerOpen(false)}
+                                className="px-4 py-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Đóng
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

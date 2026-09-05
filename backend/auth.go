@@ -1081,6 +1081,37 @@ func HandleUploadAvatar(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+type UpdateAvatarURLRequest struct {
+	AvatarURL string `json:"avatarUrl" binding:"required"`
+}
+
+func HandleUpdateAvatarURL(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDVal, exists := c.Get("userID")
+		if !exists || userIDVal == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Chưa xác thực người dùng"})
+			return
+		}
+		userID := userIDVal.(string)
+
+		var req UpdateAvatarURLRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Đường dẫn ảnh đại diện không hợp lệ"})
+			return
+		}
+
+		if err := db.Model(&Profile{}).Where("id = ?", userID).Update("avatar_url", req.AvatarURL).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi cập nhật ảnh đại diện: " + err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":   "Cập nhật ảnh đại diện thành công",
+			"avatarUrl": req.AvatarURL,
+		})
+	}
+}
+
 // GenerateSecureResetToken generates 32 cryptographically secure random bytes
 // and returns both the raw token (to give to the user) and the SHA-256 hash (to store in DB).
 func GenerateSecureResetToken() (string, string, error) {
@@ -1674,42 +1705,65 @@ func hashToken(token string) string {
 
 func parseUserAgent(ua string) (browser, os, device string) {
 	if ua == "" {
-		return "Chrome 152.0.0.0", "macOS 10.15.7", "Desktop"
+		return "Chrome", "macOS", "Desktop"
 	}
 
-	// 1. Device
-	device = "Desktop"
 	uaLower := strings.ToLower(ua)
-	if strings.Contains(uaLower, "mobile") || strings.Contains(uaLower, "iphone") || strings.Contains(uaLower, "android") {
-		device = "Mobile"
-	} else if strings.Contains(uaLower, "ipad") || strings.Contains(uaLower, "tablet") {
-		device = "Tablet"
-	}
 
-	// 2. OS
-	os = "Unknown OS"
-	if strings.Contains(ua, "Macintosh") || strings.Contains(ua, "Mac OS X") {
+	// 1. OS & Device Detection
+	if strings.Contains(ua, "iPhone") {
+		os = "iOS"
+		device = "Mobile"
+		re := regexp.MustCompile(`OS ([0-9_.]+)`)
+		if m := re.FindStringSubmatch(ua); len(m) > 1 {
+			os = "iOS " + strings.ReplaceAll(m[1], "_", ".")
+		}
+	} else if strings.Contains(ua, "iPad") {
+		os = "iPadOS"
+		device = "Tablet"
+		re := regexp.MustCompile(`OS ([0-9_.]+)`)
+		if m := re.FindStringSubmatch(ua); len(m) > 1 {
+			os = "iPadOS " + strings.ReplaceAll(m[1], "_", ".")
+		}
+	} else if strings.Contains(ua, "Android") {
+		os = "Android"
+		if strings.Contains(uaLower, "mobile") {
+			device = "Mobile"
+		} else {
+			device = "Tablet"
+		}
+		re := regexp.MustCompile(`Android ([0-9.]+)`)
+		if m := re.FindStringSubmatch(ua); len(m) > 1 {
+			os = "Android " + m[1]
+		}
+	} else if strings.Contains(ua, "Macintosh") || strings.Contains(ua, "Mac OS X") {
+		device = "Desktop"
 		reMac := regexp.MustCompile(`Mac OS X ([0-9_.]+)`)
 		match := reMac.FindStringSubmatch(ua)
 		if len(match) > 1 {
 			ver := strings.ReplaceAll(match[1], "_", ".")
 			os = "macOS " + ver
 		} else {
-			os = "macOS 10.15.7"
+			os = "macOS"
 		}
 	} else if strings.Contains(ua, "Windows NT 10.0") {
 		os = "Windows 11"
+		device = "Desktop"
 	} else if strings.Contains(ua, "Windows") {
 		os = "Windows"
-	} else if strings.Contains(ua, "iPhone") {
-		os = "iOS"
-	} else if strings.Contains(ua, "Android") {
-		os = "Android"
+		device = "Desktop"
 	} else if strings.Contains(ua, "Linux") {
 		os = "Linux"
+		device = "Desktop"
+	} else {
+		os = "Unknown OS"
+		device = "Desktop"
+		if strings.Contains(uaLower, "mobile") {
+			device = "Mobile"
+		}
 	}
 
-	// 3. Browser
+	// 2. Browser Detection
 	browser = "Trình duyệt Web"
 	if strings.Contains(ua, "Edg/") {
 		re := regexp.MustCompile(`Edg/([0-9.]+)`)
@@ -1719,7 +1773,7 @@ func parseUserAgent(ua string) (browser, os, device string) {
 		} else {
 			browser = "Edge"
 		}
-	} else if strings.Contains(ua, "Chrome/") {
+	} else if strings.Contains(ua, "Chrome/") && !strings.Contains(ua, "Edg/") {
 		re := regexp.MustCompile(`Chrome/([0-9.]+)`)
 		m := re.FindStringSubmatch(ua)
 		if len(m) > 1 {
@@ -1769,6 +1823,12 @@ func RecordUserSession(db *gorm.DB, c *gin.Context, userID, token string) {
 		location = country
 	}
 
+	// Clean up stale or duplicate sessions for this same user on this device/browser
+	_ = db.Where("user_id = ? AND browser = ? AND os = ? AND device = ? AND ip_address = ?", userID, browser, osName, device, ip).Delete(&UserSession{})
+
+	// Clean up any expired sessions
+	_ = db.Where("expires_at < ?", time.Now()).Delete(&UserSession{})
+
 	sess := UserSession{
 		ID:        uuid.New().String(),
 		UserID:    userID,
@@ -1786,6 +1846,22 @@ func RecordUserSession(db *gorm.DB, c *gin.Context, userID, token string) {
 	_ = db.Create(&sess)
 }
 
+// HandleLogout (Protected)
+// POST /api/auth/logout
+func HandleLogout(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, _ := c.Get("userID")
+		currentTokenHash, _ := c.Get("tokenHash")
+		tokenHashStr, _ := currentTokenHash.(string)
+
+		if tokenHashStr != "" {
+			_ = db.Where("user_id = ? AND token_hash = ?", userID, tokenHashStr).Delete(&UserSession{})
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Đã đăng xuất thành công."})
+	}
+}
+
 // HandleGetSessions (Protected)
 // GET /api/auth/sessions
 func HandleGetSessions(db *gorm.DB) gin.HandlerFunc {
@@ -1793,6 +1869,9 @@ func HandleGetSessions(db *gorm.DB) gin.HandlerFunc {
 		userID, _ := c.Get("userID")
 		currentTokenHash, _ := c.Get("tokenHash")
 		tokenHashStr, _ := currentTokenHash.(string)
+
+		// Clean up expired sessions first
+		_ = db.Where("expires_at < ?", time.Now()).Delete(&UserSession{})
 
 		var sessions []UserSession
 		db.Where("user_id = ?", userID).Order("last_seen DESC").Find(&sessions)

@@ -12,6 +12,7 @@ import {
     Crown,
     Calendar,
     User as UserIcon,
+    Palette,
 } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 
@@ -23,7 +24,14 @@ interface TopbarProps {
     onLogout: () => void;
     onNavigateAdmin: () => void;
     onNavigateHome: () => void;
-    onNavigateSettings: (tab?: "profile" | "history" | "notifications") => void;
+    onNavigateSettings: (
+        tab?:
+            | "profile"
+            | "security"
+            | "appearance"
+            | "history"
+            | "notifications",
+    ) => void;
     currentPath: string;
     onNavigateLeaderboard: () => void;
     onNavigateSchedule: () => void;
@@ -477,6 +485,28 @@ export default function Topbar({
                                         >
                                             <Bolt className="w-4 h-4 text-text-tertiary" />
                                             Cài đặt cá nhân
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setUserDropdownOpen(false);
+                                                onNavigateSettings("security");
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                        >
+                                            <Shield className="w-4 h-4 text-text-tertiary" />
+                                            Bảo mật tài khoản
+                                        </button>
+
+                                        <button
+                                            onClick={() => {
+                                                setUserDropdownOpen(false);
+                                                onNavigateSettings("appearance");
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                        >
+                                            <Palette className="w-4 h-4 text-text-tertiary" />
+                                            Tùy chỉnh giao diện
                                         </button>
 
                                         <button

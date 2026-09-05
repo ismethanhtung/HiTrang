@@ -100,16 +100,19 @@ export default function AdminSubmissionReviewer({
 
     const cleanTrueFalseQuestionText = (html: string) => {
         if (!html) return "";
-        let clean = html.replace(/<table[^>]*>([\s\S]*?)<\/table>/gi, (match) => {
-            if (
-                match.includes("Khẳng định") ||
-                match.includes("Đúng") ||
-                match.includes("Sai")
-            ) {
-                return "";
-            }
-            return match;
-        });
+        let clean = html.replace(
+            /<table[^>]*>([\s\S]*?)<\/table>/gi,
+            (match) => {
+                if (
+                    match.includes("Khẳng định") ||
+                    match.includes("Đúng") ||
+                    match.includes("Sai")
+                ) {
+                    return "";
+                }
+                return match;
+            },
+        );
 
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = clean;
@@ -162,7 +165,9 @@ export default function AdminSubmissionReviewer({
                 return "wrong";
             } else if (q.type === "short_answer") {
                 const cKey = (q.shortAnswerKey || "").trim().toLowerCase();
-                const sKey = String(chosen || "").trim().toLowerCase();
+                const sKey = String(chosen || "")
+                    .trim()
+                    .toLowerCase();
                 return cKey && sKey === cKey ? "correct" : "wrong";
             }
             return "wrong";
@@ -241,14 +246,17 @@ export default function AdminSubmissionReviewer({
                             {submission.timeSpent !== undefined && (
                                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">
                                     <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                    <span>{formatTime(submission.timeSpent)}</span>
+                                    <span>
+                                        {formatTime(submission.timeSpent)}
+                                    </span>
                                 </div>
                             )}
 
                             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border bg-brand-50 border-brand-200 text-brand-700 dark:bg-brand-950/40 dark:border-brand-800/40 dark:text-brand-300 text-xs font-bold shadow-3xs">
                                 <Crown className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                                 <span>
-                                    Điểm: {submission.score} (Đúng {correctCount}/{totalQ})
+                                    Điểm: {submission.score} (Đúng{" "}
+                                    {correctCount}/{totalQ})
                                 </span>
                             </div>
                         </div>
@@ -261,7 +269,8 @@ export default function AdminSubmissionReviewer({
                                 Đang xem câu {safeIdx + 1} trên {totalQ}
                             </span>
                             <span>
-                                Tỷ lệ đúng: {Math.round((correctCount / totalQ) * 100)}%
+                                Tỷ lệ đúng:{" "}
+                                {Math.round((correctCount / totalQ) * 100)}%
                             </span>
                         </div>
                         <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -317,7 +326,9 @@ export default function AdminSubmissionReviewer({
                             <h3 className="font-semibold text-text-primary leading-relaxed overflow-x-auto text-[14px] sm:text-[15px] [&_img]:mx-auto [&_img]:block [&_img]:my-4 select-none">
                                 <span
                                     dangerouslySetInnerHTML={{
-                                        __html: renderMathHtml(displayQuestionText),
+                                        __html: renderMathHtml(
+                                            displayQuestionText,
+                                        ),
                                     }}
                                 />
                             </h3>
@@ -330,11 +341,13 @@ export default function AdminSubmissionReviewer({
                                             {q.options.map((option, idx) => {
                                                 const isChosen = chosen === idx;
                                                 const isCorrectOpt =
-                                                    q.correctAnswerIndex === idx;
-                                                const cleanedOpt = option.replace(
-                                                    /^\s*[a-f][\)\.\:\-]\s*/i,
-                                                    "",
-                                                );
+                                                    q.correctAnswerIndex ===
+                                                    idx;
+                                                const cleanedOpt =
+                                                    option.replace(
+                                                        /^\s*[a-f][\)\.\:\-]\s*/i,
+                                                        "",
+                                                    );
 
                                                 let borderStyle =
                                                     "border-border-primary/80 text-text-primary bg-bg-card hover:bg-slate-50/50 dark:hover:bg-slate-800/50";
@@ -352,7 +365,10 @@ export default function AdminSubmissionReviewer({
                                                             <CheckCircle2 className="w-3.5 h-3.5" />
                                                         </div>
                                                     );
-                                                } else if (isChosen && !isCorrectOpt) {
+                                                } else if (
+                                                    isChosen &&
+                                                    !isCorrectOpt
+                                                ) {
                                                     borderStyle =
                                                         "border-rose-400 bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 ring-2 ring-rose-500/20";
                                                     letterCircleStyle =
@@ -415,14 +431,17 @@ export default function AdminSubmissionReviewer({
                                                 </div>
                                             </div>
                                             {q.options.map((option, idx) => {
-                                                const currentVal = studentTf[idx];
-                                                const correctVal = correctTf[idx];
+                                                const currentVal =
+                                                    studentTf[idx];
+                                                const correctVal =
+                                                    correctTf[idx];
                                                 const isCorrect =
                                                     currentVal === correctVal;
-                                                const cleanedOption = option.replace(
-                                                    /^\s*[a-f][\)\.\:\-]\s*/i,
-                                                    "",
-                                                );
+                                                const cleanedOption =
+                                                    option.replace(
+                                                        /^\s*[a-f][\)\.\:\-]\s*/i,
+                                                        "",
+                                                    );
 
                                                 let dungBtnClass =
                                                     "bg-bg-card border border-border-primary text-slate-400";
@@ -433,7 +452,9 @@ export default function AdminSubmissionReviewer({
                                                     dungBtnClass = isCorrect
                                                         ? "bg-emerald-500 text-white shadow-xs"
                                                         : "bg-rose-500 text-white shadow-xs";
-                                                } else if (currentVal === false) {
+                                                } else if (
+                                                    currentVal === false
+                                                ) {
                                                     saiBtnClass = isCorrect
                                                         ? "bg-emerald-500 text-white shadow-xs"
                                                         : "bg-rose-500 text-white shadow-xs";
@@ -480,9 +501,11 @@ export default function AdminSubmissionReviewer({
                                                                 Sai
                                                             </span>
                                                             <span className="flex items-center ml-1">
-                                                                {currentVal === null ? (
+                                                                {currentVal ===
+                                                                null ? (
                                                                     <span className="text-[8px] text-slate-400 font-bold">
-                                                                        Chưa chọn
+                                                                        Chưa
+                                                                        chọn
                                                                     </span>
                                                                 ) : isCorrect ? (
                                                                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -567,7 +590,9 @@ export default function AdminSubmissionReviewer({
                         <button
                             type="button"
                             onClick={() =>
-                                setAdminReviewQuestionIdx((p) => Math.max(0, p - 1))
+                                setAdminReviewQuestionIdx((p) =>
+                                    Math.max(0, p - 1),
+                                )
                             }
                             disabled={safeIdx === 0}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-text-primary text-xs font-bold rounded-xl transition-all cursor-pointer"
@@ -707,4 +732,3 @@ export default function AdminSubmissionReviewer({
         </div>
     );
 }
-

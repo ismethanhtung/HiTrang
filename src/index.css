@@ -24,24 +24,24 @@
 }
 
 .dark {
-  --bg-base: #1E2B3E;        /* Midnight navy base background (#1E2B3E) */
-  --bg-surface: #1E2B3E;     /* Midnight navy surface background */
-  --bg-card: #27374D;        /* Deep Steel Navy card background (#27374D) */
-  --text-primary: #DDE6ED;   /* Ice Blue primary text (#DDE6ED) */
-  --text-secondary: #9DB2BF; /* Soft Grayish Blue secondary text (#9DB2BF) */
-  --text-tertiary: #526D82;  /* Steel Blue tertiary text (#526D82) */
-  --border-primary: #34475E;  /* Steel Navy border outline */
-  --border-secondary: #526D82;/* Steel Blue divider border */
+  --bg-base: #1D2A3B;        /* Softened Midnight Steel Navy base background */
+  --bg-surface: #26384F;     /* Soft Steel Navy surface background */
+  --bg-card: #233448;        /* Refined Steel Navy card background */
+  --text-primary: #F8FAFC;   /* Crisp soft white primary text */
+  --text-secondary: #CBD5E1; /* Soft slate secondary text */
+  --text-tertiary: #94A3B8;  /* Steel Blue tertiary text */
+  --border-primary: #334863;  /* Soft steel border outline */
+  --border-secondary: #466082;/* Steel Blue divider border */
 
   /* Dark Mode Brand System (Navy Steel & Ice Blue) */
-  --brand-50: #253347;
-  --brand-100: #2F4057;
-  --brand-200: #526D82;      /* Steel Blue */
-  --brand-300: #9DB2BF;      /* Soft Grayish Blue active accent */
-  --brand-400: #DDE6ED;      /* Ice Blue active text & highlight */
-  --brand-500: #e2eaf0;
-  --brand-600: #ffffff;
-  --brand-700: #ffffff;
+  --brand-50: #293B52;
+  --brand-100: #334966;
+  --brand-200: #3E577A;      /* Steel Blue */
+  --brand-300: #93C5FD;      /* Soft Ice Blue active accent */
+  --brand-400: #BFDBFE;      /* Ice Blue highlight text */
+  --brand-500: #60A5FA;
+  --brand-600: #3B82F6;
+  --brand-700: #2563EB;
 }
 
 @theme {
@@ -87,7 +87,7 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
 }
 
-.bg-slate-50, .bg-[#fafafa], .bg-[#fcfbfa], .bg-gray-50, .bg-zinc-50 {
+.bg-slate-50, .bg-gray-50, .bg-zinc-50, [class*="bg-[#fafafa]"], [class*="bg-[#fcfbfa]"] {
   background-color: var(--bg-surface);
 }
 
@@ -154,8 +154,17 @@ input:focus, select:focus, textarea:focus {
 /* Specific Dark Mode overrides */
 .dark {
   .bg-white {
+    background-color: var(--bg-card) !important;
     border: 1px solid var(--border-primary) !important;
     box-shadow: none !important;
+  }
+
+  .bg-slate-900, .bg-slate-950, .bg-slate-850 {
+    background-color: var(--bg-card);
+  }
+
+  .bg-slate-800, .bg-slate-800\/80, .bg-slate-800\/60, .bg-slate-800\/40, .bg-slate-800\/30 {
+    background-color: var(--bg-surface);
   }
   
   .bg-black\/50, .bg-slate-900\/50 {

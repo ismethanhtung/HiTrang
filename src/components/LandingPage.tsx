@@ -23,7 +23,7 @@ export default function LandingPage({ onOpenAuth }: LandingPageProps) {
         cyclingWords[wordIdx % cyclingWords.length] || cyclingWords[0];
 
     return (
-        <div className="w-full min-h-screen bg-[#FAF6EE] dark:bg-[#1A2536] text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-[#20542E]/20 overflow-x-hidden">
+        <div className="w-full min-h-screen bg-[#FAF6EE] dark:bg-bg-base text-slate-900 dark:text-slate-100 font-sans antialiased flex flex-col justify-between selection:bg-[#20542E]/20 overflow-x-hidden">
             {/* ─── 1. TOP HEADER BAR (Refined Minimalist Editorial Style) ─── */}
             <header className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-4 sm:py-5 flex items-center justify-between gap-4 border-b border-slate-300/40 dark:border-slate-800/60">
                 {/* Left: Brand Logo + Name */}

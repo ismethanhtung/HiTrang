@@ -648,14 +648,13 @@ export default function StudentDashboard({
                 }
             >
                 {loadingReview ? (
-                    <div className="flex-1 flex flex-col items-center justify-center bg-white p-8 xl:p-12 text-center">
+                    <div className="flex-1 flex flex-col items-center justify-center  p-8 xl:p-12 text-center">
                         <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
                         <h3 className="text-sm font-semibold text-slate-800">
                             Đang tải đáp án và giải chi tiết...
                         </h3>
                         <p className="text-xs text-slate-400 mt-1">
-                            Đồng bộ an toàn với máy chủ để lấy đáp án chính
-                            thức.
+                            Đồng bộ an toàn để lấy đáp án chính thức.
                         </p>
                     </div>
                 ) : reviewSubmission ? (
@@ -822,7 +821,6 @@ export default function StudentDashboard({
 
                                             {/* Score Pill mimicking Timer Pill */}
                                             <div className="flex items-center gap-2 px-3.5 py-2 rounded-lg border bg-brand-50 border-brand-200 text-brand-700 text-xs font-bold self-start sm:self-auto shadow-3xs">
-                                                <Award className="w-4.5 h-4.5" />
                                                 <span>
                                                     Điểm số:{" "}
                                                     {reviewSubmission.score}{" "}
@@ -875,7 +873,7 @@ export default function StudentDashboard({
                                             }}
                                         >
                                             {/* Question Box Card */}
-                                            <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-6 rounded-xl space-y-4">
+                                            <div className="bg-bg-base dark:bg-bg-card border border-border-primary dark:border-slate-800 p-6  space-y-4">
                                                 {q.sectionTitle && (
                                                     <div className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2 py-0.5 rounded border border-brand-200 inline-block uppercase tracking-wider">
                                                         {q.sectionTitle}
@@ -1218,7 +1216,7 @@ export default function StudentDashboard({
                                             {/* Rich HTML Explanation */}
                                             {q.explanation && (
                                                 <div
-                                                    className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2"
+                                                    className="bg-slate-50 border border-slate-200  p-4 space-y-2"
                                                     style={{
                                                         fontSize: `${fontSize - 1}px`,
                                                     }}
@@ -1292,15 +1290,15 @@ export default function StudentDashboard({
                                             Bảng câu hỏi
                                         </h3>
                                         <p className="text-[10px] text-gray-500 mt-1 flex items-center flex-wrap gap-1">
-                                            <span className="inline-block w-2.5 h-2.5 bg-emerald-200 border border-emerald-350 rounded-sm"></span>{" "}
+                                            <span className="inline-block w-2.5 h-2.5 bg-emerald-200 border border-emerald-300 rounded-sm"></span>{" "}
                                             <span className="mr-1">Đúng</span>
                                             <span className="inline-block w-2.5 h-2.5 bg-amber-200 border border-amber-300 rounded-sm"></span>{" "}
                                             <span className="mr-1">
                                                 Đúng một phần
                                             </span>
-                                            <span className="inline-block w-2.5 h-2.5 bg-rose-200 border border-rose-350 rounded-sm"></span>{" "}
+                                            <span className="inline-block w-2.5 h-2.5 bg-rose-200 border border-rose-300 rounded-sm"></span>{" "}
                                             <span className="mr-1">Sai</span>
-                                            <span className="inline-block w-2.5 h-2.5 bg-slate-100 border border-slate-250 rounded-sm"></span>{" "}
+                                            <span className="inline-block w-2.5 h-2.5 bg-slate-100 border border-slate-200 rounded-sm"></span>{" "}
                                             <span>Chưa làm</span>
                                         </p>
                                     </div>
@@ -1353,19 +1351,19 @@ export default function StudentDashboard({
                                                                         safeIdx;
 
                                                                     let btnColorClass =
-                                                                        "bg-rose-200 text-rose-900 border-rose-300 hover:bg-rose-300";
+                                                                        "bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-300";
                                                                     if (
                                                                         s ===
                                                                         "correct"
                                                                     ) {
                                                                         btnColorClass =
-                                                                            "bg-emerald-200 text-emerald-900 border-emerald-300 hover:bg-emerald-300";
+                                                                            "bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-300";
                                                                     } else if (
                                                                         s ===
                                                                         "partial"
                                                                     ) {
                                                                         btnColorClass =
-                                                                            "bg-amber-200 text-amber-900 border-amber-300 hover:bg-amber-300";
+                                                                            "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-300";
                                                                     } else if (
                                                                         s ===
                                                                         "unanswered"

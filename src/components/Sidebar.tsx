@@ -86,7 +86,7 @@ export default function Sidebar({
     };
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-bg-card dark:bg-slate-900 border-r border-border-primary dark:border-slate-800/80 pt-6 pb-2.5 transition-colors duration-200">
+        <div className="flex flex-col h-full bg-bg-card dark:bg-bg-card border-r border-border-primary dark:border-slate-800/80 pt-6 pb-2.5 transition-colors duration-200">
             {/* Brand Logo */}
             <div className="px-6 mb-5 select-none">
                 <h1 className="font-calligraphy text-4xl text-brand-300 tracking-wide">
@@ -277,7 +277,7 @@ export default function Sidebar({
     return (
         <>
             {/* Mobile Header */}
-            <header className="lg:hidden h-14 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between px-4 sticky top-0 z-30 transition-colors duration-200">
+            <header className="lg:hidden h-14 bg-white dark:bg-bg-card border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between px-4 sticky top-0 z-30 transition-colors duration-200">
                 <div className="flex items-center gap-2 select-none">
                     <span className="font-calligraphy text-2xl text-brand-300 tracking-wide">
                         HiTrang

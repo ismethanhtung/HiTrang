@@ -36,15 +36,40 @@ import {
 } from "lucide-react";
 
 export default function App() {
-    // 1. Force Light Mode by Default
-    const [theme, setTheme] = useState<"light" | "dark">(() => {
+    // 1. Theme Management (Light, Dark, or System)
+    const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
         const saved = localStorage.getItem("hitrang_theme");
-        return saved === "dark" ? "dark" : "light";
+        if (saved === "dark" || saved === "light" || saved === "system") {
+            return saved;
+        }
+        return "light";
     });
 
     useEffect(() => {
         const root = window.document.documentElement;
-        if (theme === "dark") {
+        if (theme === "system") {
+            const systemPrefersDark = window.matchMedia(
+                "(prefers-color-scheme: dark)",
+            ).matches;
+            if (systemPrefersDark) {
+                root.classList.add("dark");
+            } else {
+                root.classList.remove("dark");
+            }
+
+            const listener = (e: MediaQueryListEvent) => {
+                if (e.matches) {
+                    root.classList.add("dark");
+                } else {
+                    root.classList.remove("dark");
+                }
+            };
+            const mediaQuery = window.matchMedia(
+                "(prefers-color-scheme: dark)",
+            );
+            mediaQuery.addEventListener("change", listener);
+            return () => mediaQuery.removeEventListener("change", listener);
+        } else if (theme === "dark") {
             root.classList.add("dark");
         } else {
             root.classList.remove("dark");
@@ -62,8 +87,12 @@ export default function App() {
         if (cleanPath === "/") return { route: "home" };
         if (cleanPath === "/auth/google/callback")
             return { route: "google-callback" };
-        if (cleanPath === "/settings")
+        if (cleanPath === "/settings" || cleanPath === "/profile")
             return { route: "settings", tab: "profile" };
+        if (cleanPath === "/security")
+            return { route: "settings", tab: "security" };
+        if (cleanPath === "/appearance" || cleanPath === "/theme")
+            return { route: "settings", tab: "appearance" };
         if (cleanPath === "/history")
             return { route: "settings", tab: "history" };
         if (cleanPath === "/notifications" || cleanPath === "/noti")
@@ -166,8 +195,120 @@ export default function App() {
         }
     }, [user]);
 
-    // Check Supabase session on mount
+    // Dynamic Page Title for browser tab
     useEffect(() => {
+        const baseTitle = "HiTrang";
+        let pageTitle = "";
+
+        switch (routeInfo.route) {
+            case "home":
+                if (!user) {
+                    pageTitle = "HiTrang - Học Toán & Luyện đề cùng Cô Trang";
+                } else if (activeTab === "student-quizzes") {
+                    pageTitle = "Danh sách đề thi";
+                } else if (activeTab === "student-results") {
+                    pageTitle = "Học bạ của tôi";
+                } else {
+                    pageTitle = "Bảng điều khiển";
+                }
+                break;
+            case "grade":
+                pageTitle = `Khối ${routeInfo.gradeId}`;
+                break;
+            case "quiz": {
+                const targetQuiz = quizzes.find(
+                    (q) => q.id === routeInfo.quizId,
+                );
+                pageTitle = targetQuiz
+                    ? `Làm bài: ${targetQuiz.title}`
+                    : "Làm bài thi";
+                break;
+            }
+            case "result": {
+                const targetSub = submissions.find(
+                    (s) => s.id === routeInfo.subId,
+                );
+                pageTitle = targetSub
+                    ? `Kết quả: ${targetSub.quizTitle}`
+                    : "Kết quả bài làm";
+                break;
+            }
+            case "leaderboard":
+                pageTitle = "Bảng xếp hạng";
+                break;
+            case "schedule":
+                pageTitle = "Lịch học & Sự kiện";
+                break;
+            case "teacher":
+                pageTitle = "Cô Huyền Trang";
+                break;
+            case "settings":
+                if (routeInfo.tab === "security") {
+                    pageTitle = "Bảo mật tài khoản";
+                } else if (routeInfo.tab === "appearance") {
+                    pageTitle = "Tùy chỉnh giao diện";
+                } else if (routeInfo.tab === "history") {
+                    pageTitle = "Lịch sử bài làm";
+                } else if (routeInfo.tab === "notifications") {
+                    pageTitle = "Thông báo hệ thống";
+                } else {
+                    pageTitle = "Cài đặt tài khoản";
+                }
+                break;
+            case "admin": {
+                const tabTitles: Record<string, string> = {
+                    plans: "Quản lý gói & tài khoản",
+                    "create-quiz": "Tạo đề thi mới",
+                    quizzes: "Quản lý đề thi",
+                    "stats-quizzes": "Thống kê đề thi",
+                    "stats-students": "Thống kê học sinh",
+                    schedule: "Quản lý lịch học",
+                    notifications: "Thông báo & Tin nhắn",
+                    bugs: "Báo cáo sự cố",
+                    "api-monitor": "Giám sát API",
+                    backups: "Sao lưu & Dữ liệu",
+                    system: "Hạ tầng hệ thống",
+                };
+                const tabName = tabTitles[routeInfo.tab] || "Quản trị";
+                pageTitle = `${tabName} | Admin`;
+                break;
+            }
+            case "reset-password":
+                pageTitle = "Đặt lại mật khẩu";
+                break;
+            case "google-callback":
+                pageTitle = "Đang xác thực...";
+                break;
+            default:
+                pageTitle = "HiTrang";
+        }
+
+        if (pageTitle === "HiTrang" || pageTitle.startsWith("HiTrang -")) {
+            document.title = pageTitle;
+        } else {
+            document.title = `${pageTitle} | ${baseTitle}`;
+        }
+    }, [currentPath, routeInfo, quizzes, submissions, activeTab, user]);
+
+    // Check Supabase session and sync saved font on mount
+    useEffect(() => {
+        const savedFont = localStorage.getItem("hitrang_font_family");
+        if (savedFont) {
+            const fontMap: Record<string, string> = {
+                "plus-jakarta": "'Plus Jakarta Sans', sans-serif",
+                "be-vietnam": "'Be Vietnam Pro', sans-serif",
+                inter: "'Inter', sans-serif",
+                "jetbrains-mono": "'JetBrains Mono', monospace",
+            };
+            if (fontMap[savedFont]) {
+                document.body.style.fontFamily = fontMap[savedFont];
+                document.documentElement.style.setProperty(
+                    "--font-sans",
+                    fontMap[savedFont],
+                );
+            }
+        }
+
         const fetchInitialData = async () => {
             const startTime = performance.now();
             setLoading(true);
@@ -473,7 +614,7 @@ export default function App() {
 
     return (
         <div
-            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} ${!user ? "bg-[#FAF6EE] dark:bg-[#1A2536]" : "bg-[#F9F8F6] dark:bg-bg-base"} text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
+            className={`${isTakingOrReviewing ? "h-screen overflow-hidden" : "min-h-screen"} ${!user ? "bg-[#FAF6EE] dark:bg-bg-base" : "bg-[#F9F8F6] dark:bg-bg-base"} text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
             {!isTakingQuiz && (user ? true : routeInfo.route === "schedule") && (
@@ -522,7 +663,11 @@ export default function App() {
                                     ? "/notifications"
                                     : tab === "history"
                                       ? "/history"
-                                      : "/settings",
+                                      : tab === "appearance"
+                                        ? "/appearance"
+                                        : tab === "security"
+                                          ? "/security"
+                                          : "/settings",
                             );
                         }
                     }}
@@ -685,6 +830,10 @@ export default function App() {
                             {(() => {
                                 if (
                                     currentPath === "/settings" ||
+                                    currentPath === "/profile" ||
+                                    currentPath === "/security" ||
+                                    currentPath === "/appearance" ||
+                                    currentPath === "/theme" ||
                                     currentPath === "/history" ||
                                     currentPath === "/notifications" ||
                                     currentPath === "/noti"
@@ -697,6 +846,9 @@ export default function App() {
                                             }
                                             onLogout={handleLogout}
                                             theme={theme}
+                                            onThemeChange={(newTheme) =>
+                                                setTheme(newTheme)
+                                            }
                                             submissions={submissions}
                                             quizzes={quizzes}
                                             initialTab={
@@ -706,7 +858,15 @@ export default function App() {
                                                     ? "notifications"
                                                     : currentPath === "/history"
                                                       ? "history"
-                                                      : "profile"
+                                                      : currentPath ===
+                                                              "/appearance" ||
+                                                          currentPath ===
+                                                              "/theme"
+                                                        ? "appearance"
+                                                        : currentPath ===
+                                                            "/security"
+                                                          ? "security"
+                                                          : "profile"
                                             }
                                             onTabChange={(tab) => {
                                                 const targetPath =
@@ -714,7 +874,11 @@ export default function App() {
                                                         ? "/notifications"
                                                         : tab === "history"
                                                           ? "/history"
-                                                          : "/settings";
+                                                          : tab === "appearance"
+                                                            ? "/appearance"
+                                                            : tab === "security"
+                                                              ? "/security"
+                                                              : "/settings";
                                                 window.history.pushState(
                                                     null,
                                                     "",
