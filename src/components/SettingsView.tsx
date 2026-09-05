@@ -2026,7 +2026,6 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                <Mail className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                                 <span>Email khôi phục</span>
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
@@ -2036,13 +2035,6 @@ export default function SettingsView({
                         <div className="col-span-12 md:col-span-8">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-1">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-center shrink-0">
-                                        {user.email ? (
-                                            <MailCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                                        ) : (
-                                            <Mail className="w-4 h-4 text-slate-400" />
-                                        )}
-                                    </div>
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -2112,7 +2104,6 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                                 <span>Two-factor Authenticator</span>
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
@@ -2125,15 +2116,6 @@ export default function SettingsView({
                             {/* Main 2FA Status Row */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-1">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-center shrink-0">
-                                        <ShieldCheck
-                                            className={`w-4 h-4 ${
-                                                user.totpEnabled
-                                                    ? "text-emerald-600 dark:text-emerald-400"
-                                                    : "text-slate-400"
-                                            }`}
-                                        />
-                                    </div>
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">

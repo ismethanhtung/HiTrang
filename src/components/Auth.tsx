@@ -65,7 +65,12 @@ export default function Auth({
 
     // Forgot Password states
     const [forgotStep, setForgotStep] = useState<
-        "enter_user" | "choose_method" | "email_otp" | "has_2fa" | "no_method" | "success"
+        | "enter_user"
+        | "choose_method"
+        | "email_otp"
+        | "has_2fa"
+        | "no_method"
+        | "success"
     >("enter_user");
     const [forgotUserData, setForgotUserData] = useState<{
         name?: string;
@@ -305,7 +310,8 @@ export default function Auth({
     };
 
     const handleResendForgotEmailOTP = async () => {
-        if (forgotResendTimer > 0 || !forgotUserData?.username || loading) return;
+        if (forgotResendTimer > 0 || !forgotUserData?.username || loading)
+            return;
         setError("");
         setSuccess("");
         setLoading(true);
@@ -589,47 +595,32 @@ export default function Auth({
                         {/* Step 1.2: Choose Method (When user has BOTH Email and Google Authenticator) */}
                         {forgotStep === "choose_method" && (
                             <div className="space-y-4">
-                                <div className="p-3 bg-brand-50/60 border border-brand-100 rounded-2xl flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-800">
-                                            {forgotUserData?.name ||
-                                                forgotUserData?.username}
-                                        </p>
-                                        <p className="text-[11px] text-slate-400 font-mono">
-                                            @{forgotUserData?.username}
-                                        </p>
-                                    </div>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-100 text-brand-700">
-                                        2 phương thức
-                                    </span>
-                                </div>
-
-                                <div className="text-center space-y-1">
+                                <div className="text-center space-y-1 py-1">
                                     <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                                         Chọn phương thức xác thực
                                     </h3>
                                     <p className="text-[11px] text-slate-400">
-                                        Chọn cách bạn muốn xác nhận để đặt lại mật khẩu:
+                                        Chọn cách bạn muốn nhận mã để đặt lại
+                                        mật khẩu:
                                     </p>
                                 </div>
 
-                                <div className="space-y-2.5">
+                                <div className="divide-y divide-slate-100 border-t border-b border-slate-100">
                                     {/* Option 1: Email OTP */}
                                     <button
                                         type="button"
                                         onClick={handleSelectEmailMethod}
                                         disabled={loading}
-                                        className="w-full p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-300 rounded-2xl flex items-center gap-3 transition-all text-left group shadow-xs cursor-pointer disabled:opacity-50"
+                                        className="w-full py-3 px-2 hover:bg-slate-50/80 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
                                     >
-                                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                            <Mail className="w-5 h-5" />
-                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
                                                 Xác thực qua Email
                                             </p>
-                                            <p className="text-[11px] text-slate-400 truncate">
-                                                Gửi mã OTP đến {forgotUserData?.maskedEmail || "email đã liên kết"}
+                                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                                Gửi mã OTP đến{" "}
+                                                {forgotUserData?.maskedEmail ||
+                                                    "email đã liên kết"}
                                             </p>
                                         </div>
                                         <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors shrink-0" />
@@ -644,17 +635,15 @@ export default function Auth({
                                             setForgotStep("has_2fa");
                                         }}
                                         disabled={loading}
-                                        className="w-full p-3.5 bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-300 rounded-2xl flex items-center gap-3 transition-all text-left group shadow-xs cursor-pointer disabled:opacity-50"
+                                        className="w-full py-3 px-2 hover:bg-slate-50/80 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
                                     >
-                                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                            <ShieldCheck className="w-5 h-5" />
-                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
                                                 Google Authenticator
                                             </p>
-                                            <p className="text-[11px] text-slate-400 truncate">
-                                                Nhập mã 6 số từ ứng dụng xác thực
+                                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                                                Nhập mã 6 số từ ứng dụng xác
+                                                thực
                                             </p>
                                         </div>
                                         <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-brand-500 transition-colors shrink-0" />
@@ -688,7 +677,7 @@ export default function Auth({
                                 onSubmit={handleForgotResetWithEmail}
                                 className="space-y-4"
                             >
-                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-between">
+                                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                                     <div>
                                         <p className="text-xs font-bold text-slate-800">
                                             {forgotUserData?.name ||
@@ -699,10 +688,6 @@ export default function Auth({
                                                 "Email xác thực"}
                                         </p>
                                     </div>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">
-                                        <Mail className="w-3 h-3" />
-                                        Mã OTP Email
-                                    </span>
                                 </div>
 
                                 <div className="space-y-1">
@@ -744,7 +729,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Kiểm tra hộp thư đến (hoặc thư rác/Spam)
@@ -770,7 +755,7 @@ export default function Auth({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
                                         />
                                         <button
                                             type="button"
@@ -807,7 +792,7 @@ export default function Auth({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                        className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
                                     />
                                 </div>
 
@@ -818,7 +803,7 @@ export default function Auth({
                                 )}
 
                                 {success && (
-                                    <div className="p-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl font-medium">
+                                    <div className="p-2 text-xs text-emerald-600  font-medium">
                                         {success}
                                     </div>
                                 )}
@@ -885,22 +870,6 @@ export default function Auth({
                                 onSubmit={handleForgotResetWithTOTP}
                                 className="space-y-4"
                             >
-                                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-800">
-                                            {forgotUserData?.name ||
-                                                forgotUserData?.username}
-                                        </p>
-                                        <p className="text-[11px] text-slate-400 font-mono">
-                                            @{forgotUserData?.username}
-                                        </p>
-                                    </div>
-                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">
-                                        <ShieldCheck className="w-3 h-3" />
-                                        Có 2-Step
-                                    </span>
-                                </div>
-
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold text-slate-700">
                                         Mã Google Authenticator (6 số)
@@ -919,7 +888,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Mở app Authenticator trên điện thoại để
@@ -945,7 +914,7 @@ export default function Auth({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
                                         />
                                         <button
                                             type="button"
@@ -982,7 +951,7 @@ export default function Auth({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                        className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
                                     />
                                 </div>
 
@@ -1020,16 +989,6 @@ export default function Auth({
                                         </>
                                     )}
                                 </button>
-
-                                {forgotUserData?.hasEmail && (
-                                    <button
-                                        type="button"
-                                        onClick={handleSelectEmailMethod}
-                                        className="w-full py-1 text-xs text-brand-600 hover:underline font-medium text-center cursor-pointer"
-                                    >
-                                        Nhận mã qua Email thay thế
-                                    </button>
-                                )}
 
                                 <button
                                     type="button"
@@ -1105,7 +1064,7 @@ export default function Auth({
                         {/* Step 3: Success */}
                         {forgotStep === "success" && (
                             <div className="text-center py-4 space-y-4">
-                                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 text-emerald-600 flex items-center justify-center mx-auto">
                                     <CheckCircle2 className="w-6 h-6" />
                                 </div>
                                 <div>
