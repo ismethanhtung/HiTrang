@@ -1815,11 +1815,8 @@ export default function SettingsView({
                                 </p>
                             </div>
                             <div className="col-span-12 md:col-span-8">
-                                <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-xl">
+                                <div className="p-3.5 dark:bg-slate-800/40 dark:border-slate-700/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-xl">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200/60 dark:border-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
-                                            <GoogleIcon className="w-4.5 h-4.5" />
-                                        </div>
                                         <div className="min-w-0">
                                             <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                                                 {user.email ||
