@@ -3119,7 +3119,7 @@ export default function StudentDashboard({
                                 className="space-y-8"
                             >
                                 {/* Header section (Welcome back, Alex style) */}
-                                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-slate-200">
+                                <div className="hidden sm:flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pb-6 border-b border-slate-200">
                                     <div>
                                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                                             Chào mừng quay trở lại, {user.name}{" "}
@@ -3133,11 +3133,11 @@ export default function StudentDashboard({
                                 </div>
 
                                 {/* ULTRA-CLEAN FLAT SAGE-WHITE DASHBOARD */}
-                                <div className="space-y-12 pt-8">
+                                <div className="space-y-8 sm:space-y-12 pt-2 sm:pt-8">
                                     {/* 2-Column Split Layout */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
                                         {/* Left Column: Continue Learning & Quizzes Feed (2/3 width) */}
-                                        <div className="lg:col-span-2 space-y-10">
+                                        <div className="lg:col-span-2 space-y-8 sm:space-y-10">
                                             {/* Section 1: TIẾP TỤC LUYỆN TẬP */}
                                             <div className="space-y-4 text-left">
                                                 <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
@@ -3163,14 +3163,14 @@ export default function StudentDashboard({
                                                     </span>
                                                 </div>
 
-                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pt-2">
-                                                    <div className="space-y-1.5 flex-1">
-                                                        <h4 className="text-base font-black text-slate-800 leading-snug">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pt-2">
+                                                    <div className="space-y-1 sm:space-y-1.5 flex-1">
+                                                        <h4 className="text-sm sm:text-base font-black text-slate-800 leading-snug">
                                                             Chương trình ôn
                                                             luyện Toán chất
                                                             lượng cao Cô Trang
                                                         </h4>
-                                                        <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                                                        <p className="text-[11px] sm:text-xs text-slate-400 font-medium leading-relaxed">
                                                             Luyện tập giải đề
                                                             đều đặn giúp bạn
                                                             củng cố kiến thức
@@ -3184,7 +3184,7 @@ export default function StudentDashboard({
                                                         onClick={
                                                             handleResumeOngoing
                                                         }
-                                                        className="px-6 py-2.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-lg transition-all shadow-sm shrink-0 flex items-center gap-1.5 cursor-pointer"
+                                                        className="w-full sm:w-auto px-6 py-2.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-lg transition-all shadow-sm shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
                                                     >
                                                         <span>
                                                             {ongoingAttempt
@@ -3246,11 +3246,11 @@ export default function StudentDashboard({
                                                     </button>
                                                 </div>
 
-                                                {/* Spacious borderless feed rows — filter by user's grade locally here only */}
-                                                <div className="space-y-6">
+                                                {/* Feed rows: Clean GradeView card on mobile, original spacious horizontal feed row on PC */}
+                                                <div className="space-y-3 md:space-y-6">
                                                     {loading ? (
                                                         <div className="py-10 flex items-center justify-center">
-                                                            <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
+                                                            <Loader2 className="w-5 h-5 text-slate-300 dark:text-slate-600 animate-spin" />
                                                         </div>
                                                     ) : (
                                                         (() => {
@@ -3269,20 +3269,42 @@ export default function StudentDashboard({
                                                             ) {
                                                                 return (
                                                                     <div className="py-10 flex items-center justify-center">
-                                                                        <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
+                                                                        <Loader2 className="w-5 h-5 text-slate-300 dark:text-slate-600 animate-spin" />
                                                                     </div>
                                                                 );
                                                             }
                                                             return gradeQuizzes
                                                                 .slice(0, 5)
                                                                 .map((quiz) => {
-                                                                    const hasDone =
-                                                                        studentSubmissions.some(
+                                                                    const studentQuizSubs =
+                                                                        studentSubmissions.filter(
                                                                             (
-                                                                                sub,
+                                                                                s,
                                                                             ) =>
-                                                                                sub.quizId ===
+                                                                                s.quizId ===
                                                                                 quiz.id,
+                                                                        );
+                                                                    const hasDone =
+                                                                        studentQuizSubs.length >
+                                                                        0;
+                                                                    const bestSubmission =
+                                                                        studentQuizSubs.sort(
+                                                                            (
+                                                                                a,
+                                                                                b,
+                                                                            ) =>
+                                                                                b.score -
+                                                                                a.score,
+                                                                        )[0];
+                                                                    const maxScore =
+                                                                        bestSubmission
+                                                                            ? bestSubmission.score
+                                                                            : 0;
+                                                                    const isOngoing =
+                                                                        !!(
+                                                                            ongoingAttempt &&
+                                                                            ongoingAttempt.quiz_id ===
+                                                                                quiz.id
                                                                         );
 
                                                                     const sectionCount =
@@ -3310,7 +3332,7 @@ export default function StudentDashboard({
                                                                             if (
                                                                                 !quiz.createdAt
                                                                             )
-                                                                                return "Chưa rõ";
+                                                                                return "";
                                                                             const dateParts =
                                                                                 quiz.createdAt.split(
                                                                                     "-",
@@ -3369,102 +3391,235 @@ export default function StudentDashboard({
                                                                                 "chuyên",
                                                                             );
 
+                                                                    const cleanSubject =
+                                                                        quiz.subject
+                                                                            ? quiz.subject
+                                                                                  .split(
+                                                                                      " - ",
+                                                                                  )[0]
+                                                                                  .trim()
+                                                                            : "Toán Học";
+
                                                                     return (
                                                                         <div
                                                                             key={
                                                                                 quiz.id
                                                                             }
-                                                                            className="group flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 last:pb-0 gap-3 sm:gap-4 text-left transition-all"
                                                                         >
-                                                                            {/* Left info */}
-                                                                            <div className="space-y-1.5 flex-1 w-full">
-                                                                                <div className="flex items-center gap-2 flex-wrap">
-                                                                                    <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-[#3B6D85] transition-colors leading-snug">
-                                                                                        {
-                                                                                            quiz.title
-                                                                                        }
-                                                                                    </h4>
+                                                                            {/* 1. PC / Desktop layout: Original flat horizontal row */}
+                                                                            <div className="hidden md:flex items-center justify-between pb-6 border-b border-slate-200/50 dark:border-slate-800/50 last:border-0 last:pb-0 gap-4 text-left transition-all group">
+                                                                                {/* Left info */}
+                                                                                <div className="space-y-1.5 flex-1 w-full">
+                                                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                                                        <h4 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-[#3B6D85] dark:group-hover:text-brand-300 transition-colors leading-snug">
+                                                                                            {
+                                                                                                quiz.title
+                                                                                            }
+                                                                                        </h4>
+                                                                                    </div>
+
+                                                                                    <p className="text-xs text-slate-400 dark:text-slate-500 font-medium line-clamp-1 max-w-[90%]">
+                                                                                        {quiz.description ||
+                                                                                            "Tài liệu ôn thi trắc nghiệm toán học giúp chuẩn bị cho kì thi chính thức trên lớp."}
+                                                                                    </p>
+
+                                                                                    {/* Metas */}
+                                                                                    <div className="flex items-center gap-4 text-[10px] text-slate-400 dark:text-slate-500 font-bold flex-wrap pt-0.5">
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                                                                            {
+                                                                                                quiz.duration
+                                                                                            }{" "}
+                                                                                            phút
+                                                                                        </span>
+                                                                                        <span className="text-slate-300 dark:text-slate-700 select-none">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <HelpCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                                                                            {
+                                                                                                quiz
+                                                                                                    .questions
+                                                                                                    .length
+                                                                                            }{" "}
+                                                                                            câu
+                                                                                            hỏi
+                                                                                        </span>
+                                                                                        <span className="text-slate-300 dark:text-slate-700 select-none">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <List className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                                                                            {
+                                                                                                sectionCount
+                                                                                            }{" "}
+                                                                                            phần
+                                                                                        </span>
+                                                                                        <span className="text-slate-300 dark:text-slate-700 select-none">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 text-slate-400 dark:text-slate-500 font-medium shrink-0">
+                                                                                            <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                                                                                            Ngày:{" "}
+                                                                                            {formattedDate ||
+                                                                                                "Chưa rõ"}
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
 
-                                                                                <p className="text-xs text-slate-400 font-medium line-clamp-1 max-w-[90%]">
-                                                                                    {quiz.description ||
-                                                                                        "Tài liệu ôn thi trắc nghiệm toán học giúp chuẩn bị cho kì thi chính thức trên lớp."}
-                                                                                </p>
+                                                                                {/* Right Action */}
+                                                                                <div className="flex items-center justify-end gap-5 shrink-0">
+                                                                                    <span
+                                                                                        className={`text-[10px] font-extrabold px-3 py-1 rounded-full ${
+                                                                                            hasDone
+                                                                                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40"
+                                                                                                : "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40"
+                                                                                        }`}
+                                                                                    >
+                                                                                        {hasDone
+                                                                                            ? "✓ Đã làm"
+                                                                                            : "○ Chưa làm"}
+                                                                                    </span>
 
-                                                                                {/* Metas and real quiz data */}
-                                                                                <div className="flex items-center gap-x-3 gap-y-1 sm:gap-4 text-[10px] text-slate-400 font-bold flex-wrap pt-0.5">
-                                                                                    <span className="flex items-center gap-1 shrink-0">
-                                                                                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                                                                        {
-                                                                                            quiz.duration
-                                                                                        }{" "}
-                                                                                        phút
-                                                                                    </span>
-                                                                                    <span className="hidden sm:inline select-none">
-                                                                                        •
-                                                                                    </span>
-                                                                                    <span className="flex items-center gap-1 shrink-0">
-                                                                                        <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
-                                                                                        {
-                                                                                            quiz
-                                                                                                .questions
-                                                                                                .length
-                                                                                        }{" "}
-                                                                                        câu
-                                                                                        hỏi
-                                                                                    </span>
-                                                                                    <span className="hidden sm:inline select-none">
-                                                                                        •
-                                                                                    </span>
-                                                                                    <span className="flex items-center gap-1 shrink-0">
-                                                                                        <List className="w-3.5 h-3.5 text-slate-400" />
-                                                                                        {
-                                                                                            sectionCount
-                                                                                        }{" "}
-                                                                                        phần
-                                                                                    </span>
-                                                                                    <span className="hidden sm:inline select-none">
-                                                                                        •
-                                                                                    </span>
-                                                                                    <span className="flex items-center gap-1 text-slate-400 font-medium shrink-0">
-                                                                                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                                                                                        Ngày:{" "}
-                                                                                        {
-                                                                                            formattedDate
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() =>
+                                                                                            handleStartQuiz(
+                                                                                                quiz,
+                                                                                            )
                                                                                         }
-                                                                                    </span>
+                                                                                        className="px-4 py-1.5 bg-[#3B6D85] hover:bg-slate-700 dark:hover:bg-[#2C5A71] text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
+                                                                                    >
+                                                                                        <span>
+                                                                                            Làm
+                                                                                            bài
+                                                                                        </span>
+                                                                                        <ChevronRight className="w-3.5 h-3.5" />
+                                                                                    </button>
                                                                                 </div>
                                                                             </div>
 
-                                                                            {/* Right Action */}
-                                                                            <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-5 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100/70 dark:border-slate-800/60 shrink-0">
-                                                                                <span
-                                                                                    className={`text-[10px] font-extrabold px-3 py-1 rounded-full shrink-0 ${
-                                                                                        hasDone
-                                                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60"
-                                                                                            : "bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60"
-                                                                                    }`}
-                                                                                >
-                                                                                    {hasDone
-                                                                                        ? "✓ Đã làm"
-                                                                                        : "○ Chưa làm"}
-                                                                                </span>
+                                                                            {/* 2. Mobile layout: Exact GradeView Card */}
+                                                                            <div className="md:hidden p-3.5 rounded-lg bg-slate-50/70 dark:bg-slate-850/50 border border-slate-200/70 dark:border-slate-800 group flex flex-col justify-between text-left transition-all">
+                                                                                <div className="space-y-2">
+                                                                                    {/* Header line: Tags & Date */}
+                                                                                    <div className="flex items-center justify-between gap-2">
+                                                                                        <div className="flex flex-wrap items-center gap-1.5">
+                                                                                            <span className="text-[8px] font-extrabold uppercase tracking-wider bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300 px-2 py-0.5 rounded-md border border-brand-100 dark:border-brand-500/20">
+                                                                                                {
+                                                                                                    cleanSubject
+                                                                                                }
+                                                                                            </span>
+                                                                                            {isVip && (
+                                                                                                <span className="text-[8px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-350 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
+                                                                                                    Nâng
+                                                                                                    cao
+                                                                                                </span>
+                                                                                            )}
+                                                                                            {isOngoing && (
+                                                                                                <span className="text-[8px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-350 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/40 animate-pulse">
+                                                                                                    Đang
+                                                                                                    làm
+                                                                                                    dở
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        {formattedDate && (
+                                                                                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold">
+                                                                                                {
+                                                                                                    formattedDate
+                                                                                                }
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
 
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() =>
-                                                                                        handleStartQuiz(
-                                                                                            quiz,
-                                                                                        )
-                                                                                    }
-                                                                                    className="px-4 py-1.5 bg-[#3B6D85] hover:bg-slate-700 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
-                                                                                >
-                                                                                    <span>
-                                                                                        Làm
-                                                                                        bài
-                                                                                    </span>
-                                                                                    <ChevronRight className="w-3.5 h-3.5" />
-                                                                                </button>
+                                                                                    {/* Title */}
+                                                                                    <h3 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
+                                                                                        {
+                                                                                            quiz.title
+                                                                                        }
+                                                                                    </h3>
+
+                                                                                    <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium line-clamp-1 leading-relaxed">
+                                                                                        {quiz.description ||
+                                                                                            "Tài liệu ôn thi trắc nghiệm toán học giúp chuẩn bị cho kì thi chính thức trên lớp."}
+                                                                                    </p>
+
+                                                                                    {/* Metadata */}
+                                                                                    <div className="flex items-center gap-x-2.5 gap-y-1 text-[10px] text-slate-400 dark:text-slate-500 font-bold flex-wrap pt-0.5">
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                                                            {
+                                                                                                quiz.duration
+                                                                                            }{" "}
+                                                                                            phút
+                                                                                        </span>
+                                                                                        <span className="text-slate-300 dark:text-slate-700 select-none">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <HelpCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                                                            {
+                                                                                                quiz
+                                                                                                    .questions
+                                                                                                    .length
+                                                                                            }{" "}
+                                                                                            câu
+                                                                                        </span>
+                                                                                        <span className="text-slate-300 dark:text-slate-700 select-none">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span className="flex items-center gap-1 shrink-0">
+                                                                                            <List className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
+                                                                                            {
+                                                                                                sectionCount
+                                                                                            }{" "}
+                                                                                            phần
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* Action line */}
+                                                                                <div className="flex items-center justify-between gap-3 pt-2.5 mt-3 border-t border-slate-200/50 dark:border-slate-800/60">
+                                                                                    <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold">
+                                                                                        {hasDone ? (
+                                                                                            <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-100/40 dark:border-emerald-900/30">
+                                                                                                Highest:{" "}
+                                                                                                {
+                                                                                                    maxScore
+                                                                                                }
+                                                                                            </span>
+                                                                                        ) : (
+                                                                                            <span className="bg-amber-50/50 text-amber-700 dark:bg-amber-950/10 dark:text-amber-400 px-2.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-900/30">
+                                                                                                Chưa
+                                                                                                làm
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() =>
+                                                                                            handleStartQuiz(
+                                                                                                quiz,
+                                                                                            )
+                                                                                        }
+                                                                                        className={`px-3.5 py-1.5 ${
+                                                                                            isOngoing
+                                                                                                ? "bg-[#18323E] hover:bg-[#10222B] dark:bg-slate-800 dark:hover:bg-slate-900 text-white shadow-md shadow-blue-500/10"
+                                                                                                : "bg-[#3B6D85] hover:bg-[#2C5A71] text-white"
+                                                                                        } rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
+                                                                                    >
+                                                                                        <span>
+                                                                                            {isOngoing
+                                                                                                ? "Tiếp tục làm"
+                                                                                                : hasDone
+                                                                                                  ? "Làm lại"
+                                                                                                  : "Làm bài"}
+                                                                                        </span>
+                                                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     );
@@ -3477,7 +3632,6 @@ export default function StudentDashboard({
 
                                         {/* Right Column: Sidebar (1/3 width) - Borderless Stats & Charts */}
                                         <div className="space-y-10 lg:pl-4 lg:border-l lg:border-slate-200/50">
-                                            {/* Section 3: Lịch sử điểm số */}
                                             {/* Section 3: Lịch sử điểm số */}
                                             <div className="space-y-2 text-left">
                                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider border-b border-slate-200/60 pb-2">

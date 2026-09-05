@@ -100,38 +100,38 @@ export default function ScheduleView({
     const quote = "Mối tình đẹp nhất là mối tình với tri thức";
 
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 pb-32 bg-transparent">
+        <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-12 pb-20 sm:pb-32 bg-transparent">
             {/* HEADER SECTION - Left-aligned, sentence case */}
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 pb-6 border-b border-slate-200 dark:border-slate-800">
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 sm:gap-6 pb-2 sm:pb-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="text-left hidden sm:block">
+                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {title}
                     </h1>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                         {subtext}
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-855 text-slate-600 dark:text-slate-300 uppercase">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-md sm:rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-855 text-slate-600 dark:text-slate-300 uppercase self-start sm:self-auto">
                         {applyDate}
                     </span>
 
                     {/* Toggle view mode buttons */}
-                    <div className="inline-flex bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
+                    <div className="grid grid-cols-3 sm:inline-flex w-full sm:w-auto bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
                         <button
                             onClick={() => setViewMode("grid")}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
+                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
                                 viewMode === "grid"
                                     ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
                                     : "text-slate-400 hover:text-slate-650"
                             }`}
                         >
-                            Lưới thời khoá biểu
+                            Lưới TKB
                         </button>
                         <button
                             onClick={() => setViewMode("list")}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
+                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
                                 viewMode === "list"
                                     ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
                                     : "text-slate-400 hover:text-slate-650"
@@ -141,7 +141,7 @@ export default function ScheduleView({
                         </button>
                         <button
                             onClick={() => setViewMode("image")}
-                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none ${
+                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
                                 viewMode === "image"
                                     ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
                                     : "text-slate-400 hover:text-slate-650"
@@ -154,7 +154,7 @@ export default function ScheduleView({
             </div>
 
             {viewMode === "list" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-6 sm:gap-x-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 sm:gap-x-4">
                     {days.map((day) => {
                         const daySlots = timeRows
                             .map((time) => ({ time, slot: getSlot(time, day) }))
@@ -163,34 +163,36 @@ export default function ScheduleView({
                         return (
                             <div
                                 key={day}
-                                className="py-4 px-5 border border-slate-200 dark:border-slate-800 flex flex-col justify-between"
+                                className="p-3.5 sm:p-5 rounded-xl sm:rounded-none border border-slate-200/70 dark:border-slate-800 bg-slate-50/60 sm:bg-transparent dark:bg-slate-850/40 dark:sm:bg-transparent flex flex-col justify-between shadow-2xs sm:shadow-none text-left"
                             >
                                 <div>
-                                    <div className="pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+                                    <div className="pb-2.5 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
                                         <h3 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider font-sans">
                                             {dayLabels[day]}
                                         </h3>
-                                        <span className="text-[9px] font-bold text-[#4B726B] uppercase">
+                                        <span className="text-[9px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50/90 dark:bg-brand-500/15 px-2 py-0.5 rounded-full uppercase">
                                             {daySlots.length} buổi học
                                         </span>
                                     </div>
 
-                                    <div className="pt-3.5 space-y-3">
+                                    <div className="pt-3 space-y-2.5">
                                         {daySlots.length === 0 ? (
                                             <p className="text-xs text-slate-400 dark:text-slate-500 italic py-1">
                                                 Không có lịch học
                                             </p>
                                         ) : (
                                             daySlots.map(({ time, slot }) => {
+                                                const grade = getGradeFromContent(slot?.content || "");
+                                                const pastelClass = getGridPastelStyles(grade);
                                                 return (
                                                     <div
                                                         key={time}
-                                                        className="flex items-center justify-between gap-3 text-xs"
+                                                        className="flex items-center justify-between gap-2 text-xs py-0.5"
                                                     >
-                                                        <span className="text-slate-600 dark:text-slate-300 font-bold">
+                                                        <span className="text-slate-500 dark:text-slate-400 font-bold text-[11px] shrink-0">
                                                             {time}
                                                         </span>
-                                                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                                                        <span className={`font-black text-[11px] px-2 py-0.5 rounded-md ${pastelClass || "text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800"}`}>
                                                             {slot?.content}
                                                         </span>
                                                     </div>
@@ -205,17 +207,17 @@ export default function ScheduleView({
                 </div>
             ) : viewMode === "grid" ? (
                 /* VIEW MODE: TABLE GRID (Clean Flat Table, transparent background, outer border, rounded corners) */
-                <div className="overflow-x-auto bg-transparent border border-slate-300 dark:border-slate-800 shadow-3xs">
-                    <table className="w-full min-w-[850px] border-collapse text-center table-fixed">
+                <div className="overflow-x-auto bg-transparent border border-slate-200/80 dark:border-slate-800 rounded-xl sm:rounded-none shadow-3xs">
+                    <table className="w-full min-w-[720px] sm:min-w-[850px] border-collapse text-center table-fixed">
                         <thead>
-                            <tr className="border-b border-slate-300 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 text-[11px] font-bold text-slate-455 uppercase">
-                                <th className="py-3.5 px-4 w-[130px] border-r border-slate-200/60 dark:border-slate-800/60">
+                            <tr className="border-b border-slate-300 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 text-[10px] sm:text-[11px] font-bold text-slate-455 uppercase">
+                                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 w-[110px] sm:w-[130px] border-r border-slate-200/60 dark:border-slate-800/60">
                                     Khung giờ
                                 </th>
                                 {days.map((day) => (
                                     <th
                                         key={day}
-                                        className="py-3.5 px-4 w-[12.5%] font-bold text-slate-700 dark:text-slate-355 border-r border-slate-200/60 dark:border-slate-800/60 last:border-0"
+                                        className="py-2.5 sm:py-3.5 px-2 sm:px-4 w-[12.5%] font-bold text-slate-700 dark:text-slate-355 border-r border-slate-200/60 dark:border-slate-800/60 last:border-0"
                                     >
                                         {dayLabels[day]}
                                     </th>
@@ -228,7 +230,7 @@ export default function ScheduleView({
                                     key={timeRow}
                                     className="border-b border-slate-200 dark:border-slate-800 last:border-0"
                                 >
-                                    <td className="py-4 px-3 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200/60 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-900/10">
+                                    <td className="py-3 sm:py-4 px-2 sm:px-3 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 border-r border-slate-200/60 dark:border-slate-800/60 bg-slate-50/10 dark:bg-slate-900/10">
                                         {timeRow}
                                     </td>
                                     {days.map((day) => {
@@ -247,11 +249,11 @@ export default function ScheduleView({
                                                 className={`p-0 border-r border-slate-200/50 dark:border-slate-800/50 last:border-0 align-middle ${pastelClass || "text-slate-855 dark:text-slate-200"}`}
                                             >
                                                 {slot && slot.content ? (
-                                                    <div className="py-4 px-2 text-xs font-bold text-center">
+                                                    <div className="py-3 sm:py-4 px-1.5 sm:px-2 text-[11px] sm:text-xs font-bold text-center">
                                                         {slot.content}
                                                     </div>
                                                 ) : (
-                                                    <div className="py-4 text-slate-200 dark:text-slate-800 select-none">
+                                                    <div className="py-3 sm:py-4 text-slate-200 dark:text-slate-800 select-none">
                                                         -
                                                     </div>
                                                 )}
@@ -265,20 +267,18 @@ export default function ScheduleView({
                 </div>
             ) : (
                 /* VIEW MODE: IMAGE */
-                <div className="flex justify-center w-full">
+                <div className="flex justify-center w-full rounded-xl overflow-hidden border border-slate-200/70 dark:border-slate-800">
                     <img
                         src="/lich/1.jpeg"
                         alt="Ảnh Lịch học"
-                        className="w-full max-w-none"
+                        className="w-full max-w-4xl h-auto object-contain"
                     />
                 </div>
             )}
 
             {/* THREE-COLUMN LAYOUT: CONTACT & SOCIALS (LEFT) | QUOTE (CENTER) | INTERNAL LINKS (RIGHT) */}
-            {/* Using grid-cols-3 to ensure the middle quote column is mathematically and visually centered */}
-            <div className="pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-8 items-center">
-                {/* Center Column: Quote - aligned perfectly centered visually */}
-                <div className="flex items-center justify-center text-center md:h-full py-4 md:py-6">
+            <div className="pt-6 sm:pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 gap-8 items-center">
+                <div className="flex items-center justify-center text-center py-2 sm:py-6">
                     <p className="text-xs sm:text-sm italic text-slate-550 dark:text-slate-455 font-medium leading-relaxed max-w-xs inline-flex items-center justify-center gap-1.5 flex-wrap">
                         <span>"{quote}</span>
                         <img

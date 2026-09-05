@@ -176,49 +176,50 @@ export default function GradeView({
     // Grid column border and padding classes for borderless line-separated columns
     const getColClasses = (index: number) => {
         let classes =
-            "group flex flex-col justify-between bg-transparent border-t border-r border-slate-200 dark:border-slate-800 pt-6 pb-6 transition-all duration-200 ";
+            "group flex flex-col justify-between transition-all duration-200 ";
 
         // Tablet (2 columns on md)
         const mdCol = index % 2;
         if (mdCol === 0) {
             classes +=
-                "md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
+                "md:border-t md:border-l md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 md:pt-6 md:pb-6 ";
         } else {
             classes +=
-                "md:border-l-0 md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 ";
+                "md:border-t md:border-l-0 md:border-r md:border-slate-200 dark:md:border-slate-800 md:pl-6 md:pr-6 md:pt-6 md:pb-6 ";
         }
 
         // Desktop (3 columns on lg)
         const lgCol = index % 3;
         if (lgCol === 0) {
             classes +=
-                "lg:border-l lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+                "lg:border-t lg:border-l lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 lg:pt-6 lg:pb-6 ";
         } else {
             classes +=
-                "lg:border-l-0 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 ";
+                "lg:border-t lg:border-l-0 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pl-6 lg:pr-6 lg:pt-6 lg:pb-6 ";
         }
 
-        // Mobile (1 column on mobile has border-r to close on the right side)
-        classes += "max-md:border-r max-md:border-l-0 max-md:pl-0 max-md:pr-0";
+        // Mobile: Clean rounded card with soft border & subtle background
+        classes +=
+            "max-md:p-3.5 max-md:rounded-xl max-md:bg-slate-50/70 dark:max-md:bg-slate-850/50 max-md:border max-md:border-slate-200/70 dark:max-md:border-slate-800 max-md:";
         return classes;
     };
 
     return (
         <div className="bg-transparent text-text-primary animate-in fade-in duration-200">
-            <div className="max-w-6xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-5 sm:space-y-8">
                 {/* Banner Header */}
-                <div className="pb-6 border-b border-slate-100 space-y-2 text-left">
-                    <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                <div className="hidden sm:block pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800 space-y-1 sm:space-y-2 text-left">
+                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         Kho Đề Thi Ôn Luyện Lớp {grade}
                     </h1>
-                    <p className="text-xs text-slate-400 max-w-xl">
+                    <p className="text-[11px] sm:text-xs text-slate-400 max-w-xl">
                         Tổng hợp các đề thi môn Toán chất lượng cao giúp bứt phá
                         điểm số cùng cô Trang.
                     </p>
                 </div>
 
                 {/* Search, Filter & Sort Controls */}
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between pb-2">
+                <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 items-stretch sm:items-center justify-between pb-2">
                     {/* Search Box */}
                     <div className="relative w-full sm:max-w-xs">
                         <input
@@ -226,15 +227,15 @@ export default function GradeView({
                             placeholder="Tìm kiếm đề thi..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 text-xs bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                            className="w-full pl-8.5 pr-4 py-2 text-xs bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-lg sm:rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder-slate-400 dark:placeholder-slate-500"
                         />
                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                     </div>
 
-                    {/* Filters */}
-                    <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
-                        <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                    {/* Filters Row: 3 equal compact columns on mobile, original horizontal flex on PC */}
+                    <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-4 w-full sm:w-auto sm:justify-end">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 text-xs min-w-0">
+                            <span className="hidden sm:inline text-slate-500 dark:text-slate-400 font-semibold text-xs shrink-0">
                                 Phân loại:
                             </span>
                             <select
@@ -242,18 +243,18 @@ export default function GradeView({
                                 onChange={(e) =>
                                     setSelectedSubject(e.target.value)
                                 }
-                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
+                                className="w-full sm:w-auto bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer truncate"
                             >
                                 {subjectOptions.map((sub) => (
                                     <option key={sub} value={sub}>
-                                        {sub}
+                                        {sub === "Tất cả" ? "Tất cả loại" : sub}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 text-xs min-w-0">
+                            <span className="hidden sm:inline text-slate-500 dark:text-slate-400 font-semibold text-xs shrink-0">
                                 Trạng thái:
                             </span>
                             <select
@@ -261,46 +262,46 @@ export default function GradeView({
                                 onChange={(e) =>
                                     setStatusFilter(e.target.value)
                                 }
-                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
+                                className="w-full sm:w-auto bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer truncate"
                             >
-                                <option value="all">Tất cả</option>
+                                <option value="all">Tất cả trạng thái</option>
                                 <option value="not_done">Chưa làm</option>
                                 <option value="done">Đã làm</option>
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-xs">
-                            <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-1.5 text-xs min-w-0">
+                            <span className="hidden sm:inline text-slate-500 dark:text-slate-400 font-semibold text-xs shrink-0">
                                 Sắp xếp:
                             </span>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-3 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer"
+                                className="w-full sm:w-auto bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-brand-500 cursor-pointer truncate"
                             >
                                 <option value="newest">Mới nhất</option>
                                 <option value="duration_asc">
-                                    Thời gian (Tăng dần)
+                                    Thời gian tăng
                                 </option>
                                 <option value="duration_desc">
-                                    Thời gian (Giảm dần)
+                                    Thời gian giảm
                                 </option>
                                 <option value="questions_count">
-                                    Số lượng câu hỏi
+                                    Số câu hỏi
                                 </option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                {/* Quizzes List - Grid layout of borderless feed items with dynamic border lines */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-0 gap-y-0">
+                {/* Quizzes List - Grid layout of borderless feed items on PC, rounded cards on mobile */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-0 gap-y-3 md:gap-y-0">
                     {loading ? (
                         <div className="col-span-full py-16 flex items-center justify-center">
                             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-450  border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
+                        <div className="col-span-full py-16 text-center text-slate-450 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
                             <img
                                 src="/icons/ghost.png"
                                 alt=""
@@ -365,35 +366,6 @@ export default function GradeView({
                             );
                             const maxScore =
                                 scores.length > 0 ? Math.max(...scores) : 0;
-                            const avgScore =
-                                scores.length > 0
-                                    ? Number(
-                                          (
-                                              scores.reduce(
-                                                  (a, b) => a + b,
-                                                  0,
-                                              ) / scores.length
-                                          ).toFixed(1),
-                                      )
-                                    : 0;
-                            const sortedSubmissions = [
-                                ...studentQuizSubmissions,
-                            ].sort((a, b) => {
-                                return (
-                                    safeParseDate(
-                                        safeParseDate(a.submittedAt).getTime(),
-                                    ).getTime() -
-                                    safeParseDate(
-                                        safeParseDate(b.submittedAt).getTime(),
-                                    ).getTime()
-                                );
-                            });
-                            const newestScore =
-                                sortedSubmissions.length > 0
-                                    ? sortedSubmissions[
-                                          sortedSubmissions.length - 1
-                                      ].score
-                                    : 0;
 
                             const isOngoing = !!(
                                 ongoingAttempt &&
@@ -419,7 +391,7 @@ export default function GradeView({
                                     key={quiz.id}
                                     className={getColClasses(index)}
                                 >
-                                    <div className="space-y-2.5">
+                                    <div className="space-y-2 sm:space-y-2.5">
                                         {/* Header line: Tags & Date */}
                                         <div className="flex items-center justify-between gap-2">
                                             <div className="flex flex-wrap items-center gap-1.5">
@@ -429,12 +401,12 @@ export default function GradeView({
                                                     )}
                                                 </span>
                                                 {isVip && (
-                                                    <span className="text-[9px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-350 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
+                                                    <span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-350 px-2 py-0.5 rounded-md border border-rose-100 dark:border-rose-900/40">
                                                         Nâng cao
                                                     </span>
                                                 )}
                                                 {isOngoing && (
-                                                    <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-350 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/40 animate-pulse">
+                                                    <span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-350 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/40 animate-pulse">
                                                         Đang làm dở
                                                     </span>
                                                 )}
@@ -447,30 +419,34 @@ export default function GradeView({
                                         </div>
 
                                         {/* Title */}
-                                        <h3 className="text-sm font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
+                                        <h3 className="text-[13px] sm:text-sm font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
                                             {quiz.title}
                                         </h3>
 
                                         {/* Description */}
                                         {quiz.description && (
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium line-clamp-2 leading-relaxed">
+                                            <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium line-clamp-1 sm:line-clamp-2 leading-relaxed">
                                                 {quiz.description}
                                             </p>
                                         )}
 
                                         {/* Metadata */}
-                                        <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold flex-wrap pt-0.5">
-                                            <span className="flex items-center gap-1">
+                                        <div className="flex items-center gap-x-2.5 gap-y-1 sm:gap-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold flex-wrap pt-0.5">
+                                            <span className="flex items-center gap-1 shrink-0">
                                                 <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
                                                 {quiz.duration} phút
                                             </span>
-                                            <span>•</span>
-                                            <span className="flex items-center gap-1">
+                                            <span className="hidden sm:inline select-none">
+                                                •
+                                            </span>
+                                            <span className="flex items-center gap-1 shrink-0">
                                                 <HelpCircle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
                                                 {quiz.questions.length} câu
                                             </span>
-                                            <span>•</span>
-                                            <span className="flex items-center gap-1">
+                                            <span className="hidden sm:inline select-none">
+                                                •
+                                            </span>
+                                            <span className="flex items-center gap-1 shrink-0">
                                                 <List className="w-3.5 h-3.5 text-slate-400 dark:text-slate-655" />
                                                 {sectionsCount} phần
                                             </span>
@@ -478,7 +454,7 @@ export default function GradeView({
                                     </div>
 
                                     {/* Action line */}
-                                    <div className="flex items-center justify-between gap-3 pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/60">
+                                    <div className="flex items-center justify-between gap-3 pt-2.5 sm:pt-3 mt-3 sm:mt-4 border-t border-slate-200/50 dark:border-slate-800/60">
                                         <div className="flex flex-wrap items-center gap-1.5 text-[9px] font-extrabold">
                                             {studentQuizSubmissions.length >
                                             0 ? (
@@ -496,11 +472,11 @@ export default function GradeView({
 
                                         <button
                                             onClick={() => onStartQuiz(quiz)}
-                                            className={`px-4 py-1.5 ${
+                                            className={`px-3.5 py-1.5 sm:px-4 sm:py-1.5 ${
                                                 isOngoing
                                                     ? "bg-[#18323E] hover:bg-[#10222B] dark:bg-slate-800 dark:hover:bg-slate-900 text-white shadow-md shadow-blue-500/10"
                                                     : "bg-[#3B6D85] hover:bg-[#2C5A71] text-white"
-                                            } rounded-md text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
+                                            } rounded-lg sm:rounded-md text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
                                         >
                                             <span>
                                                 {isOngoing

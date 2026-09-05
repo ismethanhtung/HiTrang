@@ -305,8 +305,12 @@ export default function LeaderboardView({
     return (
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 pb-32 animate-in fade-in duration-300 overflow-x-hidden">
             {/* 1. Header Vinh Danh */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-start gap-4">
+            <div
+                className={`flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800 ${
+                    user.role !== "admin" ? "hidden sm:flex" : ""
+                }`}
+            >
+                <div className="hidden sm:flex items-start gap-4">
                     <div className="space-y-0.5">
                         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
@@ -479,7 +483,7 @@ export default function LeaderboardView({
                 <div className="lg:col-span-6 space-y-8 min-w-0">
                     {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
                     {top3.length > 0 && (
-                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-2 sm:gap-6 pt-10 pb-4 relative select-none">
+                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-2 sm:gap-6 pt-6 sm:pt-10 pb-6 sm:pb-4 relative select-none">
                             {/* HẠNG 2 (Bên trái) */}
                             {podiumOrder[0] ? (
                                 <motion.div
@@ -488,11 +492,11 @@ export default function LeaderboardView({
                                     transition={{ duration: 0.4, delay: 0.1 }}
                                     className="flex flex-col items-center text-center group"
                                 >
-                                    <div className="relative mb-3">
-                                        <div className="absolute -top-2 -right-2 z-20">
+                                    <div className="relative mb-2 sm:mb-3">
+                                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 z-20">
                                             <img
                                                 src="/icons/medal2.png"
-                                                className="w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 object-contain"
+                                                className="w-5 h-5 sm:w-6.5 sm:h-6.5 object-contain"
                                                 alt="Huy chương bạc"
                                             />
                                         </div>
@@ -507,13 +511,13 @@ export default function LeaderboardView({
                                             className="border-2 border-slate-300 bg-white dark:bg-slate-900 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10"
                                         />
                                     </div>
-                                    <div className="space-y-0.5 max-w-full z-10">
-                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
+                                    <div className="space-y-0.5 max-w-full z-10 px-1">
+                                        <h4 className="text-[11px] sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
                                             {podiumOrder[0].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
-                                        <div className="flex items-center gap-1.5">
+                                    <div className="mt-3 sm:mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
+                                        <div className="flex items-center gap-1 sm:gap-1.5">
                                             <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                                 HẠNG 2
                                             </span>
@@ -523,10 +527,14 @@ export default function LeaderboardView({
                                                     .previousRankPosition,
                                             )}
                                         </div>
-                                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                            {podiumOrder[0].totalPoints} điểm
+                                        <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {podiumOrder[0].totalPoints}{" "}
+                                            <span className="sm:hidden">đ</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
-                                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 font-brand text-slate-400/80 dark:text-slate-500/80 text-[11px] select-none whitespace-nowrap hidden sm:inline">
+                                        <span className="text-[10px] sm:text-[11px] font-brand text-slate-400/80 dark:text-slate-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Kẻ về nhì...
                                         </span>
                                     </div>
@@ -543,8 +551,8 @@ export default function LeaderboardView({
                                     transition={{ duration: 0.4 }}
                                     className="flex flex-col items-center text-center group relative z-10"
                                 >
-                                    <div className="relative mb-3">
-                                        <div className="absolute -top-2 -right-2 z-20">
+                                    <div className="relative mb-2 sm:mb-3">
+                                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 z-20">
                                             <img
                                                 src="/icons/medal1.png"
                                                 className="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-[0_2px_4px_rgba(245,158,11,0.35)]"
@@ -562,14 +570,14 @@ export default function LeaderboardView({
                                             className="border-2 border-amber-400 bg-white dark:bg-slate-900 shadow-lg group-hover:scale-105 transition-all duration-300 relative z-10 ring-4 ring-amber-400/10"
                                         />
                                     </div>
-                                    <div className="space-y-0.5 max-w-full z-10">
+                                    <div className="space-y-0.5 max-w-full z-10 px-1">
                                         <h4 className="text-xs sm:text-base font-black text-slate-900 dark:text-slate-100 truncate">
                                             {podiumOrder[1].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
+                                    <div className="mt-3 sm:mt-4 w-full bg-transparent border-t border-b border-amber-400/30 dark:border-amber-900/30 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
+                                        <div className="flex items-center gap-1 sm:gap-1.5">
+                                            <span className="text-[8px] sm:text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
                                                 Hạng nhất
                                             </span>
                                             {renderTrend(
@@ -579,9 +587,13 @@ export default function LeaderboardView({
                                             )}
                                         </div>
                                         <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
-                                            {podiumOrder[1].totalPoints} điểm
+                                            {podiumOrder[1].totalPoints}{" "}
+                                            <span className="sm:hidden">đ</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
-                                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 font-brand text-amber-500/80 text-[11px] select-none whitespace-nowrap hidden sm:inline">
+                                        <span className="text-[10px] sm:text-[11px] font-brand text-amber-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Bình thường thôi.
                                         </span>
                                     </div>
@@ -596,11 +608,11 @@ export default function LeaderboardView({
                                     transition={{ duration: 0.4, delay: 0.2 }}
                                     className="flex flex-col items-center text-center group"
                                 >
-                                    <div className="relative mb-3">
-                                        <div className="absolute -top-2 -right-2 z-20">
+                                    <div className="relative mb-2 sm:mb-3">
+                                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 z-20">
                                             <img
                                                 src="/icons/medal3.png"
-                                                className="w-5.5 h-5.5 sm:w-6.5 sm:h-6.5 object-contain"
+                                                className="w-5 h-5 sm:w-6.5 sm:h-6.5 object-contain"
                                                 alt="Huy chương đồng"
                                             />
                                         </div>
@@ -615,13 +627,13 @@ export default function LeaderboardView({
                                             className="border-2 border-orange-300/80 bg-white dark:bg-slate-900 shadow-md group-hover:scale-105 transition-all duration-300 relative z-10"
                                         />
                                     </div>
-                                    <div className="space-y-0.5 max-w-full z-10">
-                                        <h4 className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
+                                    <div className="space-y-0.5 max-w-full z-10 px-1">
+                                        <h4 className="text-[11px] sm:text-sm font-bold text-slate-700 dark:text-slate-355 truncate">
                                             {podiumOrder[2].studentName}
                                         </h4>
                                     </div>
-                                    <div className="mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
-                                        <div className="flex items-center gap-1.5">
+                                    <div className="mt-3 sm:mt-4 w-full bg-transparent border-t border-b border-slate-100 dark:border-slate-800 rounded-none h-[64px] sm:h-[72px] flex flex-col items-center justify-center transition-all relative">
+                                        <div className="flex items-center gap-1 sm:gap-1.5">
                                             <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                                 HẠNG 3
                                             </span>
@@ -631,10 +643,14 @@ export default function LeaderboardView({
                                                     .previousRankPosition,
                                             )}
                                         </div>
-                                        <span className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                            {podiumOrder[2].totalPoints} điểm
+                                        <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {podiumOrder[2].totalPoints}{" "}
+                                            <span className="sm:hidden">đ</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
-                                        <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 font-brand text-orange-500/80 text-[11px] select-none whitespace-nowrap hidden sm:inline">
+                                        <span className="text-[10px] sm:text-[11px] font-brand text-orange-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Cũng được!
                                         </span>
                                     </div>
@@ -649,7 +665,7 @@ export default function LeaderboardView({
                     {loading && (
                         <div className="py-24 flex flex-col items-center justify-center gap-3">
                             <RefreshCw className="w-6 h-6 text-[#4B726B] animate-spin" />
-                            <span className="text-xs text-slate-450 font-semibold">
+                            <span className="text-xs text-slate-455 font-semibold">
                                 Đang cập nhật danh sách...
                             </span>
                         </div>
@@ -658,21 +674,19 @@ export default function LeaderboardView({
                     {/* DANH SÁCH BẢNG XẾP HẠNG CHI TIẾT */}
                     {filteredOverall.length > 0 && (
                         <div className="space-y-3">
-                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-2.5 sm:px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-2 sm:gap-6 min-w-0">
-                                    <span className="w-7 sm:w-8 text-center shrink-0">
+                            <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1.5 sm:px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-1.5 sm:gap-6 min-w-0">
+                                    <span className="w-6 sm:w-8 text-center shrink-0">
                                         Hạng
                                     </span>
-                                    <span className="w-5 sm:w-6 text-center shrink-0 hidden xs:inline-block">
-                                        Xu hướng
-                                    </span>
+                                    <span className="w-5 sm:w-6 text-center shrink-0"></span>
                                     <span>Học sinh</span>
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-12 shrink-0">
                                     <span className="hidden sm:inline">
                                         Số đề đã thi
                                     </span>
-                                    <span className="w-16 sm:w-20 text-right">
+                                    <span className="w-14 sm:w-20 text-right">
                                         Tổng điểm
                                     </span>
                                 </div>
@@ -714,15 +728,15 @@ export default function LeaderboardView({
                                                 key={entry.studentId}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                className={`relative overflow-hidden py-3 px-2 sm:px-3 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800 shrink-0 ${getRowBackground()}`}
+                                                className={`relative overflow-hidden py-2.5 sm:py-3 px-1.5 sm:px-3 rounded-none flex items-center justify-between transition-all duration-200 border-b border-slate-100 dark:border-slate-800 shrink-0 ${getRowBackground()}`}
                                             >
-                                                <div className="relative z-10 flex items-center gap-2 sm:gap-6 min-w-0 flex-1 mr-2">
-                                                    <span className="w-7 sm:w-8 text-center font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
+                                                <div className="relative z-10 flex items-center gap-1.5 sm:gap-6 min-w-0 flex-1 mr-2">
+                                                    <span className="w-6 sm:w-8 text-center font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
                                                         {isTop3 ? (
                                                             <img
                                                                 src={`/icons/medal${rank}.png`}
                                                                 alt={`Hạng ${rank}`}
-                                                                className="w-5.5 h-5.5 object-contain"
+                                                                className="w-5 h-5 sm:w-5.5 sm:h-5.5 object-contain"
                                                             />
                                                         ) : (
                                                             <span className="text-slate-450">
@@ -744,7 +758,7 @@ export default function LeaderboardView({
                                                                 <img
                                                                     src="/icons/laurel-wreath.png"
                                                                     alt=""
-                                                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11 h-11 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
+                                                                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                                 />
                                                             )}
                                                             <LeaderboardAvatar
@@ -754,8 +768,8 @@ export default function LeaderboardView({
                                                                 name={
                                                                     entry.studentName
                                                                 }
-                                                                sizeClass="w-8 h-8 text-xs"
-                                                                iconClass={`w-4.5 h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
+                                                                sizeClass="w-7.5 h-7.5 sm:w-8 sm:h-8 text-xs"
+                                                                iconClass={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
                                                                 className={
                                                                     rank === 1
                                                                         ? "border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
@@ -782,6 +796,12 @@ export default function LeaderboardView({
                                                                     </span>
                                                                 )}
                                                             </p>
+                                                            <p className="sm:hidden text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
+                                                                {
+                                                                    entry.testsCompleted
+                                                                }{" "}
+                                                                đề thi
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -792,12 +812,12 @@ export default function LeaderboardView({
                                                         đề thi
                                                     </span>
                                                     <span
-                                                        className={`w-16 sm:w-20 text-right font-bold sm:text-sm ${
+                                                        className={`w-14 sm:w-20 text-right font-bold text-xs sm:text-sm ${
                                                             isMe
                                                                 ? "text-[#4B726B] dark:text-[#88BDA4]"
                                                                 : isTop3
                                                                   ? "text-slate-900 dark:text-slate-100"
-                                                                  : "text-slate-700 dark:text-slate-350"
+                                                                  : "text-slate-700 dark:text-slate-355"
                                                         }`}
                                                     >
                                                         {entry.totalPoints}
@@ -812,7 +832,7 @@ export default function LeaderboardView({
                     )}
 
                     {filteredOverall.length === 0 && (
-                        <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-450 text-xs italic flex flex-col items-center justify-center gap-2">
+                        <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-455 text-xs italic flex flex-col items-center justify-center gap-2">
                             <img
                                 src="/icons/ghost.png"
                                 alt=""
@@ -828,7 +848,7 @@ export default function LeaderboardView({
                 {/* CỘT PHẢI (Col-span 4): Thành tích cá nhân & Bài thi chưa thi */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* A. CARD THÀNH TÍCH CÁ NHÂN */}
-                    <div className="bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none py-6 space-y-4 relative">
+                    <div className="bg-transparent max-lg:bg-slate-50/70 dark:max-lg:bg-slate-900/50 max-lg:p-4 max-lg:rounded-lg max-lg:border max-lg:border-slate-200/60 dark:max-lg:border-slate-800 border-b lg:border-b-0 border-slate-200 dark:border-slate-850 py-6 lg:py-6 space-y-4 relative">
                         <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#4B726B]/5 rounded-full blur-xl pointer-events-none" />
 
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
@@ -937,7 +957,7 @@ export default function LeaderboardView({
                     </div>
 
                     {/* B. CARD NÂNG CAO ĐIỂM SỐ: Danh sách đề thi chưa thi (CTA để leo hạng) */}
-                    <div className="bg-transparent rounded-none py-6 space-y-4">
+                    <div className="bg-transparent max-lg:bg-slate-50/70 dark:max-lg:bg-slate-900/50 max-lg:p-4 max-lg:rounded-lg max-lg:border max-lg:border-slate-200/60 dark:max-lg:border-slate-800 rounded-none py-6 space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
                                 Nâng cao điểm số
