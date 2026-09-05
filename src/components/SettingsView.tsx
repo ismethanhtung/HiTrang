@@ -3156,11 +3156,8 @@ export default function SettingsView({
             {/* 2FA DISABLE CONFIRMATION MODAL */}
             {isDisable2FAModalOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-bg-card rounded-3xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-xl w-full max-w-sm p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 flex items-center justify-center shrink-0">
-                                <ShieldAlert className="w-5 h-5" />
-                            </div>
                             <div>
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                                     Tắt Xác Thực 2 Bước
