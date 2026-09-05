@@ -1446,7 +1446,12 @@ func HandleSendEmailVerificationOTP(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if err := SendEmailOTP(cleanEmail, otpCode, "link_email", profile.Name); err != nil {
+		meta := EmailMetadata{
+			IP:        c.ClientIP(),
+			UserAgent: c.GetHeader("User-Agent"),
+			Time:      time.Now(),
+		}
+		if err := SendEmailOTP(cleanEmail, otpCode, "link_email", profile.Name, meta); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể gửi email OTP: " + err.Error()})
 			return
 		}
@@ -1633,7 +1638,12 @@ func HandleForgotPasswordSendOTP(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		if err := SendEmailOTP(toEmail, otpCode, "reset_password", profile.Name); err != nil {
+		meta := EmailMetadata{
+			IP:        c.ClientIP(),
+			UserAgent: c.GetHeader("User-Agent"),
+			Time:      time.Now(),
+		}
+		if err := SendEmailOTP(toEmail, otpCode, "reset_password", profile.Name, meta); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Không thể gửi email OTP: " + err.Error()})
 			return
 		}
