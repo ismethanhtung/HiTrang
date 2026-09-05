@@ -1823,9 +1823,6 @@ func RecordUserSession(db *gorm.DB, c *gin.Context, userID, token string) {
 		location = country
 	}
 
-	// Clean up stale or duplicate sessions for this same user on this device/browser
-	_ = db.Where("user_id = ? AND browser = ? AND os = ? AND device = ? AND ip_address = ?", userID, browser, osName, device, ip).Delete(&UserSession{})
-
 	// Clean up any expired sessions
 	_ = db.Where("expires_at < ?", time.Now()).Delete(&UserSession{})
 

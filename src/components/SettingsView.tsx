@@ -53,9 +53,11 @@ import {
     Type,
     Search,
     Sparkles,
+    AlertTriangle,
 } from "lucide-react";
 import { User as UserType, Quiz, Submission, AppNotification } from "../types";
 import { PREDEFINED_AVATARS } from "../constants/avatars";
+import { GoogleIcon, isUserGoogleAccount } from "./GoogleIcon";
 import {
     updateProfileName,
     updateUsername,
@@ -127,6 +129,7 @@ export default function SettingsView({
     };
 
     const initialName = parseName(user.name);
+    const isGoogleUser = isUserGoogleAccount(user);
     const [firstName, setFirstName] = useState(initialName.firstName);
     const [lastName, setLastName] = useState(initialName.lastName);
     const [password, setPassword] = useState("");
@@ -696,6 +699,8 @@ export default function SettingsView({
     const [updatingUsername, setUpdatingUsername] = useState(false);
     const [usernameError, setUsernameError] = useState("");
     const [usernameSuccess, setUsernameSuccess] = useState("");
+    const [isConfirmUsernameModalOpen, setIsConfirmUsernameModalOpen] =
+        useState(false);
     const [pwdError, setPwdError] = useState("");
     const [pwdSuccess, setPwdSuccess] = useState("");
     const [globalError, setGlobalError] = useState("");
@@ -705,8 +710,9 @@ export default function SettingsView({
         setUsernameInput(user.username || "");
     }, [user.username]);
 
-    // Handle username update
-    const handleUpdateUsername = async () => {
+    // Validate and initiate username update modal
+    const handleInitiateUpdateUsername = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setUsernameError("");
         setUsernameSuccess("");
 
@@ -740,6 +746,16 @@ export default function SettingsView({
             return;
         }
 
+        // Open confirmation modal
+        setIsConfirmUsernameModalOpen(true);
+    };
+
+    // Confirmed username update execution
+    const handleConfirmUpdateUsername = async () => {
+        setUsernameError("");
+        setUsernameSuccess("");
+        const clean = usernameInput.trim().toLowerCase();
+
         setUpdatingUsername(true);
         try {
             const res = await updateUsername(clean);
@@ -748,8 +764,20 @@ export default function SettingsView({
                 username: res.username || clean,
             });
             setUsernameSuccess("Đã đổi tên đăng nhập thành công!");
+            setIsConfirmUsernameModalOpen(false);
+
+            // Log out user as session ends with username change
+            setTimeout(() => {
+                alert(
+                    isGoogleUser
+                        ? `Đổi tên định danh thành công sang @${clean}.\nPhiên làm việc đã kết thúc. Vui lòng đăng nhập lại bằng tài khoản Google.`
+                        : `Đổi tên đăng nhập thành công sang @${clean}.\nPhiên đăng nhập hiện tại đã kết thúc. Vui lòng đăng nhập lại bằng tên mới.`,
+                );
+                onLogout();
+            }, 300);
         } catch (err: any) {
             setUsernameError(err.message || "Lỗi khi đổi tên đăng nhập.");
+            setIsConfirmUsernameModalOpen(false);
         } finally {
             setUpdatingUsername(false);
         }
@@ -1572,9 +1600,9 @@ export default function SettingsView({
                                 Họ tên hiển thị trên bảng xếp hạng.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg">
-                                <div className="space-y-1.5">
+                        <div className="col-span-12 md:col-span-8 space-y-3">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 max-w-xl">
+                                <div className="space-y-1.5 flex-1 min-w-[140px]">
                                     <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                         Họ và tên lót
                                     </label>
@@ -1585,10 +1613,16 @@ export default function SettingsView({
                                         onChange={(e) =>
                                             setFirstName(e.target.value)
                                         }
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleUpdateName();
+                                            }
+                                        }}
                                         className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
-                                <div className="space-y-1.5">
+                                <div className="space-y-1.5 w-full sm:w-28 shrink-0">
                                     <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                         Tên
                                     </label>
@@ -1599,9 +1633,30 @@ export default function SettingsView({
                                         onChange={(e) =>
                                             setLastName(e.target.value)
                                         }
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleUpdateName();
+                                            }
+                                        }}
                                         className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={handleUpdateName}
+                                    disabled={
+                                        updatingName ||
+                                        (firstName === initialName.firstName &&
+                                            lastName === initialName.lastName)
+                                    }
+                                    className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs shrink-0"
+                                >
+                                    {updatingName && (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
+                                    <span>Lưu họ tên</span>
+                                </button>
                             </div>
 
                             {nameError && (
@@ -1614,49 +1669,90 @@ export default function SettingsView({
                                     {nameSuccess}
                                 </div>
                             )}
-
-                            <button
-                                type="button"
-                                onClick={handleUpdateName}
-                                disabled={
-                                    updatingName ||
-                                    (firstName === initialName.firstName &&
-                                        lastName === initialName.lastName)
-                                }
-                                className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
-                            >
-                                {updatingName && (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                )}
-                                <span>Lưu họ tên</span>
-                            </button>
                         </div>
                     </div>
+
+                    {/* Linked Google Account Row */}
+                    {isGoogleUser && (
+                        <div className="grid grid-cols-12 gap-6 py-6 items-center">
+                            <div className="col-span-12 md:col-span-4 space-y-1">
+                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <GoogleIcon className="w-4 h-4 shrink-0" />
+                                    <span>Tài khoản Google</span>
+                                </h4>
+                                <p className="text-xs text-slate-400 dark:text-slate-550">
+                                    Phương thức đăng nhập chính của bạn.
+                                </p>
+                            </div>
+                            <div className="col-span-12 md:col-span-8">
+                                <div className="p-3.5 bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-xl">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200/60 dark:border-slate-600 flex items-center justify-center shrink-0 shadow-2xs">
+                                            <GoogleIcon className="w-4.5 h-4.5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                                                {user.email || "Tài khoản Google"}
+                                            </div>
+                                            <div className="text-[11px] text-slate-400 dark:text-slate-550">
+                                                Đã xác thực & bảo mật qua Google OAuth
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 shrink-0 self-start sm:self-center">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        Đang kết nối
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Username Row */}
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
-                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Tên đăng nhập (Username)
-                            </h4>
+                            <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                                    {isGoogleUser
+                                        ? "Tên định danh (Username)"
+                                        : "Tên đăng nhập (Username)"}
+                                </h4>
+                                {isGoogleUser && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200/60 dark:border-brand-800/50">
+                                        Mã định danh
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Dùng để đăng nhập vào tài khoản của bạn.
+                                {isGoogleUser
+                                    ? "Tên tag (@tag) hiển thị trên hệ thống và bảng xếp hạng."
+                                    : "Dùng để đăng nhập vào tài khoản của bạn."}
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 max-w-lg">
                                 <input
                                     type="text"
-                                    placeholder="Nhập tên đăng nhập mới"
+                                    placeholder={
+                                        isGoogleUser
+                                            ? "Nhập tên định danh mới"
+                                            : "Nhập tên đăng nhập mới"
+                                    }
                                     value={usernameInput}
                                     onChange={(e) =>
                                         setUsernameInput(e.target.value)
                                     }
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            handleInitiateUpdateUsername();
+                                        }
+                                    }}
                                     className="w-full sm:max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                 />
                                 <button
                                     type="button"
-                                    onClick={handleUpdateUsername}
+                                    onClick={handleInitiateUpdateUsername}
                                     disabled={
                                         updatingUsername ||
                                         usernameInput.trim().toLowerCase() ===
@@ -1667,7 +1763,11 @@ export default function SettingsView({
                                     {updatingUsername && (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     )}
-                                    <span>Lưu tên đăng nhập</span>
+                                    <span>
+                                        {isGoogleUser
+                                            ? "Lưu tên định danh"
+                                            : "Lưu tên đăng nhập"}
+                                    </span>
                                 </button>
                             </div>
 
@@ -1676,6 +1776,32 @@ export default function SettingsView({
                                 Không dấu, không khoảng trắng, không kí tự đặc
                                 biệt.
                             </p>
+
+                            {/* Warning Note */}
+                            <div className="flex items-start gap-2.5 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-800 dark:text-amber-300 max-w-lg">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                <div className="text-[11px] leading-relaxed">
+                                    <span className="font-bold">Lưu ý:</span>{" "}
+                                    {isGoogleUser ? (
+                                        <>
+                                            Bạn đang đăng nhập bằng Google. Đổi
+                                            tên định danh sẽ làm mới phiên đăng
+                                            nhập và bạn có thể tiếp tục đăng nhập
+                                            lại bình thường bằng tài khoản
+                                            Google.
+                                        </>
+                                    ) : (
+                                        <>
+                                            Đổi tên đăng nhập sẽ{" "}
+                                            <span className="font-semibold text-amber-900 dark:text-amber-200">
+                                                kết thúc phiên làm việc
+                                            </span>{" "}
+                                            hiện tại. Bạn sẽ cần đăng nhập lại
+                                            với tên đăng nhập mới.
+                                        </>
+                                    )}
+                                </div>
+                            </div>
 
                             {usernameError && (
                                 <div className="text-xs text-red-600 font-medium">
@@ -1717,35 +1843,47 @@ export default function SettingsView({
                     <div className="grid grid-cols-12 gap-6 py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Password
+                                Mật khẩu (Password)
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
-                                {formatPasswordAge(
-                                    user.passwordUpdatedAt || user.createdAt,
-                                )}
+                                {isGoogleUser
+                                    ? "Tài khoản bảo mật qua Google."
+                                    : formatPasswordAge(
+                                          user.passwordUpdatedAt ||
+                                              user.createdAt,
+                                      )}
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 flex items-center gap-3">
-                            <input
-                                type="password"
-                                readOnly
-                                value="•••••••••••••"
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-500 select-none outline-none tracking-widest cursor-default"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setCurrentPassword("");
-                                    setPassword("");
-                                    setConfirmPassword("");
-                                    setPwdError("");
-                                    setPwdSuccess("");
-                                    setIsChangePasswordModalOpen(true);
-                                }}
-                                className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 shadow-xs"
-                            >
-                                Change password
-                            </button>
+                        <div className="col-span-12 md:col-span-8 space-y-2">
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="password"
+                                    readOnly
+                                    value="•••••••••••••"
+                                    className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-550 select-none outline-none tracking-widest cursor-default"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCurrentPassword("");
+                                        setPassword("");
+                                        setConfirmPassword("");
+                                        setPwdError("");
+                                        setPwdSuccess("");
+                                        setIsChangePasswordModalOpen(true);
+                                    }}
+                                    className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 shadow-xs"
+                                >
+                                    {isGoogleUser
+                                        ? "Đặt / Đổi mật khẩu"
+                                        : "Đổi mật khẩu"}
+                                </button>
+                            </div>
+                            {isGoogleUser && (
+                                <p className="text-[11px] text-slate-400 dark:text-slate-550 leading-relaxed">
+                                    💡 Bạn đăng nhập trực tiếp qua Google OAuth nên không bắt buộc phải dùng mật khẩu riêng. Bạn có thể đặt mật khẩu nếu muốn đăng nhập bằng cả tên định danh.
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -3215,6 +3353,117 @@ export default function SettingsView({
                             >
                                 Đóng
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Username Change Modal */}
+            {isConfirmUsernameModalOpen && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-2xl w-full max-w-md p-6 shadow-2xl border border-amber-200/80 dark:border-amber-900/50 space-y-4 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-start gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+                                <AlertTriangle className="w-5 h-5 stroke-[2.2]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                    {isGoogleUser
+                                        ? "Xác nhận đổi tên định danh"
+                                        : "Xác nhận đổi tên đăng nhập"}
+                                </h3>
+                                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mt-0.5">
+                                    {isGoogleUser
+                                        ? "Bạn có chắc chắn muốn đổi mã định danh (@username)?"
+                                        : "Bạn có chắc chắn muốn đổi tên đăng nhập?"}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() =>
+                                    !updatingUsername &&
+                                    setIsConfirmUsernameModalOpen(false)
+                                }
+                                disabled={updatingUsername}
+                                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-3 pt-1">
+                            <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 rounded-xl space-y-2 text-xs">
+                                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+                                    <span>
+                                        {isGoogleUser
+                                            ? "Tên định danh hiện tại:"
+                                            : "Tên đăng nhập hiện tại:"}
+                                    </span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                        @{user.username || "chưa có"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between text-brand-600 dark:text-brand-400 font-semibold border-t border-slate-200/60 dark:border-slate-700/60 pt-2">
+                                    <span>
+                                        {isGoogleUser
+                                            ? "Tên định danh mới:"
+                                            : "Tên đăng nhập mới:"}
+                                    </span>
+                                    <span className="font-bold text-sm">
+                                        @{usernameInput.trim().toLowerCase()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2.5">
+                                <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                                <div className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+                                    {isGoogleUser ? (
+                                        <>
+                                            <b>Làm mới phiên đăng nhập:</b> Sau khi
+                                            xác nhận, hệ thống sẽ kết thúc phiên hiện tại để cập nhật tên định danh mới (
+                                            <b>@{usernameInput.trim().toLowerCase()}</b>). Bạn có thể tiếp tục đăng nhập lại bình thường bằng <b>tài khoản Google</b>.
+                                        </>
+                                    ) : (
+                                        <>
+                                            <b>Thoát phiên đăng nhập:</b> Sau khi xác
+                                            nhận, tài khoản sẽ tự động <b>đăng xuất</b>.
+                                            Bạn cần đăng nhập lại bằng tên mới (
+                                            <b>@{usernameInput.trim().toLowerCase()}</b>
+                                            ).
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {usernameError && (
+                                <div className="p-2.5 text-xs text-red-600 bg-red-50 dark:bg-red-950/20 border border-red-200/50 rounded-xl font-medium">
+                                    {usernameError}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2.5 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setIsConfirmUsernameModalOpen(false)
+                                    }
+                                    disabled={updatingUsername}
+                                    className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold cursor-pointer transition-colors disabled:opacity-50"
+                                >
+                                    Hủy bỏ
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleConfirmUpdateUsername}
+                                    disabled={updatingUsername}
+                                    className="flex-1 py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-[0.99] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                                >
+                                    {updatingUsername && (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    )}
+                                    <span>Xác nhận & Đăng xuất</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

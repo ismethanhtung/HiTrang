@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.85"
+const AppVersion = "1.0.86"
 
 func main() {
 	serverStartTime := time.Now()
