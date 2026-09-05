@@ -300,7 +300,7 @@ export default function GradeView({
                             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
                         </div>
                     ) : processedQuizzes.length === 0 ? (
-                        <div className="col-span-full py-16 text-center text-slate-450 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
+                        <div className="col-span-full py-16 text-center text-slate-450  border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-2.5">
                             <img
                                 src="/icons/ghost.png"
                                 alt=""
