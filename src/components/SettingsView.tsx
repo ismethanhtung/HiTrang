@@ -3790,7 +3790,7 @@ export default function SettingsView({
                                                 ),
                                             )
                                         }
-                                        className="w-full px-3.5 py-3 text-center text-xl tracking-[6px] font-mono font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-300"
+                                        className="w-full px-3.5 py-2 text-center text-xl tracking-[6px]  font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700  text-slate-800 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all placeholder:text-slate-300"
                                     />
                                     <div className="flex items-center justify-between text-[11px] pt-1">
                                         <button

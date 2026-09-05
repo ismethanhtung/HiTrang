@@ -44,7 +44,6 @@ func GenerateNumericOTP(length int) string {
 	const digits = "0123456789"
 	bytes := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, bytes); err != nil {
-		// Fallback to time-based seed if reader fails
 		return fmt.Sprintf("%06d", time.Now().UnixNano()%1000000)
 	}
 	for i := range bytes {
@@ -65,7 +64,7 @@ func parseDevice(userAgent string) string {
 	} else if strings.Contains(userAgent, "Windows") {
 		os = "Windows"
 	} else if strings.Contains(userAgent, "iPhone") {
-		os = "iPhone iOS"
+		os = "iOS"
 	} else if strings.Contains(userAgent, "iPad") {
 		os = "iPadOS"
 	} else if strings.Contains(userAgent, "Android") {
@@ -107,7 +106,7 @@ func formatClientIP(ip string) string {
 	return ip
 }
 
-// SendEmailOTP sends an ultra-clean, modern HTML email containing a 6-digit OTP code using SMTP (Gmail)
+// SendEmailOTP sends a minimalist, ultra-refined HTML email with a continuous 6-digit OTP code
 func SendEmailOTP(toEmail, otpCode, purpose, recipientName string, meta ...EmailMetadata) error {
 	smtpHost := os.Getenv("SMTP_HOST")
 	if smtpHost == "" {
@@ -158,53 +157,22 @@ func SendEmailOTP(toEmail, otpCode, purpose, recipientName string, meta ...Email
 	var subject string
 	var title string
 	var description string
-	var actionButtonText string
+
+	cleanOTP := strings.TrimSpace(otpCode)
 
 	switch purpose {
 	case "link_email":
-		subject = fmt.Sprintf("[%s] Mã xác thực liên kết Email: %s", fromName, otpCode)
-		title = "Xác thực liên kết Email"
-		description = "Chúng tôi nhận được yêu cầu liên kết địa chỉ email này với tài khoản của bạn tại HiTrang. Nếu đây là bạn, vui lòng xác nhận bằng mã bên dưới để tiếp tục."
-		actionButtonText = "Xác nhận liên kết Email"
+		subject = fmt.Sprintf("[%s] Mã xác thực liên kết Email: %s", fromName, cleanOTP)
+		title = "Liên kết Email"
+		description = "Nhập mã xác thực dưới đây để hoàn tất:"
 	case "reset_password":
-		subject = fmt.Sprintf("[%s] Mã khôi phục mật khẩu: %s", fromName, otpCode)
+		subject = fmt.Sprintf("[%s] Mã khôi phục mật khẩu: %s", fromName, cleanOTP)
 		title = "Khôi phục mật khẩu"
-		description = "Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Nếu đây là bạn, vui lòng xác nhận bằng mã bên dưới để tiếp tục."
-		actionButtonText = "Đặt lại mật khẩu"
+		description = "Nhập mã xác thực dưới đây để đặt lại mật khẩu:"
 	default:
-		subject = fmt.Sprintf("[%s] Mã xác thực: %s", fromName, otpCode)
-		title = "Xác thực tài khoản"
-		description = "Chúng tôi nhận được yêu cầu xác thực bảo mật cho tài khoản của bạn. Vui lòng xác nhận bằng mã bên dưới để tiếp tục."
-		actionButtonText = "Xác thực tài khoản"
-	}
-
-	// Format OTP code with space in middle for high legibility (e.g. "544 119")
-	displayOTP := otpCode
-	if len(otpCode) == 6 {
-		displayOTP = otpCode[:3] + " &nbsp; " + otpCode[3:]
-	}
-
-	// Build optional action button HTML
-	actionButtonHTML := ""
-	if metadata.ActionURL != "" {
-		actionButtonHTML = fmt.Sprintf(`
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="margin-bottom: 20px;">
-            <tr>
-                <td align="center">
-                    <a href="%s" target="_blank" style="display: block; width: 100%%; box-sizing: border-box; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 13px 24px; border-radius: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 600; text-align: center; letter-spacing: -0.2px;">
-                        %s
-                    </a>
-                </td>
-            </tr>
-        </table>
-        <p style="margin: 0 0 16px 0; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; color: #64748b;">
-            hoặc nhập mã OTP xác thực thủ công
-        </p>`, metadata.ActionURL, actionButtonText)
-	} else {
-		actionButtonHTML = `
-        <p style="margin: 0 0 12px 0; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 500; color: #64748b;">
-            Mã xác thực OTP của bạn
-        </p>`
+		subject = fmt.Sprintf("[%s] Mã xác thực: %s", fromName, cleanOTP)
+		title = "Mã xác thực"
+		description = "Nhập mã xác thực dưới đây để tiếp tục:"
 	}
 
 	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
@@ -215,139 +183,63 @@ func SendEmailOTP(toEmail, otpCode, purpose, recipientName string, meta ...Email
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>%s</title>
 </head>
-<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="min-height: 100vh; padding: 40px 15px; background-color: #f8fafc;">
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #111827;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="min-height: 100vh; padding: 40px 16px; background-color: #fafafa;">
         <tr>
             <td align="center" style="vertical-align: top;">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="max-width: 480px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); overflow: hidden;">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="max-width: 440px; background-color: #ffffff; border-radius: 14px; border: 1px solid #eaeaea; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03); overflow: hidden;">
                     <tr>
-                        <td style="padding: 40px 36px 36px 36px;">
-                            <!-- Brand Header -->
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
-                                <tr>
-                                    <td style="vertical-align: middle; width: 36px;">
-                                        <div style="width: 36px; height: 36px; background-color: #0284c7; border-radius: 10px; text-align: center; line-height: 36px; font-size: 18px; color: #ffffff;">
-                                            🌸
-                                        </div>
-                                    </td>
-                                    <td style="vertical-align: middle; padding-left: 10px;">
-                                        <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">HiTrang</span>
-                                    </td>
-                                </tr>
-                            </table>
+                        <td style="padding: 36px 32px 28px 32px;">
+                            <!-- Minimal Brand Text (No Sakura Logo) -->
+                            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 17px; font-weight: 700; color: #111827; letter-spacing: -0.3px; margin-bottom: 24px;">
+                                HiTrang
+                            </div>
 
-                            <!-- Main Heading -->
-                            <h1 style="margin: 0 0 10px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; line-height: 1.25;">
+                            <!-- Title & Short Description -->
+                            <h1 style="margin: 0 0 6px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 21px; font-weight: 700; color: #111827; letter-spacing: -0.4px;">
                                 %s
                             </h1>
-                            <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; color: #64748b; line-height: 1.55;">
+                            <p style="margin: 0 0 20px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #6b7280; line-height: 1.5;">
                                 %s
                             </p>
 
-                            <!-- Security Metadata Card -->
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="background-color: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; margin-bottom: 24px;">
-                                <tr>
-                                    <td style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%">
-                                            <tr>
-                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                    TÀI KHOẢN
-                                                </td>
-                                                <td align="right" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 600; color: #0f172a;">
-                                                    %s
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%">
-                                            <tr>
-                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                    THIẾT BỊ
-                                                </td>
-                                                <td align="right" style="font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600; color: #0f172a;">
-                                                    %s
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px 18px; border-bottom: 1px solid #f1f5f9;">
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%">
-                                            <tr>
-                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                    ĐỊA CHỈ IP
-                                                </td>
-                                                <td align="right" style="font-family: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Consolas, monospace; font-size: 13px; font-weight: 600; color: #0f172a;">
-                                                    %s
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px 18px;">
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%">
-                                            <tr>
-                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.8px;">
-                                                    THỜI GIAN
-                                                </td>
-                                                <td align="right" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; font-weight: 600; color: #0f172a;">
-                                                    %s
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Action Button or OTP Header -->
-                            %s
-
-                            <!-- OTP Numbers Display -->
-                            <div style="text-align: center; margin: 4px 0 6px 0;">
-                                <span style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Courier New', monospace; font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: 8px; line-height: 1;">
-                                    %s
-                                </span>
+                            <!-- Continuous OTP Box (Easy 1-Click Copy, No Separators) -->
+                            <div style="background-color: #f9fafb; border: 1px solid #f3f4f6; border-radius: 10px; padding: 18px 20px; text-align: center; margin: 0 0 6px 0;">
+                                <span style="display: inline-block; font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace; font-size: 32px; font-weight: 700; color: #111827; letter-spacing: 5px; line-height: 1; user-select: all; -webkit-user-select: all;">%s</span>
                             </div>
-                            <p style="margin: 0 0 28px 0; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; color: #94a3b8; font-weight: 500;">
-                                Hiệu lực trong vòng 10 phút
+                            <p style="margin: 0 0 24px 0; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af;">
+                                Hết hạn sau 10 phút
                             </p>
 
-                            <!-- Alert Warning Box -->
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="background-color: #fffbeb; border: 1px solid #fef3c7; border-radius: 12px; margin-bottom: 28px;">
+                            <!-- Clean Divider List (No Full Enclosing Box) -->
+                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="border-top: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; margin-bottom: 20px;">
                                 <tr>
-                                    <td style="padding: 14px 18px;">
-                                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%">
-                                            <tr>
-                                                <td style="vertical-align: top; width: 22px; padding-right: 10px;">
-                                                    <span style="font-size: 15px; line-height: 1;">⚠️</span>
-                                                </td>
-                                                <td style="vertical-align: middle; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #92400e; font-size: 12px; line-height: 1.55;">
-                                                    Nếu bạn không thực hiện yêu cầu này, tài khoản của bạn có thể đang gặp rủi ro. Vui lòng bỏ qua email hoặc thông báo ngay cho quản trị viên để bảo vệ tài khoản.
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
+                                    <td style="padding: 9px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af;">Tài khoản</td>
+                                    <td align="right" style="padding: 9px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 500; color: #374151;">%s</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af;">Thiết bị</td>
+                                    <td align="right" style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; font-weight: 500; color: #374151;">%s</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af;">Địa chỉ IP</td>
+                                    <td align="right" style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; font-weight: 500; color: #374151;">%s</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af;">Thời gian</td>
+                                    <td align="right" style="padding: 9px 0; border-top: 1px solid #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; font-weight: 500; color: #374151;">%s</td>
                                 </tr>
                             </table>
 
-                            <!-- Divider & Footer -->
-                            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%%" style="border-top: 1px solid #f1f5f9; padding-top: 24px; text-align: center;">
-                                <tr>
-                                    <td align="center">
-                                        <p style="margin: 0 0 8px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #94a3b8; font-size: 12px; line-height: 1.5;">
-                                            Bạn nhận được email này vì có hoạt động bảo mật đối với tài khoản của bạn.
-                                        </p>
-                                        <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #cbd5e1; font-size: 11px;">
-                                            © %d HiTrang Education. All rights reserved.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
+                            <!-- Soft Minimal Note -->
+                            <p style="margin: 0 0 24px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 12px; color: #9ca3af; line-height: 1.5;">
+                                Nếu không phải bạn yêu cầu, hãy bỏ qua email này.
+                            </p>
+
+                            <!-- Subtle Minimal Footer -->
+                            <p style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #d1d5db; font-size: 11px; text-align: center;">
+                                © %d HiTrang
+                            </p>
                         </td>
                     </tr>
                 </table>
@@ -359,12 +251,11 @@ func SendEmailOTP(toEmail, otpCode, purpose, recipientName string, meta ...Email
 		title,
 		title,
 		description,
+		cleanOTP,
 		recipientName,
 		deviceFormatted,
 		ipFormatted,
 		timeFormatted,
-		actionButtonHTML,
-		displayOTP,
 		time.Now().Year(),
 	)
 
