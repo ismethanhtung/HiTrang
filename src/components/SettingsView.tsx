@@ -2756,7 +2756,7 @@ export default function SettingsView({
                                                         Điểm cao nhất
                                                     </span>
                                                     <div
-                                                        className={`text-xs sm:text-sm font-black font-mono ${maxScoreColor}`}
+                                                        className={`text-xs sm:text-sm font-black ${maxScoreColor}`}
                                                     >
                                                         <span>
                                                             {group.maxScore}
@@ -2837,7 +2837,7 @@ export default function SettingsView({
                                                                 <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                                                                     {/* Score without border or bg */}
                                                                     <div
-                                                                        className={`text-xs sm:text-sm font-black font-mono ${attemptScoreColor}`}
+                                                                        className={`text-xs sm:text-sm font-black ${attemptScoreColor}`}
                                                                     >
                                                                         <span>
                                                                             {
@@ -3560,9 +3560,6 @@ export default function SettingsView({
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-bg-card rounded-2xl w-full max-w-md p-6 shadow-2xl border border-amber-200/80 dark:border-amber-900/50 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-start gap-3.5">
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
-                                <AlertTriangle className="w-5 h-5 stroke-[2.2]" />
-                            </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                                     {isGoogleUser

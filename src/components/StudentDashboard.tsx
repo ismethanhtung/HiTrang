@@ -4560,7 +4560,7 @@ export default function StudentDashboard({
                                                                                 }
                                                                             </span>
                                                                             <span
-                                                                                className={`text-xs font-black font-mono shrink-0 ${scoreColor}`}
+                                                                                className={`text-xs font-black shrink-0 ${scoreColor}`}
                                                                             >
                                                                                 {
                                                                                     sub.score
