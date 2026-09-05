@@ -677,19 +677,6 @@ export default function Auth({
                                 onSubmit={handleForgotResetWithEmail}
                                 className="space-y-4"
                             >
-                                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-800">
-                                            {forgotUserData?.name ||
-                                                forgotUserData?.username}
-                                        </p>
-                                        <p className="text-[11px] text-slate-500 font-mono">
-                                            {forgotUserData?.maskedEmail ||
-                                                "Email xác thực"}
-                                        </p>
-                                    </div>
-                                </div>
-
                                 <div className="space-y-1">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-bold text-slate-700">
@@ -729,7 +716,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Kiểm tra hộp thư đến (hoặc thư rác/Spam)
@@ -888,7 +875,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2.5 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Mở app Authenticator trên điện thoại để

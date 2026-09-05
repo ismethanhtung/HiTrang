@@ -3022,12 +3022,9 @@ export default function SettingsView({
             {/* 2FA SETUP MODAL */}
             {is2FAModalOpen && setup2FAData && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-bg-card rounded-3xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-bg-card rounded-xl w-full max-w-md p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 flex items-center justify-center">
-                                    <ShieldCheck className="w-4 h-4" />
-                                </div>
                                 <div>
                                     <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
                                         Cài Đặt Google Authenticator
@@ -3058,11 +3055,11 @@ export default function SettingsView({
                         </div>
 
                         {/* QR Code display */}
-                        <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 flex flex-col items-center justify-center">
+                        <div className="p-4 bg-white dark:bg-slate-800   border border-slate-200/80 dark:border-slate-700 flex flex-col items-center justify-center">
                             <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(setup2FAData.otpauthUri)}`}
                                 alt="QR Code Google Authenticator"
-                                className="w-40 h-40 rounded-xl object-contain shadow-xs bg-white p-2"
+                                className="w-40 h-40 object-contain   bg-white p-2"
                             />
                         </div>
 
@@ -3077,14 +3074,14 @@ export default function SettingsView({
                                     type="text"
                                     readOnly
                                     value={setup2FAData.secret}
-                                    className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono font-bold tracking-wider text-brand-700 dark:text-brand-300 select-all text-center"
+                                    className="flex-1 px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold tracking-wider text-brand-700 dark:text-brand-300 select-all text-center"
                                 />
                                 <button
                                     type="button"
                                     onClick={handleCopy2FASecret}
-                                    className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                                    className={`px-3 py-2 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                                         copied2FASecret
-                                            ? "bg-emerald-600 text-white"
+                                            ? "bg-green-300 text-white"
                                             : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
                                     }`}
                                 >
@@ -3122,7 +3119,7 @@ export default function SettingsView({
                                             e.target.value.replace(/\D/g, ""),
                                         )
                                     }
-                                    className="w-full py-2.5 px-4 text-center font-mono text-xl tracking-[0.3em] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-brand-400 text-slate-800 dark:text-slate-100"
+                                    className="w-full py-2.5 px-4 text-center font-mono text-xl tracking-[0.3em] font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-brand-400 text-slate-800 dark:text-slate-100"
                                 />
                             </div>
 
@@ -3148,11 +3145,6 @@ export default function SettingsView({
                                     }
                                     className="flex-1 py-2 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-sm"
                                 >
-                                    {enabling2FA ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                        <ShieldCheck className="w-3.5 h-3.5" />
-                                    )}
                                     <span>Xác nhận & Bật 2FA</span>
                                 </button>
                             </div>
