@@ -3485,7 +3485,7 @@ export default function StudentDashboard({
                                                                                     }`}
                                                                                 >
                                                                                     {hasDone
-                                                                                        ? "✓ Đã nộp"
+                                                                                        ? "✓ Đã làm"
                                                                                         : "○ Chưa làm"}
                                                                                 </span>
 
@@ -4478,6 +4478,116 @@ export default function StudentDashboard({
                                                         </span>
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            {/* Section 5: Lịch sử bài làm xem lại */}
+                                            <div className="space-y-1 text-left pt-2">
+                                                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/80 pb-2">
+                                                    <h3 className="text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wider">
+                                                        Lịch sử bài làm
+                                                    </h3>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            onNavigate(
+                                                                "/history",
+                                                            )
+                                                        }
+                                                        className="text-[11px] font-bold text-brand-600 hover:text-brand-700 dark:text-brand-300 dark:hover:text-brand-200 transition-colors flex items-center gap-0.5 cursor-pointer hover:underline"
+                                                    >
+                                                        <span>Xem tất cả</span>
+                                                        <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+
+                                                {studentSubmissions.length ===
+                                                0 ? (
+                                                    <div className="py-6 text-center text-slate-400 dark:text-slate-500 text-xs">
+                                                        <p className="font-medium text-slate-500 dark:text-slate-400">
+                                                            Chưa có bài làm nào
+                                                        </p>
+                                                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                                            Làm bài thi để xem
+                                                            lại lời giải chi
+                                                            tiết tại đây nhé!
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="divide-y divide-slate-200/60 dark:divide-slate-800/80">
+                                                        {[...studentSubmissions]
+                                                            .sort(
+                                                                (a, b) =>
+                                                                    safeParseDate(
+                                                                        b.submittedAt,
+                                                                    ).getTime() -
+                                                                    safeParseDate(
+                                                                        a.submittedAt,
+                                                                    ).getTime(),
+                                                            )
+                                                            .slice(0, 5)
+                                                            .map((sub) => {
+                                                                let scoreColor =
+                                                                    "text-rose-600 dark:text-rose-400";
+                                                                if (
+                                                                    sub.score >=
+                                                                    8
+                                                                ) {
+                                                                    scoreColor =
+                                                                        "text-emerald-600 dark:text-emerald-400";
+                                                                } else if (
+                                                                    sub.score >=
+                                                                    5
+                                                                ) {
+                                                                    scoreColor =
+                                                                        "text-amber-600 dark:text-amber-400";
+                                                                }
+
+                                                                return (
+                                                                    <div
+                                                                        key={
+                                                                            sub.id
+                                                                        }
+                                                                        onClick={() =>
+                                                                            onNavigate(
+                                                                                "/result/" +
+                                                                                    sub.id,
+                                                                            )
+                                                                        }
+                                                                        className="py-3 group flex flex-col gap-1.5 cursor-pointer transition-colors hover:bg-slate-50/40 dark:hover:bg-slate-800/30 px-1 rounded-sm"
+                                                                    >
+                                                                        <div className="flex items-start justify-between gap-2">
+                                                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors line-clamp-1">
+                                                                                {
+                                                                                    sub.quizTitle
+                                                                                }
+                                                                            </span>
+                                                                            <span
+                                                                                className={`text-xs font-black font-mono shrink-0 ${scoreColor}`}
+                                                                            >
+                                                                                {
+                                                                                    sub.score
+                                                                                }
+                                                                                /10
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Clock className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                                                                                {
+                                                                                    sub.submittedAt
+                                                                                }
+                                                                            </span>
+                                                                            <span className="font-bold text-brand-600 dark:text-brand-300 group-hover:underline flex items-center gap-0.5">
+                                                                                Xem
+                                                                                lại{" "}
+                                                                                <ChevronRight className="w-3 h-3 inline-block" />
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
