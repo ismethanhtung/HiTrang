@@ -106,6 +106,28 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			go func(sid string) {
 				_ = db.Model(&UserSession{}).Where("id = ?", sid).Update("last_seen", time.Now())
 			}(sess.ID)
+		} else {
+			ua := c.GetHeader("User-Agent")
+			ip := c.ClientIP()
+			if ip == "" {
+				ip = c.RemoteIP()
+			}
+			go func(uid, tok, userAgent, clientIP string) {
+				b, o, d := parseUserAgent(userAgent)
+				_ = db.Create(&UserSession{
+					ID:        uuid.New().String(),
+					UserID:    uid,
+					TokenHash: hashToken(tok),
+					Browser:   b,
+					OS:        o,
+					Device:    d,
+					IPAddress: clientIP,
+					Location:  "VN",
+					LastSeen:  time.Now(),
+					ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+					CreatedAt: time.Now(),
+				})
+			}(claims.UserID, tokenStr, ua, ip)
 		}
 
 		// Update last active time
@@ -404,7 +426,31 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 			AvatarURL    *string         `json:"avatarUrl"`
 			CreatedAt    string          `json:"createdAt"`
 			LastActiveAt *time.Time      `json:"lastActiveAt"`
+			Device       string          `json:"device,omitempty"`
+			OS           string          `json:"os,omitempty"`
+			Browser      string          `json:"browser,omitempty"`
 			ActiveExam   *ActiveExamInfo `json:"activeExam,omitempty"`
+		}
+
+		// Query latest session device info for all users
+		type UserDeviceSession struct {
+			UserID  string    `gorm:"column:user_id"`
+			Device  string    `gorm:"column:device"`
+			OS      string    `gorm:"column:os"`
+			Browser string    `gorm:"column:browser"`
+			LastSeen time.Time `gorm:"column:last_seen"`
+		}
+		var userSessions []UserDeviceSession
+		_ = db.Table("user_sessions").
+			Select("user_id, device, os, browser, last_seen").
+			Order("last_seen desc").
+			Scan(&userSessions)
+
+		deviceMap := make(map[string]UserDeviceSession)
+		for _, s := range userSessions {
+			if _, exists := deviceMap[s.UserID]; !exists {
+				deviceMap[s.UserID] = s
+			}
 		}
 
 		// Find inprogress unexpired attempts
@@ -463,6 +509,15 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 				isGoogle = true
 			}
 
+			dev := ""
+			osName := ""
+			browser := ""
+			if s, ok := deviceMap[p.ID]; ok {
+				dev = s.Device
+				osName = s.OS
+				browser = s.Browser
+			}
+
 			resp[i] = UserResponse{
 				ID:           p.ID,
 				Name:         p.Name,
@@ -475,6 +530,9 @@ func HandleGetAllProfiles(db *gorm.DB) gin.HandlerFunc {
 				AvatarURL:    p.AvatarURL,
 				CreatedAt:    p.CreatedAt.Format("2006-01-02"),
 				LastActiveAt: p.LastActiveAt,
+				Device:       dev,
+				OS:           osName,
+				Browser:      browser,
 				ActiveExam:   activeMap[p.ID],
 			}
 		}

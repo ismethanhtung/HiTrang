@@ -1386,8 +1386,7 @@ export default function SettingsView({
                                                                                       : "bg-rose-100 text-rose-800 border border-rose-250 dark:bg-rose-950/20 dark:text-rose-400"
                                                                             }`}
                                                                         >
-                                                                            Bạn
-                                                                            chọn:{" "}
+                                                                            Sai:{" "}
                                                                             {
                                                                                 sText
                                                                             }
@@ -1561,7 +1560,7 @@ export default function SettingsView({
     return (
         <div className="flex-1 bg-white dark:bg-bg-card text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
             {/* Title Header with Tabs */}
-            <div className="max-w-4xl mx-auto pt-8 pb-6 px-6   dark:border-slate-800/80">
+            <div className="max-w-4xl mx-auto pt-6 sm:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 dark:border-slate-800/80">
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {activeSettingsTab === "profile"
                         ? "Hồ sơ cá nhân"
@@ -1585,11 +1584,11 @@ export default function SettingsView({
                               : "Xem lại toàn bộ thông báo và cập nhật mới dành cho bạn."}
                 </p>
 
-                {/* Tabs navigation */}
-                <div className="flex gap-6 mt-6 border-b border-slate-100 dark:border-slate-800/50">
+                {/* Tabs navigation (Hidden on mobile, clean original text tabs on PC) */}
+                <div className="hidden sm:flex gap-5 sm:gap-6 mt-6 border-b border-slate-100 dark:border-slate-800/50 overflow-x-auto no-scrollbar scroll-smooth">
                     <button
                         onClick={() => handleTabClick("profile")}
-                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer ${
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer whitespace-nowrap shrink-0 ${
                             activeSettingsTab === "profile"
                                 ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1599,7 +1598,7 @@ export default function SettingsView({
                     </button>
                     <button
                         onClick={() => handleTabClick("security")}
-                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             activeSettingsTab === "security"
                                 ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1609,7 +1608,7 @@ export default function SettingsView({
                     </button>
                     <button
                         onClick={() => handleTabClick("appearance")}
-                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             activeSettingsTab === "appearance"
                                 ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1619,7 +1618,7 @@ export default function SettingsView({
                     </button>
                     <button
                         onClick={() => handleTabClick("history")}
-                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             activeSettingsTab === "history"
                                 ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1629,7 +1628,7 @@ export default function SettingsView({
                     </button>
                     <button
                         onClick={() => handleTabClick("notifications")}
-                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 ${
+                        className={`pb-2.5 text-xs font-bold transition-all relative cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                             activeSettingsTab === "notifications"
                                 ? "text-slate-900 dark:text-white border-b-2 border-slate-900 dark:border-white"
                                 : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
@@ -1647,9 +1646,9 @@ export default function SettingsView({
 
             {activeSettingsTab === "profile" ? (
                 /* Profile Settings Grid */
-                <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 max-sm:space-y-3.5 sm:divide-y sm:divide-slate-100/70 sm:dark:divide-slate-800/80">
                     {/* Profile Photo Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6 items-center">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6 items-center">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                                 Ảnh đại diện
@@ -1659,7 +1658,7 @@ export default function SettingsView({
                                 xếp hạng.
                             </p>
                         </div>
-                        <div className="col-span-12 md:col-span-8 flex flex-col sm:flex-row sm:items-center gap-5">
+                        <div className="col-span-12 md:col-span-8 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
                             <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center border border-slate-200/60 dark:border-slate-700/60 shadow-xs">
                                 {user.avatarUrl ? (
                                     <img
@@ -1678,7 +1677,7 @@ export default function SettingsView({
                                     </div>
                                 )}
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
                                     <button
                                         type="button"
@@ -1689,11 +1688,11 @@ export default function SettingsView({
                                             uploadingAvatar ||
                                             selectingPredefined
                                         }
-                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                                        className="max-sm:flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-1.5 bg-brand-500 hover:bg-brand-600 text-white rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50 text-center"
                                     >
                                         <span>Chọn ảnh có sẵn</span>
                                     </button>
-                                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs">
+                                    <label className="max-sm:flex-1 cursor-pointer inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 sm:py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-2xs text-center">
                                         <span>Tải ảnh từ máy</span>
                                         <input
                                             type="file"
@@ -1721,7 +1720,7 @@ export default function SettingsView({
                     </div>
 
                     {/* First & Last Name Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                                 Họ và Tên
@@ -1731,9 +1730,9 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 max-w-xl">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5 sm:gap-3 max-w-xl">
                                 <div className="space-y-1.5 flex-1 min-w-[140px]">
-                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
                                         Họ và tên lót
                                     </label>
                                     <input
@@ -1749,11 +1748,11 @@ export default function SettingsView({
                                                 handleUpdateName();
                                             }
                                         }}
-                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                        className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
                                 <div className="space-y-1.5 w-full sm:w-28 shrink-0">
-                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                                    <label className="text-[11px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
                                         Tên
                                     </label>
                                     <input
@@ -1769,7 +1768,7 @@ export default function SettingsView({
                                                 handleUpdateName();
                                             }
                                         }}
-                                        className="w-full px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                        className="w-full px-3.5 py-2.5 sm:py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                     />
                                 </div>
                                 <button
@@ -1780,7 +1779,7 @@ export default function SettingsView({
                                         (firstName === initialName.firstName &&
                                             lastName === initialName.lastName)
                                     }
-                                    className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs shrink-0"
+                                    className="w-full sm:w-auto py-2.5 sm:py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs shrink-0 text-center"
                                 >
                                     {updatingName && (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1804,7 +1803,7 @@ export default function SettingsView({
 
                     {/* Linked Google Account Row */}
                     {isGoogleUser && (
-                        <div className="grid grid-cols-12 gap-6 py-6 items-center">
+                        <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6 items-center">
                             <div className="col-span-12 md:col-span-4 space-y-1">
                                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                     <GoogleIcon className="w-4 h-4 shrink-0" />
@@ -1815,7 +1814,7 @@ export default function SettingsView({
                                 </p>
                             </div>
                             <div className="col-span-12 md:col-span-8">
-                                <div className="p-3.5 dark:bg-slate-800/40 dark:border-slate-700/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-xl">
+                                <div className="p-3.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-700/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-xl">
                                     <div className="flex items-center gap-3">
                                         <div className="min-w-0">
                                             <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
@@ -1838,7 +1837,7 @@ export default function SettingsView({
                     )}
 
                     {/* Username Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -1859,7 +1858,7 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 max-w-lg">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 max-w-lg">
                                 <input
                                     type="text"
                                     placeholder={
@@ -1877,7 +1876,7 @@ export default function SettingsView({
                                             handleInitiateUpdateUsername();
                                         }
                                     }}
-                                    className="w-full sm:max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
+                                    className="w-full sm:max-w-xs px-3.5 py-2.5 sm:py-2 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-800/80 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                 />
                                 <button
                                     type="button"
@@ -1887,7 +1886,7 @@ export default function SettingsView({
                                         usernameInput.trim().toLowerCase() ===
                                             (user.username || "").toLowerCase()
                                     }
-                                    className="py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                    className="w-full sm:w-auto py-2.5 sm:py-2 px-4 bg-slate-950 hover:bg-slate-900 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 text-center"
                                 >
                                     {updatingUsername && (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1921,12 +1920,12 @@ export default function SettingsView({
                                         </>
                                     ) : (
                                         <>
-                                            Đổi tên đăng nhập sẽ{" "}
+                                            Đổi Username sẽ{" "}
                                             <span className="font-semibold text-amber-900 dark:text-amber-200">
-                                                kết thúc phiên làm việc
+                                                kết thúc phiên đăng nhập
                                             </span>{" "}
-                                            hiện tại. Bạn sẽ cần đăng nhập lại
-                                            với tên đăng nhập mới.
+                                            . Bạn cần login lại với username
+                                            mới.
                                         </>
                                     )}
                                 </div>
@@ -1944,32 +1943,12 @@ export default function SettingsView({
                             )}
                         </div>
                     </div>
-
-                    {/* Timezone Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
-                        <div className="col-span-12 md:col-span-4 space-y-1">
-                            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Timezone
-                            </h4>
-                            <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Used for time-based alerts and reports.
-                            </p>
-                        </div>
-                        <div className="col-span-12 md:col-span-8">
-                            <input
-                                type="text"
-                                readOnly
-                                value="GMT+7 — Indochina Time"
-                                className="w-full max-w-xs px-3.5 py-2 bg-slate-50/50 dark:bg-slate-800/20 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-450 dark:text-slate-550 select-none outline-none"
-                            />
-                        </div>
-                    </div>
                 </div>
             ) : activeSettingsTab === "security" ? (
                 /* Security Settings Grid */
-                <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100 dark:divide-slate-800/80">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 max-sm:space-y-3.5 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
                     {/* Password Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                                 Mật khẩu (Password)
@@ -1984,12 +1963,12 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-2">
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
                                 <input
                                     type="password"
                                     readOnly
                                     value="•••••••••••••"
-                                    className="w-full max-w-xs px-3.5 py-2 bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-550 select-none outline-none tracking-widest cursor-default"
+                                    className="w-full sm:max-w-xs px-3.5 py-2.5 sm:py-2 bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-550 select-none outline-none tracking-widest cursor-default"
                                 />
                                 <button
                                     type="button"
@@ -2001,7 +1980,7 @@ export default function SettingsView({
                                         setPwdSuccess("");
                                         setIsChangePasswordModalOpen(true);
                                     }}
-                                    className="py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 shadow-2xs"
+                                    className="w-full sm:w-auto justify-center py-2.5 sm:py-2 px-3.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 shadow-2xs text-center"
                                 >
                                     {isGoogleUser
                                         ? "Đặt / Đổi mật khẩu"
@@ -2020,7 +1999,7 @@ export default function SettingsView({
                     </div>
 
                     {/* Recovery Email Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <span>Email khôi phục</span>
@@ -2030,10 +2009,10 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-1">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 py-1">
                                 <div className="flex items-center gap-3">
                                     <div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                                 {user.email ||
                                                     "Chưa liên kết email khôi phục"}
@@ -2054,7 +2033,7 @@ export default function SettingsView({
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+                                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto self-start sm:self-center">
                                     {isGoogleUser ? (
                                         <span className="text-[11px] text-slate-400 dark:text-slate-500 italic">
                                             Tự động qua Google
@@ -2066,7 +2045,7 @@ export default function SettingsView({
                                                 onClick={
                                                     handleOpenLinkEmailModal
                                                 }
-                                                className="py-1.5 px-3 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-2xs"
+                                                className="max-sm:flex-1 py-2.5 sm:py-1.5 px-3.5 sm:px-3 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl sm:rounded-lg text-xs font-semibold transition-all cursor-pointer shadow-2xs text-center"
                                             >
                                                 Đổi email
                                             </button>
@@ -2076,7 +2055,7 @@ export default function SettingsView({
                                                 onClick={
                                                     handleUnlinkEmailAction
                                                 }
-                                                className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
+                                                className="p-2.5 sm:p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl sm:rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors cursor-pointer"
                                                 title="Gỡ liên kết email"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -2086,7 +2065,7 @@ export default function SettingsView({
                                         <button
                                             type="button"
                                             onClick={handleOpenLinkEmailModal}
-                                            className="py-1.5 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
+                                            className="w-full sm:w-auto justify-center py-2.5 sm:py-1.5 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl sm:rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
                                         >
                                             <Mail className="w-3.5 h-3.5" />
                                             <span>Liên kết Email</span>
@@ -2098,7 +2077,7 @@ export default function SettingsView({
                     </div>
 
                     {/* Google Authenticator & 2-Step Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <span>Two-factor Authenticator</span>
@@ -2111,10 +2090,10 @@ export default function SettingsView({
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-4">
                             {/* Main 2FA Status Row */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-1">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 py-1">
                                 <div className="flex items-center gap-3">
                                     <div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                                                 {user.totpEnabled
                                                     ? "Google Authenticator"
@@ -2132,7 +2111,7 @@ export default function SettingsView({
                                                     : "Chưa liên kết"}
                                             </span>
                                         </div>
-                                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                        <p className="text-[11px] text-slate-400 dark:text-slate-550 mt-0.5">
                                             {user.totpEnabled
                                                 ? "Bạn có thể dùng mã 6 số từ ứng dụng để đổi mật khẩu và bảo mật đăng nhập."
                                                 : "Khuyên dùng để có thể tự khôi phục mật khẩu khi quên."}
@@ -2140,33 +2119,35 @@ export default function SettingsView({
                                     </div>
                                 </div>
 
-                                {user.totpEnabled ? (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setDisable2FAError("");
-                                            setDisable2FACodeOrPassword("");
-                                            setIsDisable2FAModalOpen(true);
-                                        }}
-                                        className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 dark:text-rose-400 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0"
-                                    >
-                                        Hủy liên kết
-                                    </button>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        disabled={loading2FASetup}
-                                        onClick={handleStartSetup2FA}
-                                        className="py-1.5 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
-                                    >
-                                        {loading2FASetup ? (
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                        ) : (
-                                            <QrCode className="w-3.5 h-3.5" />
-                                        )}
-                                        Liên kết Authenticator
-                                    </button>
-                                )}
+                                <div className="w-full sm:w-auto shrink-0 self-start sm:self-center">
+                                    {user.totpEnabled ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setDisable2FAError("");
+                                                setDisable2FACodeOrPassword("");
+                                                setIsDisable2FAModalOpen(true);
+                                            }}
+                                            className="w-full sm:w-auto justify-center py-2.5 sm:py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 dark:text-rose-400 rounded-xl sm:rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 text-center"
+                                        >
+                                            Hủy liên kết
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            disabled={loading2FASetup}
+                                            onClick={handleStartSetup2FA}
+                                            className="w-full sm:w-auto justify-center py-2.5 sm:py-1.5 px-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl sm:rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs disabled:opacity-50"
+                                        >
+                                            {loading2FASetup ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <QrCode className="w-3.5 h-3.5" />
+                                            )}
+                                            <span>Liên kết Authenticator</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Sub-toggle for 2-Step Login */}
@@ -2211,8 +2192,8 @@ export default function SettingsView({
                     </div>
 
                     {/* Active Sessions Section */}
-                    <div className="py-6 space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 py-4 sm:py-6 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                             <div className="space-y-0.5">
                                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                                     Phiên hoạt động (Active sessions)
@@ -2232,7 +2213,7 @@ export default function SettingsView({
                                     sessions.filter((s) => !s.isCurrent)
                                         .length === 0
                                 }
-                                className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-2xs shrink-0 self-start sm:self-auto"
+                                className="w-full sm:w-auto justify-center px-3.5 py-2 sm:py-1.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl sm:rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-2xs shrink-0 self-start sm:self-auto text-center"
                             >
                                 {loggingOutAllSessions && (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
@@ -2241,7 +2222,7 @@ export default function SettingsView({
                             </button>
                         </div>
 
-                        {/* Active Sessions List (Borderless with horizontal dividers) */}
+                        {/* Active Sessions List */}
                         <div className="divide-y divide-slate-100 dark:divide-slate-800/80 border-t border-b border-slate-100 dark:border-slate-800/80">
                             {loadingSessions && sessions.length === 0 ? (
                                 <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
@@ -2259,9 +2240,9 @@ export default function SettingsView({
                                     return (
                                         <div
                                             key={sess.id}
-                                            className="py-4 flex items-start justify-between gap-4 transition-colors"
+                                            className="py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-4 transition-colors"
                                         >
-                                            <div className="flex items-start gap-3.5 min-w-0">
+                                            <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
                                                 {/* Device icon box */}
                                                 <div className="w-9 h-9 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-center shrink-0 text-slate-600 dark:text-slate-300">
                                                     {sess.device ===
@@ -2289,7 +2270,7 @@ export default function SettingsView({
                                                         )}
                                                     </div>
 
-                                                    <p className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                                                    <p className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
                                                         {sess.os ||
                                                             "Hệ điều hành"}{" "}
                                                         ·{" "}
@@ -2297,7 +2278,7 @@ export default function SettingsView({
                                                             "Máy tính"}
                                                     </p>
 
-                                                    <p className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                                                    <p className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
                                                         {sess.location
                                                             ? `${sess.location} · `
                                                             : ""}
@@ -2313,16 +2294,16 @@ export default function SettingsView({
 
                                             {/* Right side: Expires & Log out button */}
                                             {sess.isCurrent ? (
-                                                <div className="text-right shrink-0 pt-0.5">
-                                                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                                                <div className="text-left sm:text-right shrink-0 pt-0 sm:pt-0.5 pl-12 sm:pl-0">
+                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
                                                         {formatExpires(
                                                             sess.expiresAt,
                                                         )}
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <div className="flex flex-col items-end gap-1.5 shrink-0 pt-0.5">
-                                                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                                                <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1.5 shrink-0 pt-0 sm:pt-0.5 pl-12 sm:pl-0">
+                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
                                                         {formatExpires(
                                                             sess.expiresAt,
                                                         )}
@@ -2335,7 +2316,7 @@ export default function SettingsView({
                                                             )
                                                         }
                                                         disabled={isRevoking}
-                                                        className="px-2.5 py-1 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:underline dark:hover:bg-rose-950/30 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                                                        className="px-2.5 py-1 text-rose-600 sm:text-slate-600 dark:text-rose-400 sm:dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:underline dark:hover:bg-rose-950/30 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
                                                     >
                                                         {isRevoking && (
                                                             <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
@@ -2352,45 +2333,47 @@ export default function SettingsView({
                     </div>
 
                     {/* DANGER ZONE SECTION */}
-                    <div className="pt-8 pb-2">
-                        <h3 className="text-[10px] font-bold tracking-widest text-rose-500/80 uppercase select-none">
-                            DANGER ZONE
-                        </h3>
-                    </div>
-
-                    {/* Delete account Row */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-5">
-                        <div className="space-y-0.5">
-                            <h4 className="text-sm font-semibold text-rose-600 dark:text-rose-400">
-                                Xóa tài khoản
-                            </h4>
-                            <p className="text-xs text-slate-400 dark:text-slate-550">
-                                Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu lịch
-                                sử liên quan.
-                            </p>
+                    <div className="max-sm:bg-rose-50/40 max-sm:dark:bg-rose-950/10 max-sm:border max-sm:border-rose-200/70 max-sm:dark:border-rose-900/40 max-sm:rounded-2xl max-sm:p-4">
+                        <div className="pt-2 sm:pt-8 pb-2">
+                            <h3 className="text-[10px] font-bold tracking-widest text-rose-500 uppercase select-none">
+                                DANGER ZONE
+                            </h3>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setDeleteAccountError("");
-                                setDeleteAccountPassword("");
-                                setIsDeleteAccountModalOpen(true);
-                            }}
-                            className="px-3.5 py-1.5 border border-rose-200 dark:border-rose-900/60 hover:border-rose-300 bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-2xs"
-                        >
-                            Xóa tài khoản
-                        </button>
+
+                        {/* Delete account Row */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 py-2 sm:py-5">
+                            <div className="space-y-0.5">
+                                <h4 className="text-sm font-semibold text-rose-600 dark:text-rose-400">
+                                    Xóa tài khoản
+                                </h4>
+                                <p className="text-xs text-slate-400 dark:text-slate-550">
+                                    Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu
+                                    lịch sử liên quan.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setDeleteAccountError("");
+                                    setDeleteAccountPassword("");
+                                    setIsDeleteAccountModalOpen(true);
+                                }}
+                                className="w-full sm:w-auto text-center justify-center px-4 py-2.5 sm:py-1.5 border border-rose-200 dark:border-rose-900/60 hover:border-rose-300 bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl sm:rounded-lg text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-2xs"
+                            >
+                                Xóa tài khoản
+                            </button>
+                        </div>
                     </div>
                 </div>
             ) : activeSettingsTab === "appearance" ? (
                 /* Appearance Settings Grid */
-                <div className="max-w-4xl mx-auto px-6 pb-20 divide-y divide-slate-100/70 dark:divide-slate-800/80">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 max-sm:space-y-3.5 sm:divide-y sm:divide-slate-100/70 sm:dark:divide-slate-800/80">
                     {/* Font Family Selection Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <Type className="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                                Phông chữ giao diện
+                                <span>Phông chữ giao diện</span>
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
                                 Chọn kiểu phông chữ hiển thị phù hợp nhất với
@@ -2398,7 +2381,7 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                                 {fontOptions.map((f) => {
                                     const isSelected = selectedFont === f.id;
                                     return (
@@ -2409,7 +2392,7 @@ export default function SettingsView({
                                                 handleSelectFont(f.id)
                                             }
                                             style={{ fontFamily: f.cssVal }}
-                                            className={`p-4 rounded-2xl border text-left transition-all relative cursor-pointer ${
+                                            className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative cursor-pointer ${
                                                 isSelected
                                                     ? "border-brand-600 bg-brand-50/30 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-600"
                                                     : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
@@ -2428,9 +2411,6 @@ export default function SettingsView({
                                             <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-normal">
                                                 {f.desc}
                                             </p>
-                                            {/*<div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 font-medium">
-                                                Học Toán cùng cô Huyền Trang 123
-                                            </div>*/}
                                         </button>
                                     );
                                 })}
@@ -2439,12 +2419,12 @@ export default function SettingsView({
                     </div>
 
                     {/* Dark Mode / Theme Row */}
-                    <div className="grid grid-cols-12 gap-6 py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                     <Sun className="w-4 h-4 text-amber-500" />
-                                    Theme - Đang phát triển
+                                    <span>Theme - Đang phát triển</span>
                                 </h4>
                             </div>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
@@ -2453,12 +2433,12 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
                                 {/* Light Mode card */}
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("light")}
-                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
                                         theme === "light"
                                             ? "border-amber-500/80 bg-white dark:bg-slate-800 shadow-xs ring-2 ring-amber-500/20"
                                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
@@ -2500,7 +2480,7 @@ export default function SettingsView({
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("dark")}
-                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
                                         theme === "dark"
                                             ? "border-indigo-400 bg-[#233448] shadow-xs ring-2 ring-indigo-500/30 text-white"
                                             : "border-slate-700/80 bg-[#233448]/90 text-white hover:border-indigo-400"
@@ -2542,7 +2522,7 @@ export default function SettingsView({
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("system")}
-                                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
                                         theme === "system"
                                             ? "border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 shadow-xs ring-2 ring-brand-500/20"
                                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
@@ -2584,10 +2564,10 @@ export default function SettingsView({
                 </div>
             ) : activeSettingsTab === "history" ? (
                 /* History tab content */
-                <div className="max-w-4xl mx-auto px-6 pb-20 space-y-4">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 space-y-4">
                     {/* Action & Filter Bar */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 select-none">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 select-none">
                             <button
                                 type="button"
                                 onClick={() => setHistoryFilter("all")}
@@ -2669,7 +2649,7 @@ export default function SettingsView({
 
                         {userSubmissions.length > 3 && (
                             <div className="relative w-full sm:w-56">
-                                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-550 pointer-events-none" />
                                 <input
                                     type="text"
                                     value={historySearch}
@@ -2677,7 +2657,7 @@ export default function SettingsView({
                                         setHistorySearch(e.target.value)
                                     }
                                     placeholder="Tìm bài thi đã làm..."
-                                    className="w-full pl-8.5 pr-3 py-1.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                                    className="w-full pl-8.5 pr-3 py-2 sm:py-1.5 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs focus:outline-none text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-550"
                                 />
                             </div>
                         )}
@@ -2687,7 +2667,7 @@ export default function SettingsView({
                     {groupedSubmissions.length === 0 ? (
                         <div className="text-center py-16 space-y-3 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
                             <BookOpenCheck className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                            <p className="text-xs text-slate-400 dark:text-slate-550 font-medium">
                                 Bạn chưa thực hiện bài thi nào.
                             </p>
                             <button
@@ -2702,13 +2682,13 @@ export default function SettingsView({
                     ) : filteredGroups.length === 0 ? (
                         <div className="text-center py-16 space-y-3">
                             <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                            <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                            <p className="text-xs text-slate-400 dark:text-slate-550 font-medium">
                                 Không tìm thấy bài làm phù hợp với điều kiện
                                 lọc.
                             </p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        <div className="max-sm:space-y-3 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
                             {filteredGroups.map((group) => {
                                 const isExpanded =
                                     expandedQuizzes[group.quizId] !== false;
@@ -2719,20 +2699,20 @@ export default function SettingsView({
                                 return (
                                     <div
                                         key={group.quizId}
-                                        className="py-4 space-y-2.5 transition-colors"
+                                        className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 py-3.5 sm:py-4 space-y-2.5 transition-colors"
                                     >
                                         {/* Quiz Group Header */}
                                         <div
                                             onClick={() =>
                                                 toggleQuizExpand(group.quizId)
                                             }
-                                            className="flex items-start justify-between gap-4 cursor-pointer group select-none -mx-2 px-2 py-1.5 rounded-xl hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors"
+                                            className="flex items-start justify-between gap-3 sm:gap-4 cursor-pointer group select-none -mx-1 sm:-mx-2 px-1 sm:px-2 py-1 rounded-xl hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors"
                                         >
                                             <div className="space-y-1 min-w-0 flex-1">
                                                 <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors line-clamp-1">
                                                     {group.quizTitle}
                                                 </h4>
-                                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-slate-400 dark:text-slate-550 font-medium">
                                                     <span className="font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">
                                                         {group.attempts.length}{" "}
                                                         lượt làm
@@ -2750,7 +2730,7 @@ export default function SettingsView({
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3 sm:gap-4 shrink-0 pt-0.5">
+                                            <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 pt-0.5">
                                                 <div className="flex flex-col items-end">
                                                     <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                                                         Điểm cao nhất
@@ -2780,7 +2760,7 @@ export default function SettingsView({
 
                                         {/* Attempts Sub-list */}
                                         {isExpanded && (
-                                            <div className="space-y-1 pl-2 sm:pl-4 border-l-2 border-slate-100 dark:border-slate-800/80 ml-2">
+                                            <div className="space-y-1.5 pl-2 sm:pl-4 border-l-2 border-slate-200 dark:border-slate-800 ml-1.5 sm:ml-2 pt-1">
                                                 {group.attempts.map(
                                                     (attempt, index) => {
                                                         const attemptScoreColor =
@@ -2798,7 +2778,7 @@ export default function SettingsView({
                                                                             attempt.id,
                                                                     )
                                                                 }
-                                                                className="py-2.5 px-3 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/30 rounded-xl transition-colors cursor-pointer group/attempt"
+                                                                className="py-2.5 px-3 max-sm:bg-slate-50/80 max-sm:dark:bg-slate-800/40 flex items-center justify-between gap-2.5 sm:gap-3 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 rounded-xl transition-colors cursor-pointer group/attempt"
                                                             >
                                                                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 min-w-0 flex-1">
                                                                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 shrink-0">
@@ -2809,7 +2789,7 @@ export default function SettingsView({
                                                                     <span className="opacity-30">
                                                                         •
                                                                     </span>
-                                                                    <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 font-medium">
+                                                                    <span className="text-xs text-slate-400 dark:text-slate-550 flex items-center gap-1 font-medium">
                                                                         <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                                                                         {
                                                                             attempt.submittedAt
@@ -2823,7 +2803,7 @@ export default function SettingsView({
                                                                                 <span className="opacity-30 hidden sm:inline">
                                                                                     •
                                                                                 </span>
-                                                                                <span className="text-xs text-slate-400 dark:text-slate-500 hidden sm:inline">
+                                                                                <span className="text-xs text-slate-400 dark:text-slate-550 hidden sm:inline">
                                                                                     Thời
                                                                                     gian:{" "}
                                                                                     {formatTime(
@@ -2834,8 +2814,8 @@ export default function SettingsView({
                                                                         )}
                                                                 </div>
 
-                                                                <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                                                                    {/* Score without border or bg */}
+                                                                <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
+                                                                    {/* Score */}
                                                                     <div
                                                                         className={`text-xs sm:text-sm font-black ${attemptScoreColor}`}
                                                                     >
@@ -2871,14 +2851,14 @@ export default function SettingsView({
                 </div>
             ) : (
                 /* Notifications tab content */
-                <div className="max-w-4xl mx-auto px-6 pb-20 space-y-4">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 space-y-4">
                     {/* Action Bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2 shrink-0">
                             <button
                                 type="button"
                                 onClick={() => setNotifFilter("all")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${
                                     notifFilter === "all"
                                         ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
                                         : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -2889,7 +2869,7 @@ export default function SettingsView({
                             <button
                                 type="button"
                                 onClick={() => setNotifFilter("unread")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all flex items-center gap-1.5 ${
+                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
                                     notifFilter === "unread"
                                         ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
                                         : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -2910,7 +2890,7 @@ export default function SettingsView({
                             disabled={
                                 unreadNotifCount === 0 || markingAllNotifs
                             }
-                            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1.5 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed transition-colors select-none"
+                            className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 flex items-center gap-1.5 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed transition-colors select-none shrink-0 whitespace-nowrap"
                         >
                             {markingAllNotifs ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -2923,7 +2903,7 @@ export default function SettingsView({
 
                     {/* Notifications List */}
                     {loadingNotifs && notifications.length === 0 ? (
-                        <div className="text-center py-16 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+                        <div className="text-center py-16 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-550">
                             <Loader2 className="w-4 h-4 animate-spin text-brand-500" />
                             <span>Đang tải thông báo...</span>
                         </div>
@@ -2938,7 +2918,7 @@ export default function SettingsView({
                                 return (
                                     <div className="text-center py-16 space-y-3">
                                         <Bell className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                                        <p className="text-xs text-slate-400 dark:text-slate-550 font-medium">
                                             {notifFilter === "unread"
                                                 ? "Bạn đã đọc hết tất cả thông báo!"
                                                 : "Chưa có thông báo nào."}
@@ -2948,17 +2928,17 @@ export default function SettingsView({
                             }
 
                             return (
-                                <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                                <div className="max-sm:space-y-2.5 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
                                     {list.map((notif) => (
                                         <div
                                             key={notif.id}
                                             onClick={() =>
                                                 handleReadNotification(notif)
                                             }
-                                            className={`py-4 px-2 sm:px-3 -mx-2 sm:-mx-3 flex items-start justify-between gap-4 transition-colors cursor-pointer group ${
+                                            className={`py-3.5 sm:py-4 px-3.5 sm:px-3 sm:-mx-3 flex items-start justify-between gap-2.5 sm:gap-4 transition-colors cursor-pointer group rounded-2xl sm:rounded-xl max-sm:border ${
                                                 !notif.isRead
-                                                    ? "bg-brand-50/40 dark:bg-brand-950/20 hover:bg-brand-50/70 dark:hover:bg-brand-950/40"
-                                                    : "hover:bg-slate-50/80 dark:hover:bg-slate-800/30"
+                                                    ? "bg-brand-50/40 dark:bg-brand-950/20 max-sm:border-brand-200/70 max-sm:dark:border-brand-900/40 hover:bg-brand-50/70 dark:hover:bg-brand-950/40"
+                                                    : "max-sm:bg-white max-sm:dark:bg-slate-850/30 max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 hover:bg-slate-50/80 dark:hover:bg-slate-800/30"
                                             }`}
                                         >
                                             <div className="flex items-start gap-3 min-w-0">
@@ -3004,7 +2984,7 @@ export default function SettingsView({
                                             </div>
 
                                             <div className="text-right shrink-0 pt-0.5">
-                                                <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                                <span className="text-[11px] font-medium text-slate-400 dark:text-slate-550 whitespace-nowrap">
                                                     {formatNotifTimeAgo(
                                                         notif.createdAt,
                                                     )}
@@ -3668,7 +3648,7 @@ export default function SettingsView({
                                     {updatingUsername && (
                                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                     )}
-                                    <span>Xác nhận & Đăng xuất</span>
+                                    <span>Xác nhận</span>
                                 </button>
                             </div>
                         </div>

@@ -48,6 +48,9 @@ export interface User {
   passwordUpdatedAt?: string;
   createdAt?: string;
   lastActiveAt?: string;
+  device?: string;
+  os?: string;
+  browser?: string;
   activeExam?: {
     quizId: string;
     quizTitle: string;

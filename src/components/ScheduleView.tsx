@@ -45,7 +45,7 @@ export default function ScheduleView({
 }: ScheduleViewProps) {
     const [slots, setSlots] = useState<ScheduleSlot[]>([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<"list" | "grid" | "image">("grid"); // Default to grid for clean UI
+    const [viewMode, setViewMode] = useState<"image" | "grid" | "list">("image"); // Default to image as requested
 
     useEffect(() => {
         getSchedule().then((res) => {
@@ -120,6 +120,16 @@ export default function ScheduleView({
                     {/* Toggle view mode buttons */}
                     <div className="grid grid-cols-3 sm:inline-flex w-full sm:w-auto bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
                         <button
+                            onClick={() => setViewMode("image")}
+                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
+                                viewMode === "image"
+                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
+                                    : "text-slate-400 hover:text-slate-650"
+                            }`}
+                        >
+                            Ảnh
+                        </button>
+                        <button
                             onClick={() => setViewMode("grid")}
                             className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
                                 viewMode === "grid"
@@ -138,16 +148,6 @@ export default function ScheduleView({
                             }`}
                         >
                             Theo ngày
-                        </button>
-                        <button
-                            onClick={() => setViewMode("image")}
-                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
-                                viewMode === "image"
-                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
-                                    : "text-slate-400 hover:text-slate-650"
-                            }`}
-                        >
-                            Ảnh
                         </button>
                     </div>
                 </div>

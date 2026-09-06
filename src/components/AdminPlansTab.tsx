@@ -26,6 +26,9 @@ import {
     ArrowUp,
     ArrowDown,
     BarChart3,
+    Smartphone,
+    Monitor,
+    Tablet,
 } from "lucide-react";
 import { GoogleIcon, isUserGoogleAccount } from "./GoogleIcon";
 
@@ -365,7 +368,52 @@ export default function AdminPlansTab({
         return userProfiles.filter((u) => !!u.activeExam).length;
     }, [userProfiles]);
 
+    const renderDeviceIcon = (prof: User) => {
+        if (!prof.device) return null;
+        const devLower = prof.device.toLowerCase();
+        const deviceLabel =
+            prof.device === "Mobile"
+                ? "Điện thoại (Mobile)"
+                : prof.device === "Tablet"
+                  ? "Máy tính bảng (Tablet)"
+                  : "Máy tính (PC/Laptop)";
+        const tooltip = [deviceLabel, prof.os, prof.browser]
+            .filter(Boolean)
+            .join(" • ");
+
+        if (devLower.includes("mobile") || devLower.includes("phone")) {
+            return (
+                <span
+                    title={tooltip}
+                    className="inline-flex items-center justify-center p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex-shrink-0 cursor-help"
+                >
+                    <Smartphone className="w-3.5 h-3.5" />
+                </span>
+            );
+        }
+        if (devLower.includes("tablet") || devLower.includes("ipad")) {
+            return (
+                <span
+                    title={tooltip}
+                    className="inline-flex items-center justify-center p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex-shrink-0 cursor-help"
+                >
+                    <Tablet className="w-3.5 h-3.5" />
+                </span>
+            );
+        }
+        return (
+            <span
+                title={tooltip}
+                className="inline-flex items-center justify-center p-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex-shrink-0 cursor-help"
+            >
+                <Monitor className="w-3.5 h-3.5" />
+            </span>
+        );
+    };
+
     const formatLastActive = (prof: User) => {
+        const deviceIcon = renderDeviceIcon(prof);
+
         if (prof.activeExam) {
             const now = Date.now();
             const startMs = prof.activeExam.startedAt
@@ -388,43 +436,46 @@ export default function AdminPlansTab({
             const tooltipTitle = `Đề thi: ${prof.activeExam.quizTitle}\nLần thi: Lần ${attemptNum}\nThời gian: Đã làm ${elapsedMins} phút / ${durationMins} phút`;
 
             return (
-                <div className="relative group/testing inline-block">
-                    <span
-                        title={tooltipTitle}
-                        className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-700/60 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit shadow-2xs cursor-help select-none transition-all hover:border-amber-300 dark:hover:border-amber-600"
-                    >
-                        <span className="relative flex h-2 w-2 flex-shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <div className="relative group/testing inline-block">
+                        <span
+                            title={tooltipTitle}
+                            className="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-700/60 px-2 py-0.5 rounded-md text-[10px] font-bold w-fit shadow-2xs cursor-help select-none transition-all hover:border-amber-300 dark:hover:border-amber-600"
+                        >
+                            <span className="relative flex h-2 w-2 flex-shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            <span className="truncate">
+                                testing {elapsedMins} / {durationMins}p
+                            </span>
                         </span>
-                        <span className="truncate">
-                            testing {elapsedMins} / {durationMins}p
-                        </span>
-                    </span>
 
-                    {/* Popover Card on Hover */}
-                    <div className="absolute left-0 bottom-full mb-2 hidden group-hover/testing:flex flex-col gap-1.5 z-50 w-64 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 text-xs pointer-events-none animate-in fade-in zoom-in-95 duration-150">
-                        <div className="flex items-start justify-between gap-2">
-                            <span className="font-bold text-slate-800 dark:text-slate-100 text-[11px] leading-snug line-clamp-2">
-                                {prof.activeExam.quizTitle}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold whitespace-nowrap flex-shrink-0">
-                                Lần {attemptNum}
-                            </span>
-                        </div>
-                        <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-                            <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                                <span>Thời gian làm bài:</span>
-                                <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                    {elapsedMins} / {durationMins} phút (
-                                    {progressPercent}%)
+                        {/* Popover Card on Hover */}
+                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover/testing:flex flex-col gap-1.5 z-50 w-64 p-3 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 text-xs pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                            <div className="flex items-start justify-between gap-2">
+                                <span className="font-bold text-slate-800 dark:text-slate-100 text-[11px] leading-snug line-clamp-2">
+                                    {prof.activeExam.quizTitle}
+                                </span>
+                                <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-[9px] font-bold whitespace-nowrap flex-shrink-0">
+                                    Lần {attemptNum}
                                 </span>
                             </div>
-                            <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-amber-500 rounded-full transition-all"
-                                    style={{ width: `${progressPercent}%` }}
-                                />
+                            <div className="space-y-1 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                                <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                                    <span>Thời gian làm bài:</span>
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">
+                                        {elapsedMins} / {durationMins} phút (
+                                        {progressPercent}%)
+                                    </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-amber-500 rounded-full transition-all"
+                                        style={{ width: `${progressPercent}%` }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -433,7 +484,12 @@ export default function AdminPlansTab({
         }
 
         if (!prof.lastActiveAt)
-            return <span className="text-slate-400 font-medium">—</span>;
+            return (
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <span className="text-slate-400 font-medium">—</span>
+                </div>
+            );
 
         const date = new Date(prof.lastActiveAt);
         const now = new Date();
@@ -442,43 +498,58 @@ export default function AdminPlansTab({
 
         if (diffMins < 5) {
             return (
-                <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Online
-                </span>
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Online
+                    </span>
+                </div>
             );
         }
 
         if (diffMins < 60) {
             return (
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">
-                    {diffMins} phút trước
-                </span>
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                        {diffMins} phút trước
+                    </span>
+                </div>
             );
         }
 
         const diffHours = Math.floor(diffMins / 60);
         if (diffHours < 24) {
             return (
-                <span className="text-slate-500 dark:text-slate-400 font-semibold">
-                    {diffHours} giờ trước
-                </span>
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold">
+                        {diffHours} giờ trước
+                    </span>
+                </div>
             );
         }
 
         const diffDays = Math.floor(diffHours / 24);
         if (diffDays < 7) {
             return (
-                <span className="text-slate-550 dark:text-slate-400 font-semibold">
-                    {diffDays} ngày trước
-                </span>
+                <div className="inline-flex items-center gap-1.5">
+                    {deviceIcon}
+                    <span className="text-slate-550 dark:text-slate-400 font-semibold">
+                        {diffDays} ngày trước
+                    </span>
+                </div>
             );
         }
 
         return (
-            <span className="text-slate-400 font-medium">
-                {date.toLocaleDateString("vi-VN")}
-            </span>
+            <div className="inline-flex items-center gap-1.5">
+                {deviceIcon}
+                <span className="text-slate-400 font-medium">
+                    {date.toLocaleDateString("vi-VN")}
+                </span>
+            </div>
         );
     };
 

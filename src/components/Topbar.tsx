@@ -12,15 +12,17 @@ import {
     History,
     Search,
     Crown,
-    Trophy,
-    Calendar,
+    Calendar1,
+    CalendarDays,
     User as UserIcon,
     Palette,
-    BookOpen,
+    GraduationCap,
     Bell,
     Menu,
     X,
 } from "lucide-react";
+import { Podium } from "./PodiumIcon";
+import { ExamIcon } from "./ExamIcon";
 import NotificationBell from "./NotificationBell";
 
 interface TopbarProps {
@@ -231,9 +233,9 @@ export default function Topbar({
         currentPath === "/schedule" || currentPath === "/lich";
     const isLeaderboardActive = currentPath === "/leaderboard";
     const isNotiActive =
-        currentPath.includes("/notifications") ||
-        currentPath.includes("/noti");
+        currentPath.includes("/notifications") || currentPath.includes("/noti");
     const isSettingsActive = currentPath.startsWith("/settings");
+    const isResultReview = currentPath.startsWith("/result");
 
     return (
         <>
@@ -242,396 +244,421 @@ export default function Topbar({
                 className={`${
                     isHomeActive ? "block" : "hidden md:block"
                 } sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-transform duration-300 ease-in-out ${
-                    isHeaderHidden ? "-translate-y-full md:translate-y-0" : "translate-y-0"
+                    isHeaderHidden
+                        ? "-translate-y-full md:translate-y-0"
+                        : "translate-y-0"
                 }`}
             >
                 {/* BRAND LOGO + TOP ACTIONS (Desktop: 54px; Mobile: 48px) */}
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[48px] md:h-[54px] flex items-center justify-between">
-                {/* BRAND LOGO */}
-                <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
-                    <button
-                        onClick={onNavigateHome}
-                        className="flex items-center gap-2 group cursor-pointer focus:outline-none"
-                    >
-                        <img
-                            src="/logos/lotus.gif"
-                            alt="Logo"
-                            className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
-                        />
-                        <span className="font-calligraphy text-lg sm:text-lg text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
-                            HiTrang
-                        </span>
-                    </button>
+                    {/* BRAND LOGO */}
+                    <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
+                        <button
+                            onClick={onNavigateHome}
+                            className="flex items-center gap-2 group cursor-pointer focus:outline-none"
+                        >
+                            <img
+                                src="/logos/lotus.gif"
+                                alt="Logo"
+                                className="w-6.5 h-6.5 sm:w-7.5 sm:h-7.5 object-contain"
+                            />
+                            <span className="font-calligraphy text-lg sm:text-lg text-brand-500 dark:text-brand-300 font-semibold tracking-tight group-hover:opacity-90 transition-opacity">
+                                HiTrang
+                            </span>
+                        </button>
 
-                    {/* NAV LINKS - CLASS/GRADE SELECTION (DESKTOP ONLY) */}
-                    {user && (
-                        <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
-                            {grades.map((grade) => (
-                                <div
-                                    key={grade.id}
-                                    className="relative py-2"
-                                    onMouseEnter={() =>
-                                        setHoveredGradeId(grade.id)
-                                    }
-                                    onMouseLeave={() => setHoveredGradeId(null)}
-                                >
-                                    <button
-                                        onClick={() => {
-                                            onSelectGrade(grade.id, null);
-                                        }}
-                                        className={navButtonClass(
-                                            selectedGrade === grade.id,
-                                        )}
+                        {/* NAV LINKS - CLASS/GRADE SELECTION (DESKTOP ONLY) */}
+                        {user && (
+                            <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
+                                {grades.map((grade) => (
+                                    <div
+                                        key={grade.id}
+                                        className="relative py-2"
+                                        onMouseEnter={() =>
+                                            setHoveredGradeId(grade.id)
+                                        }
+                                        onMouseLeave={() =>
+                                            setHoveredGradeId(null)
+                                        }
                                     >
-                                        <span>{grade.label}</span>
-                                        <ChevronDown
-                                            className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
-                                                hoveredGradeId === grade.id
-                                                    ? "rotate-180"
-                                                    : ""
-                                            }`}
-                                        />
-                                    </button>
+                                        <button
+                                            onClick={() => {
+                                                onSelectGrade(grade.id, null);
+                                            }}
+                                            className={navButtonClass(
+                                                selectedGrade === grade.id,
+                                            )}
+                                        >
+                                            <span>{grade.label}</span>
+                                            <ChevronDown
+                                                className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
+                                                    hoveredGradeId === grade.id
+                                                        ? "rotate-180"
+                                                        : ""
+                                                }`}
+                                            />
+                                        </button>
 
-                                    {/* HOVER DROPDOWN MENU */}
-                                    {hoveredGradeId === grade.id && (
-                                        <div className="absolute top-full left-0 pt-2 z-50">
-                                            <div className="w-44 bg-bg-card border border-border-primary rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                                                <button
-                                                    onClick={() => {
-                                                        onSelectGrade(
-                                                            grade.id,
-                                                            null,
-                                                        );
-                                                        setHoveredGradeId(null);
-                                                    }}
-                                                    className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                        !currentCategory
-                                                            ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
-                                                            : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
-                                                    }`}
-                                                >
-                                                    <span>Tất cả</span>
-                                                    {!currentCategory && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
-                                                    )}
-                                                </button>
-
-                                                {(
-                                                    gradeCategories[grade.id] ||
-                                                    []
-                                                ).map((category) => (
+                                        {/* HOVER DROPDOWN MENU */}
+                                        {hoveredGradeId === grade.id && (
+                                            <div className="absolute top-full left-0 pt-2 z-50">
+                                                <div className="w-44 bg-bg-card border border-border-primary rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                                                     <button
-                                                        key={category}
                                                         onClick={() => {
                                                             onSelectGrade(
                                                                 grade.id,
-                                                                category,
+                                                                null,
                                                             );
                                                             setHoveredGradeId(
                                                                 null,
                                                             );
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                            currentCategory ===
-                                                            category
+                                                            !currentCategory
                                                                 ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
                                                                 : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
                                                         }`}
                                                     >
-                                                        <span>{category}</span>
-                                                        {currentCategory ===
-                                                            category && (
+                                                        <span>Tất cả</span>
+                                                        {!currentCategory && (
                                                             <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
                                                         )}
                                                     </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                            <button
-                                onClick={onNavigateSchedule}
-                                className={navButtonClass(
-                                    currentPath === "/lich" ||
-                                        currentPath === "/schedule",
-                                )}
-                            >
-                                <span>Lịch học</span>
-                            </button>
 
-                            <button
-                                onClick={onNavigateLeaderboard}
-                                className={navButtonClass(
-                                    currentPath === "/leaderboard",
-                                )}
-                            >
-                                <Crown className="w-3.5 h-3.5 text-amber-500" />
-                                <span>BXH</span>
-                            </button>
-                        </nav>
-                    )}
-                </div>
-
-                {/* RIGHT ACTIONS (ADMIN & AUTH) */}
-                <div className="flex items-center lg:gap-3 gap-1.5">
-                    {/* SEARCH BOX (DESKTOP) */}
-                    {user && (
-                        <div
-                            key="topbar-search-container"
-                            ref={searchContainerRef}
-                            className="relative hidden sm:block w-40 md:w-52 lg:w-64 flex-shrink-0"
-                        >
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
-                                <Search className="h-3.5 w-3.5 text-text-tertiary" />
-                            </span>
-                            <input
-                                type="text"
-                                value={localSearchQuery}
-                                onFocus={() => setSearchFocused(true)}
-                                onChange={(e) => {
-                                    setLocalSearchQuery(e.target.value);
-                                    setSearchFocused(true);
-                                }}
-                                placeholder="Tìm đề thi..."
-                                className="w-full h-[30px] pl-8 pr-3.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
-                            />
-                            {searchFocused &&
-                                localSearchQuery.trim().length > 0 && (
-                                    <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                        {filteredSearchQuizzes.length > 0 ? (
-                                            filteredSearchQuizzes.map(
-                                                (quiz) => (
-                                                    <button
-                                                        key={quiz.id}
-                                                        onClick={() => {
-                                                            onSelectGrade(
-                                                                quiz.grade ||
+                                                    {(
+                                                        gradeCategories[
+                                                            grade.id
+                                                        ] || []
+                                                    ).map((category) => (
+                                                        <button
+                                                            key={category}
+                                                            onClick={() => {
+                                                                onSelectGrade(
+                                                                    grade.id,
+                                                                    category,
+                                                                );
+                                                                setHoveredGradeId(
                                                                     null,
-                                                            );
-                                                            setLocalSearchQuery(
-                                                                "",
-                                                            );
-                                                            setSearchFocused(
-                                                                false,
-                                                            );
-                                                        }}
-                                                        className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
-                                                    >
-                                                        <span className="text-xs font-semibold text-text-primary line-clamp-1">
-                                                            {quiz.title}
-                                                        </span>
-                                                        <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
+                                                                );
+                                                            }}
+                                                            className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                                currentCategory ===
+                                                                category
+                                                                    ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
+                                                                    : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
+                                                            }`}
+                                                        >
                                                             <span>
-                                                                {quiz.subject}
+                                                                {category}
                                                             </span>
-                                                            {quiz.grade && (
-                                                                <>
-                                                                    <span className="w-1 h-1 rounded-full bg-border-secondary" />
-                                                                    <span className="font-semibold text-brand-500 dark:text-brand-300">
-                                                                        Lớp{" "}
-                                                                        {
-                                                                            quiz.grade
-                                                                        }
-                                                                    </span>
-                                                                </>
+                                                            {currentCategory ===
+                                                                category && (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
                                                             )}
-                                                        </span>
-                                                    </button>
-                                                ),
-                                            )
-                                        ) : (
-                                            <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
-                                                Không tìm thấy đề thi phù hợp
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
-                                )}
-                        </div>
-                    )}
-
-                    {/* AUTH ACTION / USER PROFILE BUTTON */}
-                    {!user ? (
-                        /* UNAUTHENTICATED ACTION BUTTONS */
-                        <div
-                            key="unauth-login-wrap"
-                            className="flex items-center"
-                        >
-                            <button
-                                key="btn-trigger-login"
-                                type="button"
-                                onClick={() => onOpenAuth("login")}
-                                className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-lg shadow-xs active:scale-[0.98] transition-colors cursor-pointer"
-                            >
-                                Đăng nhập
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2">
-                            {/* Notification Bell */}
-                            <NotificationBell
-                                onNavigate={(path) => {
-                                    if (
-                                        path === "/notifications" ||
-                                        path === "/noti"
-                                    ) {
-                                        onNavigateSettings("notifications");
-                                    }
-                                }}
-                            />
-
-                            <div
-                                key="user-profile-dropdown"
-                                className="relative"
-                                ref={dropdownRef}
-                            >
+                                ))}
                                 <button
-                                    key="btn-user-avatar-toggle"
-                                    type="button"
-                                    onClick={() => {
-                                        if (window.innerWidth < 768) {
-                                            setShowMobileMenu(true);
-                                        } else {
-                                            setUserDropdownOpen(
-                                                !userDropdownOpen,
-                                            );
-                                        }
-                                    }}
-                                    className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
+                                    onClick={onNavigateSchedule}
+                                    className={navButtonClass(
+                                        currentPath === "/lich" ||
+                                            currentPath === "/schedule",
+                                    )}
                                 >
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
-                                        {user.avatarUrl ? (
-                                            <img
-                                                src={user.avatarUrl}
-                                                alt={user.name}
-                                                referrerPolicy="no-referrer"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display =
-                                                        "none";
-                                                    const fallback = e
-                                                        .currentTarget
-                                                        .nextElementSibling as HTMLElement;
-                                                    if (fallback)
-                                                        fallback.style.display =
-                                                            "block";
-                                                }}
-                                            />
-                                        ) : null}
-                                        <UserIcon
-                                            className="w-4 h-4 text-slate-400 dark:text-slate-500"
-                                            style={{
-                                                display: user.avatarUrl
-                                                    ? "none"
-                                                    : "block",
-                                            }}
-                                        />
-                                    </div>
-                                    <ChevronDown
-                                        className={`hidden md:block w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
-                                            userDropdownOpen ? "rotate-180" : ""
-                                        }`}
-                                    />
+                                    <span>Lịch học</span>
                                 </button>
 
-                                {/* DESKTOP USER DROPDOWN MENU */}
-                                {userDropdownOpen && (
-                                    <div className="hidden md:block absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
-                                        <div className="px-4 py-2 border-b border-border-primary mb-1">
-                                            <p className="text-xs font-bold text-text-primary">
-                                                {user.name}
-                                            </p>
-                                            <p className="text-[11px] text-text-secondary truncate">
-                                                @{user.username}
-                                            </p>
-                                            <div className="mt-2 flex items-center justify-between">
-                                                <span className="text-[10px] uppercase font-semibold text-text-tertiary">
-                                                    Tài khoản
-                                                </span>
-                                                {getPlanBadge(user.plan)}
-                                            </div>
-                                        </div>
+                                <button
+                                    onClick={onNavigateLeaderboard}
+                                    className={navButtonClass(
+                                        currentPath === "/leaderboard",
+                                    )}
+                                >
+                                    <Crown className="w-3.5 h-3.5 text-amber-500" />
+                                    <span>BXH</span>
+                                </button>
+                            </nav>
+                        )}
+                    </div>
 
-                                        {(user.role === "admin" ||
-                                            user.username === "admin") && (
+                    {/* RIGHT ACTIONS (ADMIN & AUTH) */}
+                    <div className="flex items-center lg:gap-3 gap-1.5">
+                        {/* SEARCH BOX (DESKTOP) */}
+                        {user && (
+                            <div
+                                key="topbar-search-container"
+                                ref={searchContainerRef}
+                                className="relative hidden sm:block w-40 md:w-52 lg:w-64 flex-shrink-0"
+                            >
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
+                                    <Search className="h-3.5 w-3.5 text-text-tertiary" />
+                                </span>
+                                <input
+                                    type="text"
+                                    value={localSearchQuery}
+                                    onFocus={() => setSearchFocused(true)}
+                                    onChange={(e) => {
+                                        setLocalSearchQuery(e.target.value);
+                                        setSearchFocused(true);
+                                    }}
+                                    placeholder="Tìm đề thi..."
+                                    className="w-full h-[30px] pl-8 pr-3.5 text-[11px] bg-white dark:bg-bg-card border border-slate-200 dark:border-slate-800 rounded-md focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-400 dark:placeholder-slate-500 text-text-primary font-medium"
+                                />
+                                {searchFocused &&
+                                    localSearchQuery.trim().length > 0 && (
+                                        <div className="absolute top-full left-0 right-0 mt-1 w-full max-h-60 overflow-y-auto bg-bg-card rounded-md shadow-lg border border-border-primary py-1.5 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            {filteredSearchQuizzes.length >
+                                            0 ? (
+                                                filteredSearchQuizzes.map(
+                                                    (quiz) => (
+                                                        <button
+                                                            key={quiz.id}
+                                                            onClick={() => {
+                                                                onSelectGrade(
+                                                                    quiz.grade ||
+                                                                        null,
+                                                                );
+                                                                setLocalSearchQuery(
+                                                                    "",
+                                                                );
+                                                                setSearchFocused(
+                                                                    false,
+                                                                );
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                                                        >
+                                                            <span className="text-xs font-semibold text-text-primary line-clamp-1">
+                                                                {quiz.title}
+                                                            </span>
+                                                            <span className="text-[10px] text-text-tertiary flex items-center gap-1.5">
+                                                                <span>
+                                                                    {
+                                                                        quiz.subject
+                                                                    }
+                                                                </span>
+                                                                {quiz.grade && (
+                                                                    <>
+                                                                        <span className="w-1 h-1 rounded-full bg-border-secondary" />
+                                                                        <span className="font-semibold text-brand-500 dark:text-brand-300">
+                                                                            Lớp{" "}
+                                                                            {
+                                                                                quiz.grade
+                                                                            }
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                            </span>
+                                                        </button>
+                                                    ),
+                                                )
+                                            ) : (
+                                                <div className="px-3 py-3 text-center text-xs text-text-tertiary italic">
+                                                    Không tìm thấy đề thi phù
+                                                    hợp
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                            </div>
+                        )}
+
+                        {/* AUTH ACTION / USER PROFILE BUTTON */}
+                        {!user ? (
+                            /* UNAUTHENTICATED ACTION BUTTONS */
+                            <div
+                                key="unauth-login-wrap"
+                                className="flex items-center"
+                            >
+                                <button
+                                    key="btn-trigger-login"
+                                    type="button"
+                                    onClick={() => onOpenAuth("login")}
+                                    className="px-5 py-2 text-xs font-bold text-white dark:text-slate-900 bg-brand-600 hover:bg-brand-700 dark:bg-brand-300 dark:hover:bg-brand-200 rounded-lg shadow-xs active:scale-[0.98] transition-colors cursor-pointer"
+                                >
+                                    Đăng nhập
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                {/* Notification Bell */}
+                                <NotificationBell
+                                    onNavigate={(path) => {
+                                        if (
+                                            path === "/notifications" ||
+                                            path === "/noti"
+                                        ) {
+                                            onNavigateSettings("notifications");
+                                        }
+                                    }}
+                                />
+
+                                <div
+                                    key="user-profile-dropdown"
+                                    className="relative"
+                                    ref={dropdownRef}
+                                >
+                                    <button
+                                        key="btn-user-avatar-toggle"
+                                        type="button"
+                                        onClick={() => {
+                                            if (window.innerWidth < 768) {
+                                                setShowMobileMenu(true);
+                                            } else {
+                                                setUserDropdownOpen(
+                                                    !userDropdownOpen,
+                                                );
+                                            }
+                                        }}
+                                        className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+                                            {user.avatarUrl ? (
+                                                <img
+                                                    src={user.avatarUrl}
+                                                    alt={user.name}
+                                                    referrerPolicy="no-referrer"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display =
+                                                            "none";
+                                                        const fallback = e
+                                                            .currentTarget
+                                                            .nextElementSibling as HTMLElement;
+                                                        if (fallback)
+                                                            fallback.style.display =
+                                                                "block";
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <UserIcon
+                                                className="w-4 h-4 text-slate-400 dark:text-slate-500"
+                                                style={{
+                                                    display: user.avatarUrl
+                                                        ? "none"
+                                                        : "block",
+                                                }}
+                                            />
+                                        </div>
+                                        <ChevronDown
+                                            className={`hidden md:block w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
+                                                userDropdownOpen
+                                                    ? "rotate-180"
+                                                    : ""
+                                            }`}
+                                        />
+                                    </button>
+
+                                    {/* DESKTOP USER DROPDOWN MENU */}
+                                    {userDropdownOpen && (
+                                        <div className="hidden md:block absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                                            <div className="px-4 py-2 border-b border-border-primary mb-1">
+                                                <p className="text-xs font-bold text-text-primary">
+                                                    {user.name}
+                                                </p>
+                                                <p className="text-[11px] text-text-secondary truncate">
+                                                    @{user.username}
+                                                </p>
+                                                <div className="mt-2 flex items-center justify-between">
+                                                    <span className="text-[10px] uppercase font-semibold text-text-tertiary">
+                                                        Tài khoản
+                                                    </span>
+                                                    {getPlanBadge(user.plan)}
+                                                </div>
+                                            </div>
+
+                                            {(user.role === "admin" ||
+                                                user.username === "admin") && (
+                                                <button
+                                                    onClick={() => {
+                                                        setUserDropdownOpen(
+                                                            false,
+                                                        );
+                                                        onNavigateAdmin();
+                                                    }}
+                                                    className="w-full px-4 py-2 text-left text-xs text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-semibold border-b border-border-primary pb-2 mb-1 cursor-pointer"
+                                                >
+                                                    <Shield className="w-4 h-4 text-brand-500" />
+                                                    Quản lý (Admin)
+                                                </button>
+                                            )}
+
                                             <button
                                                 onClick={() => {
                                                     setUserDropdownOpen(false);
-                                                    onNavigateAdmin();
+                                                    onNavigateSettings(
+                                                        "profile",
+                                                    );
                                                 }}
-                                                className="w-full px-4 py-2 text-left text-xs text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-semibold border-b border-border-primary pb-2 mb-1 cursor-pointer"
+                                                className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
                                             >
-                                                <Shield className="w-4 h-4 text-brand-500" />
-                                                Quản lý (Admin)
+                                                <Bolt className="w-4 h-4 text-text-tertiary" />
+                                                Cài đặt cá nhân
                                             </button>
-                                        )}
 
-                                        <button
-                                            onClick={() => {
-                                                setUserDropdownOpen(false);
-                                                onNavigateSettings("profile");
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                        >
-                                            <Bolt className="w-4 h-4 text-text-tertiary" />
-                                            Cài đặt cá nhân
-                                        </button>
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onNavigateSettings(
+                                                        "security",
+                                                    );
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                            >
+                                                <Shield className="w-4 h-4 text-text-tertiary" />
+                                                Bảo mật tài khoản
+                                            </button>
 
-                                        <button
-                                            onClick={() => {
-                                                setUserDropdownOpen(false);
-                                                onNavigateSettings("security");
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                        >
-                                            <Shield className="w-4 h-4 text-text-tertiary" />
-                                            Bảo mật tài khoản
-                                        </button>
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onNavigateSettings(
+                                                        "appearance",
+                                                    );
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                            >
+                                                <Palette className="w-4 h-4 text-text-tertiary" />
+                                                Tùy chỉnh giao diện
+                                            </button>
 
-                                        <button
-                                            onClick={() => {
-                                                setUserDropdownOpen(false);
-                                                onNavigateSettings("appearance");
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                        >
-                                            <Palette className="w-4 h-4 text-text-tertiary" />
-                                            Tùy chỉnh giao diện
-                                        </button>
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onNavigateSettings(
+                                                        "history",
+                                                    );
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
+                                            >
+                                                <History className="w-4 h-4 text-text-tertiary" />
+                                                Lịch sử làm bài
+                                            </button>
 
-                                        <button
-                                            onClick={() => {
-                                                setUserDropdownOpen(false);
-                                                onNavigateSettings("history");
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-xs text-text-secondary hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center gap-2 font-medium cursor-pointer"
-                                        >
-                                            <History className="w-4 h-4 text-text-tertiary" />
-                                            Lịch sử làm bài
-                                        </button>
-
-                                        <button
-                                            onClick={() => {
-                                                setUserDropdownOpen(false);
-                                                onLogout();
-                                            }}
-                                            className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold border-t border-border-primary mt-1 cursor-pointer"
-                                        >
-                                            <LogOut className="w-4 h-4 text-rose-500" />
-                                            Đăng xuất
-                                        </button>
-                                    </div>
-                                )}
+                                            <button
+                                                onClick={() => {
+                                                    setUserDropdownOpen(false);
+                                                    onLogout();
+                                                }}
+                                                className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold border-t border-border-primary mt-1 cursor-pointer"
+                                            >
+                                                <LogOut className="w-4 h-4 text-rose-500" />
+                                                Đăng xuất
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        {/* FACEBOOK-STYLE MOBILE BOTTOM NAVIGATION BAR (FIXED AT BOTTOM OF SCREEN) */}
-            {user && (
+            {/* FACEBOOK-STYLE MOBILE BOTTOM NAVIGATION BAR (FIXED AT BOTTOM OF SCREEN) */}
+            {user && !isResultReview && (
                 <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
                     {/* 1. Trang chủ */}
                     <button
@@ -678,7 +705,7 @@ export default function Topbar({
                                     : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
                             }`}
                         >
-                            <BookOpen
+                            <ExamIcon
                                 className={`w-[21px] h-[21px] ${
                                     isGradeActive
                                         ? "stroke-[2.5]"
@@ -704,7 +731,7 @@ export default function Topbar({
                                     : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
                             }`}
                         >
-                            <Calendar
+                            <Calendar1
                                 className={`w-[21px] h-[21px] ${
                                     isScheduleActive
                                         ? "stroke-[2.5]"
@@ -730,7 +757,7 @@ export default function Topbar({
                                     : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
                             }`}
                         >
-                            <Trophy
+                            <Podium
                                 className={`w-[21px] h-[21px] ${
                                     isLeaderboardActive
                                         ? "stroke-[2.5] text-amber-500"
@@ -824,8 +851,8 @@ export default function Topbar({
                                     Chọn Khối Lớp Luyện Đề
                                 </h3>
                                 <p className="text-xs text-text-tertiary mt-0.5">
-                                    Lựa chọn khối lớp để xem danh sách đề thi môn
-                                    Toán
+                                    Lựa chọn khối lớp để xem danh sách đề thi
+                                    môn Toán
                                 </p>
                             </div>
                             <button
@@ -881,14 +908,28 @@ export default function Topbar({
                                             if (user && !user.grade) {
                                                 user.grade = g.id;
                                                 try {
-                                                    const savedUserStr = localStorage.getItem("hvt_user");
+                                                    const savedUserStr =
+                                                        localStorage.getItem(
+                                                            "hvt_user",
+                                                        );
                                                     if (savedUserStr) {
-                                                        const parsed = JSON.parse(savedUserStr);
+                                                        const parsed =
+                                                            JSON.parse(
+                                                                savedUserStr,
+                                                            );
                                                         parsed.grade = g.id;
-                                                        localStorage.setItem("hvt_user", JSON.stringify(parsed));
+                                                        localStorage.setItem(
+                                                            "hvt_user",
+                                                            JSON.stringify(
+                                                                parsed,
+                                                            ),
+                                                        );
                                                     }
                                                 } catch (e) {
-                                                    console.error("Lỗi khi lưu lớp:", e);
+                                                    console.error(
+                                                        "Lỗi khi lưu lớp:",
+                                                        e,
+                                                    );
                                                 }
                                             }
                                             onSelectGrade(g.id);
@@ -1013,7 +1054,7 @@ export default function Topbar({
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                                            <BookOpen className="w-4 h-4" />
+                                            <GraduationCap className="w-4 h-4" />
                                         </div>
                                         <div>
                                             <span>Đổi khối lớp luyện đề</span>
