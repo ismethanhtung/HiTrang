@@ -1,18 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import { User, UserPlan, Quiz } from "../types";
 import { matchesQuiz } from "../lib/searchUtils";
+import { getNotifications } from "../lib/supabaseService";
 import {
+    Home,
     LogOut,
     Bolt,
     Shield,
-    Settings,
     ChevronDown,
+    ChevronRight,
     History,
     Search,
     Crown,
+    Trophy,
     Calendar,
     User as UserIcon,
     Palette,
+    BookOpen,
+    Bell,
+    Menu,
+    X,
 } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 
@@ -58,6 +65,59 @@ export default function Topbar({
     const [searchFocused, setSearchFocused] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState("");
     const [hoveredGradeId, setHoveredGradeId] = useState<string | null>(null);
+
+    // Mobile state
+    const [showGradeModal, setShowGradeModal] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+    const [unreadNotiCount, setUnreadNotiCount] = useState(0);
+
+    const lastScrollYRef = useRef(0);
+
+    // Track scroll direction for mobile smart auto-hide header
+    useEffect(() => {
+        let ticking = false;
+        const handleScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const currentScrollY = window.scrollY;
+                    if (currentScrollY < 30) {
+                        setIsHeaderHidden(false);
+                    } else if (currentScrollY > lastScrollYRef.current + 8) {
+                        // Scrolling down -> hide top header on mobile
+                        setIsHeaderHidden(true);
+                    } else if (currentScrollY < lastScrollYRef.current - 8) {
+                        // Scrolling up -> reveal top header on mobile
+                        setIsHeaderHidden(false);
+                    }
+                    lastScrollYRef.current = currentScrollY;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    // Periodic check for notification count on mobile tab bar
+    useEffect(() => {
+        if (!user) return;
+        const fetchUnread = async () => {
+            try {
+                const data = await getNotifications();
+                setUnreadNotiCount(data.unreadCount || 0);
+            } catch {
+                // Ignore network errors
+            }
+        };
+        fetchUnread();
+        const interval = setInterval(() => {
+            if (!document.hidden) fetchUnread();
+        }, 45000);
+        return () => clearInterval(interval);
+    }, [user]);
 
     const gradeCategories: Record<string, string[]> = {
         "8": ["Giữa kì 1", "Cuối kì 1", "Giữa kì 2", "Cuối kì 2"],
@@ -160,9 +220,33 @@ export default function Topbar({
                 : "text-text-secondary/65 dark:text-text-secondary/55 font-bold hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
         }`;
 
+    // Active status flags for mobile tab bar
+    const isHomeActive =
+        (currentPath === "/" || currentPath === "") &&
+        !selectedGrade &&
+        activeTab === "student-dashboard";
+    const isGradeActive =
+        selectedGrade !== null || currentPath.startsWith("/grade");
+    const isScheduleActive =
+        currentPath === "/schedule" || currentPath === "/lich";
+    const isLeaderboardActive = currentPath === "/leaderboard";
+    const isNotiActive =
+        currentPath.includes("/notifications") ||
+        currentPath.includes("/noti");
+    const isSettingsActive = currentPath.startsWith("/settings");
+
     return (
-        <header className="sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[54px] flex items-center justify-between">
+        <>
+            {/* STICKY TOPBAR HEADER */}
+            <header
+                className={`${
+                    isHomeActive ? "block" : "hidden md:block"
+                } sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-transform duration-300 ease-in-out ${
+                    isHeaderHidden ? "-translate-y-full md:translate-y-0" : "translate-y-0"
+                }`}
+            >
+                {/* BRAND LOGO + TOP ACTIONS (Desktop: 54px; Mobile: 48px) */}
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[48px] md:h-[54px] flex items-center justify-between">
                 {/* BRAND LOGO */}
                 <div className="flex items-center lg:gap-6 gap-3 flex-shrink-0">
                     <button
@@ -179,7 +263,7 @@ export default function Topbar({
                         </span>
                     </button>
 
-                    {/* NAV LINKS - CLASS/GRADE SELECTION */}
+                    {/* NAV LINKS - CLASS/GRADE SELECTION (DESKTOP ONLY) */}
                     {user && (
                         <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
                             {grades.map((grade) => (
@@ -292,7 +376,7 @@ export default function Topbar({
 
                 {/* RIGHT ACTIONS (ADMIN & AUTH) */}
                 <div className="flex items-center lg:gap-3 gap-1.5">
-                    {/* SEARCH BOX */}
+                    {/* SEARCH BOX (DESKTOP) */}
                     {user && (
                         <div
                             key="topbar-search-container"
@@ -405,9 +489,15 @@ export default function Topbar({
                                 <button
                                     key="btn-user-avatar-toggle"
                                     type="button"
-                                    onClick={() =>
-                                        setUserDropdownOpen(!userDropdownOpen)
-                                    }
+                                    onClick={() => {
+                                        if (window.innerWidth < 768) {
+                                            setShowMobileMenu(true);
+                                        } else {
+                                            setUserDropdownOpen(
+                                                !userDropdownOpen,
+                                            );
+                                        }
+                                    }}
                                     className="flex items-center gap-1.5 p-1 rounded-lg cursor-pointer flex-shrink-0 group"
                                 >
                                     <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center flex-shrink-0 shadow-2xs overflow-hidden border border-slate-200 dark:border-slate-700/50 transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
@@ -439,14 +529,15 @@ export default function Topbar({
                                         />
                                     </div>
                                     <ChevronDown
-                                        className={`w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
+                                        className={`hidden md:block w-3.5 h-3.5 text-text-tertiary flex-shrink-0 transition-transform duration-200 ${
                                             userDropdownOpen ? "rotate-180" : ""
                                         }`}
                                     />
                                 </button>
 
+                                {/* DESKTOP USER DROPDOWN MENU */}
                                 {userDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                                    <div className="hidden md:block absolute right-0 mt-2 w-56 bg-bg-card rounded-lg shadow-xl border border-border-primary py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
                                         <div className="px-4 py-2 border-b border-border-primary mb-1">
                                             <p className="text-xs font-bold text-text-primary">
                                                 {user.name}
@@ -537,50 +628,523 @@ export default function Topbar({
                     )}
                 </div>
             </div>
+        </header>
 
-            {/* MOBILE GRADE NAVIGATION BAR */}
+        {/* FACEBOOK-STYLE MOBILE BOTTOM NAVIGATION BAR (FIXED AT BOTTOM OF SCREEN) */}
             {user && (
-                <div className="lg:hidden flex items-center gap-2 px-4 py-2 overflow-x-auto border-t border-border-primary bg-bg-surface/90">
-                    {grades.map((grade) => (
-                        <button
-                            key={grade.id}
-                            onClick={() => {
-                                onSelectGrade(grade.id);
-                            }}
-                            className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
-                                selectedGrade === grade.id
-                                    ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
-                                    : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
+                    {/* 1. Trang chủ */}
+                    <button
+                        onClick={onNavigateHome}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Trang chủ"
+                    >
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                                isHomeActive
+                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
+                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
                             }`}
                         >
-                            {grade.label}
-                        </button>
-                    ))}
-                    {/* Mobile Schedule Link */}
+                            <Home
+                                className={`w-[21px] h-[21px] ${
+                                    isHomeActive
+                                        ? "stroke-[2.5]"
+                                        : "stroke-[1.75]"
+                                }`}
+                            />
+                        </div>
+                        {isHomeActive && (
+                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
+                        )}
+                    </button>
+
+                    {/* 2. Đề thi / Khối lớp */}
+                    <button
+                        onClick={() => {
+                            if (user.grade) {
+                                onSelectGrade(user.grade);
+                            } else {
+                                setShowGradeModal(true);
+                            }
+                        }}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Đề thi"
+                    >
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
+                                isGradeActive
+                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
+                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
+                            }`}
+                        >
+                            <BookOpen
+                                className={`w-[21px] h-[21px] ${
+                                    isGradeActive
+                                        ? "stroke-[2.5]"
+                                        : "stroke-[1.75]"
+                                }`}
+                            />
+                        </div>
+                        {isGradeActive && (
+                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
+                        )}
+                    </button>
+
+                    {/* 3. Lịch học */}
                     <button
                         onClick={onNavigateSchedule}
-                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
-                            currentPath === "/schedule"
-                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
-                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
-                        }`}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Lịch học"
                     >
-                        Lịch học
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                                isScheduleActive
+                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
+                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
+                            }`}
+                        >
+                            <Calendar
+                                className={`w-[21px] h-[21px] ${
+                                    isScheduleActive
+                                        ? "stroke-[2.5]"
+                                        : "stroke-[1.75]"
+                                }`}
+                            />
+                        </div>
+                        {isScheduleActive && (
+                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
+                        )}
                     </button>
-                    {/* Mobile Leaderboard Link */}
+
+                    {/* 4. Bảng xếp hạng (BXH) */}
                     <button
                         onClick={onNavigateLeaderboard}
-                        className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all flex items-center gap-1 ${
-                            currentPath === "/leaderboard"
-                                ? "text-brand-600 dark:text-brand-300 underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-2 bg-bg-card border border-border-primary"
-                                : "text-text-secondary bg-bg-card border border-border-primary hover:text-text-primary hover:bg-brand-50/50"
-                        }`}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Bảng xếp hạng"
                     >
-                        <Crown className="w-3 h-3 text-amber-500" />
-                        <span>BXH</span>
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                                isLeaderboardActive
+                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
+                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
+                            }`}
+                        >
+                            <Trophy
+                                className={`w-[21px] h-[21px] ${
+                                    isLeaderboardActive
+                                        ? "stroke-[2.5] text-amber-500"
+                                        : "stroke-[1.75]"
+                                }`}
+                            />
+                        </div>
+                        {isLeaderboardActive && (
+                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
+                        )}
                     </button>
+
+                    {/* 5. Thông báo */}
+                    <button
+                        onClick={() => onNavigateSettings("notifications")}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Thông báo"
+                    >
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
+                                isNotiActive
+                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
+                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
+                            }`}
+                        >
+                            <Bell
+                                className={`w-[21px] h-[21px] ${
+                                    isNotiActive
+                                        ? "stroke-[2.5]"
+                                        : "stroke-[1.75]"
+                                }`}
+                            />
+                            {unreadNotiCount > 0 && (
+                                <span className="absolute -top-0.5 -right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
+                                    {unreadNotiCount > 99
+                                        ? "99+"
+                                        : unreadNotiCount}
+                                </span>
+                            )}
+                        </div>
+                        {isNotiActive && (
+                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
+                        )}
+                    </button>
+
+                    {/* 6. Tài khoản / Menu */}
+                    <button
+                        onClick={() => setShowMobileMenu(true)}
+                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        title="Tài khoản"
+                    >
+                        <div
+                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
+                                showMobileMenu || isSettingsActive
+                                    ? "ring-2 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
+                                    : ""
+                            }`}
+                        >
+                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
+                                {user.avatarUrl ? (
+                                    <img
+                                        src={user.avatarUrl}
+                                        alt={user.name}
+                                        referrerPolicy="no-referrer"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                                )}
+                            </div>
+                            <div className="absolute -bottom-0.5 -right-1 w-3.5 h-3.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 rounded-full flex items-center justify-center shadow-xs border border-white dark:border-slate-900">
+                                <Menu className="w-2 h-2 stroke-[3]" />
+                            </div>
+                        </div>
+                    </button>
+                </nav>
+            )}
+
+            {/* MOBILE GRADE SELECTOR BOTTOM SHEET */}
+            {showGradeModal && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+                        onClick={() => setShowGradeModal(false)}
+                    />
+                    <div className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[85vh] flex flex-col animate-in slide-in-from-bottom duration-250">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-border-primary">
+                            <div>
+                                <h3 className="text-base font-black text-text-primary">
+                                    Chọn Khối Lớp Luyện Đề
+                                </h3>
+                                <p className="text-xs text-text-tertiary mt-0.5">
+                                    Lựa chọn khối lớp để xem danh sách đề thi môn
+                                    Toán
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowGradeModal(false)}
+                                className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-surface transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Grade list */}
+                        <div className="p-4 overflow-y-auto space-y-2.5">
+                            {[
+                                {
+                                    id: "8",
+                                    title: "Khối Lớp 8",
+                                    desc: "Chương trình Toán THCS Lớp 8",
+                                    badge: "THCS",
+                                },
+                                {
+                                    id: "9",
+                                    title: "Khối Lớp 9",
+                                    desc: "Toán 9 & Bộ đề Luyện thi vào 10",
+                                    badge: "Ôn thi vào 10",
+                                },
+                                {
+                                    id: "10",
+                                    title: "Khối Lớp 10",
+                                    desc: "Chương trình Toán THPT Lớp 10 (GDPT mới)",
+                                    badge: "THPT",
+                                },
+                                {
+                                    id: "11",
+                                    title: "Khối Lớp 11",
+                                    desc: "Chương trình Toán THPT Lớp 11",
+                                    badge: "THPT",
+                                },
+                                {
+                                    id: "12",
+                                    title: "Khối Lớp 12",
+                                    desc: "Toán 12 & Luyện thi Tốt nghiệp THPT",
+                                    badge: "Thi thử TN THPT",
+                                },
+                            ].map((g) => {
+                                const isCurrent =
+                                    selectedGrade === g.id ||
+                                    currentPath.includes(`/grade/${g.id}`);
+                                const isUserGrade = user?.grade === g.id;
+                                return (
+                                    <button
+                                        key={g.id}
+                                        onClick={() => {
+                                            if (user && !user.grade) {
+                                                user.grade = g.id;
+                                                try {
+                                                    const savedUserStr = localStorage.getItem("hvt_user");
+                                                    if (savedUserStr) {
+                                                        const parsed = JSON.parse(savedUserStr);
+                                                        parsed.grade = g.id;
+                                                        localStorage.setItem("hvt_user", JSON.stringify(parsed));
+                                                    }
+                                                } catch (e) {
+                                                    console.error("Lỗi khi lưu lớp:", e);
+                                                }
+                                            }
+                                            onSelectGrade(g.id);
+                                            setShowGradeModal(false);
+                                        }}
+                                        className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer group ${
+                                            isCurrent
+                                                ? "bg-brand-50/70 dark:bg-brand-900/20 border-brand-500 dark:border-brand-500/50 shadow-xs"
+                                                : "bg-white dark:bg-bg-surface border-border-primary hover:border-brand-300 dark:hover:border-brand-800"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div
+                                                className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                                                    isCurrent
+                                                        ? "bg-brand-600 text-white shadow-xs"
+                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-brand-100 dark:group-hover:bg-brand-950/40"
+                                                }`}
+                                            >
+                                                {g.id}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-extrabold text-sm text-text-primary">
+                                                        {g.title}
+                                                    </span>
+                                                    {isUserGrade && (
+                                                        <span className="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-full">
+                                                            Lớp của bạn
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] text-text-tertiary truncate mt-0.5">
+                                                    {g.desc}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <span
+                                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                    g.id === "9" ||
+                                                    g.id === "12"
+                                                        ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                                }`}
+                                            >
+                                                {g.badge}
+                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:translate-x-0.5 transition-transform" />
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             )}
-        </header>
+
+            {/* MOBILE USER MENU BOTTOM SHEET */}
+            {showMobileMenu && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+                        onClick={() => setShowMobileMenu(false)}
+                    />
+                    <div className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250">
+                        {/* User Profile Card Header */}
+                        <div className="p-4 border-b border-border-primary bg-bg-surface/50">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-border-primary shadow-xs flex items-center justify-center">
+                                        {user.avatarUrl ? (
+                                            <img
+                                                src={user.avatarUrl}
+                                                alt={user.name}
+                                                referrerPolicy="no-referrer"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-base">
+                                                {user.name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-extrabold text-text-primary">
+                                            {user.name}
+                                        </h3>
+                                        <p className="text-xs text-text-tertiary">
+                                            @{user.username}
+                                        </p>
+                                        <div className="mt-1 flex items-center gap-2">
+                                            {getPlanBadge(user.plan)}
+                                            {user.grade && (
+                                                <span className="text-[10px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                                    Lớp {user.grade}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowMobileMenu(false)}
+                                    className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-card transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Action list */}
+                        <div className="p-3 overflow-y-auto space-y-1 divide-y divide-border-primary/50">
+                            <div className="space-y-1 pb-2">
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        setShowGradeModal(true);
+                                    }}
+                                    className="w-full px-3 py-2.5 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                            <BookOpen className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <span>Đổi khối lớp luyện đề</span>
+                                            <p className="text-[10px] text-text-tertiary font-normal">
+                                                {selectedGrade
+                                                    ? `Đang chọn: Lớp ${selectedGrade}`
+                                                    : "Chọn lớp 8, 9, 10, 11, 12"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                </button>
+
+                                {(user.role === "admin" ||
+                                    user.username === "admin") && (
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onNavigateAdmin();
+                                        }}
+                                        className="w-full px-3 py-2.5 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center justify-between text-left text-xs font-bold text-amber-700 dark:text-amber-300 cursor-pointer transition-colors border border-amber-200/50 dark:border-amber-800/50"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                                <Shield className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <span>
+                                                    Trang quản trị (Admin Panel)
+                                                </span>
+                                                <p className="text-[10px] text-amber-600/70 font-normal">
+                                                    Quản lý đề thi, học sinh, hệ
+                                                    thống
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-amber-500" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="space-y-1 py-2">
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        onNavigateSettings("profile");
+                                    }}
+                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                            <Bolt className="w-4 h-4" />
+                                        </div>
+                                        <span>Cài đặt thông tin cá nhân</span>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        onNavigateSettings("security");
+                                    }}
+                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                            <Shield className="w-4 h-4" />
+                                        </div>
+                                        <span>
+                                            Bảo mật tài khoản & mật khẩu
+                                        </span>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        onNavigateSettings("appearance");
+                                    }}
+                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                            <Palette className="w-4 h-4" />
+                                        </div>
+                                        <span>
+                                            Tùy chỉnh giao diện Sáng / Tối
+                                        </span>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        onNavigateSettings("history");
+                                    }}
+                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                            <History className="w-4 h-4" />
+                                        </div>
+                                        <span>Lịch sử làm bài thi</span>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                </button>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => {
+                                        setShowMobileMenu(false);
+                                        onLogout();
+                                    }}
+                                    className="w-full px-3 py-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center justify-between text-left text-xs font-bold text-rose-600 cursor-pointer transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+                                            <LogOut className="w-4 h-4" />
+                                        </div>
+                                        <span>Đăng xuất khỏi hệ thống</span>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }

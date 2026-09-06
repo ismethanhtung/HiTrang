@@ -639,7 +639,7 @@ export default function StudentDashboard({
 
     return (
         <div
-            className={`flex-1 min-h-0 ${activeQuiz || reviewSubmission ? "overflow-hidden h-full flex flex-col" : "overflow-y-auto min-h-screen"} bg-bg-base dark:bg-bg-base text-text-primary transition-colors duration-200`}
+            className={`flex-1 min-h-0 ${activeQuiz || reviewSubmission ? "overflow-hidden h-full flex flex-col" : ""} bg-bg-base dark:bg-bg-base text-text-primary transition-colors duration-200`}
         >
             <div
                 className={
@@ -817,12 +817,15 @@ export default function StudentDashboard({
                                             <div className="min-w-0 flex-1">
                                                 <div className="hidden sm:flex items-center gap-2 flex-wrap">
                                                     <span className="text-[8px] sm:text-[9px] font-bold tracking-wider uppercase bg-brand-50 text-brand-700 border border-brand-200 px-1.5 py-0.5 rounded-md shrink-0">
-                                                        {quiz.subject} - Xem lại bài làm
+                                                        {quiz.subject} - Xem lại
+                                                        bài làm
                                                     </span>
                                                 </div>
                                                 <h2
                                                     className="text-xs sm:text-sm font-extrabold text-slate-900 mt-0 sm:mt-1 truncate"
-                                                    title={reviewSubmission.quizTitle}
+                                                    title={
+                                                        reviewSubmission.quizTitle
+                                                    }
                                                 >
                                                     {reviewSubmission.quizTitle}
                                                 </h2>
@@ -836,7 +839,8 @@ export default function StudentDashboard({
                                                             Điểm số:{" "}
                                                         </span>
                                                         {reviewSubmission.score}{" "}
-                                                        (Đúng {correctCount}/{totalQ})
+                                                        (Đúng {correctCount}/
+                                                        {totalQ})
                                                     </span>
                                                 </div>
 
@@ -844,7 +848,9 @@ export default function StudentDashboard({
                                                     type="button"
                                                     onClick={() => {
                                                         if (navigateReplace) {
-                                                            navigateReplace("/");
+                                                            navigateReplace(
+                                                                "/",
+                                                            );
                                                         } else {
                                                             onNavigate("/");
                                                         }
@@ -1480,7 +1486,9 @@ export default function StudentDashboard({
                                 {/* FLOATING ACTION BUTTON (FAB) FOR MOBILE DEVICES */}
                                 <button
                                     type="button"
-                                    onClick={() => setShowMobileQuestionSheet(true)}
+                                    onClick={() =>
+                                        setShowMobileQuestionSheet(true)
+                                    }
                                     className="fixed right-0 top-1/2 -translate-y-1/2 xl:hidden z-40 bg-slate-800 text-white py-3 pl-4.5 pr-2.5 rounded-l-full shadow-lg flex items-center justify-center hover:bg-slate-900 active:scale-95 transition-all border border-r-0 border-slate-700/30 min-w-[42px]"
                                 >
                                     <span className="text-sm font-black text-white leading-none">
@@ -1497,7 +1505,9 @@ export default function StudentDashboard({
                                                 animate={{ opacity: 0.5 }}
                                                 exit={{ opacity: 0 }}
                                                 onClick={() =>
-                                                    setShowMobileQuestionSheet(false)
+                                                    setShowMobileQuestionSheet(
+                                                        false,
+                                                    )
                                                 }
                                                 className="fixed inset-0 bg-black z-50 xl:hidden"
                                             />
@@ -1519,9 +1529,12 @@ export default function StudentDashboard({
                                                             Bảng câu hỏi
                                                         </h3>
                                                         <p className="text-[9px] text-gray-500 mt-0.5 flex items-center flex-wrap gap-1">
-                                                            <span className="inline-block w-2 h-2 bg-emerald-200 rounded-xs"></span> Đúng
-                                                            <span className="inline-block w-2 h-2 bg-amber-200 rounded-xs ml-1"></span> Một phần
-                                                            <span className="inline-block w-2 h-2 bg-rose-200 rounded-xs ml-1"></span> Sai
+                                                            <span className="inline-block w-2 h-2 bg-emerald-200 rounded-xs"></span>{" "}
+                                                            Đúng
+                                                            <span className="inline-block w-2 h-2 bg-amber-200 rounded-xs ml-1"></span>{" "}
+                                                            Một phần
+                                                            <span className="inline-block w-2 h-2 bg-rose-200 rounded-xs ml-1"></span>{" "}
+                                                            Sai
                                                         </p>
                                                     </div>
                                                     <button
@@ -1584,7 +1597,9 @@ export default function StudentDashboard({
                                                                     className="space-y-2"
                                                                 >
                                                                     <h4 className="text-[10px] font-bold text-brand-600 bg-brand-50/50 px-2 py-1 rounded border border-brand-100/40 dark:bg-brand-950/20 dark:border-brand-900/30">
-                                                                        {secTitle}
+                                                                        {
+                                                                            secTitle
+                                                                        }
                                                                     </h4>
                                                                     <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-1">
                                                                         {items.map(
@@ -2088,7 +2103,7 @@ export default function StudentDashboard({
                                                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-550 dark:text-slate-400">
                                                     Tiến trình làm bài
                                                 </h3>
-                                                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                                                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                                                     Đã làm: {attemptsCount}/5
                                                     lượt
                                                 </span>
@@ -2157,7 +2172,7 @@ export default function StudentDashboard({
                                                                                     sub.id,
                                                                             )
                                                                         }
-                                                                        className="px-2.5 py-1 bg-slate-100 hover:bg-brand-500 hover:text-white dark:bg-slate-800 dark:hover:bg-brand-500 dark:hover:text-white border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                                                                        className="px-2.5 py-1 hover:underline dark:bg-slate-800 dark:hover:bg-brand-500 dark:hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
                                                                     >
                                                                         Xem lại
                                                                     </button>
@@ -2193,7 +2208,6 @@ export default function StudentDashboard({
 
                                             {attemptsCount > 0 && (
                                                 <div className="flex items-center gap-1.5 justify-center py-1.5 text-emerald-700 rounded-lg ">
-                                                    <Award className="w-4 h-4 text-emerald-600" />
                                                     <span className="text-[11px] font-bold">
                                                         Điểm số cao nhất của
                                                         bạn: {maxScore} điểm
@@ -2213,7 +2227,7 @@ export default function StudentDashboard({
                                                         navigateReplace("/");
                                                     else onNavigate("/");
                                                 }}
-                                                className="flex-1 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-655 dark:text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
+                                                className="flex-1 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-655 dark:text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-3xs cursor-pointer transition-colors"
                                             >
                                                 <ChevronLeft className="w-4 h-4" />
                                                 <span>Quay lại</span>

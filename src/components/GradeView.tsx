@@ -208,8 +208,8 @@ export default function GradeView({
         <div className="bg-transparent text-text-primary animate-in fade-in duration-200">
             <div className="max-w-6xl mx-auto space-y-5 sm:space-y-8">
                 {/* Banner Header */}
-                <div className="hidden sm:block pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800 space-y-1 sm:space-y-2 text-left">
-                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                <div className="pb-3 sm:pb-6 border-b border-slate-100 dark:border-slate-800 space-y-1 sm:space-y-2 text-left">
+                    <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         Kho Đề Thi Ôn Luyện Lớp {grade}
                     </h1>
                     <p className="text-[11px] sm:text-xs text-slate-400 max-w-xl">
@@ -305,7 +305,7 @@ export default function GradeView({
                             <img
                                 src="/icons/ghost.png"
                                 alt=""
-                                className="w-7 h-7 object-contain opacity-40 dark:opacity-60 select-none"
+                                className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                             />
                             <p className="text-xs font-medium inline-flex items-center justify-center gap-1.5 flex-wrap">
                                 <span>

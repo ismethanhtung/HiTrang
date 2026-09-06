@@ -305,17 +305,13 @@ export default function LeaderboardView({
     return (
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 pb-32 animate-in fade-in duration-300 overflow-x-hidden">
             {/* 1. Header Vinh Danh */}
-            <div
-                className={`flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800 ${
-                    user.role !== "admin" ? "hidden sm:flex" : ""
-                }`}
-            >
-                <div className="hidden sm:flex items-start gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6 pb-3 sm:pb-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-start gap-4 text-left">
                     <div className="space-y-0.5">
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                        <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
                             Ghi lại nỗ lực và sự chăm chỉ của các học sinh.
                         </p>
                     </div>
@@ -836,7 +832,7 @@ export default function LeaderboardView({
                             <img
                                 src="/icons/ghost.png"
                                 alt=""
-                                className="w-8 h-8 object-contain opacity-40 dark:opacity-60 select-none"
+                                className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                             />
                             <span>
                                 Chưa tìm thấy thông tin xếp hạng học sinh.

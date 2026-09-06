@@ -103,8 +103,8 @@ export default function ScheduleView({
         <div className="w-full max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6 sm:space-y-12 pb-20 sm:pb-32 bg-transparent">
             {/* HEADER SECTION - Left-aligned, sentence case */}
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 sm:gap-6 pb-2 sm:pb-6 border-b border-slate-200 dark:border-slate-800">
-                <div className="text-left hidden sm:block">
-                    <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                <div className="text-left">
+                    <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
                         {title}
                     </h1>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
