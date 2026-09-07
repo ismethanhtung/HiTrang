@@ -179,8 +179,10 @@ export async function signOutUser(): Promise<void> {
 export async function getQuizzes(): Promise<Quiz[]> {
   try {
     return await apiRequest<Quiz[]>('/quizzes');
-  } catch (err) {
-    console.error('Lỗi khi tải danh sách đề thi:', err);
+  } catch (err: any) {
+    if (err?.status !== 401) {
+      console.warn('Lỗi khi tải danh sách đề thi:', err?.message || err);
+    }
     return [];
   }
 }
@@ -360,11 +362,25 @@ export async function getReviewQuestions(submissionId: string): Promise<Question
 }
 
 export async function getQuizLeaderboard(quizId: string): Promise<QuizLeaderboardEntry[]> {
-  return await apiRequest<QuizLeaderboardEntry[]>(`/leaderboard/quiz?p_quiz_id=${quizId}`);
+  try {
+    return await apiRequest<QuizLeaderboardEntry[]>(`/leaderboard/quiz?p_quiz_id=${quizId}`);
+  } catch (err: any) {
+    if (err?.status !== 401) {
+      console.warn('Lỗi khi tải BXH đề thi:', err?.message || err);
+    }
+    return [];
+  }
 }
 
 export async function getOverallLeaderboard(grade: string): Promise<OverallLeaderboardEntry[]> {
-  return await apiRequest<OverallLeaderboardEntry[]>(`/leaderboard/overall?p_grade=${grade}`);
+  try {
+    return await apiRequest<OverallLeaderboardEntry[]>(`/leaderboard/overall?p_grade=${grade}`);
+  } catch (err: any) {
+    if (err?.status !== 401) {
+      console.warn('Lỗi khi tải BXH tổng hợp:', err?.message || err);
+    }
+    return [];
+  }
 }
 
 export async function refreshOverallLeaderboard(): Promise<void> {
@@ -376,8 +392,10 @@ export async function refreshOverallLeaderboard(): Promise<void> {
 export async function getRecentSubmissionsByGrade(grade: string): Promise<any[]> {
   try {
     return await apiRequest<any[]>(`/leaderboard/recent?p_grade=${grade}`);
-  } catch (err) {
-    console.error('Lỗi khi tải bảng hoạt động gần đây:', err);
+  } catch (err: any) {
+    if (err?.status !== 401) {
+      console.warn('Lỗi khi tải bảng hoạt động gần đây:', err?.message || err);
+    }
     return [];
   }
 }

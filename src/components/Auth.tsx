@@ -37,6 +37,7 @@ import {
 interface AuthProps {
     onLogin: (user: UserType) => void;
     initialRole?: "admin" | "student";
+    initialMode?: "login" | "register";
     initialUsername?: string;
     onOpenContactModal?: () => void;
 }
@@ -44,13 +45,14 @@ interface AuthProps {
 export default function Auth({
     onLogin,
     initialRole = "student",
+    initialMode = "login",
     initialUsername = "",
     onOpenContactModal,
 }: AuthProps) {
     const [authMode, setAuthMode] = useState<
         "login" | "register" | "forgot" | "2fa_login"
-    >("login");
-    const [role, setRole] = useState<"admin" | "student">("student");
+    >(initialMode);
+    const [role, setRole] = useState<"admin" | "student">(initialRole);
 
     // Fields
     const [name, setName] = useState("");
@@ -99,6 +101,12 @@ export default function Auth({
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (initialMode) {
+            setAuthMode(initialMode);
+        }
+    }, [initialMode]);
 
     React.useEffect(() => {
         if (initialUsername) {
@@ -409,7 +417,7 @@ export default function Auth({
     return (
         <div
             id="auth-container"
-            className="w-full bg-white p-6 sm:p-8 font-sans"
+            className="w-full bg-white dark:bg-card-dark p-5 sm:p-8 font-sans transition-colors duration-200"
         >
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -419,10 +427,10 @@ export default function Auth({
             >
                 {/* Brand Header */}
                 <div className="text-center mb-6">
-                    <h1 className="font-calligraphy text-4xl text-brand-500 select-none tracking-wide drop-shadow-xs">
+                    <h1 className="font-calligraphy text-4xl text-brand-500 dark:text-brand-400 select-none tracking-wide drop-shadow-xs">
                         HiTrang
                     </h1>
-                    <p className="text-xs text-slate-400 mt-2 italic font-medium flex items-center justify-center gap-1.5">
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-2 italic font-medium flex items-center justify-center gap-1.5">
                         <img
                             src="/icons/sakura.png"
                             alt=""
@@ -437,14 +445,14 @@ export default function Auth({
                 {/* ---------------------------------------------------- */}
                 {authMode === "2fa_login" && (
                     <form onSubmit={handleLoginSubmit} className="space-y-4">
-                        <div className="p-4 bg-brand-50/70 border border-brand-100 rounded-2xl text-center space-y-2">
-                            <div className="w-10 h-10 text-brand-600 rounded-xl flex items-center justify-center mx-auto">
+                        <div className="p-4 bg-brand-50/70 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900/40 rounded-2xl text-center space-y-2">
+                            <div className="w-10 h-10 text-brand-600 dark:text-brand-400 rounded-xl flex items-center justify-center mx-auto">
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
-                            <h3 className="text-sm font-bold text-slate-800">
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                 Xác Thực 2 Bước (2FA)
                             </h3>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                                 Nhập mã 6 chữ số từ ứng dụng{" "}
                                 <b>Google Authenticator</b> trên điện thoại của
                                 bạn.
@@ -452,7 +460,7 @@ export default function Auth({
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                 Mã xác thực 6 số
                             </label>
                             <input
@@ -466,12 +474,12 @@ export default function Auth({
                                         e.target.value.replace(/\D/g, ""),
                                     )
                                 }
-                                className="w-full py-3 px-4 text-center font-mono text-xl tracking-[0.4em] font-bold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white transition-all text-slate-800"
+                                className="w-full py-3 px-4 text-center font-mono text-xl tracking-[0.4em] font-bold bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 transition-all text-slate-800 dark:text-slate-100"
                             />
                         </div>
 
                         {error && (
-                            <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                            <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                 {error}
                             </div>
                         )}
@@ -503,7 +511,7 @@ export default function Auth({
                                 setLoginTOTPCode("");
                                 setError("");
                             }}
-                            className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                            className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-1 cursor-pointer"
                         >
                             <ArrowLeft className="w-3.5 h-3.5" />
                             <span>Quay lại nhập mật khẩu</span>
@@ -523,22 +531,22 @@ export default function Auth({
                                 className="space-y-4"
                             >
                                 <div className="text-center space-y-1 pb-1">
-                                    <h3 className="text-sm font-bold text-slate-800">
+                                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                         Khôi Phục Mật Khẩu
                                     </h3>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">
                                         Nhập tên đăng nhập để kiểm tra phương
                                         thức khôi phục.
                                     </p>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-medium text-gray-600">
+                                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                         Tên đăng nhập (username)
                                     </label>
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                            <User className="w-4 h-4" />
+                                    <div className="relative group">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                            <User className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                         </span>
                                         <input
                                             type="text"
@@ -547,13 +555,13 @@ export default function Auth({
                                             onChange={(e) =>
                                                 setUsername(e.target.value)
                                             }
-                                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs"
                                         />
                                     </div>
                                 </div>
 
                                 {error && (
-                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                    <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                         {error}
                                     </div>
                                 )}
@@ -584,7 +592,7 @@ export default function Auth({
                                         setAuthMode("login");
                                         setError("");
                                     }}
-                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                     <ArrowLeft className="w-3.5 h-3.5" />
                                     <span>Quay lại đăng nhập</span>
@@ -596,7 +604,7 @@ export default function Auth({
                         {forgotStep === "choose_method" && (
                             <div className="space-y-4">
                                 <div className="text-center space-y-1 py-1">
-                                    <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                                         Chọn phương thức xác thực
                                     </h3>
                                     <p className="text-[11px] text-slate-400">
@@ -605,16 +613,16 @@ export default function Auth({
                                     </p>
                                 </div>
 
-                                <div className="divide-y divide-slate-100 border-t border-b border-slate-100">
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800 border-t border-b border-slate-100 dark:border-slate-800">
                                     {/* Option 1: Email OTP */}
                                     <button
                                         type="button"
                                         onClick={handleSelectEmailMethod}
                                         disabled={loading}
-                                        className="w-full py-3 px-2 hover:bg-slate-50/80 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
+                                        className="w-full py-3 px-2 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
                                     >
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
+                                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                                                 Xác thực qua Email
                                             </p>
                                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -635,10 +643,10 @@ export default function Auth({
                                             setForgotStep("has_2fa");
                                         }}
                                         disabled={loading}
-                                        className="w-full py-3 px-2 hover:bg-slate-50/80 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
+                                        className="w-full py-3 px-2 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 flex items-center gap-3 transition-colors text-left group cursor-pointer disabled:opacity-50"
                                     >
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors">
+                                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                                                 Google Authenticator
                                             </p>
                                             <p className="text-[11px] text-slate-400 truncate mt-0.5">
@@ -651,7 +659,7 @@ export default function Auth({
                                 </div>
 
                                 {error && (
-                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                    <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                         {error}
                                     </div>
                                 )}
@@ -663,7 +671,7 @@ export default function Auth({
                                         setError("");
                                         setSuccess("");
                                     }}
-                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                     <ArrowLeft className="w-3.5 h-3.5" />
                                     <span>Chọn tài khoản khác</span>
@@ -679,7 +687,7 @@ export default function Auth({
                             >
                                 <div className="space-y-1">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-bold text-slate-700">
+                                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                             Mã OTP (6 chữ số)
                                         </label>
                                         <button
@@ -688,7 +696,7 @@ export default function Auth({
                                             disabled={
                                                 forgotResendTimer > 0 || loading
                                             }
-                                            className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
+                                            className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
                                         >
                                             <RefreshCw
                                                 className={`w-3 h-3 ${
@@ -716,7 +724,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-200/80 focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Kiểm tra hộp thư đến (hoặc thư rác/Spam)
@@ -725,7 +733,7 @@ export default function Auth({
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-700">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                         Mật khẩu mới
                                     </label>
                                     <div className="relative">
@@ -742,7 +750,7 @@ export default function Auth({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-base sm:text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900"
                                         />
                                         <button
                                             type="button"
@@ -751,19 +759,19 @@ export default function Auth({
                                                     !showForgotNewPassword,
                                                 )
                                             }
-                                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                            className="absolute right-3 top-2.5 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100 cursor-pointer transition-colors"
                                         >
                                             {showForgotNewPassword ? (
-                                                <EyeOff className="w-4 h-4" />
+                                                <EyeOff className="w-4.5 h-4.5" strokeWidth={2.2} />
                                             ) : (
-                                                <Eye className="w-4 h-4" />
+                                                <Eye className="w-4.5 h-4.5" strokeWidth={2.2} />
                                             )}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-700">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                         Xác nhận mật khẩu mới
                                     </label>
                                     <input
@@ -779,18 +787,18 @@ export default function Auth({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                        className="w-full px-3 py-2.5 bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-base sm:text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900"
                                     />
                                 </div>
 
                                 {error && (
-                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                    <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                         {error}
                                     </div>
                                 )}
 
                                 {success && (
-                                    <div className="p-2 text-xs text-emerald-600  font-medium">
+                                    <div className="p-2.5 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl font-medium">
                                         {success}
                                     </div>
                                 )}
@@ -826,7 +834,7 @@ export default function Auth({
                                             setSuccess("");
                                             setForgotStep("has_2fa");
                                         }}
-                                        className="w-full py-1 text-xs text-brand-600 hover:underline font-medium text-center cursor-pointer"
+                                        className="w-full py-1 text-xs text-brand-600 dark:text-brand-400 hover:underline font-medium text-center cursor-pointer"
                                     >
                                         Dùng mã Google Authenticator thay thế
                                     </button>
@@ -843,7 +851,7 @@ export default function Auth({
                                         setError("");
                                         setSuccess("");
                                     }}
-                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                     <ArrowLeft className="w-3.5 h-3.5" />
                                     <span>Quay lại</span>
@@ -858,7 +866,7 @@ export default function Auth({
                                 className="space-y-4"
                             >
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-700">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                         Mã Google Authenticator (6 số)
                                     </label>
                                     <input
@@ -875,7 +883,7 @@ export default function Auth({
                                                 ),
                                             )
                                         }
-                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 border border-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white text-slate-800"
+                                        className="w-full py-2 px-3 text-center font-mono text-lg tracking-[0.3em] font-bold bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl"
                                     />
                                     <p className="text-[10px] text-slate-400">
                                         Mở app Authenticator trên điện thoại để
@@ -884,7 +892,7 @@ export default function Auth({
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-700">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                         Mật khẩu mới
                                     </label>
                                     <div className="relative">
@@ -901,7 +909,7 @@ export default function Auth({
                                                     e.target.value,
                                                 )
                                             }
-                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                            className="w-full pl-3 pr-10 py-2.5 bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-base sm:text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900"
                                         />
                                         <button
                                             type="button"
@@ -910,19 +918,19 @@ export default function Auth({
                                                     !showForgotNewPassword,
                                                 )
                                             }
-                                            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                            className="absolute right-3 top-2.5 text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-slate-100 cursor-pointer transition-colors"
                                         >
                                             {showForgotNewPassword ? (
-                                                <EyeOff className="w-4 h-4" />
+                                                <EyeOff className="w-4.5 h-4.5" strokeWidth={2.2} />
                                             ) : (
-                                                <Eye className="w-4 h-4" />
+                                                <Eye className="w-4.5 h-4.5" strokeWidth={2.2} />
                                             )}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-bold text-slate-700">
+                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                         Xác nhận mật khẩu mới
                                     </label>
                                     <input
@@ -938,18 +946,18 @@ export default function Auth({
                                                 e.target.value,
                                             )
                                         }
-                                        className="w-full px-3 py-2.5 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-brand-400 focus:bg-white"
+                                        className="w-full px-3 py-2.5 bg-slate-50/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl text-base sm:text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900"
                                     />
                                 </div>
 
                                 {error && (
-                                    <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                    <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                         {error}
                                     </div>
                                 )}
 
                                 {success && (
-                                    <div className="p-2 text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-xl font-medium">
+                                    <div className="p-2.5 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 rounded-xl font-medium">
                                         {success}
                                     </div>
                                 )}
@@ -988,7 +996,7 @@ export default function Auth({
                                         setError("");
                                         setSuccess("");
                                     }}
-                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center justify-center gap-1 cursor-pointer"
+                                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                     <ArrowLeft className="w-3.5 h-3.5" />
                                     <span>Quay lại</span>
@@ -999,31 +1007,31 @@ export default function Auth({
                         {/* Step 1.5: Account exists but NO Email AND NO 2FA -> Contact Teacher */}
                         {forgotStep === "no_method" && (
                             <div className="space-y-4">
-                                <div className="p-4 bg-amber-50/80 border border-amber-200/60 rounded-2xl space-y-3">
-                                    <div className="flex items-center gap-2 text-amber-700 font-bold text-xs">
-                                        <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                                <div className="p-4 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl space-y-3">
+                                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold text-xs">
+                                        <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
                                         <span>
                                             Chưa thiết lập phương thức khôi phục
                                         </span>
                                     </div>
-                                    <p className="text-xs text-amber-800 leading-relaxed">
+                                    <p className="text-xs text-amber-800 dark:text-amber-200/90 leading-relaxed">
                                         Tài khoản{" "}
                                         <b>@{forgotUserData?.username}</b> chưa
                                         liên kết Email hoặc Google Authenticator
                                         nên không thể tự đặt lại mật khẩu trực
                                         tuyến.
                                     </p>
-                                    <div className="p-3 bg-white/80 rounded-xl border border-amber-200/50 text-xs text-slate-700 space-y-1.5">
-                                        <p className="font-bold text-slate-800 flex items-center gap-1">
-                                            <HelpCircle className="w-3.5 h-3.5 text-brand-600" />
+                                    <div className="p-3 bg-white/80 dark:bg-slate-900/80 rounded-xl border border-amber-200/50 dark:border-amber-900/30 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
+                                        <p className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                                            <HelpCircle className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                                             Cách giải quyết:
                                         </p>
-                                        <p className="text-slate-600 leading-relaxed">
+                                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                                             Bạn vui lòng{" "}
                                             <button
                                                 type="button"
                                                 onClick={handleOpenContact}
-                                                className="font-bold text-brand-600 hover:text-brand-700 underline underline-offset-2 cursor-pointer transition-colors inline"
+                                                className="font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 underline underline-offset-2 cursor-pointer transition-colors inline"
                                             >
                                                 nhắn tin trực tiếp
                                             </button>{" "}
@@ -1051,14 +1059,14 @@ export default function Auth({
                         {/* Step 3: Success */}
                         {forgotStep === "success" && (
                             <div className="text-center py-4 space-y-4">
-                                <div className="w-12 h-12 text-emerald-600 flex items-center justify-center mx-auto">
+                                <div className="w-12 h-12 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                                     <CheckCircle2 className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-bold text-slate-800">
+                                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-100">
                                         Đổi Mật Khẩu Thành Công!
                                     </h3>
-                                    <p className="text-xs text-slate-500 mt-1">
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                         Tài khoản{" "}
                                         <b>@{forgotUserData?.username}</b> đã
                                         được cập nhật mật khẩu mới.
@@ -1120,12 +1128,12 @@ export default function Auth({
                                         }}
                                         className="space-y-1.5 overflow-hidden"
                                     >
-                                        <label className="text-xs font-medium text-gray-600">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             Họ và tên
                                         </label>
-                                        <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                                <UserCheck className="w-4 h-4" />
+                                        <div className="relative group">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                                <UserCheck className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                             </span>
                                             <input
                                                 type="text"
@@ -1135,7 +1143,7 @@ export default function Auth({
                                                 onChange={(e) =>
                                                     setName(e.target.value)
                                                 }
-                                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs"
                                             />
                                         </div>
                                     </motion.div>
@@ -1143,12 +1151,12 @@ export default function Auth({
                             </AnimatePresence>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-medium text-gray-600">
+                                <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                     Tên đăng nhập (username)
                                 </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                        <User className="w-4 h-4" />
+                                <div className="relative group">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                        <User className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                     </span>
                                     <input
                                         type="text"
@@ -1162,14 +1170,14 @@ export default function Auth({
                                         onChange={(e) =>
                                             setUsername(e.target.value)
                                         }
-                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
-                                    <label className="text-xs font-medium text-gray-600">
+                                    <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                         Mật khẩu
                                     </label>
                                     {authMode === "login" && (
@@ -1181,15 +1189,15 @@ export default function Auth({
                                                 setError("");
                                                 setSuccess("");
                                             }}
-                                            className="text-[11px] text-brand-600 hover:text-brand-700 font-semibold cursor-pointer transition-colors"
+                                            className="text-[11px] text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-semibold cursor-pointer transition-colors"
                                         >
                                             Quên mật khẩu?
                                         </button>
                                     )}
                                 </div>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                        <Lock className="w-4 h-4" />
+                                <div className="relative group">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                        <Lock className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                     </span>
                                     <input
                                         type={
@@ -1201,7 +1209,7 @@ export default function Auth({
                                         onChange={(e) =>
                                             setPassword(e.target.value)
                                         }
-                                        className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                        className="w-full pl-10 pr-11 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs"
                                     />
                                     <button
                                         type="button"
@@ -1209,12 +1217,12 @@ export default function Auth({
                                         onClick={() =>
                                             setShowPassword(!showPassword)
                                         }
-                                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                                        className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer transition-colors"
                                     >
                                         {showPassword ? (
-                                            <EyeOff className="w-4 h-4" />
+                                            <EyeOff className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                         ) : (
-                                            <Eye className="w-4 h-4" />
+                                            <Eye className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                         )}
                                     </button>
                                 </div>
@@ -1245,12 +1253,12 @@ export default function Auth({
                                         className="space-y-4 overflow-hidden"
                                     >
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-gray-600">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Xác nhận mật khẩu
                                             </label>
-                                            <div className="relative">
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                                    <Lock className="w-4 h-4" />
+                                            <div className="relative group">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                                    <Lock className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                                 </span>
                                                 <input
                                                     type={
@@ -1266,18 +1274,18 @@ export default function Auth({
                                                             e.target.value,
                                                         )
                                                     }
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors placeholder:text-gray-400"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-2xs"
                                                 />
                                             </div>
                                         </div>
 
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-gray-600">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Khối lớp học
                                             </label>
-                                            <div className="relative">
-                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400 pointer-events-none">
-                                                    <GraduationCap className="w-4 h-4" />
+                                            <div className="relative group">
+                                                <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 dark:text-slate-500 group-focus-within:text-brand-600 dark:group-focus-within:text-brand-400 transition-colors pointer-events-none">
+                                                    <GraduationCap className="w-[18px] h-[18px]" strokeWidth={1.8} />
                                                 </span>
                                                 <select
                                                     id="reg-grade-select"
@@ -1285,7 +1293,7 @@ export default function Auth({
                                                     onChange={(e) =>
                                                         setGrade(e.target.value)
                                                     }
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300/25 transition-colors text-gray-700 cursor-pointer"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl text-base sm:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all cursor-pointer shadow-2xs"
                                                 >
                                                     <option value="10">
                                                         Khối 10
@@ -1310,13 +1318,13 @@ export default function Auth({
                             </AnimatePresence>
 
                             {error && (
-                                <div className="p-2 text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-medium">
+                                <div className="p-2.5 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl font-medium">
                                     {error}
                                 </div>
                             )}
 
                             {success && (
-                                <div className="p-2 text-xs text-brand-600 bg-brand-50 border border-brand-100 rounded-xl font-medium animate-pulse">
+                                <div className="p-2.5 text-xs text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40 rounded-xl font-medium animate-pulse">
                                     {success}
                                 </div>
                             )}
@@ -1325,10 +1333,10 @@ export default function Auth({
                                 type="submit"
                                 id="btn-submit-auth"
                                 disabled={loading}
-                                className={`w-full py-3 px-4 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-sm mt-2 flex items-center justify-center gap-2 cursor-pointer ${
+                                className={`w-full py-3 px-4 text-white rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm mt-2 flex items-center justify-center gap-2 cursor-pointer ${
                                     loading
-                                        ? "bg-brand-200 cursor-not-allowed text-slate-500"
-                                        : "bg-gradient-to-r from-brand-300 to-brand-400 text-white font-medium hover:opacity-95 shadow-xs transition-all active:scale-[0.98]"
+                                        ? "bg-brand-200 dark:bg-slate-800 cursor-not-allowed text-slate-500"
+                                        : "bg-gradient-to-r from-brand-400 to-brand-500 hover:from-brand-500 hover:to-brand-600 text-white shadow-xs transition-all active:scale-[0.98]"
                                 }`}
                             >
                                 {loading ? (
@@ -1351,18 +1359,18 @@ export default function Auth({
 
                         {/* Divider & Google OAuth */}
                         <div className="my-4 flex items-center justify-between">
-                            <span className="w-1/5 border-b border-gray-100"></span>
-                            <span className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold">
+                            <span className="w-1/5 border-b border-slate-100 dark:border-slate-800"></span>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">
                                 Hoặc tiếp tục với
                             </span>
-                            <span className="w-1/5 border-b border-gray-100"></span>
+                            <span className="w-1/5 border-b border-slate-100 dark:border-slate-800"></span>
                         </div>
 
                         <button
                             type="button"
                             onClick={handleGoogleSignIn}
                             disabled={loading}
-                            className="w-full py-3 px-4 bg-white border border-gray-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full py-3 px-4 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs sm:text-xs font-semibold transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-2.5 shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <svg className="w-4 h-4" viewBox="0 0 24 24">
                                 <path
@@ -1385,8 +1393,8 @@ export default function Auth({
                             <span>Đăng nhập bằng Google</span>
                         </button>
 
-                        <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-                            <p className="text-xs text-gray-500">
+                        <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {authMode === "register"
                                     ? "Đã có tài khoản?"
                                     : "Chưa có tài khoản?"}
@@ -1402,7 +1410,7 @@ export default function Auth({
                                         setError("");
                                         setSuccess("");
                                     }}
-                                    className="ml-1.5 text-brand-600 font-medium underline focus:outline-none cursor-pointer"
+                                    className="ml-1.5 text-brand-600 dark:text-brand-400 font-semibold underline focus:outline-none cursor-pointer"
                                 >
                                     {authMode === "register"
                                         ? "Đăng nhập ngay"

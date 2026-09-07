@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.97"
+const AppVersion = "1.0.115"
 
 func main() {
 	serverStartTime := time.Now()
@@ -191,6 +191,12 @@ func main() {
 			})
 		})
 
+		// Public Quizzes & Leaderboards (with Optional Auth for role-based answers & user context)
+		api.GET("/quizzes", OptionalAuthMiddleware(db), HandleGetQuizzes(db))
+		api.GET("/quizzes/:id", OptionalAuthMiddleware(db), HandleGetQuiz(db))
+		api.GET("/leaderboard/quiz", OptionalAuthMiddleware(db), HandleGetQuizLeaderboard(db))
+		api.GET("/leaderboard/overall", OptionalAuthMiddleware(db), HandleGetOverallLeaderboard(db))
+
 		// Protected APIs
 		protected := api.Group("")
 		protected.Use(AuthMiddleware(db))
@@ -238,9 +244,7 @@ func main() {
 			protected.PUT("/admin/users/:id/grade", HandleUpdateUserGrade(db))
 			protected.POST("/admin/users/:id/reset-token", HandleGenerateResetToken(db))
 
-			// Quizzes
-			protected.GET("/quizzes", HandleGetQuizzes(db))
-			protected.GET("/quizzes/:id", HandleGetQuiz(db))
+			// Quizzes (Management)
 			protected.POST("/quizzes", HandleCreateQuiz(db))
 			protected.PUT("/quizzes/:id", HandleUpdateQuiz(db))
 			protected.DELETE("/quizzes/:id", HandleDeleteQuiz(db))
@@ -258,9 +262,7 @@ func main() {
 			// Submissions
 			protected.GET("/submissions", HandleGetSubmissions(db))
 
-			// Leaderboards
-			protected.GET("/leaderboard/quiz", HandleGetQuizLeaderboard(db))
-			protected.GET("/leaderboard/overall", HandleGetOverallLeaderboard(db))
+			// Leaderboards (Management)
 			protected.POST("/leaderboard/refresh", HandleRefreshOverallLeaderboard(db))
 			// Bug Reports
 			protected.POST("/bugs", HandleCreateBugReport(db))

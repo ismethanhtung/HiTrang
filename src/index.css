@@ -93,7 +93,6 @@ body {
 
 .bg-slate-50\/50, .bg-slate-50\/30 {
   background-color: var(--bg-surface);
-  opacity: 0.85;
 }
 
 /* Text colors */
@@ -122,16 +121,11 @@ body {
   border-color: var(--border-primary);
 }
 
-/* Form controls */
-input, select, textarea {
-  background-color: var(--bg-surface) !important;
-  border-color: var(--border-primary) !important;
-  color: var(--text-primary) !important;
-}
-
-input:focus, select:focus, textarea:focus {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-secondary) !important;
+/* Form controls defaults */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+select,
+textarea {
+  color: var(--text-primary);
 }
 
 /* Hover states */

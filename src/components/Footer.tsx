@@ -159,8 +159,8 @@ export default function Footer({
                         </div>
                     </div>
 
-                    {/* Column 2: Classes & Exam Sections */}
-                    <div className="lg:col-span-3 space-y-4">
+                    {/* Column 2: Classes & Exam Sections (Desktop only, hidden on mobile) */}
+                    <div className="hidden md:block lg:col-span-3 space-y-4">
                         <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">
                             Chương trình học
                         </h4>
@@ -248,8 +248,8 @@ export default function Footer({
                         </div>
                     </div>
 
-                    {/* Combined Column 3 & 4 for Mobile (2 columns in 1 row) & PC (lg:contents unboxed to 12-col grid) */}
-                    <div className="col-span-1 sm:col-span-2 lg:contents grid grid-cols-2 gap-4 sm:gap-6">
+                    {/* Combined Column 3 & 4 (Desktop only, hidden on mobile) */}
+                    <div className="hidden md:grid col-span-1 sm:col-span-2 lg:contents grid-cols-2 gap-4 sm:gap-6">
                         {/* Column 3: Links & Support */}
                         <div className="space-y-4 lg:col-span-2 lg:pl-8">
                             <h4 className="text-[10px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest">

@@ -52,9 +52,11 @@ const TEMPLATES: NotificationTemplate[] = [
         id: "new_quiz",
         name: "Đề thi mới",
         icon: BookOpen,
-        badgeColor: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
-        title: "Đề thi mới từ Cô Trang 📝",
-        message: "Cô Trang vừa đăng đề thi mới. Các em vào làm bài để rèn luyện kiến thức và leo bảng xếp hạng ngay nhé!",
+        badgeColor:
+            "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800",
+        title: "Đề thi mới từ Cô Trang",
+        message:
+            "Cô Trang vừa đăng đề thi mới. Các em vào làm bài để rèn luyện kiến thức và leo bảng xếp hạng ngay nhé!",
         type: "new_quiz",
         suggestedLink: "/student-quizzes",
         targetGrade: "all",
@@ -64,9 +66,11 @@ const TEMPLATES: NotificationTemplate[] = [
         id: "reminder",
         name: "Nhắc nhở làm bài",
         icon: Clock,
-        badgeColor: "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
+        badgeColor:
+            "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800",
         title: "Nhắc nhở hoàn thành bài tập ⏰",
-        message: "Các em nhớ kiểm tra danh sách bài thi và hoàn thành các đề ôn tập còn lại trước 22:00 hôm nay nhé!",
+        message:
+            "Các em nhớ kiểm tra danh sách bài thi và hoàn thành các đề ôn tập còn lại trước 22:00 hôm nay nhé!",
         type: "reminder",
         suggestedLink: "/student-quizzes",
         targetGrade: "all",
@@ -76,9 +80,11 @@ const TEMPLATES: NotificationTemplate[] = [
         id: "schedule",
         name: "Lịch học & Thông báo",
         icon: Megaphone,
-        badgeColor: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
+        badgeColor:
+            "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800",
         title: "Thông báo lịch học từ Cô Trang 📢",
-        message: "Cô Trang xin thông báo lịch học tuần này có một số cập nhật mới. Các em chú ý theo dõi lịch chi tiết nhé!",
+        message:
+            "Cô Trang xin thông báo lịch học tuần này có một số cập nhật mới. Các em chú ý theo dõi lịch chi tiết nhé!",
         type: "teacher_message",
         suggestedLink: "/schedule",
         targetGrade: "all",
@@ -88,9 +94,11 @@ const TEMPLATES: NotificationTemplate[] = [
         id: "leaderboard",
         name: "Vinh danh BXH",
         icon: Trophy,
-        badgeColor: "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
+        badgeColor:
+            "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800",
         title: "Vinh danh Top Bảng Xếp Hạng tuần này 🏆",
-        message: "Chúc mừng các học sinh xuất sắc nhất tuần qua đã bứt phá ngoạn mục trên BXH! Hãy tiếp tục duy trì phong độ nhé!",
+        message:
+            "Chúc mừng các học sinh xuất sắc nhất tuần qua đã bứt phá ngoạn mục trên BXH! Hãy tiếp tục duy trì phong độ nhé!",
         type: "teacher_message",
         suggestedLink: "/leaderboard",
         targetGrade: "all",
@@ -100,9 +108,11 @@ const TEMPLATES: NotificationTemplate[] = [
         id: "vip_welcome",
         name: "Đặc quyền VIP",
         icon: Crown,
-        badgeColor: "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
+        badgeColor:
+            "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800",
         title: "Chào mừng bạn đến với gói đặc quyền VIP! 👑",
-        message: "Tài khoản của bạn đã được mở khóa trọn bộ tài liệu độc quyền và bộ đề thi chuyên sâu. Chúc bạn học thật tốt!",
+        message:
+            "Tài khoản của bạn đã được mở khóa trọn bộ tài liệu độc quyền và bộ đề thi chuyên sâu. Chúc bạn học thật tốt!",
         type: "system",
         suggestedLink: "/settings",
         targetGrade: "all",
@@ -115,12 +125,16 @@ export default function AdminNotificationsTab({
     quizzes,
 }: AdminNotificationsTabProps) {
     // Mode: "broadcast" (by group) or "direct" (single user)
-    const [targetMode, setTargetMode] = useState<"broadcast" | "direct">("broadcast");
+    const [targetMode, setTargetMode] = useState<"broadcast" | "direct">(
+        "broadcast",
+    );
 
     // Form inputs
     const [title, setTitle] = useState("");
     const [message, setMessage] = useState("");
-    const [notifType, setNotifType] = useState<"new_quiz" | "teacher_message" | "reminder" | "system">("teacher_message");
+    const [notifType, setNotifType] = useState<
+        "new_quiz" | "teacher_message" | "reminder" | "system"
+    >("teacher_message");
     const [targetGrade, setTargetGrade] = useState<string>("all");
     const [targetPlan, setTargetPlan] = useState<string>("all");
     const [selectedUserId, setSelectedUserId] = useState<string>("");
@@ -129,7 +143,9 @@ export default function AdminNotificationsTab({
     const [selectedQuizId, setSelectedQuizId] = useState<string>("");
 
     // Selected template
-    const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+    const [activeTemplateId, setActiveTemplateId] = useState<string | null>(
+        null,
+    );
 
     // Submission states
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -184,7 +200,7 @@ export default function AdminNotificationsTab({
             .filter(
                 (s) =>
                     s.name.toLowerCase().includes(q) ||
-                    s.username.toLowerCase().includes(q)
+                    s.username.toLowerCase().includes(q),
             )
             .slice(0, 15);
     }, [students, userSearchText]);
@@ -231,7 +247,7 @@ export default function AdminNotificationsTab({
             }
             if (!message) {
                 setMessage(
-                    `Cô Trang vừa đăng đề thi "${q?.title || "mới"}". Các em hãy vào hoàn thành bài sớm nhé!`
+                    `Cô Trang vừa đăng đề thi "${q?.title || "mới"}". Các em hãy vào hoàn thành bài sớm nhé!`,
                 );
             }
             setNotifType("new_quiz");
@@ -266,7 +282,8 @@ export default function AdminNotificationsTab({
                 title: title.trim(),
                 message: message.trim(),
                 type: notifType,
-                targetGrade: targetMode === "broadcast" ? targetGrade : undefined,
+                targetGrade:
+                    targetMode === "broadcast" ? targetGrade : undefined,
                 targetPlan: targetMode === "broadcast" ? targetPlan : undefined,
                 userId: targetMode === "direct" ? selectedUserId : undefined,
                 link: link.trim() || undefined,
@@ -278,13 +295,15 @@ export default function AdminNotificationsTab({
             setSuccessMessage(
                 targetMode === "direct"
                     ? `Đã gửi thông báo thành công đến ${selectedStudent?.name || "học sinh"}!`
-                    : `Đã phát thông báo thành công đến ${estimatedReach} học sinh!`
+                    : `Đã phát thông báo thành công đến ${estimatedReach} học sinh!`,
             );
             handleResetForm();
             await fetchHistory();
         } catch (err: any) {
             console.error("Lỗi khi gửi thông báo:", err);
-            setErrorMessage(err.message || "Gửi thông báo thất bại, vui lòng thử lại.");
+            setErrorMessage(
+                err.message || "Gửi thông báo thất bại, vui lòng thử lại.",
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -292,7 +311,11 @@ export default function AdminNotificationsTab({
 
     // Delete Notification
     const handleDelete = async (id: string) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa/thu hồi thông báo này không?")) {
+        if (
+            !window.confirm(
+                "Bạn có chắc chắn muốn xóa/thu hồi thông báo này không?",
+            )
+        ) {
             return;
         }
         setDeletingId(id);
@@ -300,7 +323,9 @@ export default function AdminNotificationsTab({
             await deleteAdminNotification(id);
             setNotifications((prev) => prev.filter((n) => n.id !== id));
         } catch (err: any) {
-            alert("Lỗi khi xóa: " + (err.message || "Thao tác không thành công"));
+            alert(
+                "Lỗi khi xóa: " + (err.message || "Thao tác không thành công"),
+            );
         } finally {
             setDeletingId(null);
         }
@@ -316,7 +341,8 @@ export default function AdminNotificationsTab({
                         Quản Lý & Phát Thông Báo
                     </h1>
                     <p className="text-xs text-text-tertiary mt-1">
-                        Soạn và gửi thông báo trực tiếp đến học sinh theo khối lớp, gói tài khoản hoặc gửi đích danh.
+                        Soạn và gửi thông báo trực tiếp đến học sinh theo khối
+                        lớp, gói tài khoản hoặc gửi đích danh.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -326,7 +352,9 @@ export default function AdminNotificationsTab({
                         disabled={loadingHistory}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border-primary bg-bg-card hover:bg-bg-surface text-text-secondary transition-colors cursor-pointer"
                     >
-                        <RefreshCw className={`w-3.5 h-3.5 ${loadingHistory ? "animate-spin" : ""}`} />
+                        <RefreshCw
+                            className={`w-3.5 h-3.5 ${loadingHistory ? "animate-spin" : ""}`}
+                        />
                         Làm mới
                     </button>
                 </div>
@@ -366,7 +394,9 @@ export default function AdminNotificationsTab({
                                 }`}
                             >
                                 <div className="flex items-center justify-between">
-                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${tpl.badgeColor}`}>
+                                    <div
+                                        className={`w-7 h-7 rounded-lg flex items-center justify-center border ${tpl.badgeColor}`}
+                                    >
                                         <Icon className="w-3.5 h-3.5" />
                                     </div>
                                     {isSelected && (
@@ -400,7 +430,11 @@ export default function AdminNotificationsTab({
                             Soạn Thảo Thông Báo
                         </h2>
                         <span className="text-[11px] text-text-tertiary font-mono">
-                            Đến: <strong className="text-brand-600 dark:text-brand-400">~{estimatedReach}</strong> người nhận
+                            Đến:{" "}
+                            <strong className="text-brand-600 dark:text-brand-400">
+                                ~{estimatedReach}
+                            </strong>{" "}
+                            người nhận
                         </span>
                     </div>
 
@@ -474,10 +508,14 @@ export default function AdminNotificationsTab({
                                     </label>
                                     <select
                                         value={targetGrade}
-                                        onChange={(e) => setTargetGrade(e.target.value)}
+                                        onChange={(e) =>
+                                            setTargetGrade(e.target.value)
+                                        }
                                         className="w-full text-xs bg-bg-card border border-border-primary rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                                     >
-                                        <option value="all">Tất cả các khối (8, 9, 10, 11, 12)</option>
+                                        <option value="all">
+                                            Tất cả các khối (8, 9, 10, 11, 12)
+                                        </option>
                                         <option value="8">Khối 8</option>
                                         <option value="9">Khối 9</option>
                                         <option value="10">Khối 10</option>
@@ -493,13 +531,23 @@ export default function AdminNotificationsTab({
                                     </label>
                                     <select
                                         value={targetPlan}
-                                        onChange={(e) => setTargetPlan(e.target.value)}
+                                        onChange={(e) =>
+                                            setTargetPlan(e.target.value)
+                                        }
                                         className="w-full text-xs bg-bg-card border border-border-primary rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                                     >
-                                        <option value="all">Tất cả các gói (Free + Basic + VIP)</option>
-                                        <option value="nothing">Chưa kích hoạt / Miễn phí (Free)</option>
-                                        <option value="basic">Tiêu chuẩn (Basic)</option>
-                                        <option value="vip">VIP (Đặc quyền)</option>
+                                        <option value="all">
+                                            Tất cả các gói (Free + Basic + VIP)
+                                        </option>
+                                        <option value="nothing">
+                                            Chưa kích hoạt / Miễn phí (Free)
+                                        </option>
+                                        <option value="basic">
+                                            Tiêu chuẩn (Basic)
+                                        </option>
+                                        <option value="vip">
+                                            VIP (Đặc quyền)
+                                        </option>
                                     </select>
                                 </div>
                             </div>
@@ -514,7 +562,9 @@ export default function AdminNotificationsTab({
                                         type="text"
                                         placeholder="Gõ tên hoặc username học sinh..."
                                         value={userSearchText}
-                                        onChange={(e) => setUserSearchText(e.target.value)}
+                                        onChange={(e) =>
+                                            setUserSearchText(e.target.value)
+                                        }
                                         className="w-full pl-8 pr-3 py-2 text-xs bg-bg-card border border-border-primary rounded-lg text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                                     />
                                     <Search className="w-3.5 h-3.5 text-text-tertiary absolute left-2.5 top-2.5" />
@@ -525,19 +575,30 @@ export default function AdminNotificationsTab({
                                     <div className="flex items-center justify-between p-2 rounded-lg bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-xs">
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-full bg-brand-500 text-white font-bold text-[10px] flex items-center justify-center">
-                                                {selectedStudent.name.charAt(0).toUpperCase()}
+                                                {selectedStudent.name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
                                             </div>
                                             <div>
-                                                <span className="font-bold text-text-primary">{selectedStudent.name}</span>
-                                                <span className="text-[10px] text-text-tertiary ml-1.5">(@{selectedStudent.username})</span>
+                                                <span className="font-bold text-text-primary">
+                                                    {selectedStudent.name}
+                                                </span>
+                                                <span className="text-[10px] text-text-tertiary ml-1.5">
+                                                    (@{selectedStudent.username}
+                                                    )
+                                                </span>
                                                 <span className="text-[10px] text-brand-600 dark:text-brand-400 font-medium ml-1.5">
-                                                    • Khối {selectedStudent.grade || "10"}
+                                                    • Khối{" "}
+                                                    {selectedStudent.grade ||
+                                                        "10"}
                                                 </span>
                                             </div>
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedUserId("")}
+                                            onClick={() =>
+                                                setSelectedUserId("")
+                                            }
                                             className="text-[10px] text-rose-500 hover:underline cursor-pointer"
                                         >
                                             Bỏ chọn
@@ -553,29 +614,46 @@ export default function AdminNotificationsTab({
                                                 Không tìm thấy học sinh nào.
                                             </div>
                                         ) : (
-                                            filteredStudentOptions.map((stu) => (
-                                                <div
-                                                    key={stu.id}
-                                                    onClick={() => {
-                                                        setSelectedUserId(stu.id);
-                                                        setUserSearchText("");
-                                                    }}
-                                                    className="p-2 text-xs flex items-center justify-between hover:bg-bg-surface cursor-pointer transition-colors"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center">
-                                                            {stu.name.charAt(0).toUpperCase()}
+                                            filteredStudentOptions.map(
+                                                (stu) => (
+                                                    <div
+                                                        key={stu.id}
+                                                        onClick={() => {
+                                                            setSelectedUserId(
+                                                                stu.id,
+                                                            );
+                                                            setUserSearchText(
+                                                                "",
+                                                            );
+                                                        }}
+                                                        className="p-2 text-xs flex items-center justify-between hover:bg-bg-surface cursor-pointer transition-colors"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-[10px] flex items-center justify-center">
+                                                                {stu.name
+                                                                    .charAt(0)
+                                                                    .toUpperCase()}
+                                                            </div>
+                                                            <div>
+                                                                <span className="font-medium text-text-primary">
+                                                                    {stu.name}
+                                                                </span>
+                                                                <span className="text-[10px] text-text-tertiary ml-1">
+                                                                    (@
+                                                                    {
+                                                                        stu.username
+                                                                    }
+                                                                    )
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <span className="font-medium text-text-primary">{stu.name}</span>
-                                                            <span className="text-[10px] text-text-tertiary ml-1">(@{stu.username})</span>
-                                                        </div>
+                                                        <span className="text-[10px] text-slate-400 font-mono">
+                                                            Lớp{" "}
+                                                            {stu.grade || "10"}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-[10px] text-slate-400 font-mono">
-                                                        Lớp {stu.grade || "10"}
-                                                    </span>
-                                                </div>
-                                            ))
+                                                ),
+                                            )
                                         )}
                                     </div>
                                 )}
@@ -590,10 +668,26 @@ export default function AdminNotificationsTab({
                         </label>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {[
-                                { id: "teacher_message", label: "Lời nhắn Cô Trang", icon: Megaphone },
-                                { id: "new_quiz", label: "Đề thi mới", icon: BookOpen },
-                                { id: "reminder", label: "Nhắc nhở ôn tập", icon: Clock },
-                                { id: "system", label: "Hệ thống / VIP", icon: Sparkles },
+                                {
+                                    id: "teacher_message",
+                                    label: "Lời nhắn Cô Trang",
+                                    icon: Megaphone,
+                                },
+                                {
+                                    id: "new_quiz",
+                                    label: "Đề thi mới",
+                                    icon: BookOpen,
+                                },
+                                {
+                                    id: "reminder",
+                                    label: "Nhắc nhở ôn tập",
+                                    icon: Clock,
+                                },
+                                {
+                                    id: "system",
+                                    label: "Hệ thống / VIP",
+                                    icon: Sparkles,
+                                },
                             ].map((item) => {
                                 const Icon = item.icon;
                                 const isSelected = notifType === item.id;
@@ -601,7 +695,9 @@ export default function AdminNotificationsTab({
                                     <button
                                         key={item.id}
                                         type="button"
-                                        onClick={() => setNotifType(item.id as any)}
+                                        onClick={() =>
+                                            setNotifType(item.id as any)
+                                        }
                                         className={`p-2.5 rounded-xl border text-center text-xs font-semibold transition-all cursor-pointer flex flex-col items-center gap-1.5 ${
                                             isSelected
                                                 ? "border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 ring-1 ring-brand-500"
@@ -625,7 +721,7 @@ export default function AdminNotificationsTab({
                         <div>
                             <input
                                 type="text"
-                                placeholder="Tiêu đề thông báo (VD: Đề thi mới từ Cô Trang 📝)"
+                                placeholder="Tiêu đề thông báo (VD: Đề thi mới từ Cô Trang)"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 required
@@ -659,13 +755,18 @@ export default function AdminNotificationsTab({
                                 </label>
                                 <select
                                     value={selectedQuizId}
-                                    onChange={(e) => handleSelectQuiz(e.target.value)}
+                                    onChange={(e) =>
+                                        handleSelectQuiz(e.target.value)
+                                    }
                                     className="w-full text-xs bg-bg-card border border-border-primary rounded-lg px-3 py-2 text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 truncate"
                                 >
-                                    <option value="">-- Không đính kèm đề thi --</option>
+                                    <option value="">
+                                        -- Không đính kèm đề thi --
+                                    </option>
                                     {quizzes.map((q) => (
                                         <option key={q.id} value={q.id}>
-                                            [{q.grade ? `K${q.grade}` : "Chung"}] {q.title}
+                                            [{q.grade ? `K${q.grade}` : "Chung"}
+                                            ] {q.title}
                                         </option>
                                     ))}
                                 </select>
@@ -681,7 +782,9 @@ export default function AdminNotificationsTab({
                                         type="text"
                                         placeholder="VD: /student-quizzes, /leaderboard..."
                                         value={link}
-                                        onChange={(e) => setLink(e.target.value)}
+                                        onChange={(e) =>
+                                            setLink(e.target.value)
+                                        }
                                         className="w-full pl-8 pr-3 py-2 text-xs bg-bg-card border border-border-primary rounded-lg text-text-primary focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                                     />
                                     <ExternalLink className="w-3.5 h-3.5 text-text-tertiary absolute left-2.5 top-2.5" />
@@ -702,11 +805,18 @@ export default function AdminNotificationsTab({
 
                         <button
                             type="submit"
-                            disabled={isSubmitting || (targetMode === "direct" && !selectedUserId)}
+                            disabled={
+                                isSubmitting ||
+                                (targetMode === "direct" && !selectedUserId)
+                            }
                             className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold rounded-xl bg-brand-500 hover:bg-brand-600 text-white shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Send className={`w-3.5 h-3.5 ${isSubmitting ? "animate-spin" : ""}`} />
-                            {isSubmitting ? "Đang phát thông báo..." : `Phát Thông Báo Ngay (~${estimatedReach} học sinh)`}
+                            <Send
+                                className={`w-3.5 h-3.5 ${isSubmitting ? "animate-spin" : ""}`}
+                            />
+                            {isSubmitting
+                                ? "Đang phát thông báo..."
+                                : `Phát Thông Báo Ngay (~${estimatedReach} học sinh)`}
                         </button>
                     </div>
                 </form>
@@ -725,7 +835,8 @@ export default function AdminNotificationsTab({
                         </div>
 
                         <p className="text-[11px] text-text-tertiary">
-                            Đây là giao diện thực tế mà học sinh sẽ nhìn thấy khi mở danh sách thông báo:
+                            Đây là giao diện thực tế mà học sinh sẽ nhìn thấy
+                            khi mở danh sách thông báo:
                         </p>
 
                         {/* Simulated Notification Item */}
@@ -733,17 +844,26 @@ export default function AdminNotificationsTab({
                             <div className="p-4 flex items-start gap-3 bg-brand-50/75 dark:bg-brand-950/50 border-l-[3px] border-l-brand-500">
                                 {/* Icon Badge */}
                                 <div className="w-8 h-8 rounded-xl bg-brand-100 dark:bg-brand-900/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0 shadow-xs">
-                                    {notifType === "new_quiz" && <BookOpen className="w-4 h-4" />}
-                                    {notifType === "teacher_message" && <Megaphone className="w-4 h-4" />}
-                                    {notifType === "reminder" && <Clock className="w-4 h-4" />}
-                                    {notifType === "system" && <Sparkles className="w-4 h-4" />}
+                                    {notifType === "new_quiz" && (
+                                        <BookOpen className="w-4 h-4" />
+                                    )}
+                                    {notifType === "teacher_message" && (
+                                        <Megaphone className="w-4 h-4" />
+                                    )}
+                                    {notifType === "reminder" && (
+                                        <Clock className="w-4 h-4" />
+                                    )}
+                                    {notifType === "system" && (
+                                        <Sparkles className="w-4 h-4" />
+                                    )}
                                 </div>
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0 space-y-1">
                                     <div className="flex items-center justify-between gap-2">
                                         <h4 className="text-xs font-bold text-text-primary truncate">
-                                            {title || "Tiêu đề thông báo mẫu..."}
+                                            {title ||
+                                                "Tiêu đề thông báo mẫu..."}
                                         </h4>
                                         <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider px-1.5 py-0.5 bg-brand-100/80 dark:bg-brand-900/50 rounded-md shrink-0">
                                             MỚI
@@ -751,14 +871,16 @@ export default function AdminNotificationsTab({
                                     </div>
 
                                     <p className="text-[11px] text-text-secondary leading-relaxed line-clamp-3">
-                                        {message || "Nội dung thông báo chi tiết của bạn sẽ hiển thị đầy đủ tại đây..."}
+                                        {message ||
+                                            "Nội dung thông báo chi tiết của bạn sẽ hiển thị đầy đủ tại đây..."}
                                     </p>
 
                                     <div className="flex items-center justify-between pt-1 text-[10px] text-text-tertiary">
                                         <span>Vừa xong</span>
                                         {link && (
                                             <span className="text-brand-600 dark:text-brand-400 font-semibold inline-flex items-center gap-0.5 hover:underline">
-                                                Bấm để xem <ArrowRight className="w-3 h-3" />
+                                                Bấm để xem{" "}
+                                                <ArrowRight className="w-3 h-3" />
                                             </span>
                                         )}
                                     </div>
@@ -779,7 +901,9 @@ export default function AdminNotificationsTab({
                                     <div>
                                         • Người nhận đích danh:{" "}
                                         <strong className="text-text-primary">
-                                            {selectedStudent ? `${selectedStudent.name} (@${selectedStudent.username})` : "Chưa chọn"}
+                                            {selectedStudent
+                                                ? `${selectedStudent.name} (@${selectedStudent.username})`
+                                                : "Chưa chọn"}
                                         </strong>
                                     </div>
                                 ) : (
@@ -787,7 +911,9 @@ export default function AdminNotificationsTab({
                                         <div>
                                             • Khối lớp:{" "}
                                             <strong className="text-text-primary">
-                                                {targetGrade === "all" ? "Tất cả các khối" : `Lớp ${targetGrade}`}
+                                                {targetGrade === "all"
+                                                    ? "Tất cả các khối"
+                                                    : `Lớp ${targetGrade}`}
                                             </strong>
                                         </div>
                                         <div>
@@ -796,10 +922,10 @@ export default function AdminNotificationsTab({
                                                 {targetPlan === "all"
                                                     ? "Tất cả các gói"
                                                     : targetPlan === "vip"
-                                                    ? "VIP"
-                                                    : targetPlan === "basic"
-                                                    ? "Basic"
-                                                    : "Miễn phí"}
+                                                      ? "VIP"
+                                                      : targetPlan === "basic"
+                                                        ? "Basic"
+                                                        : "Miễn phí"}
                                             </strong>
                                         </div>
                                     </>
@@ -819,7 +945,8 @@ export default function AdminNotificationsTab({
                             Lịch Sử Thông Báo Đã Gửi ({notifications.length})
                         </h2>
                         <p className="text-xs text-text-tertiary mt-0.5">
-                            Theo dõi thống kê lượt đọc và quản lý/thu hồi các thông báo đã phát sóng trong hệ thống.
+                            Theo dõi thống kê lượt đọc và quản lý/thu hồi các
+                            thông báo đã phát sóng trong hệ thống.
                         </p>
                     </div>
                 </div>
@@ -840,7 +967,8 @@ export default function AdminNotificationsTab({
                             Chưa có thông báo nào được gửi.
                         </p>
                         <p className="text-[11px] text-text-tertiary">
-                            Các thông báo được bạn phát sóng sẽ hiển thị tại đây.
+                            Các thông báo được bạn phát sóng sẽ hiển thị tại
+                            đây.
                         </p>
                     </div>
                 ) : (
@@ -848,25 +976,39 @@ export default function AdminNotificationsTab({
                         <table className="w-full text-left text-xs">
                             <thead>
                                 <tr className="border-b border-border-primary text-text-tertiary uppercase text-[10px] tracking-wider font-bold">
-                                    <th className="py-3 px-3">Loại & Tiêu đề</th>
-                                    <th className="py-3 px-3">Đối tượng nhận</th>
-                                    <th className="py-3 px-3 text-center">Lượt đã đọc</th>
+                                    <th className="py-3 px-3">
+                                        Loại & Tiêu đề
+                                    </th>
+                                    <th className="py-3 px-3">
+                                        Đối tượng nhận
+                                    </th>
+                                    <th className="py-3 px-3 text-center">
+                                        Lượt đã đọc
+                                    </th>
                                     <th className="py-3 px-3">Thời gian</th>
-                                    <th className="py-3 px-3 text-right">Thao tác</th>
+                                    <th className="py-3 px-3 text-right">
+                                        Thao tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border-primary">
                                 {notifications.map((notif) => {
-                                    const notifDate = notif.createdAt ? new Date(notif.createdAt) : null;
-                                    const dateStr = notifDate && !isNaN(notifDate.getTime())
-                                        ? notifDate.toLocaleDateString("vi-VN", {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                              day: "2-digit",
-                                              month: "2-digit",
-                                              year: "numeric",
-                                          })
-                                        : "Vừa xong";
+                                    const notifDate = notif.createdAt
+                                        ? new Date(notif.createdAt)
+                                        : null;
+                                    const dateStr =
+                                        notifDate && !isNaN(notifDate.getTime())
+                                            ? notifDate.toLocaleDateString(
+                                                  "vi-VN",
+                                                  {
+                                                      hour: "2-digit",
+                                                      minute: "2-digit",
+                                                      day: "2-digit",
+                                                      month: "2-digit",
+                                                      year: "numeric",
+                                                  },
+                                              )
+                                            : "Vừa xong";
 
                                     return (
                                         <tr
@@ -877,10 +1019,22 @@ export default function AdminNotificationsTab({
                                             <td className="py-3 px-3 max-w-sm">
                                                 <div className="flex items-start gap-2.5">
                                                     <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 mt-0.5">
-                                                        {notif.type === "new_quiz" && <BookOpen className="w-3.5 h-3.5 text-blue-500" />}
-                                                        {notif.type === "teacher_message" && <Megaphone className="w-3.5 h-3.5 text-emerald-500" />}
-                                                        {notif.type === "reminder" && <Clock className="w-3.5 h-3.5 text-amber-500" />}
-                                                        {notif.type === "system" && <Sparkles className="w-3.5 h-3.5 text-purple-500" />}
+                                                        {notif.type ===
+                                                            "new_quiz" && (
+                                                            <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+                                                        )}
+                                                        {notif.type ===
+                                                            "teacher_message" && (
+                                                            <Megaphone className="w-3.5 h-3.5 text-emerald-500" />
+                                                        )}
+                                                        {notif.type ===
+                                                            "reminder" && (
+                                                            <Clock className="w-3.5 h-3.5 text-amber-500" />
+                                                        )}
+                                                        {notif.type ===
+                                                            "system" && (
+                                                            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                                                        )}
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="font-bold text-text-primary line-clamp-1">
@@ -908,13 +1062,19 @@ export default function AdminNotificationsTab({
                                                 ) : (
                                                     <div className="flex flex-wrap items-center gap-1">
                                                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                                            {notif.targetGrade === "all" || !notif.targetGrade ? "Toàn bộ khối" : `Khối ${notif.targetGrade}`}
+                                                            {notif.targetGrade ===
+                                                                "all" ||
+                                                            !notif.targetGrade
+                                                                ? "Toàn bộ khối"
+                                                                : `Khối ${notif.targetGrade}`}
                                                         </span>
-                                                        {notif.targetPlan && notif.targetPlan !== "all" && (
-                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                                                {notif.targetPlan.toUpperCase()}
-                                                            </span>
-                                                        )}
+                                                        {notif.targetPlan &&
+                                                            notif.targetPlan !==
+                                                                "all" && (
+                                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                                                    {notif.targetPlan.toUpperCase()}
+                                                                </span>
+                                                            )}
                                                     </div>
                                                 )}
                                             </td>
@@ -936,8 +1096,12 @@ export default function AdminNotificationsTab({
                                             <td className="py-3 px-3 text-right whitespace-nowrap">
                                                 <button
                                                     type="button"
-                                                    onClick={() => handleDelete(notif.id)}
-                                                    disabled={deletingId === notif.id}
+                                                    onClick={() =>
+                                                        handleDelete(notif.id)
+                                                    }
+                                                    disabled={
+                                                        deletingId === notif.id
+                                                    }
                                                     title="Thu hồi / Xóa thông báo"
                                                     className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-50"
                                                 >

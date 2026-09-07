@@ -57,6 +57,8 @@ import {
     Mail,
     MailCheck,
     MailX,
+    GraduationCap,
+    FileText,
 } from "lucide-react";
 import { User as UserType, Quiz, Submission, AppNotification } from "../types";
 import { PREDEFINED_AVATARS } from "../constants/avatars";
@@ -2928,67 +2930,50 @@ export default function SettingsView({
                             }
 
                             return (
-                                <div className="max-sm:space-y-2.5 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
+                                <div className="divide-y divide-slate-100/80 dark:divide-slate-800/60">
                                     {list.map((notif) => (
                                         <div
                                             key={notif.id}
                                             onClick={() =>
                                                 handleReadNotification(notif)
                                             }
-                                            className={`py-3.5 sm:py-4 px-3.5 sm:px-3 sm:-mx-3 flex items-start justify-between gap-2.5 sm:gap-4 transition-colors cursor-pointer group rounded-2xl sm:rounded-xl max-sm:border ${
+                                            className={`py-3 sm:py-3.5 px-3 sm:px-3.5 flex items-start gap-3 sm:gap-3.5 transition-colors cursor-pointer group ${
                                                 !notif.isRead
-                                                    ? "bg-brand-50/40 dark:bg-brand-950/20 max-sm:border-brand-200/70 max-sm:dark:border-brand-900/40 hover:bg-brand-50/70 dark:hover:bg-brand-950/40"
-                                                    : "max-sm:bg-white max-sm:dark:bg-slate-850/30 max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 hover:bg-slate-50/80 dark:hover:bg-slate-800/30"
+                                                    ? "bg-brand-200/25 dark:bg-brand-950/20 hover:bg-brand-50/50 dark:hover:bg-brand-950/30"
+                                                    : "hover:bg-slate-50/80 dark:hover:bg-slate-800/30 active:bg-slate-100/60 dark:active:bg-slate-800/60"
                                             }`}
                                         >
-                                            <div className="flex items-start gap-3 min-w-0">
-                                                <div
-                                                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                                                        !notif.isRead
-                                                            ? "bg-brand-500 animate-pulse"
-                                                            : "bg-slate-300 dark:bg-slate-700"
-                                                    }`}
-                                                />
-                                                <div className="space-y-1 min-w-0">
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        <h4
-                                                            className={`text-sm ${
-                                                                !notif.isRead
-                                                                    ? "font-bold text-slate-900 dark:text-slate-100"
-                                                                    : "font-medium text-slate-700 dark:text-slate-300"
-                                                            }`}
-                                                        >
-                                                            {notif.title}
-                                                        </h4>
-                                                        {notif.targetGrade && (
-                                                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                                                Lớp{" "}
-                                                                {
-                                                                    notif.targetGrade
-                                                                }
-                                                            </span>
+                                            {/* Right Content */}
+                                            <div className="flex-1 min-w-0">
+                                                {/* Header line: Title + Time */}
+                                                <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                                    <h4
+                                                        className={`text-[13.5px] sm:text-sm leading-tight tracking-tight ${
+                                                            !notif.isRead
+                                                                ? "font-bold text-slate-900 dark:text-white"
+                                                                : "font-semibold text-slate-700 dark:text-slate-300"
+                                                        }`}
+                                                    >
+                                                        {notif.title}
+                                                    </h4>
+                                                    <span className="text-[11.5px] font-normal text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                                        ·{" "}
+                                                        {formatNotifTimeAgo(
+                                                            notif.createdAt,
                                                         )}
-                                                    </div>
-                                                    <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                                                        {notif.message}
-                                                    </p>
-                                                    {notif.quizId && (
-                                                        <div className="pt-1 inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-brand-400 group-hover:underline">
-                                                            <span>
-                                                                Vào làm bài ngay
-                                                            </span>
-                                                            <ExternalLink className="w-3 h-3" />
-                                                        </div>
+                                                    </span>
+                                                    {notif.targetGrade && (
+                                                        <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                                                            Lớp{" "}
+                                                            {notif.targetGrade}
+                                                        </span>
                                                     )}
                                                 </div>
-                                            </div>
 
-                                            <div className="text-right shrink-0 pt-0.5">
-                                                <span className="text-[11px] font-medium text-slate-400 dark:text-slate-550 whitespace-nowrap">
-                                                    {formatNotifTimeAgo(
-                                                        notif.createdAt,
-                                                    )}
-                                                </span>
+                                                {/* Message description */}
+                                                <p className="text-[12px] sm:text-[12.5px] text-slate-500 dark:text-slate-400 leading-snug line-clamp-2 mt-1">
+                                                    {notif.message}
+                                                </p>
                                             </div>
                                         </div>
                                     ))}

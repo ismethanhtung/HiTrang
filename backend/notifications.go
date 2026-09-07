@@ -55,7 +55,7 @@ func CreateQuizNotification(db *gorm.DB, quiz *Quiz) {
 		TargetGrade: &targetGrade,
 		TargetPlan:  &allPlan,
 		Type:        "new_quiz",
-		Title:       "Đề thi mới từ Cô Trang 📝",
+		Title:       "Đề thi mới từ Cô Trang",
 		Message:     fmt.Sprintf("Cô Trang vừa đăng đề thi mới cho %s: \"%s\". Vào test ngay nhé!", gradeDisplay, quizTitle),
 		Link:        fmt.Sprintf("/quiz/%s", quiz.ID),
 		QuizID:      &quiz.ID,

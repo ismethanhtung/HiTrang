@@ -112,13 +112,13 @@ export default function ScheduleView({
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-md sm:rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-855 text-slate-600 dark:text-slate-300 uppercase self-start sm:self-auto">
+                <div className="hidden sm:flex sm:flex-row sm:items-center gap-2.5 sm:gap-3 sm:w-auto">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md sm:rounded-lg text-[10px] font-bold bg-slate-100 dark:bg-slate-855 text-slate-600 dark:text-slate-300 uppercase">
                         {applyDate}
                     </span>
 
-                    {/* Toggle view mode buttons */}
-                    <div className="grid grid-cols-3 sm:inline-flex w-full sm:w-auto bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
+                    {/* Toggle view mode buttons (Desktop only) */}
+                    <div className="inline-flex w-auto bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
                         <button
                             onClick={() => setViewMode("image")}
                             className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${

@@ -61,6 +61,38 @@ func GenerateJWT(userID, username, role string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
+// OptionalAuthMiddleware extracts user claims if Authorization header is present, but allows unauthenticated requests
+func OptionalAuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.Next()
+			return
+		}
+
+		tokenStr := parts[1]
+		claims := &Claims{}
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
+			return jwtSecret, nil
+		})
+
+		if err == nil && token.Valid {
+			c.Set("userID", claims.UserID)
+			c.Set("username", claims.Username)
+			c.Set("role", claims.Role)
+			c.Set("name", claims.Name)
+		}
+
+		c.Next()
+	}
+}
+
 // AuthMiddleware protects routes and injects claims into context
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {

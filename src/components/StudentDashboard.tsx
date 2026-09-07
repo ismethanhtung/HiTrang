@@ -3498,8 +3498,7 @@ export default function StudentDashboard({
                                                             Luyện tập giải đề
                                                             đều đặn giúp bạn
                                                             củng cố kiến thức
-                                                            vững chắc cho các kì
-                                                            thi sắp tới.
+                                                            vững chắc.
                                                         </p>
                                                     </div>
 

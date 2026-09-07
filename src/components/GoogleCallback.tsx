@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { User as UserType } from "../types";
 
 interface GoogleCallbackProps {
@@ -16,7 +16,13 @@ export default function GoogleCallback({
         "Đang liên kết với tài khoản Google của bạn...",
     );
 
+    const hasStartedRef = useRef(false);
+    const hasSucceededRef = useRef(false);
+
     useEffect(() => {
+        if (hasStartedRef.current) return;
+        hasStartedRef.current = true;
+
         const exchangeCode = async () => {
             const params = new URLSearchParams(window.location.search);
             const code = params.get("code");
@@ -40,15 +46,29 @@ export default function GoogleCallback({
 
                 const data = await response.json();
                 if (!response.ok) {
+                    if (hasSucceededRef.current) return;
                     throw new Error(data.error || "Đăng nhập Google thất bại.");
                 }
 
+                hasSucceededRef.current = true;
                 setStatus("Đăng nhập thành công! Đang chuyển hướng...");
                 localStorage.setItem("hitrang_token", data.token);
+
+                // Clean URL search query to prevent re-exchange on refresh/navigation
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(
+                        {},
+                        document.title,
+                        window.location.pathname,
+                    );
+                }
+
                 onLogin(data.user);
                 navigateTo("/");
             } catch (err: any) {
-                setError(err.message || "Lỗi kết nối đến máy chủ.");
+                if (!hasSucceededRef.current) {
+                    setError(err.message || "Lỗi kết nối đến máy chủ.");
+                }
             }
         };
 
@@ -56,32 +76,38 @@ export default function GoogleCallback({
     }, [onLogin, navigateTo]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-base p-6 text-primary">
-            <div className="w-full max-w-md bg-card flex flex-col items-center text-center">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-bg-base p-6 text-text-primary">
+            <div className="w-full max-w-md bg-bg-card p-8 flex flex-col items-center text-center">
                 {error ? (
-                    <div className="space-y-4">
-                        <div className="w-12 h-12 rounded-full flex items-center justify-center text-red-600 dark:text-red-400 text-2xl font-bold">
-                            !
+                    <div className="space-y-4 w-full">
+                        <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+                            <AlertCircle className="w-6 h-6" />
                         </div>
-                        <h2 className="text-xl font-semibold">
+                        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                             Thử lại đăng nhập
                         </h2>
-                        <p className="text-sm text-secondary leading-relaxed">
+                        <p className="text-xs text-text-secondary leading-relaxed max-w-sm mx-auto">
                             {error}
                         </p>
                         <button
-                            onClick={() => navigateTo("/auth")}
-                            className="w-full py-2.5 px-4 bg-base hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border-primary rounded-xl font-medium text-sm transition-colors mt-2"
+                            type="button"
+                            onClick={() => navigateTo("/")}
+                            className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-4"
                         >
-                            Quay lại trang đăng nhập
+                            <ArrowLeft className="w-4 h-4" />
+                            <span>Quay lại trang chủ</span>
                         </button>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <Loader2 className="w-10 h-10 text-emerald-600 animate-spin mx-auto" />
-                        <h2 className="text-lg font-medium">{status}</h2>
-                        <p className="text-xs text-secondary">
-                            Vui lòng không đóng màn hình này
+                        <div className="w-12 h-12 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 flex items-center justify-center mx-auto">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                        </div>
+                        <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                            {status}
+                        </h2>
+                        <p className="text-xs text-text-tertiary">
+                            Vui lòng không đóng trình duyệt trong giây lát
                         </p>
                     </div>
                 )}

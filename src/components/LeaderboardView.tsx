@@ -768,8 +768,8 @@ export default function LeaderboardView({
                                                                 iconClass={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
                                                                 className={
                                                                     rank === 1
-                                                                        ? "border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
-                                                                        : "bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40"
+                                                                        ? "border border-amber-300/40 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                                                                        : "bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700/40"
                                                                 }
                                                             />
                                                         </div>

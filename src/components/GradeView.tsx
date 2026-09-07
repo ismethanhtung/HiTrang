@@ -213,8 +213,8 @@ export default function GradeView({
                         Kho Đề Thi Ôn Luyện Lớp {grade}
                     </h1>
                     <p className="text-[11px] sm:text-xs text-slate-400 max-w-xl">
-                        Tổng hợp các đề thi môn Toán chất lượng cao giúp bứt phá
-                        điểm số cùng cô Trang.
+                        Tổng hợp các đề thi môn Toán giúp rèn luyện điểm số cùng
+                        cô Trang.
                     </p>
                 </div>
 

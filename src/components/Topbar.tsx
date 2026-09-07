@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { User, UserPlan, Quiz } from "../types";
 import { matchesQuiz } from "../lib/searchUtils";
 import { getNotifications } from "../lib/supabaseService";
 import {
-    Home,
     LogOut,
     Bolt,
     Shield,
@@ -12,17 +12,20 @@ import {
     History,
     Search,
     Crown,
-    Calendar1,
     CalendarDays,
     User as UserIcon,
     Palette,
     GraduationCap,
-    Bell,
     Menu,
     X,
 } from "lucide-react";
-import { Podium } from "./PodiumIcon";
-import { ExamIcon } from "./ExamIcon";
+import {
+    NavHouseIcon,
+    NavDocumentIcon,
+    NavCalendarIcon,
+    NavRankingIcon,
+    NavBellIcon,
+} from "./NavIcons";
 import NotificationBell from "./NotificationBell";
 
 interface TopbarProps {
@@ -484,17 +487,21 @@ export default function Topbar({
                             </div>
                         ) : (
                             <div className="flex items-center gap-2">
-                                {/* Notification Bell */}
-                                <NotificationBell
-                                    onNavigate={(path) => {
-                                        if (
-                                            path === "/notifications" ||
-                                            path === "/noti"
-                                        ) {
-                                            onNavigateSettings("notifications");
-                                        }
-                                    }}
-                                />
+                                {/* Notification Bell (Desktop only, hidden on mobile) */}
+                                <div className="hidden md:block">
+                                    <NotificationBell
+                                        onNavigate={(path) => {
+                                            if (
+                                                path === "/notifications" ||
+                                                path === "/noti"
+                                            ) {
+                                                onNavigateSettings(
+                                                    "notifications",
+                                                );
+                                            }
+                                        }}
+                                    />
+                                </div>
 
                                 <div
                                     key="user-profile-dropdown"
@@ -657,37 +664,29 @@ export default function Topbar({
                 </div>
             </header>
 
-            {/* FACEBOOK-STYLE MOBILE BOTTOM NAVIGATION BAR (FIXED AT BOTTOM OF SCREEN) */}
+            {/* MOBILE BOTTOM NAVIGATION BAR (ZING MP3 COMPACT STYLE) */}
             {user && !isResultReview && (
                 <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
                     {/* 1. Trang chủ */}
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={onNavigateHome}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            isHomeActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
                         title="Trang chủ"
                     >
-                        <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
-                                isHomeActive
-                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
-                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
-                            }`}
-                        >
-                            <Home
-                                className={`w-[21px] h-[21px] ${
-                                    isHomeActive
-                                        ? "stroke-[2.5]"
-                                        : "stroke-[1.75]"
-                                }`}
-                            />
-                        </div>
-                        {isHomeActive && (
-                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
-                        )}
-                    </button>
+                        <NavHouseIcon className="w-[19px] h-[19px]" />
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isHomeActive ? "font-bold" : "font-medium"}`}>
+                            Trang chủ
+                        </span>
+                    </motion.button>
 
                     {/* 2. Đề thi / Khối lớp */}
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={() => {
                             if (user.grade) {
                                 onSelectGrade(user.grade);
@@ -695,497 +694,499 @@ export default function Topbar({
                                 setShowGradeModal(true);
                             }
                         }}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            isGradeActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
                         title="Đề thi"
                     >
-                        <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
-                                isGradeActive
-                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
-                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
-                            }`}
-                        >
-                            <ExamIcon
-                                className={`w-[21px] h-[21px] ${
-                                    isGradeActive
-                                        ? "stroke-[2.5]"
-                                        : "stroke-[1.75]"
-                                }`}
-                            />
-                        </div>
-                        {isGradeActive && (
-                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
-                        )}
-                    </button>
+                        <NavDocumentIcon className="w-[19px] h-[19px]" />
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isGradeActive ? "font-bold" : "font-medium"}`}>
+                            Đề thi
+                        </span>
+                    </motion.button>
 
                     {/* 3. Lịch học */}
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={onNavigateSchedule}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            isScheduleActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
                         title="Lịch học"
                     >
-                        <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
-                                isScheduleActive
-                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
-                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
-                            }`}
-                        >
-                            <Calendar1
-                                className={`w-[21px] h-[21px] ${
-                                    isScheduleActive
-                                        ? "stroke-[2.5]"
-                                        : "stroke-[1.75]"
-                                }`}
-                            />
-                        </div>
-                        {isScheduleActive && (
-                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
-                        )}
-                    </button>
+                        <NavCalendarIcon className="w-[19px] h-[19px]" />
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isScheduleActive ? "font-bold" : "font-medium"}`}>
+                            Lịch học
+                        </span>
+                    </motion.button>
 
                     {/* 4. Bảng xếp hạng (BXH) */}
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={onNavigateLeaderboard}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            isLeaderboardActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
                         title="Bảng xếp hạng"
                     >
-                        <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 ${
-                                isLeaderboardActive
-                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
-                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
-                            }`}
-                        >
-                            <Podium
-                                className={`w-[21px] h-[21px] ${
-                                    isLeaderboardActive
-                                        ? "stroke-[2.5] text-amber-500"
-                                        : "stroke-[1.75]"
-                                }`}
-                            />
-                        </div>
-                        {isLeaderboardActive && (
-                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
-                        )}
-                    </button>
+                        <NavRankingIcon className="w-[19px] h-[19px]" />
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isLeaderboardActive ? "font-bold" : "font-medium"}`}>
+                            Xếp hạng
+                        </span>
+                    </motion.button>
 
                     {/* 5. Thông báo */}
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={() => onNavigateSettings("notifications")}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            isNotiActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
                         title="Thông báo"
                     >
-                        <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
-                                isNotiActive
-                                    ? "w-10 h-7.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300"
-                                    : "w-10 h-7.5 text-text-secondary/70 hover:text-text-primary"
-                            }`}
-                        >
-                            <Bell
-                                className={`w-[21px] h-[21px] ${
-                                    isNotiActive
-                                        ? "stroke-[2.5]"
-                                        : "stroke-[1.75]"
-                                }`}
-                            />
+                        <div className="relative">
+                            <NavBellIcon className="w-[19px] h-[19px]" />
                             {unreadNotiCount > 0 && (
-                                <span className="absolute -top-0.5 -right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
+                                <span className="absolute -top-1 -right-1.5 min-w-[14px] h-3.5 bg-rose-500 text-white text-[8.5px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
                                     {unreadNotiCount > 99
                                         ? "99+"
                                         : unreadNotiCount}
                                 </span>
                             )}
                         </div>
-                        {isNotiActive && (
-                            <span className="absolute bottom-0 w-8 h-[2.5px] bg-brand-600 dark:bg-brand-300 rounded-full" />
-                        )}
-                    </button>
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isNotiActive ? "font-bold" : "font-medium"}`}>
+                            Thông báo
+                        </span>
+                    </motion.button>
 
-                    {/* 6. Tài khoản / Menu */}
-                    <button
+                    {/* 6. Tài khoản / Cá nhân */}
+                    <motion.button
+                        whileTap={{ scale: 0.92 }}
                         onClick={() => setShowMobileMenu(true)}
-                        className="flex-1 flex flex-col items-center justify-center h-full relative cursor-pointer group"
-                        title="Tài khoản"
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                            showMobileMenu || isSettingsActive
+                                ? "text-brand-600 dark:text-brand-300"
+                                : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
+                        }`}
+                        title="Cá nhân"
                     >
                         <div
-                            className={`flex items-center justify-center rounded-full transition-all duration-200 relative ${
+                            className={`w-5.5 h-5.5 rounded-full overflow-hidden flex items-center justify-center transition-all ${
                                 showMobileMenu || isSettingsActive
-                                    ? "ring-2 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
-                                    : ""
+                                    ? "ring-1.5 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
+                                    : "border border-border-primary"
                             }`}
                         >
-                            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
-                                {user.avatarUrl ? (
-                                    <img
-                                        src={user.avatarUrl}
-                                        alt={user.name}
-                                        referrerPolicy="no-referrer"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                                )}
-                            </div>
-                            <div className="absolute -bottom-0.5 -right-1 w-3.5 h-3.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 rounded-full flex items-center justify-center shadow-xs border border-white dark:border-slate-900">
-                                <Menu className="w-2 h-2 stroke-[3]" />
-                            </div>
+                            {user.avatarUrl ? (
+                                <img
+                                    src={user.avatarUrl}
+                                    alt={user.name}
+                                    referrerPolicy="no-referrer"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <UserIcon className="w-3 h-3 text-current" />
+                            )}
                         </div>
-                    </button>
+                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${showMobileMenu || isSettingsActive ? "font-bold" : "font-medium"}`}>
+                            Cá nhân
+                        </span>
+                    </motion.button>
                 </nav>
             )}
 
             {/* MOBILE GRADE SELECTOR BOTTOM SHEET */}
-            {showGradeModal && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-                    <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-                        onClick={() => setShowGradeModal(false)}
-                    />
-                    <div className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[85vh] flex flex-col animate-in slide-in-from-bottom duration-250">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-border-primary">
-                            <div>
-                                <h3 className="text-base font-black text-text-primary">
-                                    Chọn Khối Lớp Luyện Đề
-                                </h3>
-                                <p className="text-xs text-text-tertiary mt-0.5">
-                                    Lựa chọn khối lớp để xem danh sách đề thi
-                                    môn Toán
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setShowGradeModal(false)}
-                                className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-surface transition-colors cursor-pointer"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        {/* Grade list */}
-                        <div className="p-4 overflow-y-auto space-y-2.5">
-                            {[
-                                {
-                                    id: "8",
-                                    title: "Khối Lớp 8",
-                                    desc: "Chương trình Toán THCS Lớp 8",
-                                    badge: "THCS",
-                                },
-                                {
-                                    id: "9",
-                                    title: "Khối Lớp 9",
-                                    desc: "Toán 9 & Bộ đề Luyện thi vào 10",
-                                    badge: "Ôn thi vào 10",
-                                },
-                                {
-                                    id: "10",
-                                    title: "Khối Lớp 10",
-                                    desc: "Chương trình Toán THPT Lớp 10 (GDPT mới)",
-                                    badge: "THPT",
-                                },
-                                {
-                                    id: "11",
-                                    title: "Khối Lớp 11",
-                                    desc: "Chương trình Toán THPT Lớp 11",
-                                    badge: "THPT",
-                                },
-                                {
-                                    id: "12",
-                                    title: "Khối Lớp 12",
-                                    desc: "Toán 12 & Luyện thi Tốt nghiệp THPT",
-                                    badge: "Thi thử TN THPT",
-                                },
-                            ].map((g) => {
-                                const isCurrent =
-                                    selectedGrade === g.id ||
-                                    currentPath.includes(`/grade/${g.id}`);
-                                const isUserGrade = user?.grade === g.id;
-                                return (
-                                    <button
-                                        key={g.id}
-                                        onClick={() => {
-                                            if (user && !user.grade) {
-                                                user.grade = g.id;
-                                                try {
-                                                    const savedUserStr =
-                                                        localStorage.getItem(
-                                                            "hvt_user",
-                                                        );
-                                                    if (savedUserStr) {
-                                                        const parsed =
-                                                            JSON.parse(
-                                                                savedUserStr,
-                                                            );
-                                                        parsed.grade = g.id;
-                                                        localStorage.setItem(
-                                                            "hvt_user",
-                                                            JSON.stringify(
-                                                                parsed,
-                                                            ),
-                                                        );
-                                                    }
-                                                } catch (e) {
-                                                    console.error(
-                                                        "Lỗi khi lưu lớp:",
-                                                        e,
-                                                    );
-                                                }
-                                            }
-                                            onSelectGrade(g.id);
-                                            setShowGradeModal(false);
-                                        }}
-                                        className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer group ${
-                                            isCurrent
-                                                ? "bg-brand-50/70 dark:bg-brand-900/20 border-brand-500 dark:border-brand-500/50 shadow-xs"
-                                                : "bg-white dark:bg-bg-surface border-border-primary hover:border-brand-300 dark:hover:border-brand-800"
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
-                                                    isCurrent
-                                                        ? "bg-brand-600 text-white shadow-xs"
-                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-brand-100 dark:group-hover:bg-brand-950/40"
-                                                }`}
-                                            >
-                                                {g.id}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-extrabold text-sm text-text-primary">
-                                                        {g.title}
-                                                    </span>
-                                                    {isUserGrade && (
-                                                        <span className="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-full">
-                                                            Lớp của bạn
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-[11px] text-text-tertiary truncate mt-0.5">
-                                                    {g.desc}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <span
-                                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                                    g.id === "9" ||
-                                                    g.id === "12"
-                                                        ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
-                                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                                }`}
-                                            >
-                                                {g.badge}
-                                            </span>
-                                            <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:translate-x-0.5 transition-transform" />
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* MOBILE USER MENU BOTTOM SHEET */}
-            {showMobileMenu && (
-                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-                    <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-                        onClick={() => setShowMobileMenu(false)}
-                    />
-                    <div className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col animate-in slide-in-from-bottom duration-250">
-                        {/* User Profile Card Header */}
-                        <div className="p-4 border-b border-border-primary bg-bg-surface/50">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-border-primary shadow-xs flex items-center justify-center">
-                                        {user.avatarUrl ? (
-                                            <img
-                                                src={user.avatarUrl}
-                                                alt={user.name}
-                                                referrerPolicy="no-referrer"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-base">
-                                                {user.name
-                                                    .charAt(0)
-                                                    .toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-extrabold text-text-primary">
-                                            {user.name}
-                                        </h3>
-                                        <p className="text-xs text-text-tertiary">
-                                            @{user.username}
-                                        </p>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            {getPlanBadge(user.plan)}
-                                            {user.grade && (
-                                                <span className="text-[10px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
-                                                    Lớp {user.grade}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
+            <AnimatePresence>
+                {showGradeModal && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeOut" }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+                            onClick={() => setShowGradeModal(false)}
+                        />
+                        <motion.div
+                            initial={{ y: "100%", opacity: 0.8 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: "100%", opacity: 0.5 }}
+                            transition={{
+                                type: "spring",
+                                damping: 30,
+                                stiffness: 340,
+                                mass: 0.85,
+                            }}
+                            className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[85vh] flex flex-col"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-border-primary">
+                                <div>
+                                    <h3 className="text-base font-black text-text-primary">
+                                        Chọn Khối Lớp Luyện Đề
+                                    </h3>
+                                    <p className="text-xs text-text-tertiary mt-0.5">
+                                        Lựa chọn khối lớp để xem danh sách đề thi
+                                        môn Toán
+                                    </p>
                                 </div>
                                 <button
-                                    onClick={() => setShowMobileMenu(false)}
-                                    className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-card transition-colors cursor-pointer"
+                                    onClick={() => setShowGradeModal(false)}
+                                    className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-surface transition-colors cursor-pointer"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
-                        </div>
 
-                        {/* Action list */}
-                        <div className="p-3 overflow-y-auto space-y-1 divide-y divide-border-primary/50">
-                            <div className="space-y-1 pb-2">
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        setShowGradeModal(true);
-                                    }}
-                                    className="w-full px-3 py-2.5 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
-                                >
+                            {/* Grade list */}
+                            <div className="p-4 overflow-y-auto space-y-2.5">
+                                {[
+                                    {
+                                        id: "8",
+                                        title: "Khối Lớp 8",
+                                        desc: "Chương trình Toán THCS Lớp 8",
+                                        badge: "THCS",
+                                    },
+                                    {
+                                        id: "9",
+                                        title: "Khối Lớp 9",
+                                        desc: "Toán 9 & Bộ đề Luyện thi vào 10",
+                                        badge: "Ôn thi vào 10",
+                                    },
+                                    {
+                                        id: "10",
+                                        title: "Khối Lớp 10",
+                                        desc: "Chương trình Toán THPT Lớp 10 (GDPT mới)",
+                                        badge: "THPT",
+                                    },
+                                    {
+                                        id: "11",
+                                        title: "Khối Lớp 11",
+                                        desc: "Chương trình Toán THPT Lớp 11",
+                                        badge: "THPT",
+                                    },
+                                    {
+                                        id: "12",
+                                        title: "Khối Lớp 12",
+                                        desc: "Toán 12 & Luyện thi Tốt nghiệp THPT",
+                                        badge: "Thi thử TN THPT",
+                                    },
+                                ].map((g) => {
+                                    const isCurrent =
+                                        selectedGrade === g.id ||
+                                        currentPath.includes(`/grade/${g.id}`);
+                                    const isUserGrade = user?.grade === g.id;
+                                    return (
+                                        <button
+                                            key={g.id}
+                                            onClick={() => {
+                                                if (user && !user.grade) {
+                                                    user.grade = g.id;
+                                                    try {
+                                                        const savedUserStr =
+                                                            localStorage.getItem(
+                                                                "hvt_user",
+                                                            );
+                                                        if (savedUserStr) {
+                                                            const parsed =
+                                                                JSON.parse(
+                                                                    savedUserStr,
+                                                                );
+                                                            parsed.grade = g.id;
+                                                            localStorage.setItem(
+                                                                "hvt_user",
+                                                                JSON.stringify(
+                                                                    parsed,
+                                                                ),
+                                                            );
+                                                        }
+                                                    } catch (e) {
+                                                        console.error(
+                                                            "Lỗi khi lưu lớp:",
+                                                            e,
+                                                        );
+                                                    }
+                                                }
+                                                onSelectGrade(g.id);
+                                                setShowGradeModal(false);
+                                            }}
+                                            className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer group ${
+                                                isCurrent
+                                                    ? "bg-brand-50/70 dark:bg-brand-900/20 border-brand-500 dark:border-brand-500/50 shadow-xs"
+                                                    : "bg-white dark:bg-bg-surface border-border-primary hover:border-brand-300 dark:hover:border-brand-800"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div
+                                                    className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0 ${
+                                                        isCurrent
+                                                            ? "bg-brand-600 text-white shadow-xs"
+                                                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 group-hover:bg-brand-100 dark:group-hover:bg-brand-950/40"
+                                                    }`}
+                                                >
+                                                    {g.id}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-extrabold text-sm text-text-primary">
+                                                            {g.title}
+                                                        </span>
+                                                        {isUserGrade && (
+                                                            <span className="text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-full">
+                                                                Lớp của bạn
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[11px] text-text-tertiary truncate mt-0.5">
+                                                        {g.desc}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <span
+                                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                                        g.id === "9" ||
+                                                        g.id === "12"
+                                                            ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+                                                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                                    }`}
+                                                >
+                                                    {g.badge}
+                                                </span>
+                                                <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:translate-x-0.5 transition-transform" />
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* MOBILE USER MENU BOTTOM SHEET */}
+            <AnimatePresence>
+                {showMobileMenu && (
+                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeOut" }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-xs cursor-pointer"
+                            onClick={() => setShowMobileMenu(false)}
+                        />
+                        <motion.div
+                            initial={{ y: "100%", opacity: 0.8 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: "100%", opacity: 0.5 }}
+                            transition={{
+                                type: "spring",
+                                damping: 30,
+                                stiffness: 340,
+                                mass: 0.85,
+                            }}
+                            className="relative w-full max-w-lg bg-bg-card border-t sm:border border-border-primary rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90vh] flex flex-col"
+                        >
+                            {/* User Profile Card Header */}
+                            <div className="p-4 border-b border-border-primary bg-bg-surface/50">
+                                <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                                            <GraduationCap className="w-4 h-4" />
+                                        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-border-primary shadow-xs flex items-center justify-center">
+                                            {user.avatarUrl ? (
+                                                <img
+                                                    src={user.avatarUrl}
+                                                    alt={user.name}
+                                                    referrerPolicy="no-referrer"
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold text-base">
+                                                    {user.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
-                                            <span>Đổi khối lớp luyện đề</span>
-                                            <p className="text-[10px] text-text-tertiary font-normal">
-                                                {selectedGrade
-                                                    ? `Đang chọn: Lớp ${selectedGrade}`
-                                                    : "Chọn lớp 8, 9, 10, 11, 12"}
+                                            <h3 className="text-sm font-extrabold text-text-primary">
+                                                {user.name}
+                                            </h3>
+                                            <p className="text-xs text-text-tertiary">
+                                                @{user.username}
                                             </p>
+                                            <div className="mt-1 flex items-center gap-2">
+                                                {getPlanBadge(user.plan)}
+                                                {user.grade && (
+                                                    <span className="text-[10px] font-bold text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 px-2 py-0.5 rounded-full">
+                                                        Lớp {user.grade}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                                </button>
+                                    <button
+                                        onClick={() => setShowMobileMenu(false)}
+                                        className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-bg-card transition-colors cursor-pointer"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
 
-                                {(user.role === "admin" ||
-                                    user.username === "admin") && (
+                            {/* Action list */}
+                            <div className="p-3 overflow-y-auto space-y-1 divide-y divide-border-primary/50">
+                                <div className="space-y-1 pb-2">
                                     <button
                                         onClick={() => {
                                             setShowMobileMenu(false);
-                                            onNavigateAdmin();
+                                            setShowGradeModal(true);
                                         }}
-                                        className="w-full px-3 py-2.5 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center justify-between text-left text-xs font-bold text-amber-700 dark:text-amber-300 cursor-pointer transition-colors border border-amber-200/50 dark:border-amber-800/50"
+                                        className="w-full px-3 py-2.5 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                                                <Shield className="w-4 h-4" />
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                                                <GraduationCap className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <span>
-                                                    Trang quản trị (Admin Panel)
-                                                </span>
-                                                <p className="text-[10px] text-amber-600/70 font-normal">
-                                                    Quản lý đề thi, học sinh, hệ
-                                                    thống
+                                                <span>Đổi khối lớp luyện đề</span>
+                                                <p className="text-[10px] text-text-tertiary font-normal">
+                                                    {selectedGrade
+                                                        ? `Đang chọn: Lớp ${selectedGrade}`
+                                                        : "Chọn lớp 8, 9, 10, 11, 12"}
                                                 </p>
                                             </div>
                                         </div>
-                                        <ChevronRight className="w-4 h-4 text-amber-500" />
+                                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
                                     </button>
-                                )}
+
+                                    {(user.role === "admin" ||
+                                        user.username === "admin") && (
+                                        <button
+                                            onClick={() => {
+                                                setShowMobileMenu(false);
+                                                onNavigateAdmin();
+                                            }}
+                                            className="w-full px-3 py-2.5 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center justify-between text-left text-xs font-bold text-amber-700 dark:text-amber-300 cursor-pointer transition-colors border border-amber-200/50 dark:border-amber-800/50"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                                    <Shield className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <span>
+                                                        Trang quản trị (Admin Panel)
+                                                    </span>
+                                                    <p className="text-[10px] text-amber-600/70 font-normal">
+                                                        Quản lý đề thi, học sinh, hệ
+                                                        thống
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-amber-500" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="space-y-1 py-2">
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onNavigateSettings("profile");
+                                        }}
+                                        className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                                <Bolt className="w-4 h-4" />
+                                            </div>
+                                            <span>Cài đặt thông tin cá nhân</span>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onNavigateSettings("security");
+                                        }}
+                                        className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                                <Shield className="w-4 h-4" />
+                                            </div>
+                                            <span>
+                                                Bảo mật tài khoản & mật khẩu
+                                            </span>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onNavigateSettings("appearance");
+                                        }}
+                                        className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                                <Palette className="w-4 h-4" />
+                                            </div>
+                                            <span>
+                                                Tùy chỉnh giao diện Sáng / Tối
+                                            </span>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onNavigateSettings("history");
+                                        }}
+                                        className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                                <History className="w-4 h-4" />
+                                            </div>
+                                            <span>Lịch sử làm bài thi</span>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
+                                    </button>
+                                </div>
+
+                                <div className="pt-2">
+                                    <button
+                                        onClick={() => {
+                                            setShowMobileMenu(false);
+                                            onLogout();
+                                        }}
+                                        className="w-full px-3 py-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center justify-between text-left text-xs font-bold text-rose-600 cursor-pointer transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+                                                <LogOut className="w-4 h-4" />
+                                            </div>
+                                            <span>Đăng xuất khỏi hệ thống</span>
+                                        </div>
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="space-y-1 py-2">
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        onNavigateSettings("profile");
-                                    }}
-                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                                            <Bolt className="w-4 h-4" />
-                                        </div>
-                                        <span>Cài đặt thông tin cá nhân</span>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        onNavigateSettings("security");
-                                    }}
-                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                                            <Shield className="w-4 h-4" />
-                                        </div>
-                                        <span>
-                                            Bảo mật tài khoản & mật khẩu
-                                        </span>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        onNavigateSettings("appearance");
-                                    }}
-                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                                            <Palette className="w-4 h-4" />
-                                        </div>
-                                        <span>
-                                            Tùy chỉnh giao diện Sáng / Tối
-                                        </span>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                                </button>
-
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        onNavigateSettings("history");
-                                    }}
-                                    className="w-full px-3 py-2 rounded-xl hover:bg-brand-50/50 dark:hover:bg-brand-500/10 flex items-center justify-between text-left text-xs font-semibold text-text-primary cursor-pointer transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
-                                            <History className="w-4 h-4" />
-                                        </div>
-                                        <span>Lịch sử làm bài thi</span>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-text-tertiary" />
-                                </button>
-                            </div>
-
-                            <div className="pt-2">
-                                <button
-                                    onClick={() => {
-                                        setShowMobileMenu(false);
-                                        onLogout();
-                                    }}
-                                    className="w-full px-3 py-2.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center justify-between text-left text-xs font-bold text-rose-600 cursor-pointer transition-colors"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
-                                            <LogOut className="w-4 h-4" />
-                                        </div>
-                                        <span>Đăng xuất khỏi hệ thống</span>
-                                    </div>
-                                </button>
-                            </div>
-                        </div>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </>
     );
 }
