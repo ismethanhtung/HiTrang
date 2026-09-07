@@ -421,15 +421,7 @@ export default function AdminSubmissionReviewer({
                                     )[]) || [null, null, null, null];
 
                                     return (
-                                        <div className="bg-bg-card border border-border-primary/80 p-4 rounded-xl space-y-3 overflow-x-auto">
-                                            <div className="grid grid-cols-12 text-[10px] font-bold text-text-secondary uppercase pb-2 border-b border-border-primary/60 min-w-[320px]">
-                                                <div className="col-span-8 sm:col-span-9">
-                                                    Khẳng định / Nhận định
-                                                </div>
-                                                <div className="col-span-4 sm:col-span-3 text-center">
-                                                    Đáp án & Kết quả
-                                                </div>
-                                            </div>
+                                        <div className="bg-bg-card border border-border-primary/80 p-3 sm:p-4 rounded-xl space-y-3">
                                             {q.options.map((option, idx) => {
                                                 const currentVal =
                                                     studentTf[idx];
@@ -462,26 +454,26 @@ export default function AdminSubmissionReviewer({
 
                                                 if (correctVal === true) {
                                                     dungBtnClass +=
-                                                        " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900 border-emerald-500";
+                                                        " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900 border-emerald-500 font-black";
                                                 } else {
                                                     saiBtnClass +=
-                                                        " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900 border-emerald-500";
+                                                        " ring-2 ring-emerald-500 ring-offset-1 dark:ring-offset-slate-900 border-emerald-500 font-black";
                                                 }
 
                                                 return (
                                                     <div
                                                         key={idx}
-                                                        className="grid grid-cols-12 items-center gap-2 py-2.5 border-b border-border-primary/40 last:border-0 min-w-[320px]"
+                                                        className="py-2.5 sm:py-3 border-b border-border-primary/40 last:border-0 last:pb-0 first:pt-0 space-y-2.5"
                                                     >
-                                                        <div className="col-span-8 sm:col-span-9 flex gap-2 text-text-primary [&_img]:mx-auto [&_img]:block [&_img]:my-2 text-xs select-none pr-2">
-                                                            <span className="font-bold text-slate-400 shrink-0">
+                                                        <div className="flex items-start gap-2.5 text-text-primary text-xs select-none pr-2">
+                                                            <span className="font-bold text-slate-400 shrink-0 pt-0.5">
                                                                 {String.fromCharCode(
                                                                     97 + idx,
                                                                 )}
                                                                 )
                                                             </span>
-                                                            <span
-                                                                className="overflow-x-auto"
+                                                            <div
+                                                                className="flex-1 min-w-0 [&_p]:inline [&_p]:m-0 [&_p]:p-0 [&_.katex-display]:my-1.5 [&_.katex-display]:overflow-x-auto"
                                                                 dangerouslySetInnerHTML={{
                                                                     __html: renderMathHtml(
                                                                         cleanedOption,
@@ -489,23 +481,22 @@ export default function AdminSubmissionReviewer({
                                                                 }}
                                                             />
                                                         </div>
-                                                        <div className="col-span-4 sm:col-span-3 flex justify-center items-center gap-1.5 select-none shrink-0">
+                                                        <div className="flex items-center justify-end gap-2 pl-6 select-none">
                                                             <span
-                                                                className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${dungBtnClass}`}
+                                                                className={`px-3.5 py-1 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 min-w-[56px] ${dungBtnClass}`}
                                                             >
                                                                 Đúng
                                                             </span>
                                                             <span
-                                                                className={`px-2.5 py-1 rounded-md text-[9px] font-extrabold ${saiBtnClass}`}
+                                                                className={`px-3.5 py-1 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 min-w-[56px] ${saiBtnClass}`}
                                                             >
                                                                 Sai
                                                             </span>
                                                             <span className="flex items-center ml-1">
                                                                 {currentVal ===
                                                                 null ? (
-                                                                    <span className="text-[8px] text-slate-400 font-bold">
-                                                                        Chưa
-                                                                        chọn
+                                                                    <span className="text-[9px] text-slate-400 font-bold">
+                                                                        Chưa chọn
                                                                     </span>
                                                                 ) : isCorrect ? (
                                                                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />

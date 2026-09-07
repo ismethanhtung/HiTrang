@@ -646,7 +646,7 @@ export default function StudentDashboard({
                     activeQuiz
                         ? quizEntryPhase === "taking"
                             ? "w-full h-full p-0 sm:p-2 md:p-4 flex flex-col min-h-0"
-                            : "w-full h-full p-4 xl:p-6 flex flex-col min-h-0"
+                            : "w-full h-full p-0 md:p-4 xl:p-6 flex flex-col min-h-0"
                         : reviewSubmission
                           ? "w-full h-full p-0 sm:p-2 md:p-4 flex flex-col min-h-0"
                           : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
@@ -1058,18 +1058,18 @@ export default function StudentDashboard({
                                                             ];
 
                                                         return (
-                                                            <div className="bg-slate-50 border border-slate-300 p-2.5 sm:p-4 rounded-lg sm:rounded-xl space-y-2.5 sm:space-y-3 overflow-x-auto">
-                                                                <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase pb-2 border-b border-slate-200 min-w-[320px]">
-                                                                    <div className="col-span-8 sm:col-span-9">
+                                                            <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:p-4 space-y-1">
+                                                                <div className="hidden sm:flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                                                                    <span>
                                                                         Khẳng
                                                                         định /
                                                                         Nhận
                                                                         định
-                                                                    </div>
-                                                                    <div className="col-span-4 sm:col-span-3 text-center">
+                                                                    </span>
+                                                                    <span className="w-28 text-center">
                                                                         Đáp án &
                                                                         Kết quả
-                                                                    </div>
+                                                                    </span>
                                                                 </div>
                                                                 {q.options.map(
                                                                     (
@@ -1132,10 +1132,10 @@ export default function StudentDashboard({
                                                                                 key={
                                                                                     idx
                                                                                 }
-                                                                                className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]"
+                                                                                className="py-2.5 sm:py-3 border-b border-slate-200/60 dark:border-slate-800/80 last:border-0 last:pb-0 first:pt-0 space-y-2.5"
                                                                             >
-                                                                                <div className="col-span-8 sm:col-span-9 flex items-center gap-2 text-slate-800 [&_img]:mx-auto [&_img]:block [&_img]:my-2 [&_p]:inline [&_p]:m-0 [&_p]:p-0">
-                                                                                    <span className="font-bold text-slate-500 shrink-0">
+                                                                                <div className="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 [&_img]:mx-auto [&_img]:block [&_img]:my-2 [&_p]:inline [&_p]:m-0 [&_p]:p-0">
+                                                                                    <span className="font-bold text-slate-500 dark:text-slate-400 shrink-0 select-none pt-0.5">
                                                                                         {String.fromCharCode(
                                                                                             97 +
                                                                                                 idx,
@@ -1143,8 +1143,8 @@ export default function StudentDashboard({
 
                                                                                         )
                                                                                     </span>
-                                                                                    <span
-                                                                                        className="flex-1 [&_p]:inline [&_p]:m-0 [&_p]:p-0 [&_.katex-display]:m-0 [&_.katex-display]:inline-block"
+                                                                                    <div
+                                                                                        className="flex-1 min-w-0 [&_p]:inline [&_p]:m-0 [&_p]:p-0 [&_.katex-display]:my-1 [&_.katex-display]:overflow-x-auto"
                                                                                         dangerouslySetInnerHTML={{
                                                                                             __html: renderMathHtml(
                                                                                                 cleanedOption,
@@ -1152,14 +1152,14 @@ export default function StudentDashboard({
                                                                                         }}
                                                                                     />
                                                                                 </div>
-                                                                                <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
+                                                                                <div className="shrink-0 flex items-center justify-end sm:justify-center gap-1.5 self-end sm:self-auto">
                                                                                     <div
-                                                                                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-default ${dungBtnClass}`}
+                                                                                        className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all min-w-[50px] text-center border ${dungBtnClass}`}
                                                                                     >
                                                                                         Đúng
                                                                                     </div>
                                                                                     <div
-                                                                                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-default ${saiBtnClass}`}
+                                                                                        className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all min-w-[50px] text-center border ${saiBtnClass}`}
                                                                                     >
                                                                                         Sai
                                                                                     </div>
@@ -1744,8 +1744,8 @@ export default function StudentDashboard({
                     </div>
                 ) : activeQuiz && quizEntryPhase === "entry" ? (
                     <>
-                        <div className="flex-1 flex items-start md:items-center justify-center p-4 sm:p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto">
-                            <div className="w-full max-w-5xl flex flex-col lg:flex-row items-stretch justify-center gap-8">
+                        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 bg-[#F9F8F6] dark:bg-bg-base overflow-y-auto min-h-0">
+                            <div className="w-full max-w-md lg:max-w-5xl flex flex-col lg:flex-row items-center lg:items-stretch justify-center gap-8 my-auto">
                                 {/* Cột 1: Bảng xếp hạng của bài thi — ẩn trên mobile, hiện từ lg */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 15 }}
@@ -1761,12 +1761,8 @@ export default function StudentDashboard({
                                         {/* Header BXH */}
                                         <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                                                <img
-                                                    src="/icons/trophy.svg"
-                                                    alt=""
-                                                    className="w-4.5 h-4.5 object-contain select-none flex-shrink-0"
-                                                />{" "}
-                                                Bảng xếp hạng bài thi
+                                                <Crown className="w-4 h-4 text-amber-500" />
+                                                BXH bài thi
                                             </h3>
                                         </div>
 
@@ -2046,7 +2042,7 @@ export default function StudentDashboard({
                                         duration: 0.3,
                                         ease: "easeOut",
                                     }}
-                                    className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-transparent lg:bg-white dark:lg:bg-slate-900 border-0 lg:border lg:border-slate-200/80 dark:lg:border-slate-800 rounded-none lg:rounded-2xl p-0 lg:p-8 shadow-none flex flex-col justify-between space-y-6"
+                                    className="w-full lg:w-[420px] lg:min-h-[520px] shrink-0 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 sm:p-8 shadow-xs flex flex-col justify-between space-y-5 sm:space-y-6"
                                 >
                                     <div className="space-y-6">
                                         {/* Quiz info header */}
@@ -2325,12 +2321,8 @@ export default function StudentDashboard({
                                         {/* Sheet Header */}
                                         <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
                                             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                                                <img
-                                                    src="/icons/trophy.svg"
-                                                    alt=""
-                                                    className="w-4.5 h-4.5 object-contain select-none flex-shrink-0"
-                                                />
-                                                Bảng xếp hạng bài thi
+                                                <Crown className="w-4 h-4 text-amber-500" />
+                                                BXH bài thi
                                             </h3>
                                             <button
                                                 type="button"
@@ -2797,15 +2789,15 @@ export default function StudentDashboard({
                                                         null,
                                                     ];
                                                 return (
-                                                    <div className="bg-slate-50 border border-slate-200 p-2.5 sm:p-4 space-y-2.5 sm:space-y-3 overflow-x-auto">
-                                                        <div className="grid grid-cols-12 text-[10px] font-bold text-gray-400 uppercase pb-2 border-b border-slate-200 min-w-[320px]">
-                                                            <div className="col-span-8 sm:col-span-9">
+                                                    <div className="bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 space-y-1">
+                                                        <div className="hidden sm:flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase pb-2 border-b border-slate-200/80 dark:border-slate-800">
+                                                            <span>
                                                                 Khẳng định /
                                                                 Nhận định
-                                                            </div>
-                                                            <div className="col-span-4 sm:col-span-3 text-center">
+                                                            </span>
+                                                            <span className="w-28 text-center">
                                                                 Lựa chọn của bạn
-                                                            </div>
+                                                            </span>
                                                         </div>
                                                         {q.options.map(
                                                             (option, idx) => {
@@ -2823,10 +2815,10 @@ export default function StudentDashboard({
                                                                         key={
                                                                             idx
                                                                         }
-                                                                        className="grid grid-cols-12 items-center gap-2 py-2 border-b border-slate-100 last:border-0 min-w-[320px]"
+                                                                        className="py-2.5 sm:py-3 border-b border-slate-100 dark:border-slate-800/80 last:border-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4"
                                                                     >
-                                                                        <div className="col-span-8 sm:col-span-9 flex items-center gap-2 text-slate-800 [&_img]:mx-auto [&_img]:block [&_img]:my-2 [&_p]:inline [&_p]:m-0 [&_p]:p-0">
-                                                                            <span className="font-bold text-slate-500 shrink-0">
+                                                                        <div className="flex items-start gap-2 text-slate-800 dark:text-slate-200 text-xs sm:text-sm leading-relaxed flex-1 min-w-0 [&_img]:mx-auto [&_img]:block [&_img]:my-2 [&_p]:inline [&_p]:m-0 [&_p]:p-0">
+                                                                            <span className="font-bold text-slate-500 dark:text-slate-400 shrink-0 select-none pt-0.5">
                                                                                 {String.fromCharCode(
                                                                                     97 +
                                                                                         idx,
@@ -2834,8 +2826,8 @@ export default function StudentDashboard({
 
                                                                                 )
                                                                             </span>
-                                                                            <span
-                                                                                className="flex-1 [&_p]:inline [&_p]:m-0 [&_p]:p-0 [&_.katex-display]:m-0 [&_.katex-display]:inline-block"
+                                                                            <div
+                                                                                className="flex-1 min-w-0 [&_p]:inline [&_p]:m-0 [&_p]:p-0 [&_.katex-display]:my-1 [&_.katex-display]:overflow-x-auto"
                                                                                 dangerouslySetInnerHTML={{
                                                                                     __html: renderMathHtml(
                                                                                         cleanedOption,
@@ -2843,7 +2835,7 @@ export default function StudentDashboard({
                                                                                 }}
                                                                             />
                                                                         </div>
-                                                                        <div className="col-span-4 sm:col-span-3 flex justify-center gap-1.5">
+                                                                        <div className="shrink-0 flex items-center justify-end sm:justify-center gap-1.5 self-end sm:self-auto">
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => {
@@ -2862,11 +2854,11 @@ export default function StudentDashboard({
                                                                                         },
                                                                                     );
                                                                                 }}
-                                                                                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer min-w-[50px] text-center border ${
                                                                                     currentVal ===
                                                                                     true
-                                                                                        ? "bg-emerald-500 text-white shadow-sm"
-                                                                                        : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                                        ? "bg-emerald-500 text-white border-emerald-500 shadow-2xs"
+                                                                                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-750"
                                                                                 }`}
                                                                             >
                                                                                 Đúng
@@ -2889,11 +2881,11 @@ export default function StudentDashboard({
                                                                                         },
                                                                                     );
                                                                                 }}
-                                                                                className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-md text-[10px] font-extrabold transition-all cursor-pointer ${
+                                                                                className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer min-w-[50px] text-center border ${
                                                                                     currentVal ===
                                                                                     false
-                                                                                        ? "bg-rose-500 text-white shadow-sm"
-                                                                                        : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                                                                                        ? "bg-emerald-500 text-white border-emerald-500 shadow-2xs"
+                                                                                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-750"
                                                                                 }`}
                                                                             >
                                                                                 Sai
@@ -2932,7 +2924,7 @@ export default function StudentDashboard({
                                                                 )
                                                             }
                                                             placeholder="Ví dụ: 150, 24, 2,05, -3..."
-                                                            className="w-full px-3.5 py-2 sm:px-4 sm:py-2.5 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900  focus:outline-none transition-all placeholder:text-slate-400"
+                                                            className="w-full px-3.5 py-1.5 sm:px-4 sm:py-2.5 bg-slate-50 border border-purple-200 hover:border-purple-300 focus:border-purple-500 focus:bg-white font-bold text-slate-900  focus:outline-none transition-all placeholder:text-slate-400"
                                                             style={{
                                                                 fontSize: `${fontSize}px`,
                                                             }}
@@ -2983,16 +2975,25 @@ export default function StudentDashboard({
                         </div>
 
                         {/* RIGHT COLUMN: Questions Tracker & Quick Select Panel */}
-                        <div className="hidden xl:flex xl:w-80 bg-white border border-gray-100 rounded-xl p-5 xl:p-8 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex-col justify-between">
+                        <div className="hidden xl:flex xl:w-80 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-xl p-5 xl:p-8 shadow-sm space-y-6 xl:h-full xl:overflow-y-auto flex-col justify-between">
                             <div>
-                                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
+                                <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
                                     Bảng câu hỏi
                                 </h3>
-                                <p className="text-[10px] text-gray-500 mt-1">
-                                    Click vào số câu để chuyển nhanh. Câu chưa
-                                    làm có nền vàng nhạt, câu đã làm có nền xanh
-                                    lá.
-                                </p>
+                                <div className="text-[10px] text-gray-500 dark:text-slate-400 mt-1.5 flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="inline-block w-2.5 h-2.5 bg-brand-600 border border-brand-700 dark:border-brand-500 rounded-xs shrink-0"></span>
+                                        <span>Đang làm</span>
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="inline-block w-2.5 h-2.5 bg-emerald-200 border border-emerald-300 dark:bg-emerald-800 dark:border-emerald-600 rounded-xs shrink-0"></span>
+                                        <span>Đã làm</span>
+                                    </span>
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="inline-block w-2.5 h-2.5 bg-amber-200 border border-amber-300 dark:bg-amber-800 dark:border-amber-600 rounded-xs shrink-0"></span>
+                                        <span>Chưa làm</span>
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Render Questions grouped by Section */}
@@ -3067,10 +3068,10 @@ export default function StudentDashboard({
                                                                     }
                                                                     className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${
                                                                         isCurrent
-                                                                            ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                                                                            ? "bg-brand-600 text-white border-brand-600 shadow-sm"
                                                                             : isAnswered
-                                                                              ? "bg-emerald-100/50 text-emerald-700 border-emerald-200"
-                                                                              : "bg-amber-100/50 text-amber-700 border-amber-200"
+                                                                              ? "bg-emerald-100/50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/30"
+                                                                              : "bg-amber-100/50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900/30"
                                                                     }`}
                                                                 >
                                                                     {qIndex + 1}
@@ -3174,10 +3175,20 @@ export default function StudentDashboard({
                                                 <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
                                                     Bảng câu hỏi
                                                 </h3>
-                                                <p className="text-[9px] text-gray-500 mt-0.5">
-                                                    Chọn số câu để di chuyển
-                                                    nhanh.
-                                                </p>
+                                                <div className="text-[9px] text-gray-500 dark:text-slate-400 mt-1 flex items-center flex-wrap gap-x-2 gap-y-0.5">
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="inline-block w-2 h-2 bg-brand-600 border border-brand-700 dark:border-brand-500 rounded-xs shrink-0"></span>
+                                                        <span>Đang làm</span>
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="inline-block w-2 h-2 bg-emerald-200 border border-emerald-300 dark:bg-emerald-800 dark:border-emerald-600 rounded-xs shrink-0"></span>
+                                                        <span>Đã làm</span>
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="inline-block w-2 h-2 bg-amber-200 border border-amber-300 dark:bg-amber-800 dark:border-amber-600 rounded-xs shrink-0"></span>
+                                                        <span>Chưa làm</span>
+                                                    </span>
+                                                </div>
                                             </div>
                                             <button
                                                 type="button"
@@ -3283,7 +3294,7 @@ export default function StudentDashboard({
                                                                             }}
                                                                             className={`w-9 h-9 rounded-lg text-xs font-bold transition-all relative flex items-center justify-center cursor-pointer border ${
                                                                                 isCurrent
-                                                                                    ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 shadow-sm"
+                                                                                    ? "bg-brand-600 text-white border-brand-600 shadow-sm"
                                                                                     : isAnswered
                                                                                       ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/30"
                                                                                       : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900/30"

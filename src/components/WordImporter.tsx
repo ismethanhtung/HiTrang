@@ -2592,11 +2592,16 @@ Lời giải: Vận tốc v(3) = 2*3 + 18 = 24.`;
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
                                 Bảng câu hỏi
                             </h3>
-                            <p className="text-[10px] text-gray-500 mt-1">
-                                Click vào số câu để chuyển nhanh. Câu chưa có
-                                đáp án có nền vàng nhạt, câu đã cấu hình đáp án
-                                có nền xanh lá.
-                            </p>
+                            <div className="text-[10px] text-gray-500 mt-1.5 flex items-center flex-wrap gap-x-2.5 gap-y-1">
+                                <span className="flex items-center gap-1.5">
+                                    <span className="inline-block w-2.5 h-2.5 bg-emerald-200 border border-emerald-300 rounded-xs shrink-0"></span>
+                                    <span>Đã cấu hình</span>
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="inline-block w-2.5 h-2.5 bg-amber-200 border border-amber-300 rounded-xs shrink-0"></span>
+                                    <span>Chưa có đáp án</span>
+                                </span>
+                            </div>
                         </div>
 
                         {/* Progress counter */}
