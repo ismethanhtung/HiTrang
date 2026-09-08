@@ -86,7 +86,6 @@ func OptionalAuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			c.Set("userID", claims.UserID)
 			c.Set("username", claims.Username)
 			c.Set("role", claims.Role)
-			c.Set("name", claims.Name)
 		}
 
 		c.Next()
