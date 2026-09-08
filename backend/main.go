@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.120"
+const AppVersion = "1.0.121"
 
 func main() {
 	serverStartTime := time.Now()
@@ -79,6 +79,16 @@ func main() {
 		log.Fatalf("Không thể kết nối đến MySQL: %v", err)
 	}
 	log.Println("Kết nối MySQL thành công!")
+
+	// 2.1 Configure DB Connection Pooling for High Concurrency
+	sqlDB, err := db.DB()
+	if err == nil {
+		sqlDB.SetMaxIdleConns(15)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(time.Hour)
+		sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+		log.Println("Đã cấu hình Connection Pool (MaxOpen: 100, MaxIdle: 15, MaxLifetime: 1h)")
+	}
 
 	// 3. Auto Migration
 	log.Println("Đang chạy Auto Migration...")

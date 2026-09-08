@@ -121,7 +121,16 @@ export default function Topbar({
         const interval = setInterval(() => {
             if (!document.hidden) fetchUnread();
         }, 45000);
-        return () => clearInterval(interval);
+
+        const handleVisibilityChange = () => {
+            if (!document.hidden) fetchUnread();
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [user]);
 
     const gradeCategories: Record<string, string[]> = {

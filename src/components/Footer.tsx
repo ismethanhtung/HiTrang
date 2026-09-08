@@ -65,9 +65,24 @@ export default function Footer({
         };
 
         fetchStats();
-        // Refresh live stats every 30s
-        const timer = setInterval(fetchStats, 30000);
-        return () => clearInterval(timer);
+        // Refresh live stats every 30s only when the tab is visible
+        const timer = setInterval(() => {
+            if (!document.hidden) {
+                fetchStats();
+            }
+        }, 30000);
+
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                fetchStats();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            clearInterval(timer);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, []);
 
     const rawPing = realPing ?? loadTimeMs ?? 45;

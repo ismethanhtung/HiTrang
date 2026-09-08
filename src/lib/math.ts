@@ -66,17 +66,42 @@ const translateUnicodeToLatex = (tex: string): string => {
     return clean;
 };
 
+// In-memory LRU-like cache for full HTML math rendering to eliminate repeated KaTeX computations
+const MAX_HTML_CACHE_SIZE = 2000;
+const mathHtmlCache = new Map<string, string>();
+
+// Sub-cache for individual TeX formulas
+const MAX_TEX_CACHE_SIZE = 2000;
+const texDisplayCache = new Map<string, string>();
+const texInlineCache = new Map<string, string>();
+
 /**
  * Parses an HTML string, finds math expressions wrapped in $...$ or $$...$$,
- * renders them using KaTeX, and returns the updated HTML string.
+ * renders them using KaTeX with high-performance memory caching, and returns the updated HTML string.
  */
 export const renderMathHtml = (html: string): string => {
     if (!html) return "";
+
+    // Fast-path: if there are no math delimiters at all, return directly
+    if (!html.includes("$")) {
+        return html;
+    }
+
+    // Cache hit for entire snippet
+    const cached = mathHtmlCache.get(html);
+    if (cached !== undefined) {
+        return cached;
+    }
 
     let result = html;
 
     // 1. Replace display math $$...$$
     result = result.replace(/\$\$(.*?)\$\$/g, (match, tex) => {
+        const cachedTex = texDisplayCache.get(tex);
+        if (cachedTex !== undefined) {
+            return cachedTex;
+        }
+
         try {
             // Unescape common XML entities that mammoth might have introduced
             let cleanTex = tex
@@ -86,7 +111,14 @@ export const renderMathHtml = (html: string): string => {
                 .replace(/&quot;/g, '"')
                 .replace(/&apos;/g, "'");
             cleanTex = translateUnicodeToLatex(cleanTex);
-            return katex.renderToString(cleanTex, { displayMode: true, throwOnError: false });
+            const rendered = katex.renderToString(cleanTex, { displayMode: true, throwOnError: false });
+
+            if (texDisplayCache.size >= MAX_TEX_CACHE_SIZE) {
+                const firstKey = texDisplayCache.keys().next().value;
+                if (firstKey) texDisplayCache.delete(firstKey);
+            }
+            texDisplayCache.set(tex, rendered);
+            return rendered;
         } catch (err) {
             return match;
         }
@@ -94,6 +126,11 @@ export const renderMathHtml = (html: string): string => {
 
     // 2. Replace inline math $...$
     result = result.replace(/\$(.*?)\$/g, (match, tex) => {
+        const cachedTex = texInlineCache.get(tex);
+        if (cachedTex !== undefined) {
+            return cachedTex;
+        }
+
         try {
             // Unescape common XML entities that mammoth might have introduced
             let cleanTex = tex
@@ -103,11 +140,25 @@ export const renderMathHtml = (html: string): string => {
                 .replace(/&quot;/g, '"')
                 .replace(/&apos;/g, "'");
             cleanTex = translateUnicodeToLatex(cleanTex);
-            return katex.renderToString(cleanTex, { displayMode: false, throwOnError: false });
+            const rendered = katex.renderToString(cleanTex, { displayMode: false, throwOnError: false });
+
+            if (texInlineCache.size >= MAX_TEX_CACHE_SIZE) {
+                const firstKey = texInlineCache.keys().next().value;
+                if (firstKey) texInlineCache.delete(firstKey);
+            }
+            texInlineCache.set(tex, rendered);
+            return rendered;
         } catch (err) {
             return match;
         }
     });
+
+    // Store in HTML cache
+    if (mathHtmlCache.size >= MAX_HTML_CACHE_SIZE) {
+        const firstKey = mathHtmlCache.keys().next().value;
+        if (firstKey) mathHtmlCache.delete(firstKey);
+    }
+    mathHtmlCache.set(html, result);
 
     return result;
 };

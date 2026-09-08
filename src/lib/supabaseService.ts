@@ -784,9 +784,8 @@ export async function createManualBackup(): Promise<{ message: string; backup: B
 }
 
 export async function downloadBackupFile(filename: string, passkey: string): Promise<Blob> {
-  const token = getToken();
-  const apiUrl = getApiUrl();
-  const res = await fetch(`${apiUrl}/admin/backups/${encodeURIComponent(filename)}/download?passkey=${encodeURIComponent(passkey)}`, {
+  const token = localStorage.getItem('hitrang_token');
+  const res = await fetch(`${API_BASE_URL}/admin/backups/${encodeURIComponent(filename)}/download?passkey=${encodeURIComponent(passkey)}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
@@ -811,13 +810,12 @@ export async function restoreBackupFile(filename: string, passkey: string): Prom
 }
 
 export async function uploadAndRestoreBackup(file: File, passkey: string): Promise<{ message: string; metadata?: any }> {
-  const token = getToken();
-  const apiUrl = getApiUrl();
+  const token = localStorage.getItem('hitrang_token');
   const formData = new FormData();
   formData.append('backup_file', file);
   formData.append('passkey', passkey);
 
-  const res = await fetch(`${apiUrl}/admin/backups/upload-restore`, {
+  const res = await fetch(`${API_BASE_URL}/admin/backups/upload-restore`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,

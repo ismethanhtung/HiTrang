@@ -7,11 +7,14 @@ import LandingPage from "./components/LandingPage";
 import Auth from "./components/Auth";
 import StudentDashboard from "./components/StudentDashboard";
 import AdminDashboard from "./components/AdminDashboard";
-import AdminPanel, { AdminTab } from "./components/AdminPanel";
+import type { AdminTab } from "./components/AdminPanel";
 import SettingsView from "./components/SettingsView";
 import Footer from "./components/Footer";
-import GoogleCallback from "./components/GoogleCallback";
-import ResetPasswordView from "./components/ResetPasswordView";
+
+// Lazy-load heavy or rarely used routes for fast initial page loads and minimal bundle size on mobile
+const AdminPanel = React.lazy(() => import("./components/AdminPanel"));
+const GoogleCallback = React.lazy(() => import("./components/GoogleCallback"));
+const ResetPasswordView = React.lazy(() => import("./components/ResetPasswordView"));
 import {
     getCurrentUser,
     signOutUser,
@@ -505,9 +508,24 @@ export default function App() {
 
         checkOngoing();
 
-        // Check every 10 seconds
-        const interval = setInterval(checkOngoing, 10000);
-        return () => clearInterval(interval);
+        // Check every 12 seconds only when tab is visible
+        const interval = setInterval(() => {
+            if (!document.hidden) {
+                checkOngoing();
+            }
+        }, 12000);
+
+        const handleVisibilityChange = () => {
+            if (!document.hidden) {
+                checkOngoing();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
     }, [user, currentPath]);
 
     // Exit browser fullscreen mode when student stops taking test
@@ -748,29 +766,37 @@ export default function App() {
                     {/* 1. ADMIN PANEL ROUTE */}
                     {routeInfo.route === "admin" ? (
                         user && user.role === "admin" ? (
-                            <AdminPanel
-                                quizzes={quizzes}
-                                submissions={submissions}
-                                onAddQuiz={handleAddQuiz}
-                                onDeleteQuiz={handleDeleteQuiz}
-                                onUpdateQuiz={handleUpdateQuiz}
-                                onReloadSubmissions={handleReloadSubmissions}
-                                initialTab={
-                                    (routeInfo.tab || "plans") as AdminTab
+                            <React.Suspense
+                                fallback={
+                                    <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                                        <div className="w-8 h-8 border-3 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
                                 }
-                                onTabChange={(tab) => {
-                                    const targetPath =
-                                        tab === "plans"
-                                            ? "/admin"
-                                            : `/admin/${tab}`;
-                                    window.history.pushState(
-                                        null,
-                                        "",
-                                        targetPath,
-                                    );
-                                    setCurrentPath(targetPath);
-                                }}
-                            />
+                            >
+                                <AdminPanel
+                                    quizzes={quizzes}
+                                    submissions={submissions}
+                                    onAddQuiz={handleAddQuiz}
+                                    onDeleteQuiz={handleDeleteQuiz}
+                                    onUpdateQuiz={handleUpdateQuiz}
+                                    onReloadSubmissions={handleReloadSubmissions}
+                                    initialTab={
+                                        (routeInfo.tab || "plans") as AdminTab
+                                    }
+                                    onTabChange={(tab) => {
+                                        const targetPath =
+                                            tab === "plans"
+                                                ? "/admin"
+                                                : `/admin/${tab}`;
+                                        window.history.pushState(
+                                            null,
+                                            "",
+                                            targetPath,
+                                        );
+                                        setCurrentPath(targetPath);
+                                    }}
+                                />
+                            </React.Suspense>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-center p-6 bg-bg-base">
                                 <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto">
@@ -805,10 +831,12 @@ export default function App() {
                             </div>
                         )
                     ) : routeInfo.route === "google-callback" ? (
-                        <GoogleCallback
-                            onLogin={handleLogin}
-                            navigateTo={navigateTo}
-                        />
+                        <React.Suspense fallback={<div className="min-h-screen" />}>
+                            <GoogleCallback
+                                onLogin={handleLogin}
+                                navigateTo={navigateTo}
+                            />
+                        </React.Suspense>
                     ) : routeInfo.route === "schedule" ? (
                         <ScheduleView
                             user={user}
@@ -819,16 +847,18 @@ export default function App() {
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
                         />
                     ) : routeInfo.route === "reset-password" ? (
-                        <ResetPasswordView
-                            onNavigate={navigateTo}
-                            onOpenAuth={(mode = "login", prefillUsername) => {
-                                setAuthMode(mode);
-                                if (prefillUsername) {
-                                    setAuthPrefillUsername(prefillUsername);
-                                }
-                                setAuthModalOpen(true);
-                            }}
-                        />
+                        <React.Suspense fallback={<div className="min-h-screen" />}>
+                            <ResetPasswordView
+                                onNavigate={navigateTo}
+                                onOpenAuth={(mode = "login", prefillUsername) => {
+                                    setAuthMode(mode);
+                                    if (prefillUsername) {
+                                        setAuthPrefillUsername(prefillUsername);
+                                    }
+                                    setAuthModalOpen(true);
+                                }}
+                            />
+                        </React.Suspense>
                     ) : !user ? (
                         /* 2. UNAUTHENTICATED LANDING PAGE (100% MATCH TO DESIGN IMAGE) */
                         <LandingPage
@@ -1054,11 +1084,6 @@ export default function App() {
                             }}
                             userLoggedIn={!!user}
                             loadTimeMs={loadTimeMs}
-                            totalSubmissionsCount={
-                                submissions && submissions.length > 0
-                                    ? submissions.length
-                                    : 1568
-                            }
                         />
                     )}
             </main>
