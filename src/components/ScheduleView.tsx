@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { getSchedule, ScheduleSlot } from "../lib/supabaseService";
 
 const getGradeFromContent = (content: string): string | null => {
@@ -117,37 +118,75 @@ export default function ScheduleView({
                         {applyDate}
                     </span>
 
-                    {/* Toggle view mode buttons (Desktop only) */}
-                    <div className="inline-flex w-auto bg-slate-100 dark:bg-slate-855 p-0.5 rounded-lg border border-slate-200/50 dark:border-slate-800">
+                    {/* Toggle view mode buttons (Desktop only - Minimal Full-width Underline Bar Style) */}
+                    <div className="inline-flex items-center gap-5 sm:gap-6 select-none">
                         <button
+                            type="button"
                             onClick={() => setViewMode("image")}
-                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
+                            className={`relative pb-1.5 text-[11px] sm:text-xs transition-colors cursor-pointer flex flex-col items-center outline-none ${
                                 viewMode === "image"
-                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
-                                    : "text-slate-400 hover:text-slate-650"
+                                    ? "text-slate-900 dark:text-white font-bold"
+                                    : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
                             }`}
                         >
-                            Ảnh
+                            <span className="px-0.5">Ảnh</span>
+                            {viewMode === "image" && (
+                                <motion.div
+                                    layoutId="scheduleViewUnderline"
+                                    className="absolute bottom-0 inset-x-0 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 400,
+                                        damping: 32,
+                                    }}
+                                />
+                            )}
                         </button>
+
                         <button
+                            type="button"
                             onClick={() => setViewMode("grid")}
-                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
+                            className={`relative pb-1.5 text-[11px] sm:text-xs transition-colors cursor-pointer flex flex-col items-center outline-none ${
                                 viewMode === "grid"
-                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
-                                    : "text-slate-400 hover:text-slate-650"
+                                    ? "text-slate-900 dark:text-white font-bold"
+                                    : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
                             }`}
                         >
-                            Lưới TKB
+                            <span className="px-0.5">Lưới TKB</span>
+                            {viewMode === "grid" && (
+                                <motion.div
+                                    layoutId="scheduleViewUnderline"
+                                    className="absolute bottom-0 inset-x-0 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 400,
+                                        damping: 32,
+                                    }}
+                                />
+                            )}
                         </button>
+
                         <button
+                            type="button"
                             onClick={() => setViewMode("list")}
-                            className={`px-2.5 sm:px-3 py-1.5 sm:py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer outline-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none border-0 border-transparent select-none text-center truncate ${
+                            className={`relative pb-1.5 text-[11px] sm:text-xs transition-colors cursor-pointer flex flex-col items-center outline-none ${
                                 viewMode === "list"
-                                    ? "bg-white dark:bg-slate-900 text-slate-855 dark:text-slate-100 shadow-2xs"
-                                    : "text-slate-400 hover:text-slate-650"
+                                    ? "text-slate-900 dark:text-white font-bold"
+                                    : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
                             }`}
                         >
-                            Theo ngày
+                            <span className="px-0.5">Theo ngày</span>
+                            {viewMode === "list" && (
+                                <motion.div
+                                    layoutId="scheduleViewUnderline"
+                                    className="absolute bottom-0 inset-x-0 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                    transition={{
+                                        type: "spring",
+                                        stiffness: 400,
+                                        damping: 32,
+                                    }}
+                                />
+                            )}
                         </button>
                     </div>
                 </div>

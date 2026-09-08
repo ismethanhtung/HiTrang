@@ -129,7 +129,10 @@ export default function Topbar({
 
         return () => {
             clearInterval(interval);
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange,
+            );
         };
     }, [user]);
 
@@ -675,20 +678,24 @@ export default function Topbar({
 
             {/* MOBILE BOTTOM NAVIGATION BAR (ZING MP3 COMPACT STYLE) */}
             {user && !isResultReview && (
-                <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[50px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
                     {/* 1. Trang chủ */}
                     <motion.button
                         whileTap={{ scale: 0.92 }}
                         onClick={onNavigateHome}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             isHomeActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Trang chủ"
                     >
-                        <NavHouseIcon className="w-[19px] h-[19px]" />
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isHomeActive ? "font-bold" : "font-medium"}`}>
+                        <div className="h-[20px] flex items-center justify-center">
+                            <NavHouseIcon className="w-[17px] h-[17px]" />
+                        </div>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isHomeActive ? "font-bold" : "font-medium"}`}
+                        >
                             Trang chủ
                         </span>
                     </motion.button>
@@ -703,15 +710,19 @@ export default function Topbar({
                                 setShowGradeModal(true);
                             }
                         }}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             isGradeActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Đề thi"
                     >
-                        <NavDocumentIcon className="w-[19px] h-[19px]" />
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isGradeActive ? "font-bold" : "font-medium"}`}>
+                        <div className="h-[20px] flex items-center justify-center">
+                            <NavDocumentIcon className="w-[17px] h-[17px]" />
+                        </div>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isGradeActive ? "font-bold" : "font-medium"}`}
+                        >
                             Đề thi
                         </span>
                     </motion.button>
@@ -720,15 +731,19 @@ export default function Topbar({
                     <motion.button
                         whileTap={{ scale: 0.92 }}
                         onClick={onNavigateSchedule}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             isScheduleActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Lịch học"
                     >
-                        <NavCalendarIcon className="w-[19px] h-[19px]" />
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isScheduleActive ? "font-bold" : "font-medium"}`}>
+                        <div className="h-[20px] flex items-center justify-center">
+                            <NavCalendarIcon className="w-[17px] h-[17px]" />
+                        </div>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isScheduleActive ? "font-bold" : "font-medium"}`}
+                        >
                             Lịch học
                         </span>
                     </motion.button>
@@ -737,15 +752,19 @@ export default function Topbar({
                     <motion.button
                         whileTap={{ scale: 0.92 }}
                         onClick={onNavigateLeaderboard}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             isLeaderboardActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Bảng xếp hạng"
                     >
-                        <NavRankingIcon className="w-[19px] h-[19px]" />
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isLeaderboardActive ? "font-bold" : "font-medium"}`}>
+                        <div className="h-[20px] flex items-center justify-center">
+                            <NavRankingIcon className="w-[17px] h-[17px]" />
+                        </div>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isLeaderboardActive ? "font-bold" : "font-medium"}`}
+                        >
                             Xếp hạng
                         </span>
                     </motion.button>
@@ -754,24 +773,26 @@ export default function Topbar({
                     <motion.button
                         whileTap={{ scale: 0.92 }}
                         onClick={() => onNavigateSettings("notifications")}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             isNotiActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Thông báo"
                     >
-                        <div className="relative">
-                            <NavBellIcon className="w-[19px] h-[19px]" />
+                        <div className="h-[20px] flex items-center justify-center relative">
+                            <NavBellIcon className="w-[17px] h-[17px]" />
                             {unreadNotiCount > 0 && (
-                                <span className="absolute -top-1 -right-1.5 min-w-[14px] h-3.5 bg-rose-500 text-white text-[8.5px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
+                                <span className="absolute -top-1 -right-1.5 min-w-[13px] h-3 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
                                     {unreadNotiCount > 99
                                         ? "99+"
                                         : unreadNotiCount}
                                 </span>
                             )}
                         </div>
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${isNotiActive ? "font-bold" : "font-medium"}`}>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isNotiActive ? "font-bold" : "font-medium"}`}
+                        >
                             Thông báo
                         </span>
                     </motion.button>
@@ -780,32 +801,44 @@ export default function Topbar({
                     <motion.button
                         whileTap={{ scale: 0.92 }}
                         onClick={() => setShowMobileMenu(true)}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-1 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
                             showMobileMenu || isSettingsActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Cá nhân"
                     >
-                        <div
-                            className={`w-5.5 h-5.5 rounded-full overflow-hidden flex items-center justify-center transition-all ${
-                                showMobileMenu || isSettingsActive
-                                    ? "ring-1.5 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
-                                    : "border border-border-primary"
-                            }`}
-                        >
+                        <div className="h-[20px] flex items-center justify-center">
                             {user.avatarUrl ? (
-                                <img
-                                    src={user.avatarUrl}
-                                    alt={user.name}
-                                    referrerPolicy="no-referrer"
-                                    className="w-full h-full object-cover"
-                                />
+                                <div
+                                    className={`w-[22px] h-[22px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
+                                        showMobileMenu || isSettingsActive
+                                            ? "ring-1.5 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
+                                            : "border border-border-primary"
+                                    }`}
+                                >
+                                    <img
+                                        src={user.avatarUrl}
+                                        alt={user.name}
+                                        referrerPolicy="no-referrer"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
                             ) : (
-                                <UserIcon className="w-3 h-3 text-current" />
+                                <div
+                                    className={`w-[22px] h-[22px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
+                                        showMobileMenu || isSettingsActive
+                                            ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 ring-1.5 ring-brand-500"
+                                            : "border border-border-primary text-text-secondary"
+                                    }`}
+                                >
+                                    <UserIcon className="w-[11px] h-[11px] text-current" />
+                                </div>
                             )}
                         </div>
-                        <span className={`text-[10px] leading-none mt-1 tracking-tight ${showMobileMenu || isSettingsActive ? "font-bold" : "font-medium"}`}>
+                        <span
+                            className={`text-[9px] leading-tight mt-0.5 tracking-tight ${showMobileMenu || isSettingsActive ? "font-bold" : "font-medium"}`}
+                        >
                             Cá nhân
                         </span>
                     </motion.button>
@@ -843,8 +876,8 @@ export default function Topbar({
                                         Chọn Khối Lớp Luyện Đề
                                     </h3>
                                     <p className="text-xs text-text-tertiary mt-0.5">
-                                        Lựa chọn khối lớp để xem danh sách đề thi
-                                        môn Toán
+                                        Lựa chọn khối lớp để xem danh sách đề
+                                        thi môn Toán
                                     </p>
                                 </div>
                                 <button
@@ -1066,7 +1099,9 @@ export default function Topbar({
                                                 <GraduationCap className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <span>Đổi khối lớp luyện đề</span>
+                                                <span>
+                                                    Đổi khối lớp luyện đề
+                                                </span>
                                                 <p className="text-[10px] text-text-tertiary font-normal">
                                                     {selectedGrade
                                                         ? `Đang chọn: Lớp ${selectedGrade}`
@@ -1092,11 +1127,12 @@ export default function Topbar({
                                                 </div>
                                                 <div>
                                                     <span>
-                                                        Trang quản trị (Admin Panel)
+                                                        Trang quản trị (Admin
+                                                        Panel)
                                                     </span>
                                                     <p className="text-[10px] text-amber-600/70 font-normal">
-                                                        Quản lý đề thi, học sinh, hệ
-                                                        thống
+                                                        Quản lý đề thi, học
+                                                        sinh, hệ thống
                                                     </p>
                                                 </div>
                                             </div>
@@ -1117,7 +1153,9 @@ export default function Topbar({
                                             <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center">
                                                 <Bolt className="w-4 h-4" />
                                             </div>
-                                            <span>Cài đặt thông tin cá nhân</span>
+                                            <span>
+                                                Cài đặt thông tin cá nhân
+                                            </span>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-text-tertiary" />
                                     </button>

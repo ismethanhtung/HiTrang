@@ -11,6 +11,7 @@ const safeParseDate = (dateVal: any): Date => {
 };
 
 import React, { useState } from "react";
+import { motion } from "motion/react";
 import {
     User,
     LogOut,
@@ -2855,33 +2856,59 @@ export default function SettingsView({
                 /* Notifications tab content */
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 space-y-4">
                     {/* Action Bar */}
-                    <div className="flex items-center justify-between gap-3 py-3 border-b border-slate-100 dark:border-slate-800/60">
-                        <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center justify-between gap-3 pt-2 pb-1 border-b border-slate-200/60 dark:border-slate-800/80">
+                        {/* Tab Switcher: Tất cả & Chưa đọc (Minimal Full-width Underline Bar Style) */}
+                        <div className="flex items-center gap-6 sm:gap-7 select-none">
                             <button
                                 type="button"
                                 onClick={() => setNotifFilter("all")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap ${
+                                className={`relative pb-2 text-xs sm:text-[12.5px] transition-colors cursor-pointer flex flex-col items-center group outline-none ${
                                     notifFilter === "all"
-                                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                        ? "text-slate-900 dark:text-white font-bold"
+                                        : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
                                 }`}
                             >
-                                Tất cả ({notifications.length})
+                                <span className="px-0.5">Tất cả ({notifications.length})</span>
+                                {notifFilter === "all" && (
+                                    <motion.div
+                                        layoutId="notifTabUnderline"
+                                        className="absolute bottom-0 inset-x-0 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 32,
+                                        }}
+                                    />
+                                )}
                             </button>
+
                             <button
                                 type="button"
                                 onClick={() => setNotifFilter("unread")}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                                className={`relative pb-2 text-xs sm:text-[12.5px] transition-colors cursor-pointer flex flex-col items-center group outline-none ${
                                     notifFilter === "unread"
-                                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
-                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                                        ? "text-slate-900 dark:text-white font-bold"
+                                        : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-800 dark:hover:text-slate-200"
                                 }`}
                             >
-                                <span>Chưa đọc</span>
-                                {unreadNotifCount > 0 && (
-                                    <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
-                                        {unreadNotifCount}
-                                    </span>
+                                <div className="flex items-center gap-1.5 px-0.5">
+                                    <span>Chưa đọc</span>
+                                    {unreadNotifCount > 0 && (
+                                        <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                                            {unreadNotifCount}
+                                        </span>
+                                    )}
+                                </div>
+                                {notifFilter === "unread" && (
+                                    <motion.div
+                                        layoutId="notifTabUnderline"
+                                        className="absolute bottom-0 inset-x-0 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                        transition={{
+                                            type: "spring",
+                                            stiffness: 400,
+                                            damping: 32,
+                                        }}
+                                    />
                                 )}
                             </button>
                         </div>

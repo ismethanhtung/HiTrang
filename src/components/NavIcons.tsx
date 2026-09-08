@@ -4,7 +4,7 @@ import React from "react";
  * NavHouseIcon - Icon Trang chủ từ public/svg/house.svg
  */
 export function NavHouseIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
@@ -27,7 +27,7 @@ export function NavHouseIcon({
  * NavDocumentIcon - Icon Đề thi / Khối lớp từ public/svg/document.svg
  */
 export function NavDocumentIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
@@ -50,7 +50,7 @@ export function NavDocumentIcon({
  * NavCalendarIcon - Icon Lịch học từ public/svg/calendar.svg
  */
 export function NavCalendarIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
@@ -73,7 +73,7 @@ export function NavCalendarIcon({
  * NavRankingIcon - Icon Bảng xếp hạng từ public/svg/ranking.svg
  */
 export function NavRankingIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
@@ -96,7 +96,7 @@ export function NavRankingIcon({
  * NavBellIcon - Icon Thông báo từ public/svg/bell.svg
  */
 export function NavBellIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
@@ -119,7 +119,7 @@ export function NavBellIcon({
  * NavPacmanIcon - Icon Pacman từ public/svg/pacman.svg
  */
 export function NavPacmanIcon({
-    className = "w-[19px] h-[19px]",
+    className = "w-[17px] h-[17px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (

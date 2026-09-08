@@ -143,6 +143,18 @@ export default function App() {
     const [authMode, setAuthMode] = useState<"login" | "register">("login");
     const [authPrefillUsername, setAuthPrefillUsername] = useState<string>("");
 
+    const [isMobileScreen, setIsMobileScreen] = useState(() =>
+        typeof window !== "undefined" ? window.innerWidth < 640 : false,
+    );
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobileScreen(window.innerWidth < 640);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [prefetchedLeaderboard, setPrefetchedLeaderboard] = useState<
@@ -718,15 +730,34 @@ export default function App() {
                             className="fixed inset-0 bg-slate-950/40 dark:bg-slate-950/70 backdrop-blur-xs cursor-pointer"
                         />
                         <motion.div
-                            initial={{ y: "100%", opacity: 0.8 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: "100%", opacity: 0.5 }}
-                            transition={{
-                                type: "spring",
-                                damping: 30,
-                                stiffness: 340,
-                                mass: 0.85,
-                            }}
+                            initial={
+                                isMobileScreen
+                                    ? { y: "100%", opacity: 0.8 }
+                                    : { opacity: 0, scale: 0.95, y: -6 }
+                            }
+                            animate={
+                                isMobileScreen
+                                    ? { y: 0, opacity: 1 }
+                                    : { opacity: 1, scale: 1, y: 0 }
+                            }
+                            exit={
+                                isMobileScreen
+                                    ? { y: "100%", opacity: 0.5 }
+                                    : { opacity: 0, scale: 0.96, y: -6 }
+                            }
+                            transition={
+                                isMobileScreen
+                                    ? {
+                                          type: "spring",
+                                          damping: 30,
+                                          stiffness: 340,
+                                          mass: 0.85,
+                                      }
+                                    : {
+                                          duration: 0.2,
+                                          ease: [0.16, 1, 0.3, 1],
+                                      }
+                            }
                             onClick={(e) => e.stopPropagation()}
                             className="relative w-full max-w-[420px] bg-white dark:bg-card-dark rounded-t-3xl sm:rounded-2xl shadow-2xl border-t sm:border border-slate-100 dark:border-slate-800 max-h-[92vh] sm:max-h-[90vh] overflow-y-auto cursor-default z-10"
                         >
