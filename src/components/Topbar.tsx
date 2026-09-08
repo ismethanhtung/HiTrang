@@ -781,7 +781,7 @@ export default function Topbar({
                         title="Thông báo"
                     >
                         <div className="h-[20px] flex items-center justify-center relative">
-                            <NavBellIcon className="w-[17px] h-[17px]" />
+                            <NavBellIcon className="w-[18px] h-[18px]" />
                             {unreadNotiCount > 0 && (
                                 <span className="absolute -top-1 -right-1.5 min-w-[13px] h-3 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
                                     {unreadNotiCount > 99

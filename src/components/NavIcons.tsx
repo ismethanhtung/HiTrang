@@ -96,21 +96,27 @@ export function NavRankingIcon({
  * NavBellIcon - Icon Thông báo từ public/svg/bell.svg
  */
 export function NavBellIcon({
-    className = "w-[17px] h-[17px]",
+    className = "w-[18px] h-[18px]",
     ...props
 }: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
+            viewBox="4.5 3.2 15 17.2"
             fill="currentColor"
-            stroke="currentColor"
-            strokeWidth="0.35"
-            strokeLinejoin="round"
             className={className}
             {...props}
         >
-            <path d="M22.555,13.662l-1.9-6.836A9.321,9.321,0,0,0,2.576,7.3L1.105,13.915A5,5,0,0,0,5.986,20H7.1a5,5,0,0,0,9.8,0h.838a5,5,0,0,0,4.818-6.338ZM12,22a3,3,0,0,1-2.816-2h5.632A3,3,0,0,1,12,22Zm8.126-5.185A2.977,2.977,0,0,1,17.737,18H5.986a3,3,0,0,1-2.928-3.651l1.47-6.616a7.321,7.321,0,0,1,14.2-.372l1.9,6.836A2.977,2.977,0,0,1,20.126,16.815Z" />
+            <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M11.9998 4.50037C9.02034 4.50037 6.55167 6.81159 6.35561 9.78463L5.94855 15.9572H18.0507L17.6441 9.78506C17.4482 6.81184 14.9795 4.50037 11.9998 4.50037ZM7.85236 9.88334C7.99643 7.6987 9.81045 6.00037 11.9998 6.00037C14.1893 6.00037 16.0034 7.69888 16.1473 9.88365L16.4486 14.4572H7.55073L7.85236 9.88334Z"
+            />
+            <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M10 17.5C10.4 18.7 11.1 19.5 12 19.5C12.9 19.5 13.6 18.7 14 17.5H10Z"
+            />
         </svg>
     );
 }
