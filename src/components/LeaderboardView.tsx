@@ -736,7 +736,7 @@ export default function LeaderboardView({
                                                             />
                                                         ) : (
                                                             <span className="text-slate-450">
-                                                                #{rank}
+                                                                {rank}
                                                             </span>
                                                         )}
                                                     </span>

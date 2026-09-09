@@ -480,10 +480,7 @@ export default function StudentDashboard({
                     Object.keys(selectedAnswersRef.current || {}).length > 0
                         ? selectedAnswersRef.current
                         : selectedAnswers;
-                await updateAttemptAnswers(
-                    currentAttempt.attempt_id,
-                    payload,
-                );
+                await updateAttemptAnswers(currentAttempt.attempt_id, payload);
             } catch (err) {
                 console.warn(
                     "Không thể lưu nháp đáp án (học sinh có thể đang rớt mạng):",
@@ -651,9 +648,7 @@ export default function StudentDashboard({
                 activeQuiz.duration * 60 -
                     Math.max(
                         0,
-                        Math.ceil(
-                            (quizEndTimeRef.current - Date.now()) / 1000,
-                        ),
+                        Math.ceil((quizEndTimeRef.current - Date.now()) / 1000),
                     ),
             );
 
@@ -2073,7 +2068,7 @@ export default function StudentDashboard({
                                                                                     className="w-5 h-5 object-contain"
                                                                                 />
                                                                             ) : (
-                                                                                `#${entry.rankPosition}`
+                                                                                `${entry.rankPosition}`
                                                                             )}
                                                                         </span>
                                                                         {/* Avatar */}
