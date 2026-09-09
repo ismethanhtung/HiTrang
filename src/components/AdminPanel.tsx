@@ -28,11 +28,13 @@ import {
     Bell,
     Database,
     Server,
+    FileCheck,
 } from "lucide-react";
 
 import AdminPlansTab from "./AdminPlansTab";
 import AdminCreateQuizTab from "./AdminCreateQuizTab";
 import AdminQuizzesTab from "./AdminQuizzesTab";
+import AdminSubmissionsTab from "./AdminSubmissionsTab";
 import AdminStatsQuizzesTab from "./AdminStatsQuizzesTab";
 import AdminStatsStudentsTab from "./AdminStatsStudentsTab";
 import AdminSubmissionReviewer from "./AdminSubmissionReviewer";
@@ -47,6 +49,7 @@ export type AdminTab =
     | "plans"
     | "create-quiz"
     | "quizzes"
+    | "submissions"
     | "stats-quizzes"
     | "stats-students"
     | "api-monitor"
@@ -60,6 +63,7 @@ const VALID_ADMIN_TABS: AdminTab[] = [
     "plans",
     "create-quiz",
     "quizzes",
+    "submissions",
     "stats-quizzes",
     "stats-students",
     "api-monitor",
@@ -421,6 +425,28 @@ export default function AdminPanel({
                                 )}
 
                                 {matchSetting([
+                                    "quản lý bài nộp",
+                                    "bài nộp",
+                                    "submissions",
+                                    "kết quả nộp",
+                                    "lượt nộp",
+                                ]) && (
+                                    <button
+                                        onClick={() =>
+                                            handleTabClick("submissions")
+                                        }
+                                        className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
+                                            activeTab === "submissions"
+                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
+                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                        }`}
+                                    >
+                                        <FileCheck className="w-4 h-4 shrink-0" />
+                                        <span>Quản Lý Bài Nộp</span>
+                                    </button>
+                                )}
+
+                                {matchSetting([
                                     "quản lý lịch học",
                                     "lịch học",
                                     "lịch",
@@ -704,6 +730,16 @@ export default function AdminPanel({
                                 submissions={submissions}
                                 onDeleteQuiz={onDeleteQuiz}
                                 onUpdateQuiz={onUpdateQuiz}
+                            />
+                        )}
+
+                        {activeTab === "submissions" && (
+                            <AdminSubmissionsTab
+                                quizzes={quizzes}
+                                submissions={submissions}
+                                userProfiles={userProfiles}
+                                onReviewSubmission={setAdminReviewSubmission}
+                                onReloadSubmissions={onReloadSubmissions}
                             />
                         )}
 

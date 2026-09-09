@@ -250,6 +250,12 @@ export async function createSubmission(sub: Submission): Promise<void> {
   return;
 }
 
+export async function deleteSubmission(submissionId: string): Promise<void> {
+  await apiRequest(`/admin/submissions/${submissionId}`, {
+    method: 'DELETE',
+  });
+}
+
 /**
  * ----------------------------------------------------
  * 4. CẬP NHẬT THÔNG TIN TÀI KHOẢN (SETTINGS OPERATIONS)

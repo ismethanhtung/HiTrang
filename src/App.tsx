@@ -108,6 +108,7 @@ export default function App() {
             let tab = rawSub || "plans";
             if (tab === "users" || tab === "accounts") tab = "plans";
             if (tab === "students") tab = "stats-students";
+            if (tab === "submission" || tab === "attempts" || tab === "bainop") tab = "submissions";
             if (tab === "server" || tab === "ec2" || tab === "metrics" || tab === "infrastructure") tab = "system";
             return { route: "admin", tab };
         }
@@ -192,7 +193,7 @@ export default function App() {
 
     const confirmNavigation = () => {
         if (isTakingQuiz) {
-            return window.confirm("ê bé, đang làm mà chuyển đi đâu thế.");
+            return window.confirm("Bạn đang trong bài thi. Bạn có chắc chắn muốn rời khỏi?");
         }
         return true;
     };
@@ -276,6 +277,7 @@ export default function App() {
                     plans: "Quản lý gói & tài khoản",
                     "create-quiz": "Tạo đề thi mới",
                     quizzes: "Quản lý đề thi",
+                    submissions: "Quản lý bài nộp",
                     "stats-quizzes": "Thống kê đề thi",
                     "stats-students": "Thống kê học sinh",
                     schedule: "Quản lý lịch học",

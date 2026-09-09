@@ -180,6 +180,9 @@ export default function StudentDashboard({
     const [selectedAnswers, setSelectedAnswers] = useState<Record<string, any>>(
         {},
     );
+    const selectedAnswersRef = useRef<Record<string, any>>({});
+    const quizEndTimeRef = useRef<number>(0);
+    const isSubmittingQuizRef = useRef<boolean>(false);
     const [timeLeft, setTimeLeft] = useState(0); // in seconds
     const [quizTimerActive, setQuizTimerActive] = useState(false);
     const [currentAttempt, setCurrentAttempt] = useState<any>(null);
@@ -190,6 +193,29 @@ export default function StudentDashboard({
         any | null
     >(null);
     const [loadingCheckAttempt, setLoadingCheckAttempt] = useState(false);
+
+    // Keep answers ref in sync
+    useEffect(() => {
+        selectedAnswersRef.current = selectedAnswers;
+    }, [selectedAnswers]);
+
+    const handleAnswerChange = (qId: string, answerVal: any) => {
+        setSelectedAnswers((prev) => {
+            const next = { ...prev, [qId]: answerVal };
+            selectedAnswersRef.current = next;
+            if (currentAttempt) {
+                try {
+                    localStorage.setItem(
+                        "hitrang_answers_" + currentAttempt.attempt_id,
+                        JSON.stringify(next),
+                    );
+                } catch {
+                    // ignore
+                }
+            }
+            return next;
+        });
+    };
 
     // Quiz leaderboard states
     const [quizLeaderboard, setQuizLeaderboard] = useState<
@@ -224,17 +250,13 @@ export default function StudentDashboard({
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (activeQuiz && quizEntryPhase === "taking") {
                 e.preventDefault();
-                e.returnValue = "ê bé, đang làm mà chuyển đi đâu thế.";
-                return "ê bé, đang làm mà chuyển đi đâu thế.";
+                e.returnValue = "";
+                return "";
             }
         };
 
         const handleVisibilityChange = () => {
-            if (activeQuiz && quizEntryPhase === "taking" && document.hidden) {
-                alert(
-                    "ê bé, đang kiểm tra mà chuyển tab đi đâu thế! Hãy tập trung làm bài nhé.",
-                );
-            }
+            // Non-blocking handler to prevent freezing timer threads on mobile/desktop
         };
 
         window.addEventListener("beforeunload", handleBeforeUnload);
@@ -348,8 +370,33 @@ export default function StudentDashboard({
                 questions,
             });
             setCurrentQuestionIdx(0);
-            setSelectedAnswers(attempt.answers || {});
-            setTimeLeft(attempt.remaining_seconds);
+
+            // Merge server answers and any unsynced local answers backup
+            let initialAnswers = attempt.answers || {};
+            try {
+                const savedLocal = localStorage.getItem(
+                    "hitrang_answers_" + attempt.attempt_id,
+                );
+                if (savedLocal) {
+                    const parsed = JSON.parse(savedLocal);
+                    initialAnswers = { ...initialAnswers, ...parsed };
+                }
+            } catch {
+                // ignore
+            }
+
+            setSelectedAnswers(initialAnswers);
+            selectedAnswersRef.current = initialAnswers;
+
+            // Set up target wall-clock finish time
+            const remSec =
+                attempt.remaining_seconds !== undefined &&
+                attempt.remaining_seconds >= 0
+                    ? attempt.remaining_seconds
+                    : activeQuiz.duration * 60;
+            quizEndTimeRef.current = Date.now() + remSec * 1000;
+            setTimeLeft(remSec);
+            isSubmittingQuizRef.current = false;
             setQuizTimerActive(true);
             setQuizEntryPhase("taking");
         } catch (err: any) {
@@ -417,6 +464,8 @@ export default function StudentDashboard({
             setQuizEntryPhase("none");
             setActiveAttemptInProgress(null);
             setQuizLeaderboard([]);
+            isSubmittingQuizRef.current = false;
+            quizEndTimeRef.current = 0;
         }
     }, [activeQuizId, quizzes, quizEntryPhase, activeQuiz]);
 
@@ -427,18 +476,21 @@ export default function StudentDashboard({
         // Debounce saving answers to Supabase
         const delayDebounceFn = setTimeout(async () => {
             try {
+                const payload =
+                    Object.keys(selectedAnswersRef.current || {}).length > 0
+                        ? selectedAnswersRef.current
+                        : selectedAnswers;
                 await updateAttemptAnswers(
                     currentAttempt.attempt_id,
-                    selectedAnswers,
+                    payload,
                 );
-                console.log("Đã tự động lưu đáp án nháp.");
             } catch (err) {
                 console.warn(
                     "Không thể lưu nháp đáp án (học sinh có thể đang rớt mạng):",
                     err,
                 );
             }
-        }, 1500); // 1.5s debounce
+        }, 1200);
 
         return () => clearTimeout(delayDebounceFn);
     }, [selectedAnswers, currentAttempt, quizTimerActive]);
@@ -484,19 +536,48 @@ export default function StudentDashboard({
         setShowContactOptions(false);
     };
 
-    // Timer Effect
+    // Timer Effect using real Wall-Clock timestamp
     useEffect(() => {
-        let interval: any = null;
-        if (quizTimerActive && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft((prev) => prev - 1);
-            }, 1000);
-        } else if (timeLeft === 0 && quizTimerActive) {
-            // Auto submit when time runs out
-            handleQuizSubmit(true);
-        }
-        return () => clearInterval(interval);
-    }, [quizTimerActive, timeLeft]);
+        if (!quizTimerActive || !activeQuiz || !currentAttempt) return;
+
+        const updateTimer = () => {
+            if (isSubmittingQuizRef.current) return;
+            const now = Date.now();
+            const remaining = Math.max(
+                0,
+                Math.ceil((quizEndTimeRef.current - now) / 1000),
+            );
+            setTimeLeft(remaining);
+
+            if (remaining <= 0) {
+                setQuizTimerActive(false);
+                handleQuizSubmit(true);
+            }
+        };
+
+        // Run tick immediately
+        updateTimer();
+
+        const interval = setInterval(updateTimer, 1000);
+
+        const handleVisibilityOrFocus = () => {
+            if (!document.hidden) {
+                updateTimer();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+        window.addEventListener("focus", handleVisibilityOrFocus);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityOrFocus,
+            );
+            window.removeEventListener("focus", handleVisibilityOrFocus);
+        };
+    }, [quizTimerActive, activeQuiz, currentAttempt]);
 
     // Format seconds to MM:SS
     const formatTime = (secs: number) => {
@@ -526,10 +607,16 @@ export default function StudentDashboard({
     // Submit current quiz
     const handleQuizSubmit = async (force = false) => {
         if (!activeQuiz || !currentAttempt) return;
+        if (isSubmittingQuizRef.current) return;
+
+        const answersToSubmit =
+            Object.keys(selectedAnswersRef.current || {}).length > 0
+                ? selectedAnswersRef.current
+                : selectedAnswers;
 
         if (
             !force &&
-            Object.keys(selectedAnswers).length < activeQuiz.questions.length
+            Object.keys(answersToSubmit).length < activeQuiz.questions.length
         ) {
             if (
                 !confirm(
@@ -540,13 +627,34 @@ export default function StudentDashboard({
             }
         }
 
+        isSubmittingQuizRef.current = true;
         setQuizTimerActive(false);
 
         try {
             // Server trigger will calculate exact score and total questions automatically
             const { score, totalQuestions } = await finalizeAndSubmitAttempt(
                 currentAttempt.attempt_id,
-                selectedAnswers,
+                answersToSubmit,
+            );
+
+            // Clear local storage backup on success
+            try {
+                localStorage.removeItem(
+                    "hitrang_answers_" + currentAttempt.attempt_id,
+                );
+            } catch {
+                // ignore
+            }
+
+            const timeSpentSec = Math.max(
+                1,
+                activeQuiz.duration * 60 -
+                    Math.max(
+                        0,
+                        Math.ceil(
+                            (quizEndTimeRef.current - Date.now()) / 1000,
+                        ),
+                    ),
             );
 
             const newSubmission: Submission = {
@@ -560,9 +668,9 @@ export default function StudentDashboard({
                 submittedAt: new Date()
                     .toISOString()
                     .replace("T", " ")
-                    .substring(0, 16),
-                answers: { ...selectedAnswers },
-                timeSpent: activeQuiz.duration * 60 - timeLeft,
+                    .substring(0, 19),
+                answers: { ...answersToSubmit },
+                timeSpent: timeSpentSec,
             };
 
             onAddSubmission(newSubmission);
@@ -573,6 +681,7 @@ export default function StudentDashboard({
             }
         } catch (err: any) {
             console.error("Lỗi khi nộp bài:", err);
+            isSubmittingQuizRef.current = false;
             alert(
                 `Lỗi khi nộp bài: ${err.message || "Vui lòng kiểm tra lại kết nối mạng và thử lại!"}`,
             );
@@ -2734,11 +2843,9 @@ export default function StudentDashboard({
                                                                         type="button"
                                                                         id={`btn-option-${idx}`}
                                                                         onClick={() =>
-                                                                            setSelectedAnswers(
-                                                                                {
-                                                                                    ...selectedAnswers,
-                                                                                    [qId]: idx,
-                                                                                },
+                                                                            handleAnswerChange(
+                                                                                qId,
+                                                                                idx,
                                                                             )
                                                                         }
                                                                         className={`w-full flex items-center justify-between p-3 sm:p-4 bg-white border rounded-lg text-left font-medium transition-all duration-150 cursor-pointer ${
@@ -2847,11 +2954,9 @@ export default function StudentDashboard({
                                                                                         idx
                                                                                     ] =
                                                                                         true;
-                                                                                    setSelectedAnswers(
-                                                                                        {
-                                                                                            ...selectedAnswers,
-                                                                                            [qId]: updated,
-                                                                                        },
+                                                                                    handleAnswerChange(
+                                                                                        qId,
+                                                                                        updated,
                                                                                     );
                                                                                 }}
                                                                                 className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer min-w-[50px] text-center border ${
@@ -2874,11 +2979,9 @@ export default function StudentDashboard({
                                                                                         idx
                                                                                     ] =
                                                                                         false;
-                                                                                    setSelectedAnswers(
-                                                                                        {
-                                                                                            ...selectedAnswers,
-                                                                                            [qId]: updated,
-                                                                                        },
+                                                                                    handleAnswerChange(
+                                                                                        qId,
+                                                                                        updated,
                                                                                     );
                                                                                 }}
                                                                                 className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer min-w-[50px] text-center border ${
@@ -2914,13 +3017,10 @@ export default function StudentDashboard({
                                                             type="text"
                                                             value={textVal}
                                                             onChange={(e) =>
-                                                                setSelectedAnswers(
-                                                                    {
-                                                                        ...selectedAnswers,
-                                                                        [qId]: e
-                                                                            .target
-                                                                            .value,
-                                                                    },
+                                                                handleAnswerChange(
+                                                                    qId,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
                                                             placeholder="Ví dụ: 150, 24, 2,05, -3..."

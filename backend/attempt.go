@@ -98,24 +98,27 @@ func CalculateScore(quiz *Quiz, answers map[string]interface{}) (float64, int) {
 
 			case "true_false":
 				// chosen should be a list of boolean values
-				var studentTf []bool
+				var studentTf []*bool
 				if list, ok := chosen.([]interface{}); ok {
 					for _, item := range list {
 						if b, ok := item.(bool); ok {
-							studentTf = append(studentTf, b)
+							bVal := b
+							studentTf = append(studentTf, &bVal)
 						} else {
-							// If null is sent, append false or ignore.
-							studentTf = append(studentTf, false)
+							studentTf = append(studentTf, nil)
 						}
 					}
 				} else if list, ok := chosen.([]bool); ok {
-					studentTf = list
+					for _, b := range list {
+						bVal := b
+						studentTf = append(studentTf, &bVal)
+					}
 				}
 
 				if len(q.CorrectAnswers) == 4 && len(studentTf) == 4 {
 					tfMatches := 0
 					for i := 0; i < 4; i++ {
-						if studentTf[i] == q.CorrectAnswers[i] {
+						if studentTf[i] != nil && *studentTf[i] == q.CorrectAnswers[i] {
 							tfMatches++
 						}
 					}
@@ -138,9 +141,12 @@ func CalculateScore(quiz *Quiz, answers map[string]interface{}) (float64, int) {
 				} else if f, ok := chosen.(float64); ok {
 					studentStr = strconv.FormatFloat(f, 'f', -1, 64)
 				}
-				studentStr = strings.TrimSpace(strings.ToLower(studentStr))
-				correctStr := strings.TrimSpace(strings.ToLower(q.ShortAnswerKey))
-				if studentStr == correctStr && correctStr != "" {
+				normStudent := strings.TrimSpace(strings.ToLower(studentStr))
+				normCorrect := strings.TrimSpace(strings.ToLower(q.ShortAnswerKey))
+				// Normalize comma to dot for decimal comparison (e.g. 2,5 == 2.5)
+				stdNormStudent := strings.ReplaceAll(normStudent, ",", ".")
+				stdNormCorrect := strings.ReplaceAll(normCorrect, ",", ".")
+				if (normStudent == normCorrect || stdNormStudent == stdNormCorrect) && normCorrect != "" {
 					qScore = 1.0
 				}
 			}
@@ -488,13 +494,7 @@ func HandleUpdateAttemptAnswers(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		if attempt.Status != "inprogress" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bài thi đã được nộp từ trước"})
-			return
-		}
-
-		// Grace period 10 seconds for slow network
-		if time.Now().After(attempt.ExpiresAt.Add(10 * time.Second)) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Thời gian làm bài đã kết thúc"})
+			c.JSON(http.StatusOK, gin.H{"message": "Bài thi đã được nộp từ trước"})
 			return
 		}
 
@@ -504,10 +504,12 @@ func HandleUpdateAttemptAnswers(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		attempt.Answers = req.Answers
-		if err := db.Save(&attempt).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu nháp đáp án"})
-			return
+		if req.Answers != nil {
+			attempt.Answers = req.Answers
+			if err := db.Save(&attempt).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lưu nháp đáp án"})
+				return
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Lưu nháp thành công"})
@@ -515,7 +517,7 @@ func HandleUpdateAttemptAnswers(db *gorm.DB) gin.HandlerFunc {
 }
 
 type FinalizeAttemptRequest struct {
-	Answers map[string]interface{} `json:"answers" binding:"required"`
+	Answers map[string]interface{} `json:"answers"`
 }
 
 func HandleFinalizeAndSubmitAttempt(db *gorm.DB) gin.HandlerFunc {
@@ -534,21 +536,29 @@ func HandleFinalizeAndSubmitAttempt(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		// If already submitted (e.g. from prior auto-submit or fast double-click), return existing score gracefully
 		if attempt.Status != "inprogress" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Lượt thi này đã được nộp trước đó"})
-			return
-		}
-
-		// Grace period 15 seconds for slow network latency when submitting
-		if time.Now().After(attempt.ExpiresAt.Add(15 * time.Second)) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Thời gian làm bài thi đã kết thúc"})
+			if attempt.Score != nil && attempt.TotalQuestions != nil {
+				c.JSON(http.StatusOK, gin.H{
+					"score":          *attempt.Score,
+					"totalQuestions": *attempt.TotalQuestions,
+				})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"message": "Lượt thi này đã được nộp trước đó"})
 			return
 		}
 
 		var req FinalizeAttemptRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Dữ liệu nộp bài không hợp lệ"})
-			return
+		_ = c.ShouldBindJSON(&req)
+
+		// Fallback to draft answers in DB if payload is empty
+		finalAnswers := req.Answers
+		if finalAnswers == nil || len(finalAnswers) == 0 {
+			finalAnswers = attempt.Answers
+		}
+		if finalAnswers == nil {
+			finalAnswers = make(map[string]interface{})
 		}
 
 		// Fetch quiz to score
@@ -559,7 +569,7 @@ func HandleFinalizeAndSubmitAttempt(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// Compute score on Go side (Equivalent to Postgres trigger finalize_attempt)
-		score, totalQuestions := CalculateScore(&quiz, req.Answers)
+		score, totalQuestions := CalculateScore(&quiz, finalAnswers)
 
 		now := time.Now()
 		tx := db.Begin()
@@ -571,7 +581,7 @@ func HandleFinalizeAndSubmitAttempt(db *gorm.DB) gin.HandlerFunc {
 
 		// 1. Update attempt status, answers and score
 		attempt.Status = "submitted"
-		attempt.Answers = req.Answers
+		attempt.Answers = finalAnswers
 		attempt.Score = &score
 		attempt.TotalQuestions = &totalQuestions
 		attempt.SubmittedAt = &now
@@ -737,6 +747,54 @@ func HandleGetSubmissions(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, response)
+	}
+}
+
+// HandleAdminDeleteSubmission (Admin/Teacher only)
+// DELETE /api/admin/submissions/:id
+func HandleAdminDeleteSubmission(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roleVal, _ := c.Get("role")
+		role, _ := roleVal.(string)
+		if role != "admin" && role != "teacher" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Không có quyền thực hiện thao tác"})
+			return
+		}
+
+		id := strings.TrimSpace(c.Param("id"))
+		if id == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID bài nộp không hợp lệ"})
+			return
+		}
+
+		// Check if submission exists
+		var sub Submission
+		hasSub := db.Where("id = ?", id).First(&sub).Error == nil
+
+		// Delete from submissions and exam_attempts
+		_ = db.Where("id = ?", id).Delete(&Submission{}).Error
+		_ = db.Where("id = ?", id).Delete(&ExamAttempt{}).Error
+
+		// Recalculate stats for this student if found
+		if hasSub && sub.StudentID != "" {
+			var count int64
+			db.Model(&Submission{}).Where("student_id = ?", sub.StudentID).Count(&count)
+			type SumResult struct {
+				Total float64
+			}
+			var sr SumResult
+			db.Table("submissions").Select("COALESCE(SUM(score), 0) as total").Where("student_id = ?", sub.StudentID).Scan(&sr)
+
+			db.Model(&UserOverallStats{}).Where("user_id = ?", sub.StudentID).Updates(map[string]interface{}{
+				"tests_completed": count,
+				"total_exp":       sr.Total * 10,
+			})
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Đã xóa bài nộp thành công",
+		})
 	}
 }
 

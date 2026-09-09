@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.127"
+const AppVersion = "1.0.130"
 
 func main() {
 	serverStartTime := time.Now()
@@ -271,6 +271,7 @@ func main() {
 
 			// Submissions
 			protected.GET("/submissions", HandleGetSubmissions(db))
+			protected.DELETE("/admin/submissions/:id", HandleAdminDeleteSubmission(db))
 
 			// Leaderboards (Management)
 			protected.POST("/leaderboard/refresh", HandleRefreshOverallLeaderboard(db))
