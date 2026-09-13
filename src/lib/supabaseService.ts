@@ -37,6 +37,14 @@ async function apiRequest<T = any>(path: string, options: RequestInit = {}): Pro
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      if (!path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+        localStorage.removeItem('hitrang_token');
+        localStorage.removeItem('hvt_user');
+        localStorage.removeItem('hvt_submissions');
+        window.dispatchEvent(new CustomEvent('hitrang:session-expired'));
+      }
+    }
     throw new ApiError(errBody.error || `Lỗi API (${res.status})`, res.status);
   }
 
@@ -92,17 +100,19 @@ export async function signInUser(username: string, password: string, totpCode?: 
 
 export async function getCurrentUser(): Promise<User | null> {
   const token = localStorage.getItem('hitrang_token');
-  if (!token) return null;
+  if (!token) {
+    localStorage.removeItem('hvt_user');
+    return null;
+  }
 
   try {
     const data = await apiRequest<User>('/auth/me');
     return data;
   } catch (err: any) {
     console.warn('Lỗi đồng bộ session cũ:', err);
-    if (err.status === 401) {
-      console.warn('Mã xác thực hết hạn hoặc không hợp lệ. Xóa token.');
-      localStorage.removeItem('hitrang_token');
-    }
+    localStorage.removeItem('hitrang_token');
+    localStorage.removeItem('hvt_user');
+    localStorage.removeItem('hvt_submissions');
     return null;
   }
 }
@@ -167,6 +177,8 @@ export async function signOutUser(): Promise<void> {
     // Ignore if offline or already expired
   } finally {
     localStorage.removeItem('hitrang_token');
+    localStorage.removeItem('hvt_user');
+    localStorage.removeItem('hvt_submissions');
   }
 }
 
@@ -292,6 +304,8 @@ export async function updatePassword(
 
 export async function signOutAllDevices(): Promise<void> {
   localStorage.removeItem('hitrang_token');
+  localStorage.removeItem('hvt_user');
+  localStorage.removeItem('hvt_submissions');
 }
 
 /**

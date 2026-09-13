@@ -166,8 +166,19 @@ export default function App() {
 
     // User Session State
     const [user, setUser] = useState<User | null>(() => {
+        const token = localStorage.getItem("hitrang_token");
         const saved = localStorage.getItem("hvt_user");
-        return saved ? JSON.parse(saved) : null;
+        if (!token || !saved) {
+            localStorage.removeItem("hvt_user");
+            localStorage.removeItem("hitrang_token");
+            return null;
+        }
+        try {
+            return JSON.parse(saved);
+        } catch {
+            localStorage.removeItem("hvt_user");
+            return null;
+        }
     });
 
     const filteredQuizzes = quizzes;
@@ -211,6 +222,24 @@ export default function App() {
             setBugSenderName("");
         }
     }, [user]);
+
+    // Global listener for session expiration triggered by 401 API responses
+    useEffect(() => {
+        const handleSessionExpired = () => {
+            setUser(null);
+            localStorage.removeItem("hvt_user");
+            localStorage.removeItem("hitrang_token");
+            localStorage.removeItem("hvt_submissions");
+            if (window.location.pathname.startsWith("/admin")) {
+                window.history.pushState(null, "", "/");
+                setCurrentPath("/");
+            }
+        };
+        window.addEventListener("hitrang:session-expired", handleSessionExpired);
+        return () => {
+            window.removeEventListener("hitrang:session-expired", handleSessionExpired);
+        };
+    }, []);
 
     // Dynamic Page Title for browser tab
     useEffect(() => {
@@ -400,6 +429,15 @@ export default function App() {
                             } else {
                                 setActiveTab("student-dashboard");
                             }
+                        } else {
+                            setUser(null);
+                            localStorage.removeItem("hvt_user");
+                            localStorage.removeItem("hitrang_token");
+                            localStorage.removeItem("hvt_submissions");
+                            if (window.location.pathname.startsWith("/admin")) {
+                                window.history.pushState(null, "", "/");
+                                setCurrentPath("/");
+                            }
                         }
                     } else {
                         const [dbQuizzes, currentUser, dbSubmissions] =
@@ -438,6 +476,15 @@ export default function App() {
                             } else {
                                 setActiveTab("student-dashboard");
                             }
+                        } else {
+                            setUser(null);
+                            localStorage.removeItem("hvt_user");
+                            localStorage.removeItem("hitrang_token");
+                            localStorage.removeItem("hvt_submissions");
+                            if (window.location.pathname.startsWith("/admin")) {
+                                window.history.pushState(null, "", "/");
+                                setCurrentPath("/");
+                            }
                         }
                     }
                     setLoading(false);
@@ -472,7 +519,12 @@ export default function App() {
                     } else {
                         setUser(null);
                         localStorage.removeItem("hvt_user");
+                        localStorage.removeItem("hitrang_token");
                         localStorage.removeItem("hvt_submissions");
+                        if (window.location.pathname.startsWith("/admin")) {
+                            window.history.pushState(null, "", "/");
+                            setCurrentPath("/");
+                        }
                     }
                     setLoading(false);
                 }
@@ -855,12 +907,23 @@ export default function App() {
                                     Bạn không có quyền truy cập vào trang quản
                                     trị. Vui lòng đăng nhập với tài khoản Admin.
                                 </p>
-                                <button
-                                    onClick={() => navigateTo("/")}
-                                    className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
-                                >
-                                    Quay lại Trang chủ
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setAuthMode("login");
+                                            setAuthModalOpen(true);
+                                        }}
+                                        className="px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+                                    >
+                                        Đăng nhập Admin
+                                    </button>
+                                    <button
+                                        onClick={() => navigateTo("/")}
+                                        className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                                    >
+                                        Quay lại Trang chủ
+                                    </button>
+                                </div>
                             </div>
                         )
                     ) : routeInfo.route === "google-callback" ? (
