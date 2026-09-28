@@ -115,6 +115,21 @@ type UserOverallStats struct {
 	Profile        Profile   `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
+// UserMonthlyStats represents user_monthly_stats table for month-by-month rankings & snapshots
+type UserMonthlyStats struct {
+	Month          string    `json:"month" gorm:"primaryKey;type:varchar(7)"` // 'YYYY-MM'
+	UserID         string    `json:"user_id" gorm:"primaryKey;type:varchar(36)"`
+	Grade          string    `json:"grade" gorm:"type:varchar(10);default:'';index:idx_monthly_grade_rank"`
+	TotalExp       float64   `json:"total_exp" gorm:"default:0"`
+	TestsCompleted int       `json:"tests_completed" gorm:"default:0"`
+	CurrentRank    *int      `json:"current_rank"`
+	PreviousRank   *int      `json:"previous_rank"`
+	RankDate       string    `json:"rank_date" gorm:"column:rank_date;type:varchar(10);default:''"`
+	IsLocked       bool      `json:"is_locked" gorm:"column:is_locked;default:false"`
+	UpdatedAt      time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	Profile        Profile   `json:"-" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+}
+
 // BugReport represents bug_reports table
 type BugReport struct {
 	ID           string    `json:"id" gorm:"primaryKey;type:varchar(36)"`

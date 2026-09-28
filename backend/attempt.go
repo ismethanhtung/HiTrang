@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -201,10 +203,16 @@ func CalculateScore(quiz *Quiz, answers map[string]interface{}) (float64, int) {
 	return roundedScore, totalQuestions
 }
 
-// RefreshOverallLeaderboard recalculates overall ranks grouped by grade
-func RefreshOverallLeaderboard(db *gorm.DB) error {
+// RefreshMonthlyLeaderboard recalculates ranks for a specific month (format: 'YYYY-MM') grouped by grade
+func RefreshMonthlyLeaderboard(db *gorm.DB, targetMonth string) error {
+	if targetMonth == "" {
+		targetMonth = time.Now().Format("2006-01")
+	}
+	currentMonth := time.Now().Format("2006-01")
+	isPastMonth := targetMonth < currentMonth
+
 	return db.Transaction(func(tx *gorm.DB) error {
-		// A. Fetch profiles and their attempts
+		// A. Fetch all student profiles
 		var students []Profile
 		if err := tx.Where("role = 'student'").Find(&students).Error; err != nil {
 			return err
@@ -216,8 +224,181 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 				studentGrade = strings.TrimSpace(*student.Grade)
 			}
 
-			// Find earliest successful submission for each quiz for this student.
-			// Only count quizzes that match the student's grade or are for all grades.
+			// Only count quizzes created in targetMonth.
+			// Only count the student's first attempt for each quiz.
+			// If targetMonth is a past month, only count attempts submitted within targetMonth.
+			var firstAttempts []struct {
+				QuizID string
+				Score  float64
+			}
+
+			query := `
+				SELECT ea.quiz_id, ea.score 
+				FROM exam_attempts ea
+				JOIN quizzes q ON q.id = ea.quiz_id
+				WHERE ea.user_id = ? AND ea.status = 'submitted'
+				AND DATE_FORMAT(q.created_at, '%Y-%m') = ?
+				AND (q.grade = ? OR q.grade IS NULL OR q.grade = '' OR ? = '')
+				AND ea.started_at = (
+					SELECT MIN(started_at) 
+					FROM exam_attempts 
+					WHERE user_id = ea.user_id AND quiz_id = ea.quiz_id AND status = 'submitted'
+				)
+			`
+			var err error
+			if isPastMonth {
+				queryWithDateLimit := query + ` AND DATE_FORMAT(ea.submitted_at, '%Y-%m') <= ?`
+				err = tx.Raw(queryWithDateLimit, student.ID, targetMonth, studentGrade, studentGrade, targetMonth).Scan(&firstAttempts).Error
+			} else {
+				err = tx.Raw(query, student.ID, targetMonth, studentGrade, studentGrade).Scan(&firstAttempts).Error
+			}
+
+			if err != nil {
+				return err
+			}
+
+			totalExp := 0.0
+			for _, fa := range firstAttempts {
+				totalExp += fa.Score
+			}
+			testsCompleted := len(firstAttempts)
+
+			// Upsert into user_monthly_stats
+			upsertQuery := `
+				INSERT INTO user_monthly_stats (month, user_id, grade, total_exp, tests_completed, is_locked, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, NOW())
+				ON DUPLICATE KEY UPDATE 
+					grade = VALUES(grade),
+					total_exp = VALUES(total_exp),
+					tests_completed = VALUES(tests_completed),
+					is_locked = VALUES(is_locked),
+					updated_at = NOW()
+			`
+			if err := tx.Exec(upsertQuery, targetMonth, student.ID, studentGrade, totalExp, testsCompleted, isPastMonth).Error; err != nil {
+				return err
+			}
+		}
+
+		// B. Remove stats of users who have no valid submitted attempts in targetMonth
+		deleteStatsQuery := `
+			DELETE FROM user_monthly_stats 
+			WHERE month = ? AND (tests_completed = 0 OR total_exp <= 0)
+		`
+		if err := tx.Exec(deleteStatsQuery, targetMonth).Error; err != nil {
+			return err
+		}
+
+		// C. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
+		today := time.Now().Format("2006-01-02")
+
+		var statsWithGrade []struct {
+			UserID         string
+			Grade          string
+			TotalExp       float64
+			TestsCompleted int
+			CurrentRank    *int
+			PreviousRank   *int
+			RankDate       string
+		}
+
+		selectQuery := `
+			SELECT ums.user_id, COALESCE(p.grade, '') as grade, ums.total_exp, ums.tests_completed, ums.current_rank, ums.previous_rank, COALESCE(ums.rank_date, '') as rank_date
+			FROM user_monthly_stats ums
+			JOIN profiles p ON p.id = ums.user_id
+			WHERE p.role = 'student' AND ums.month = ?
+			ORDER BY grade, ums.total_exp DESC, ums.tests_completed DESC
+		`
+		if err := tx.Raw(selectQuery, targetMonth).Scan(&statsWithGrade).Error; err != nil {
+			return err
+		}
+
+		currentGrade := "__none__"
+		rank := 1
+		positionInGrade := 0
+		var lastExp float64 = -1.0
+		lastTests := -1
+
+		for _, row := range statsWithGrade {
+			if row.Grade != currentGrade {
+				currentGrade = row.Grade
+				positionInGrade = 1
+				rank = 1
+				lastExp = row.TotalExp
+				lastTests = row.TestsCompleted
+			} else {
+				positionInGrade++
+				if row.TotalExp != lastExp || row.TestsCompleted != lastTests {
+					rank = positionInGrade
+					lastExp = row.TotalExp
+					lastTests = row.TestsCompleted
+				}
+			}
+
+			newRank := rank
+			if isPastMonth {
+				// For locked past months, freeze rank directly
+				if err := tx.Exec("UPDATE user_monthly_stats SET current_rank = ?, is_locked = 1 WHERE month = ? AND user_id = ?", newRank, targetMonth, row.UserID).Error; err != nil {
+					return err
+				}
+			} else {
+				if row.CurrentRank == nil {
+					if err := tx.Exec("UPDATE user_monthly_stats SET current_rank = ?, previous_rank = NULL, rank_date = ? WHERE month = ? AND user_id = ?", newRank, today, targetMonth, row.UserID).Error; err != nil {
+						return err
+					}
+				} else if row.RankDate != today {
+					if err := tx.Exec("UPDATE user_monthly_stats SET previous_rank = current_rank, current_rank = ?, rank_date = ? WHERE month = ? AND user_id = ?", newRank, today, targetMonth, row.UserID).Error; err != nil {
+						return err
+					}
+				} else {
+					if *row.CurrentRank != newRank {
+						if err := tx.Exec("UPDATE user_monthly_stats SET current_rank = ? WHERE month = ? AND user_id = ?", newRank, targetMonth, row.UserID).Error; err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+}
+
+// RefreshOverallLeaderboard recalculates monthly leaderboards & legacy overall stats
+func RefreshOverallLeaderboard(db *gorm.DB) error {
+	currentMonth := time.Now().Format("2006-01")
+
+	// 1. Refresh current active month
+	if err := RefreshMonthlyLeaderboard(db, currentMonth); err != nil {
+		log.Printf("Lỗi cập nhật BXH tháng hiện tại (%s): %v", currentMonth, err)
+	}
+
+	// 2. Discover all distinct quiz creation months to refresh/lock past snapshots
+	var quizMonths []string
+	_ = db.Model(&Quiz{}).Select("DISTINCT DATE_FORMAT(created_at, '%Y-%m') as m").Where("created_at IS NOT NULL").Pluck("m", &quizMonths).Error
+	for _, qm := range quizMonths {
+		if qm != "" && qm < currentMonth {
+			// Ensure past months are locked and calculated
+			var count int64
+			db.Model(&UserMonthlyStats{}).Where("month = ? AND is_locked = 1", qm).Count(&count)
+			if count == 0 {
+				_ = RefreshMonthlyLeaderboard(db, qm)
+			}
+		}
+	}
+
+	// 3. Maintain user_overall_stats table for all-time stats fallback
+	return db.Transaction(func(tx *gorm.DB) error {
+		var students []Profile
+		if err := tx.Where("role = 'student'").Find(&students).Error; err != nil {
+			return err
+		}
+
+		for _, student := range students {
+			studentGrade := ""
+			if student.Grade != nil {
+				studentGrade = strings.TrimSpace(*student.Grade)
+			}
+
 			var firstAttempts []struct {
 				QuizID string
 				Score  float64
@@ -245,7 +426,6 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			}
 			testsCompleted := len(firstAttempts)
 
-			// Update UserOverallStats (total_exp & tests_completed) without touching previous_rank or current_rank
 			upsertQuery := `
 				INSERT INTO user_overall_stats (user_id, total_exp, tests_completed, updated_at)
 				VALUES (?, ?, ?, NOW())
@@ -259,7 +439,6 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			}
 		}
 
-		// B. Remove stats of users who have no valid submitted attempts in their grade
 		deleteStatsQuery := `
 			DELETE FROM user_overall_stats 
 			WHERE tests_completed = 0 OR total_exp <= 0
@@ -268,9 +447,7 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 			return err
 		}
 
-		// C. Recalculate ranks partitioned by grade using Standard Competition Ranking (1224)
 		today := time.Now().Format("2006-01-02")
-
 		var statsWithGrade []struct {
 			UserID         string
 			Grade          string
@@ -307,30 +484,23 @@ func RefreshOverallLeaderboard(db *gorm.DB) error {
 				lastTests = row.TestsCompleted
 			} else {
 				positionInGrade++
-				// Standard Competition Ranking (1224):
-				// If score or tests completed differs from previous student,
-				// the rank jumps to the 1-based index (positionInGrade)
 				if row.TotalExp != lastExp || row.TestsCompleted != lastTests {
 					rank = positionInGrade
 					lastExp = row.TotalExp
 					lastTests = row.TestsCompleted
 				}
-				// If tied, rank stays the same
 			}
 
 			newRank := rank
 			if row.CurrentRank == nil {
-				// Newly ranked student on leaderboard for the first time
 				if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ?, previous_rank = NULL, rank_date = ? WHERE user_id = ?", newRank, today, row.UserID).Error; err != nil {
 					return err
 				}
 			} else if row.RankDate != today {
-				// Daily rollover: lock previous_rank as the student's ending rank from previous day, and update rank_date to today
 				if err := tx.Exec("UPDATE user_overall_stats SET previous_rank = current_rank, current_rank = ?, rank_date = ? WHERE user_id = ?", newRank, today, row.UserID).Error; err != nil {
 					return err
 				}
 			} else {
-				// Same day: Keep the locked daily baseline (previous_rank), only update current_rank if changed
 				if *row.CurrentRank != newRank {
 					if err := tx.Exec("UPDATE user_overall_stats SET current_rank = ? WHERE user_id = ?", newRank, row.UserID).Error; err != nil {
 						return err
@@ -873,14 +1043,23 @@ func HandleGetQuizLeaderboard(db *gorm.DB) gin.HandlerFunc {
 func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		grade := c.Query("p_grade")
+		if grade == "" {
+			grade = "10"
+		}
+		month := strings.TrimSpace(c.Query("month"))
+		if month == "" {
+			month = time.Now().Format("2006-01")
+		}
 
-		// Retrieve ranking from precomputed user_overall_stats table joined with profiles
 		today := time.Now().Format("2006-01-02")
+		currentMonth := time.Now().Format("2006-01")
 
-		type OverallRow struct {
+		type MonthlyRow struct {
 			RankPosition         int     `json:"rankPosition"`
 			PreviousRankPosition *int    `json:"previousRankPosition"`
 			RankDate             string  `json:"-"`
+			IsLocked             bool    `json:"isLocked"`
+			Month                string  `json:"month"`
 			StudentID            string  `json:"studentId"`
 			StudentName          string  `json:"studentName"`
 			StudentUsername      string  `json:"studentUsername"`
@@ -890,35 +1069,43 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			TestsCompleted       int     `json:"testsCompleted"`
 		}
 
-		rows := []OverallRow{}
+		rows := []MonthlyRow{}
 		query := `
 			SELECT 
-				uos.current_rank as rank_position,
-				uos.previous_rank as previous_rank_position,
-				COALESCE(uos.rank_date, '') as rank_date,
-				uos.user_id as student_id,
+				ums.current_rank as rank_position,
+				ums.previous_rank as previous_rank_position,
+				COALESCE(ums.rank_date, '') as rank_date,
+				ums.is_locked as is_locked,
+				ums.month as month,
+				ums.user_id as student_id,
 				p.name as student_name,
 				p.username as student_username,
 				p.grade as student_grade,
 				p.avatar_url as student_avatar_url,
-				uos.total_exp as total_points,
-				uos.tests_completed as tests_completed
-			FROM user_overall_stats uos
-			JOIN profiles p ON p.id = uos.user_id
-			WHERE p.role = 'student' AND p.grade = ?
-			ORDER BY uos.total_exp DESC, uos.tests_completed DESC
+				ums.total_exp as total_points,
+				ums.tests_completed as tests_completed
+			FROM user_monthly_stats ums
+			JOIN profiles p ON p.id = ums.user_id
+			WHERE p.role = 'student' AND (p.grade = ? OR (p.grade IS NULL AND ? = '10')) AND ums.month = ?
+			ORDER BY ums.total_exp DESC, ums.tests_completed DESC
 		`
 
-		if err := db.Raw(query, grade).Scan(&rows).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lấy BXH tổng hợp"})
+		if err := db.Raw(query, grade, grade, month).Scan(&rows).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Lỗi lấy BXH theo tháng"})
 			return
 		}
 
+		// If no monthly records yet, try refreshing the target month and re-fetch
+		if len(rows) == 0 {
+			var quizCount int64
+			db.Model(&Quiz{}).Where("DATE_FORMAT(created_at, '%Y-%m') = ?", month).Count(&quizCount)
+			if quizCount > 0 {
+				_ = RefreshMonthlyLeaderboard(db, month)
+				_ = db.Raw(query, grade, grade, month).Scan(&rows)
+			}
+		}
+
 		// Dynamically compute Standard Competition Ranking (1224 rank) on the returned rows.
-		// This guarantees that:
-		// 1. Two students tied at 11 will be followed by 13 (not 12).
-		// 2. If a student was recently moved from another grade, they will be ranked
-		//    strictly according to their actual points in this grade, never stuck at Top 1.
 		rank := 1
 		var lastExp float64 = -1.0
 		var lastTests int = -1
@@ -931,13 +1118,120 @@ func HandleGetOverallLeaderboard(db *gorm.DB) gin.HandlerFunc {
 			}
 			rows[i].RankPosition = rank
 
-			// If it's a new day and rank hasn't moved yet today, daily baseline defaults to current rank
-			if r.RankDate != "" && r.RankDate != today && r.PreviousRankPosition == nil {
+			// If viewing current active month and daily baseline hasn't changed today
+			if month == currentMonth && r.RankDate != "" && r.RankDate != today && r.PreviousRankPosition == nil {
 				rows[i].PreviousRankPosition = &rank
 			}
 		}
 
 		c.JSON(http.StatusOK, rows)
+	}
+}
+
+// HandleGetLeaderboardHistory returns list of all available months with champion & stats for Hall of Fame
+func HandleGetLeaderboardHistory(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		grade := c.Query("p_grade")
+		if grade == "" {
+			grade = "10"
+		}
+
+		currentMonth := time.Now().Format("2006-01")
+		monthMap := make(map[string]bool)
+		monthMap[currentMonth] = true
+
+		// Find distinct months from quizzes
+		var quizMonths []string
+		_ = db.Model(&Quiz{}).Select("DISTINCT DATE_FORMAT(created_at, '%Y-%m') as m").Where("created_at IS NOT NULL").Pluck("m", &quizMonths).Error
+		for _, m := range quizMonths {
+			if m != "" {
+				monthMap[m] = true
+			}
+		}
+
+		// Find distinct months from user_monthly_stats
+		var userMonths []string
+		_ = db.Model(&UserMonthlyStats{}).Select("DISTINCT month").Pluck("month", &userMonths).Error
+		for _, m := range userMonths {
+			if m != "" {
+				monthMap[m] = true
+			}
+		}
+
+		// Sort months descending (newest first)
+		monthsList := make([]string, 0, len(monthMap))
+		for m := range monthMap {
+			monthsList = append(monthsList, m)
+		}
+		sort.Slice(monthsList, func(i, j int) bool {
+			return monthsList[i] > monthsList[j]
+		})
+
+		type ChampionInfo struct {
+			StudentID        string  `json:"studentId"`
+			StudentName      string  `json:"studentName"`
+			StudentUsername  string  `json:"studentUsername"`
+			StudentAvatarURL *string `json:"studentAvatarUrl"`
+			TotalPoints      float64 `json:"totalPoints"`
+			TestsCompleted   int     `json:"testsCompleted"`
+		}
+
+		type MonthHistoryItem struct {
+			Month             string        `json:"month"`
+			MonthLabel        string        `json:"monthLabel"`
+			IsCurrent         bool          `json:"isCurrent"`
+			IsLocked          bool          `json:"isLocked"`
+			Champion          *ChampionInfo `json:"champion"`
+			TotalParticipants int           `json:"totalParticipants"`
+		}
+
+		history := make([]MonthHistoryItem, 0, len(monthsList))
+
+		for _, m := range monthsList {
+			parts := strings.Split(m, "-")
+			label := m
+			if len(parts) == 2 {
+				label = fmt.Sprintf("Tháng %s/%s", parts[1], parts[0])
+			}
+
+			isCurrent := (m == currentMonth)
+			isLocked := (m < currentMonth)
+
+			// Get Top 1 Champion for this grade and month
+			var champ ChampionInfo
+			champQuery := `
+				SELECT 
+					ums.user_id as student_id,
+					p.name as student_name,
+					p.username as student_username,
+					p.avatar_url as student_avatar_url,
+					ums.total_exp as total_points,
+					ums.tests_completed as tests_completed
+				FROM user_monthly_stats ums
+				JOIN profiles p ON p.id = ums.user_id
+				WHERE p.role = 'student' AND (p.grade = ? OR (p.grade IS NULL AND ? = '10')) AND ums.month = ?
+				ORDER BY ums.current_rank ASC, ums.total_exp DESC, ums.tests_completed DESC
+				LIMIT 1
+			`
+			var championPtr *ChampionInfo
+			if err := db.Raw(champQuery, grade, grade, m).Scan(&champ).Error; err == nil && champ.StudentID != "" {
+				championPtr = &champ
+			}
+
+			var participantCount int64
+			db.Model(&UserMonthlyStats{}).Where("month = ? AND (grade = ? OR (grade = '' AND ? = '10'))", m, grade, grade).Count(&participantCount)
+
+			history = append(history, MonthHistoryItem{
+				Month:             m,
+				MonthLabel:        label,
+				IsCurrent:         isCurrent,
+				IsLocked:          isLocked,
+				Champion:          championPtr,
+				TotalParticipants: int(participantCount),
+			})
+		}
+
+		c.JSON(http.StatusOK, history)
 	}
 }
 

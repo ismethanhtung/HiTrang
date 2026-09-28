@@ -97,6 +97,24 @@ export interface OverallLeaderboardEntry {
   studentAvatarUrl?: string;
   totalPoints: number;
   testsCompleted: number;
+  isLocked?: boolean;
+  month?: string;
+}
+
+export interface LeaderboardMonthHistory {
+  month: string; // '2026-09'
+  monthLabel: string; // 'Tháng 09/2026'
+  isCurrent: boolean;
+  isLocked: boolean;
+  champion?: {
+    studentId: string;
+    studentName: string;
+    studentUsername: string;
+    studentAvatarUrl?: string;
+    totalPoints: number;
+    testsCompleted: number;
+  } | null;
+  totalParticipants: number;
 }
 
 export interface AppNotification {

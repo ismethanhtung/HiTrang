@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-const AppVersion = "1.0.131"
+const AppVersion = "1.0.132"
 
 func main() {
 	serverStartTime := time.Now()
@@ -99,6 +99,7 @@ func main() {
 		&ExamAttempt{},
 		&Submission{},
 		&UserOverallStats{},
+		&UserMonthlyStats{},
 		&BugReport{},
 		&ScheduleSlot{},
 		&PasswordResetToken{},
@@ -206,6 +207,8 @@ func main() {
 		api.GET("/quizzes/:id", OptionalAuthMiddleware(db), HandleGetQuiz(db))
 		api.GET("/leaderboard/quiz", OptionalAuthMiddleware(db), HandleGetQuizLeaderboard(db))
 		api.GET("/leaderboard/overall", OptionalAuthMiddleware(db), HandleGetOverallLeaderboard(db))
+		api.GET("/leaderboard/history", OptionalAuthMiddleware(db), HandleGetLeaderboardHistory(db))
+		api.GET("/leaderboard/recent", OptionalAuthMiddleware(db), HandleGetRecentSubmissionsByGrade(db))
 
 		// Protected APIs
 		protected := api.Group("")

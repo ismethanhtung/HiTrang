@@ -13,11 +13,15 @@ import {
     ArrowRight,
     PartyPopper,
     CheckCircle2,
+    Lock,
+    Calendar,
+    History,
     User as UserIcon,
 } from "lucide-react";
-import { User, Quiz, Submission, OverallLeaderboardEntry } from "../types";
+import { User, Quiz, Submission, OverallLeaderboardEntry, LeaderboardMonthHistory } from "../types";
 import {
     getOverallLeaderboard,
+    getLeaderboardHistory,
     refreshOverallLeaderboard,
 } from "../lib/supabaseService";
 import { matchesSearch } from "../lib/searchUtils";
@@ -153,6 +157,9 @@ export default function LeaderboardView({
     onNavigate,
     initialData,
 }: LeaderboardViewProps) {
+    // Current system month formatted as 'YYYY-MM'
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+
     // Helper to get the display initial of a Vietnamese name (given name first letter)
     const getAvatarInitial = (name: string) => {
         if (!name) return "";
@@ -162,6 +169,7 @@ export default function LeaderboardView({
             ? lastWord.charAt(0).toUpperCase()
             : name.charAt(0).toUpperCase();
     };
+
     // Grade states: students are locked to their profile grade (fallback to "10"), teachers default to "10"
     const [activeGrade, setActiveGrade] = useState<string>(() => {
         if (user.role === "student") {
@@ -169,6 +177,11 @@ export default function LeaderboardView({
         }
         return "10";
     });
+
+    // Selected Month state (defaults to current month)
+    const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
+    const [historyMonths, setHistoryMonths] = useState<LeaderboardMonthHistory[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
     const [overallData, setOverallData] = useState<OverallLeaderboardEntry[]>(
         () => {
@@ -194,26 +207,47 @@ export default function LeaderboardView({
     const gradeQuizzes = quizzes.filter(
         (q) => q.grade === activeGrade || (!q.grade && activeGrade === "10"),
     );
-    const totalQuizzesForGrade = gradeQuizzes.length || 1;
+
+    // Is the currently viewed month the active current month?
+    const isViewingCurrentMonth = selectedMonth === currentMonthKey;
+
+    // Filter untaken quizzes created in the active selected month
+    const monthQuizzes = gradeQuizzes.filter(
+        (q) => (q.createdAt && q.createdAt.slice(0, 7) === selectedMonth) || (!q.createdAt && isViewingCurrentMonth),
+    );
+    const totalQuizzesForGrade = monthQuizzes.length || 1;
 
     // Quiz IDs that the student has completed
     const submittedQuizIds = new Set(submissions.map((sub) => sub.quizId));
 
-    // Quizzes not taken yet
-    const untakenQuizzes = gradeQuizzes.filter(
+    // Quizzes not taken yet for the selected month
+    const untakenQuizzes = monthQuizzes.filter(
         (q) => !submittedQuizIds.has(q.id),
     );
 
-    // Fetch Overall Leaderboard for the active grade
-    const fetchOverallRankings = async (showSilence = false) => {
+    // Fetch Hall of Fame History
+    const fetchHistory = async () => {
+        try {
+            setLoadingHistory(true);
+            const history = await getLeaderboardHistory(activeGrade);
+            setHistoryMonths(history);
+        } catch (err) {
+            console.error("Lỗi khi tải lịch sử vinh danh:", err);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
+    // Fetch Monthly Leaderboard for the active grade & selected month
+    const fetchOverallRankings = async (showSilence = false, targetMonth = selectedMonth) => {
         const silent = showSilence || overallData.length > 0;
         if (!silent) setLoading(true);
         setError(null);
         try {
-            const data = await getOverallLeaderboard(activeGrade);
+            const data = await getOverallLeaderboard(activeGrade, targetMonth);
             setOverallData(data);
         } catch (err: any) {
-            console.error("Lỗi khi tải bảng xếp hạng chung:", err);
+            console.error("Lỗi khi tải bảng xếp hạng theo tháng:", err);
             setError(err.message || "Không thể tải dữ liệu bảng xếp hạng.");
         } finally {
             if (!silent) setLoading(false);
@@ -221,8 +255,12 @@ export default function LeaderboardView({
     };
 
     useEffect(() => {
-        fetchOverallRankings();
+        fetchHistory();
     }, [activeGrade]);
+
+    useEffect(() => {
+        fetchOverallRankings(false, selectedMonth);
+    }, [activeGrade, selectedMonth]);
 
     // Handle manual refresh for teacher
     const handleManualRefresh = async () => {
@@ -230,12 +268,25 @@ export default function LeaderboardView({
         setRefreshing(true);
         try {
             await refreshOverallLeaderboard();
-            await fetchOverallRankings(true);
+            await fetchHistory();
+            await fetchOverallRankings(true, selectedMonth);
         } catch (err: any) {
             alert("Không thể làm mới: " + err.message);
         } finally {
             setRefreshing(false);
         }
+    };
+
+    // Active selected history item metadata
+    const selectedHistoryItem = historyMonths.find((h) => h.month === selectedMonth) || {
+        month: selectedMonth,
+        monthLabel: (() => {
+            const parts = selectedMonth.split("-");
+            return parts.length === 2 ? `Tháng ${parts[1]}/${parts[0]}` : selectedMonth;
+        })(),
+        isCurrent: isViewingCurrentMonth,
+        isLocked: selectedMonth < currentMonthKey,
+        totalParticipants: overallData.length,
     };
 
     const displayData = overallData;
@@ -304,30 +355,64 @@ export default function LeaderboardView({
 
     return (
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 pb-32 animate-in fade-in duration-300 overflow-x-hidden">
-            {/* 1. Header Vinh Danh */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-6 pb-3 sm:pb-6 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-start gap-4 text-left">
-                    <div className="space-y-0.5">
+            {/* 1. Header Vinh Danh & Bộ Lọc Tháng / Khối */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="space-y-1 text-left">
+                    <div className="flex items-center gap-2.5 flex-wrap">
                         <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
-                        <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            Ghi lại nỗ lực và sự chăm chỉ của các học sinh.
-                        </p>
+                        {/* Month Badge */}
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400 text-xs font-black">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>{selectedHistoryItem.monthLabel}</span>
+                            {selectedHistoryItem.isCurrent ? (
+                                <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ml-1">
+                                    Hiện tại
+                                </span>
+                            ) : (
+                                <span className="text-[10px] bg-slate-500 text-white px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ml-1 flex items-center gap-0.5">
+                                    <Lock className="w-2.5 h-2.5" /> Đã khóa
+                                </span>
+                            )}
+                        </div>
                     </div>
+                    <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Điểm số được tính từ các đề thi được tạo trong tháng. Cuối tháng sẽ chốt danh hiệu và khóa xếp hạng.
+                    </p>
                 </div>
 
-                {user.role === "admin" && (
-                    <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                        {/* SELECT GRADE */}
+                <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                    {/* SELECT MONTH */}
+                    {historyMonths.length > 1 && (
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-text-secondary whitespace-nowrap">
-                                Lọc theo:
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                Chọn tháng:
+                            </span>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                            >
+                                {historyMonths.map((h) => (
+                                    <option key={h.month} value={h.month}>
+                                        {h.monthLabel} {h.isCurrent ? "(Hiện tại)" : "(Đã khóa)"}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* SELECT GRADE (Cho Admin) */}
+                    {user.role === "admin" && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                Khối:
                             </span>
                             <select
                                 value={activeGrade}
                                 onChange={(e) => setActiveGrade(e.target.value)}
-                                className="px-3.5 py-2 bg-bg-surface border border-border-secondary text-text-primary text-xs font-bold rounded-xl outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 cursor-pointer"
+                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none focus:border-[#4B726B] focus:ring-1 focus:ring-[#4B726B] cursor-pointer"
                             >
                                 {grades.map((g) => (
                                     <option key={g.id} value={g.id}>
@@ -336,33 +421,36 @@ export default function LeaderboardView({
                                 ))}
                             </select>
                         </div>
+                    )}
 
-                        {/* SYNC BUTTON */}
+                    {/* SYNC BUTTON (Admin) */}
+                    {user.role === "admin" && (
                         <button
                             onClick={handleManualRefresh}
                             disabled={refreshing || loading}
-                            className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-3xs transition-all cursor-pointer disabled:opacity-50"
+                            className="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-250 rounded-xl text-xs font-bold flex items-center gap-2 shadow-3xs transition-all cursor-pointer disabled:opacity-50"
                         >
                             <RefreshCw
                                 className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`}
                             />
-                            <span>Đồng bộ điểm toàn khối</span>
+                            <span>Đồng bộ điểm</span>
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* 3. Bố Cục Grid Ba Cột (Vinh Danh Bên Trái | Bảng Xếp Hạng Ở Giữa | Góc Học Tập Bên Phải) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* CỘT TRÁI (Col-span 3): Lịch sử vinh danh (Hall of Fame) */}
                 <div className="hidden lg:block lg:col-span-3 space-y-6">
-                    <div className="bg-transparent dark:border-slate-850 rounded-none py-6 space-y-4 relative">
+                    <div className="bg-transparent dark:border-slate-850 rounded-none py-2 space-y-4 relative">
                         {/* Golden backdrop blur effect */}
                         <div className="absolute -top-12 -left-12 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
 
                         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                Lịch sử vinh danh
+                                <History className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Lịch sử vinh danh</span>
                             </h3>
                             <span className="text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
                                 Hạng nhất
@@ -373,99 +461,81 @@ export default function LeaderboardView({
                             <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
                                 Học sinh hạng nhất trước kia:
                             </p>
-                            {displayData.length > 0 ? (
-                                <div className="space-y-1">
-                                    {(() => {
-                                        const champion = displayData[0];
+                            {historyMonths.length > 0 ? (
+                                <div className="space-y-2">
+                                    {historyMonths.map((hItem) => {
+                                        const isSelected = selectedMonth === hItem.month;
+                                        const champ = hItem.champion;
                                         return (
                                             <div
-                                                key={champion.studentId}
-                                                className="py-3 bg-transparent hover:bg-amber-500/5 border-b border-slate-100 dark:border-slate-800/80 last:border-b-0 flex items-center gap-3.5 transition-all duration-200 group"
+                                                key={hItem.month}
+                                                onClick={() => setSelectedMonth(hItem.month)}
+                                                className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer group relative ${
+                                                    isSelected
+                                                        ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-sm ring-1 ring-amber-500/30"
+                                                        : "border-slate-100 dark:border-slate-800/80 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                                                }`}
                                             >
-                                                {/* Small gold avatar with laurel wreath */}
-                                                <div className="relative shrink-0 flex items-center justify-center">
-                                                    <img
-                                                        src="/icons/laurel-wreath.png"
-                                                        alt=""
-                                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11.5 h-11.5 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
-                                                    />
-                                                    <LeaderboardAvatar
-                                                        avatarUrl={
-                                                            champion.studentAvatarUrl
-                                                        }
-                                                        name={
-                                                            champion.studentName
-                                                        }
-                                                        sizeClass="w-8.5 h-8.5 text-xs font-extrabold text-amber-600 dark:text-amber-400"
-                                                        useInitial={true}
-                                                        className="border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 group-hover:scale-105 transition-transform"
-                                                    />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between mb-2">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-600/85 dark:text-amber-400/85">
-                                                            Tháng 08/2026 (Hiện
-                                                            tại)
+                                                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                                                            {hItem.monthLabel}
                                                         </span>
+                                                        {hItem.isCurrent ? (
+                                                            <span className="text-[8px] bg-amber-500 text-white px-1.5 py-0.2 rounded font-black uppercase">
+                                                                Hiện tại
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-[8px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.2 rounded font-bold flex items-center gap-0.5">
+                                                                <Lock className="w-2 h-2" /> Đã khóa
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <h4 className="text-xs font-black text-slate-750 dark:text-slate-200 truncate mt-0.5 group-hover:text-amber-500 transition-colors">
-                                                        {champion.studentName}
-                                                    </h4>
-                                                    <p className="text-[9px] text-slate-455 dark:text-slate-400 font-medium mt-0.5">
-                                                        {
-                                                            champion.testsCompleted
-                                                        }{" "}
-                                                        đề thi •{" "}
-                                                        {champion.totalPoints} đ
-                                                    </p>
+                                                    {isSelected && (
+                                                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                                                    )}
                                                 </div>
-                                                {/* Champion 1st Place Wreath Icon */}
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="1.5"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    className="w-7 h-7 text-amber-500 dark:text-amber-400 select-none group-hover:scale-110 transition-all shrink-0"
-                                                >
-                                                    <path d="M6.43614 8C6.15488 8.84221 6 9.76282 6 10.7273C6 14.7439 8.68629 18 12 18C15.3137 18 18 14.7439 18 10.7273C18 9.76282 17.8451 8.84221 17.5639 8" />
-                                                    <path d="M14.5 21C14.5 21 13.818 18 12 18C10.182 18 9.5 21 9.5 21" />
-                                                    <path d="M18.5202 5.22967C18.8121 6.89634 17.5004 8 17.5004 8C17.5004 8 15.8969 7.437 15.605 5.77033C15.3131 4.10366 16.6248 3 16.6248 3C16.6248 3 18.2284 3.56301 18.5202 5.22967Z" />
-                                                    <path d="M11 9L12 8.5V13.5M13 13.5H11" />
-                                                    <path d="M21.0942 12.1393C19.8128 13.4061 18.0778 12.9003 18.0778 12.9003C18.0778 12.9003 17.6241 11.1276 18.9055 9.86074C20.1868 8.59388 21.9219 9.09972 21.9219 9.09972C21.9219 9.09972 22.3756 10.8724 21.0942 12.1393Z" />
-                                                    <path d="M18.2335 18.1896C16.7335 17.614 16.5 16 16.5 16C16.5 16 17.7665 14.9616 19.2665 15.5372C20.7665 16.1128 21 17.7268 21 17.7268C21 17.7268 19.7335 18.7652 18.2335 18.1896Z" />
-                                                    <path d="M5.76651 18.1895C7.26651 17.6139 7.5 15.9999 7.5 15.9999C7.5 15.9999 6.23349 14.9615 4.73349 15.5371C3.23349 16.1127 3 17.7267 3 17.7267C3 17.7267 4.26651 18.7651 5.76651 18.1895Z" />
-                                                    <path d="M2.90552 12.1393C4.18688 13.4061 5.92191 12.9003 5.92191 12.9003C5.92191 12.9003 6.37559 11.1276 5.09423 9.86074C3.81288 8.59388 2.07785 9.09972 2.07785 9.09972C2.07785 9.09972 1.62417 10.8724 2.90552 12.1393Z" />
-                                                    <path d="M5.47987 5.22967C5.18799 6.89634 6.49968 8 6.49968 8C6.49968 8 8.10325 7.437 8.39513 5.77033C8.68701 4.10366 7.37532 3 7.37532 3C7.37532 3 5.77175 3.56301 5.47987 5.22967Z" />
-                                                </svg>
+
+                                                {champ ? (
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Small gold avatar with laurel wreath */}
+                                                        <div className="relative shrink-0 flex items-center justify-center">
+                                                            <img
+                                                                src="/icons/laurel-wreath.png"
+                                                                alt=""
+                                                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
+                                                            />
+                                                            <LeaderboardAvatar
+                                                                avatarUrl={champ.studentAvatarUrl}
+                                                                name={champ.studentName}
+                                                                sizeClass="w-7.5 h-7.5 text-xs font-extrabold text-amber-600 dark:text-amber-400"
+                                                                useInitial={true}
+                                                                className="border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 group-hover:scale-105 transition-transform"
+                                                            />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-500 transition-colors">
+                                                                {champ.studentName}
+                                                            </h4>
+                                                            <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                                                                {champ.testsCompleted} đề thi • {champ.totalPoints} đ
+                                                            </p>
+                                                        </div>
+                                                        {/* Trophy Icon */}
+                                                        <Award className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="py-2 text-center text-[10px] text-slate-400 italic">
+                                                        Chưa ghi nhận lượt thi trong tháng này
+                                                    </div>
+                                                )}
                                             </div>
                                         );
-                                    })()}
+                                    })}
                                 </div>
                             ) : (
                                 <div className="py-8 text-center border border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl space-y-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="w-10 h-10 text-amber-500/60 dark:text-amber-400/60 select-none mx-auto"
-                                    >
-                                        <path d="M6.43614 8C6.15488 8.84221 6 9.76282 6 10.7273C6 14.7439 8.68629 18 12 18C15.3137 18 18 14.7439 18 10.7273C18 9.76282 17.8451 8.84221 17.5639 8" />
-                                        <path d="M14.5 21C14.5 21 13.818 18 12 18C10.182 18 9.5 21 9.5 21" />
-                                        <path d="M18.5202 5.22967C18.8121 6.89634 17.5004 8 17.5004 8C17.5004 8 15.8969 7.437 15.605 5.77033C15.3131 4.10366 16.6248 3 16.6248 3C16.6248 3 18.2284 3.56301 18.5202 5.22967Z" />
-                                        <path d="M11 9L12 8.5V13.5M13 13.5H11" />
-                                        <path d="M21.0942 12.1393C19.8128 13.4061 18.0778 12.9003 18.0778 12.9003C18.0778 12.9003 17.6241 11.1276 18.9055 9.86074C20.1868 8.59388 21.9219 9.09972 21.9219 9.09972C21.9219 9.09972 22.3756 10.8724 21.0942 12.1393Z" />
-                                        <path d="M18.2335 18.1896C16.7335 17.614 16.5 16 16.5 16C16.5 16 17.7665 14.9616 19.2665 15.5372C20.7665 16.1128 21 17.7268 21 17.7268C21 17.7268 19.7335 18.7652 18.2335 18.1896Z" />
-                                        <path d="M5.76651 18.1895C7.26651 17.6139 7.5 15.9999 7.5 15.9999C7.5 15.9999 6.23349 14.9615 4.73349 15.5371C3.23349 16.1127 3 17.7267 3 17.7267C3 17.7267 4.26651 18.7651 5.76651 18.1895Z" />
-                                        <path d="M2.90552 12.1393C4.18688 13.4061 5.92191 12.9003 5.92191 12.9003C5.92191 12.9003 6.37559 11.1276 5.09423 9.86074C3.81288 8.59388 2.07785 9.09972 2.07785 9.09972C2.07785 9.09972 1.62417 10.8724 2.90552 12.1393Z" />
-                                        <path d="M5.47987 5.22967C5.18799 6.89634 6.49968 8 6.49968 8C6.49968 8 8.10325 7.437 8.39513 5.77033C8.68701 4.10366 7.37532 3 7.37532 3C7.37532 3 5.77175 3.56301 5.47987 5.22967Z" />
-                                    </svg>
+                                    <Award className="w-8 h-8 text-amber-500/60 dark:text-amber-400/60 mx-auto" />
                                     <p className="text-[11px] text-slate-450 dark:text-slate-500 italic">
                                         Chưa ghi nhận lịch sử vinh danh
                                     </p>
@@ -476,10 +546,27 @@ export default function LeaderboardView({
                 </div>
 
                 {/* CỘT GIỮA (Col-span 6): Podium & Danh sách thứ hạng */}
-                <div className="lg:col-span-6 space-y-8 min-w-0">
+                <div className="lg:col-span-6 space-y-6 min-w-0">
+                    {/* Status Alert for Locked Past Months */}
+                    {selectedHistoryItem.isLocked && (
+                        <div className="p-3.5 bg-slate-100/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                <Lock className="w-4 h-4" />
+                            </div>
+                            <div className="text-left space-y-0.5">
+                                <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    Xếp hạng {selectedHistoryItem.monthLabel} đã đóng băng
+                                </h4>
+                                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                    Tháng thi này đã kết thúc. Thứ tự xếp hạng và danh hiệu đã được khóa lại cố định.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* TOP 3 PODIUM - Tinh tế, có chiều sâu, cực kỳ sang trọng */}
                     {top3.length > 0 && (
-                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-2 sm:gap-6 pt-6 sm:pt-10 pb-6 sm:pb-4 relative select-none">
+                        <div className="grid grid-cols-3 items-end max-w-xl mx-auto gap-2 sm:gap-6 pt-4 sm:pt-8 pb-4 relative select-none">
                             {/* HẠNG 2 (Bên trái) */}
                             {podiumOrder[0] ? (
                                 <motion.div
@@ -498,9 +585,7 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <LeaderboardAvatar
-                                            avatarUrl={
-                                                podiumOrder[0].studentAvatarUrl
-                                            }
+                                            avatarUrl={podiumOrder[0].studentAvatarUrl}
                                             name={podiumOrder[0].studentName}
                                             sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-slate-500"
                                             iconClass="w-5.5 h-5.5 text-slate-400"
@@ -517,18 +602,15 @@ export default function LeaderboardView({
                                             <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                                 HẠNG 2
                                             </span>
-                                            {renderTrend(
+                                            {isViewingCurrentMonth && renderTrend(
                                                 podiumOrder[0].rankPosition,
-                                                podiumOrder[0]
-                                                    .previousRankPosition,
+                                                podiumOrder[0].previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[0].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">
-                                                điểm
-                                            </span>
+                                            <span className="hidden sm:inline">điểm</span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-slate-400/80 dark:text-slate-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Kẻ về nhì...
@@ -557,9 +639,7 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
                                         <LeaderboardAvatar
-                                            avatarUrl={
-                                                podiumOrder[1].studentAvatarUrl
-                                            }
+                                            avatarUrl={podiumOrder[1].studentAvatarUrl}
                                             name={podiumOrder[1].studentName}
                                             sizeClass="w-13 h-13 sm:w-15 sm:h-15 text-base font-black text-amber-600 dark:text-amber-400"
                                             iconClass="w-6.5 h-6.5 text-amber-500"
@@ -576,18 +656,15 @@ export default function LeaderboardView({
                                             <span className="text-[8px] sm:text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
                                                 Hạng nhất
                                             </span>
-                                            {renderTrend(
+                                            {isViewingCurrentMonth && renderTrend(
                                                 podiumOrder[1].rankPosition,
-                                                podiumOrder[1]
-                                                    .previousRankPosition,
+                                                podiumOrder[1].previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">
-                                                điểm
-                                            </span>
+                                            <span className="hidden sm:inline">điểm</span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-amber-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Bình thường thôi.
@@ -614,9 +691,7 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <LeaderboardAvatar
-                                            avatarUrl={
-                                                podiumOrder[2].studentAvatarUrl
-                                            }
+                                            avatarUrl={podiumOrder[2].studentAvatarUrl}
                                             name={podiumOrder[2].studentName}
                                             sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-orange-700"
                                             iconClass="w-5.5 h-5.5 text-orange-700"
@@ -633,18 +708,15 @@ export default function LeaderboardView({
                                             <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                                 HẠNG 3
                                             </span>
-                                            {renderTrend(
+                                            {isViewingCurrentMonth && renderTrend(
                                                 podiumOrder[2].rankPosition,
-                                                podiumOrder[2]
-                                                    .previousRankPosition,
+                                                podiumOrder[2].previousRankPosition,
                                             )}
                                         </div>
                                         <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[2].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">
-                                                điểm
-                                            </span>
+                                            <span className="hidden sm:inline">điểm</span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-orange-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Cũng được!
@@ -662,13 +734,13 @@ export default function LeaderboardView({
                         <div className="py-24 flex flex-col items-center justify-center gap-3">
                             <RefreshCw className="w-6 h-6 text-[#4B726B] animate-spin" />
                             <span className="text-xs text-slate-455 font-semibold">
-                                Đang cập nhật danh sách...
+                                Đang tải danh sách {selectedHistoryItem.monthLabel}...
                             </span>
                         </div>
                     )}
 
                     {/* DANH SÁCH BẢNG XẾP HẠNG CHI TIẾT */}
-                    {filteredOverall.length > 0 && (
+                    {filteredOverall.length > 0 && !loading && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1.5 sm:px-4 pb-2 border-b border-slate-100 dark:border-slate-800">
                                 <div className="flex items-center gap-1.5 sm:gap-6 min-w-0">
@@ -680,7 +752,7 @@ export default function LeaderboardView({
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-12 shrink-0">
                                     <span className="hidden sm:inline">
-                                        Số đề đã thi
+                                        Số đề tháng {selectedMonth.split("-")[1] || ""}
                                     </span>
                                     <span className="w-14 sm:w-20 text-right">
                                         Tổng điểm
@@ -691,20 +763,9 @@ export default function LeaderboardView({
                             <div className="flex flex-col max-h-[720px] overflow-y-auto pr-1">
                                 <AnimatePresence>
                                     {filteredOverall.map((entry) => {
-                                        const isMe =
-                                            entry.studentId === user.id;
+                                        const isMe = entry.studentId === user.id;
                                         const rank = entry.rankPosition;
                                         const isTop3 = rank <= 3;
-                                        const completedRatio = Math.min(
-                                            (entry.testsCompleted || 0) /
-                                                totalQuizzesForGrade,
-                                            1,
-                                        );
-                                        const pointsRatio = Math.min(
-                                            (entry.totalPoints || 0) /
-                                                (totalQuizzesForGrade * 10),
-                                            1,
-                                        );
 
                                         const getRowBackground = () => {
                                             if (isMe)
@@ -742,9 +803,15 @@ export default function LeaderboardView({
                                                     </span>
 
                                                     <span className="w-5 sm:w-6 flex items-center justify-center shrink-0">
-                                                        {renderTrend(
-                                                            entry.rankPosition,
-                                                            entry.previousRankPosition,
+                                                        {isViewingCurrentMonth ? (
+                                                            renderTrend(
+                                                                entry.rankPosition,
+                                                                entry.previousRankPosition,
+                                                            )
+                                                        ) : (
+                                                            <span className="text-[10px] text-slate-400 font-mono">
+                                                                #{rank}
+                                                            </span>
                                                         )}
                                                     </span>
 
@@ -758,12 +825,8 @@ export default function LeaderboardView({
                                                                 />
                                                             )}
                                                             <LeaderboardAvatar
-                                                                avatarUrl={
-                                                                    entry.studentAvatarUrl
-                                                                }
-                                                                name={
-                                                                    entry.studentName
-                                                                }
+                                                                avatarUrl={entry.studentAvatarUrl}
+                                                                name={entry.studentName}
                                                                 sizeClass="w-7.5 h-7.5 sm:w-8 sm:h-8 text-xs"
                                                                 iconClass={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
                                                                 className={
@@ -782,9 +845,7 @@ export default function LeaderboardView({
                                                                 }`}
                                                             >
                                                                 <span className="truncate">
-                                                                    {
-                                                                        entry.studentName
-                                                                    }
+                                                                    {entry.studentName}
                                                                 </span>
                                                                 {isMe && (
                                                                     <span className="text-[8px] bg-[#4B726B] text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider font-sans shrink-0">
@@ -793,10 +854,7 @@ export default function LeaderboardView({
                                                                 )}
                                                             </p>
                                                             <p className="sm:hidden text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
-                                                                {
-                                                                    entry.testsCompleted
-                                                                }{" "}
-                                                                đề thi
+                                                                {entry.testsCompleted} đề thi
                                                             </p>
                                                         </div>
                                                     </div>
@@ -804,8 +862,7 @@ export default function LeaderboardView({
 
                                                 <div className="relative z-10 flex items-center gap-2 sm:gap-12 shrink-0 text-xs">
                                                     <span className="hidden sm:inline text-slate-450 dark:text-slate-400 font-medium">
-                                                        {entry.testsCompleted}{" "}
-                                                        đề thi
+                                                        {entry.testsCompleted} đề thi
                                                     </span>
                                                     <span
                                                         className={`w-14 sm:w-20 text-right font-bold text-xs sm:text-sm ${
@@ -827,7 +884,7 @@ export default function LeaderboardView({
                         </div>
                     )}
 
-                    {filteredOverall.length === 0 && (
+                    {filteredOverall.length === 0 && !loading && (
                         <div className="py-12 bg-transparent border-b border-slate-200 dark:border-slate-850 rounded-none text-center text-slate-455 text-xs italic flex flex-col items-center justify-center gap-2">
                             <img
                                 src="/icons/ghost.png"
@@ -835,7 +892,7 @@ export default function LeaderboardView({
                                 className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                             />
                             <span>
-                                Chưa tìm thấy thông tin xếp hạng học sinh.
+                                Chưa có dữ liệu bảng xếp hạng cho {selectedHistoryItem.monthLabel}.
                             </span>
                         </div>
                     )}
@@ -849,7 +906,7 @@ export default function LeaderboardView({
 
                         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                Thành tích của bạn
+                                Thành tích {selectedHistoryItem.monthLabel}
                             </h3>
                         </div>
 
@@ -858,11 +915,11 @@ export default function LeaderboardView({
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-slate-500">
-                                            Thứ hạng hiện tại
+                                            Thứ hạng {isViewingCurrentMonth ? "hiện tại" : "chốt tháng"}
                                         </p>
                                         <p className="text-xl font-black text-amber-500 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
                                             #{myOverallStats.rankPosition}
-                                            {renderTrend(
+                                            {isViewingCurrentMonth && renderTrend(
                                                 myOverallStats.rankPosition,
                                                 myOverallStats.previousRankPosition,
                                             )}
@@ -870,7 +927,7 @@ export default function LeaderboardView({
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs text-slate-500">
-                                            Tổng tích lũy
+                                            Tổng điểm tháng
                                         </p>
                                         <p className="text-base font-extrabold text-amber-500 mt-0.5">
                                             {myOverallStats.totalPoints} điểm
@@ -879,61 +936,49 @@ export default function LeaderboardView({
                                 </div>
 
                                 <div className="p-3 bg-[#4B726B]/5 border-l-2 border-[#4B726B] rounded-none space-y-1 relative">
-                                    {nextUserAbove ? (
-                                        Number(
-                                            (
-                                                nextUserAbove.totalPoints -
-                                                myOverallStats.totalPoints
-                                            ).toFixed(1),
-                                        ) > 0 ? (
-                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                                                Bạn cần tích lũy thêm{" "}
-                                                <strong className="text-[#4B726B]">
-                                                    {Number(
-                                                        (
-                                                            nextUserAbove.totalPoints -
-                                                            myOverallStats.totalPoints
-                                                        ).toFixed(1),
-                                                    )}{" "}
-                                                    điểm
-                                                </strong>{" "}
-                                                để vượt qua học sinh{" "}
-                                                <strong className="text-slate-700 dark:text-slate-300">
-                                                    {nextUserAbove.studentName}
-                                                </strong>{" "}
-                                                (Hạng #
-                                                {nextUserAbove.rankPosition})
-                                            </p>
-                                        ) : (
-                                            <p className="text-[10px] text-slate-500 leading-relaxed font-medium flex items-center gap-1.5">
-                                                <img
-                                                    src="/icons/lightbulb.png"
-                                                    alt=""
-                                                    className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
-                                                />
-                                                <span>
-                                                    Bạn đang đồng hạng với{" "}
-                                                    <strong className="text-slate-700 dark:text-slate-300">
-                                                        {
-                                                            nextUserAbove.studentName
-                                                        }
+                                    {isViewingCurrentMonth ? (
+                                        nextUserAbove ? (
+                                            Number((nextUserAbove.totalPoints - myOverallStats.totalPoints).toFixed(1)) > 0 ? (
+                                                <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                                                    Bạn cần tích lũy thêm{" "}
+                                                    <strong className="text-[#4B726B]">
+                                                        {Number((nextUserAbove.totalPoints - myOverallStats.totalPoints).toFixed(1))}{" "}
+                                                        điểm
                                                     </strong>{" "}
-                                                    (Hạng #
-                                                    {nextUserAbove.rankPosition}
-                                                    ). Hãy tích lũy thêm điểm để
-                                                    bứt phá vươn lên!
-                                                </span>
+                                                    để vượt qua học sinh{" "}
+                                                    <strong className="text-slate-700 dark:text-slate-300">
+                                                        {nextUserAbove.studentName}
+                                                    </strong>{" "}
+                                                    (Hạng #{nextUserAbove.rankPosition})
+                                                </p>
+                                            ) : (
+                                                <p className="text-[10px] text-slate-500 leading-relaxed font-medium flex items-center gap-1.5">
+                                                    <img
+                                                        src="/icons/lightbulb.png"
+                                                        alt=""
+                                                        className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                                    />
+                                                    <span>
+                                                        Bạn đang đồng hạng với{" "}
+                                                        <strong className="text-slate-700 dark:text-slate-300">
+                                                            {nextUserAbove.studentName}
+                                                        </strong>{" "}
+                                                        (Hạng #{nextUserAbove.rankPosition}). Hãy làm thêm bài test tháng này để bứt phá!
+                                                    </span>
+                                                </p>
+                                            )
+                                        ) : (
+                                            <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-relaxed font-black">
+                                                👑 Bạn đang dẫn đầu Khối {activeGrade} trong {selectedHistoryItem.monthLabel}! Hãy tiếp tục duy trì nhé!
                                             </p>
                                         )
                                     ) : (
-                                        <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-relaxed font-black">
-                                            👑 Bạn đang dẫn đầu Khối{" "}
-                                            {activeGrade}! Hãy kiên trì duy trì
-                                            vị trí của mình nhé!
+                                        <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                                            🏁 Bạn đã hoàn thành {selectedHistoryItem.monthLabel} ở vị trí <strong>#{myOverallStats.rankPosition}</strong> với <strong>{myOverallStats.totalPoints}</strong> điểm.
                                         </p>
                                     )}
                                     <span className="block font-brand text-amber-500 text-[12px] text-right mt-1 select-none">
-                                        Cố gắng lên nhé!
+                                        {isViewingCurrentMonth ? "Cố gắng lên nhé!" : "Kết quả đã lưu danh!"}
                                     </span>
                                 </div>
                             </div>
@@ -945,86 +990,97 @@ export default function LeaderboardView({
                                     className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                                 />
                                 <p className="text-xs text-slate-400 italic">
-                                    Bạn chưa được ghi nhận trên BXH khối{" "}
-                                    {activeGrade}.
+                                    Bạn chưa có bài thi nào trong {selectedHistoryItem.monthLabel}.
                                 </p>
                             </div>
                         )}
                     </div>
 
-                    {/* B. CARD NÂNG CAO ĐIỂM SỐ: Danh sách đề thi chưa thi (CTA để leo hạng) */}
+                    {/* B. CARD NÂNG CAO ĐIỂM SỐ: Danh sách đề thi tạo trong tháng chưa làm */}
                     <div className="bg-transparent max-lg:bg-slate-50/70 dark:max-lg:bg-slate-900/50 max-lg:p-4 max-lg:rounded-lg max-lg:border max-lg:border-slate-200/60 dark:max-lg:border-slate-800 rounded-none py-6 space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                Nâng cao điểm số
+                                Đề thi {isViewingCurrentMonth ? "tháng này" : selectedHistoryItem.monthLabel}
                             </h3>
                             <span className="text-[9px] bg-[#4B726B]/10 text-[#4B726B] dark:text-brand-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
-                                Chưa làm
+                                {isViewingCurrentMonth ? "Cộng điểm BXH" : "Đã qua"}
                             </span>
                         </div>
 
-                        {untakenQuizzes.length > 0 ? (
-                            <div className="space-y-3">
-                                <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed flex items-center gap-1.5">
-                                    <img
-                                        src="/icons/lightbulb.png"
-                                        alt=""
-                                        className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
-                                    />
-                                    <span>
-                                        Dưới đây là các bài thi bạn chưa làm:
-                                    </span>
-                                </p>
-                                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                                    {untakenQuizzes.slice(0, 5).map((quiz) => (
-                                        <div
-                                            key={quiz.id}
-                                            onClick={() =>
-                                                onNavigate(`/quiz/${quiz.id}`)
-                                            }
-                                            className="py-3 bg-transparent hover:bg-[#4B726B]/5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 flex items-center justify-between transition-all duration-200 cursor-pointer group"
-                                        >
-                                            <div className="space-y-1 min-w-0 pr-2">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 py-0.2 rounded">
-                                                        {quiz.subject}
-                                                    </span>
+                        {isViewingCurrentMonth ? (
+                            untakenQuizzes.length > 0 ? (
+                                <div className="space-y-3">
+                                    <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed flex items-center gap-1.5">
+                                        <img
+                                            src="/icons/lightbulb.png"
+                                            alt=""
+                                            className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
+                                        />
+                                        <span>
+                                            Làm các đề thi được tạo trong tháng này để tăng thứ hạng:
+                                        </span>
+                                    </p>
+                                    <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                                        {untakenQuizzes.slice(0, 5).map((quiz) => (
+                                            <div
+                                                key={quiz.id}
+                                                onClick={() => onNavigate(`/quiz/${quiz.id}`)}
+                                                className="py-3 bg-transparent hover:bg-[#4B726B]/5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 flex items-center justify-between transition-all duration-200 cursor-pointer group"
+                                            >
+                                                <div className="space-y-1 min-w-0 pr-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 py-0.2 rounded">
+                                                            {quiz.subject}
+                                                        </span>
+                                                    </div>
+                                                    <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200 truncate group-hover:text-[#4B726B] transition-colors">
+                                                        {quiz.title}
+                                                    </h4>
+                                                    <p className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
+                                                        <Clock className="w-3 h-3 text-slate-350" />
+                                                        <span>
+                                                            {quiz.duration} phút • {quiz.questions?.length || 0} câu
+                                                        </span>
+                                                    </p>
                                                 </div>
-                                                <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200 truncate group-hover:text-[#4B726B] transition-colors">
-                                                    {quiz.title}
-                                                </h4>
-                                                <p className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
-                                                    <Clock className="w-3 h-3 text-slate-350" />
-                                                    <span>
-                                                        {quiz.duration} phút •{" "}
-                                                        {quiz.questions
-                                                            ?.length || 0}{" "}
-                                                        câu
-                                                    </span>
-                                                </p>
+                                                <span className="text-[10px] text-slate-400 group-hover:text-[#4B726B] font-bold flex items-center gap-0.5 shrink-0 transition-colors">
+                                                    Làm bài{" "}
+                                                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                                </span>
                                             </div>
-                                            <span className="text-[10px] text-slate-400 group-hover:text-[#4B726B] font-bold flex items-center gap-0.5 shrink-0 transition-colors">
-                                                Làm bài{" "}
-                                                <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                                            </span>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="py-8 text-center space-y-2.5 text-slate-400">
+                                    <img
+                                        src="/icons/party.gif"
+                                        alt="Chúc mừng"
+                                        className="w-12 h-12 object-contain mx-auto select-none"
+                                    />
+                                    <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                        Tuyệt vời! Bạn đã hoàn thành tất cả đề thi tháng này.
+                                    </p>
+                                    <p className="text-[10px] text-slate-455 dark:text-slate-500">
+                                        Hãy chờ các đề thi mới tiếp theo của Khối {activeGrade}.
+                                    </p>
+                                </div>
+                            )
                         ) : (
-                            <div className="py-8 text-center space-y-2.5 text-slate-400">
-                                <img
-                                    src="/icons/party.gif"
-                                    alt="Chúc mừng"
-                                    className="w-12 h-12 object-contain mx-auto select-none"
-                                />
+                            <div className="py-6 text-center space-y-2 text-slate-500 dark:text-slate-400">
+                                <Lock className="w-8 h-8 text-slate-400 mx-auto" />
                                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                    Tuyệt vời! Bạn đã hoàn thành tất cả đề thi.
+                                    {selectedHistoryItem.monthLabel} đã kết thúc
                                 </p>
-                                <p className="text-[10px] text-slate-455 dark:text-slate-500">
-                                    Không còn đề thi chưa hoàn thành của Khối{" "}
-                                    {activeGrade}.
+                                <p className="text-[10px] leading-relaxed text-slate-500">
+                                    Làm các bài thi cũ sẽ không được cộng điểm vào BXH tháng này để đảm bảo tính công bằng.
                                 </p>
+                                <button
+                                    onClick={() => setSelectedMonth(currentMonthKey)}
+                                    className="mt-2 px-3 py-1.5 bg-[#4B726B] text-white text-xs font-bold rounded-lg hover:bg-[#3D5E58] transition-colors"
+                                >
+                                    Xem BXH tháng hiện tại
+                                </button>
                             </div>
                         )}
                     </div>

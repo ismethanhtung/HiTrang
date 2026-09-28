@@ -1,4 +1,4 @@
-import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderboardEntry, AppNotification } from '../types';
+import { Quiz, Submission, User, Question, QuizLeaderboardEntry, OverallLeaderboardEntry, LeaderboardMonthHistory, AppNotification } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -392,12 +392,26 @@ export async function getQuizLeaderboard(quizId: string): Promise<QuizLeaderboar
   }
 }
 
-export async function getOverallLeaderboard(grade: string): Promise<OverallLeaderboardEntry[]> {
+export async function getOverallLeaderboard(grade: string, month?: string): Promise<OverallLeaderboardEntry[]> {
   try {
-    return await apiRequest<OverallLeaderboardEntry[]>(`/leaderboard/overall?p_grade=${grade}`);
+    const url = month
+      ? `/leaderboard/overall?p_grade=${grade}&month=${month}`
+      : `/leaderboard/overall?p_grade=${grade}`;
+    return await apiRequest<OverallLeaderboardEntry[]>(url);
   } catch (err: any) {
     if (err?.status !== 401) {
       console.warn('Lỗi khi tải BXH tổng hợp:', err?.message || err);
+    }
+    return [];
+  }
+}
+
+export async function getLeaderboardHistory(grade: string): Promise<LeaderboardMonthHistory[]> {
+  try {
+    return await apiRequest<LeaderboardMonthHistory[]>(`/leaderboard/history?p_grade=${grade}`);
+  } catch (err: any) {
+    if (err?.status !== 401) {
+      console.warn('Lỗi khi tải lịch sử vinh danh BXH:', err?.message || err);
     }
     return [];
   }
