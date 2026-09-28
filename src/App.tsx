@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Quiz, Submission, User } from "./types";
 import { INITIAL_QUIZZES, INITIAL_SUBMISSIONS } from "./data";
@@ -155,6 +155,83 @@ export default function App() {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
+
+    // Helper to calculate mobile tab index for smooth directional slide transitions
+    const getMobileTabInfo = (
+        path: string,
+        route: string,
+        grade: string | null,
+        takingOrReviewing: boolean,
+    ) => {
+        if (takingOrReviewing) return { key: "quiz", index: -1 };
+        if (
+            route === "admin" ||
+            path.startsWith("/admin") ||
+            path === "/trang" ||
+            path === "/teacher"
+        ) {
+            return { key: "admin", index: -1 };
+        }
+        if (path === "/notifications" || path === "/noti") {
+            return { key: "notifications", index: 4 };
+        }
+        if (
+            path === "/settings" ||
+            path === "/profile" ||
+            path === "/security" ||
+            path === "/appearance" ||
+            path === "/theme" ||
+            path === "/history"
+        ) {
+            return { key: "settings", index: 5 };
+        }
+        if (route === "leaderboard" || path === "/leaderboard") {
+            return { key: "leaderboard", index: 3 };
+        }
+        if (route === "schedule" || path === "/schedule" || path === "/lich") {
+            return { key: "schedule", index: 2 };
+        }
+        if (grade || path.startsWith("/grade/")) {
+            return { key: `grade-${grade || "list"}`, index: 1 };
+        }
+        return { key: "home", index: 0 };
+    };
+
+    const currentTabInfo = getMobileTabInfo(
+        currentPath,
+        routeInfo.route,
+        selectedGrade,
+        isTakingOrReviewing,
+    );
+
+    const prevTabIndexRef = useRef(currentTabInfo.index);
+    const [tabDirection, setTabDirection] = useState<number>(0);
+
+    useEffect(() => {
+        const prev = prevTabIndexRef.current;
+        const curr = currentTabInfo.index;
+        if (prev !== -1 && curr !== -1 && prev !== curr) {
+            setTabDirection(curr > prev ? 1 : -1);
+        } else {
+            setTabDirection(0);
+        }
+        prevTabIndexRef.current = curr;
+    }, [currentTabInfo.index, currentTabInfo.key]);
+
+    const tabVariants = {
+        enter: (dir: number) => ({
+            x: isMobileScreen ? (dir > 0 ? 32 : dir < 0 ? -32 : 0) : 0,
+            opacity: 0,
+        }),
+        center: {
+            x: 0,
+            opacity: 1,
+        },
+        exit: (dir: number) => ({
+            x: isMobileScreen ? (dir > 0 ? -32 : dir < 0 ? 32 : 0) : 0,
+            opacity: 0,
+        }),
+    };
 
     const [quizzes, setQuizzes] = useState<Quiz[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -933,7 +1010,7 @@ export default function App() {
                                 navigateTo={navigateTo}
                             />
                         </React.Suspense>
-                    ) : routeInfo.route === "schedule" ? (
+                    ) : routeInfo.route === "schedule" && !user ? (
                         <ScheduleView
                             user={user}
                             onNavigate={navigateTo}
@@ -941,6 +1018,14 @@ export default function App() {
                                 setGlobalContactModalOpen(true)
                             }
                             onOpenBugModal={() => setGlobalBugModalOpen(true)}
+                        />
+                    ) : routeInfo.route === "leaderboard" && !user ? (
+                        <LeaderboardView
+                            user={user}
+                            quizzes={quizzes}
+                            submissions={submissions}
+                            onNavigate={navigateTo}
+                            initialData={prefetchedLeaderboard}
                         />
                     ) : routeInfo.route === "reset-password" ? (
                         <React.Suspense fallback={<div className="min-h-screen" />}>
@@ -969,182 +1054,219 @@ export default function App() {
                         <div
                             className={`flex-1 bg-transparent flex flex-col ${isTakingOrReviewing ? "min-h-0 overflow-hidden" : ""}`}
                         >
-                            {(() => {
-                                if (
-                                    currentPath === "/settings" ||
-                                    currentPath === "/profile" ||
-                                    currentPath === "/security" ||
-                                    currentPath === "/appearance" ||
-                                    currentPath === "/theme" ||
-                                    currentPath === "/history" ||
-                                    currentPath === "/notifications" ||
-                                    currentPath === "/noti"
-                                ) {
-                                    return (
-                                        <SettingsView
-                                            user={user}
-                                            onUpdateUser={(updatedUser) =>
-                                                setUser(updatedUser)
-                                            }
-                                            onLogout={handleLogout}
-                                            theme={theme}
-                                            onThemeChange={(newTheme) =>
-                                                setTheme(newTheme)
-                                            }
-                                            submissions={submissions}
-                                            quizzes={quizzes}
-                                            initialTab={
-                                                currentPath ===
-                                                    "/notifications" ||
-                                                currentPath === "/noti"
-                                                    ? "notifications"
-                                                    : currentPath === "/history"
-                                                      ? "history"
-                                                      : currentPath ===
-                                                              "/appearance" ||
-                                                          currentPath ===
-                                                              "/theme"
-                                                        ? "appearance"
-                                                        : currentPath ===
-                                                            "/security"
-                                                          ? "security"
-                                                          : "profile"
-                                            }
-                                            onTabChange={(tab) => {
-                                                const targetPath =
-                                                    tab === "notifications"
-                                                        ? "/notifications"
-                                                        : tab === "history"
-                                                          ? "/history"
-                                                          : tab === "appearance"
-                                                            ? "/appearance"
-                                                            : tab === "security"
-                                                              ? "/security"
-                                                              : "/settings";
-                                                window.history.pushState(
-                                                    null,
-                                                    "",
-                                                    targetPath,
-                                                );
-                                                setCurrentPath(targetPath);
-                                            }}
-                                            onNavigate={navigateTo}
-                                        />
-                                    );
-                                }
-
-                                if (isTakingOrReviewing) {
-                                    return (
-                                        <StudentDashboard
-                                            user={user}
-                                            quizzes={filteredQuizzes}
-                                            submissions={submissions}
-                                            onAddSubmission={
-                                                handleAddSubmission
-                                            }
-                                            activeTab={activeTab}
-                                            selectedGrade={selectedGrade}
-                                            onSelectGrade={(
-                                                grade,
-                                                category,
-                                            ) => {
-                                                if (confirmNavigation()) {
-                                                    if (grade) {
-                                                        let path =
-                                                            "/grade/" + grade;
-                                                        if (category) {
-                                                            path +=
-                                                                "?category=" +
-                                                                encodeURIComponent(
-                                                                    category,
-                                                                );
-                                                        }
-                                                        navigateTo(path);
-                                                    } else {
-                                                        navigateTo("/");
-                                                    }
+                            {isTakingOrReviewing ? (
+                                <StudentDashboard
+                                    user={user}
+                                    quizzes={filteredQuizzes}
+                                    submissions={submissions}
+                                    onAddSubmission={
+                                        handleAddSubmission
+                                    }
+                                    activeTab={activeTab}
+                                    selectedGrade={selectedGrade}
+                                    onSelectGrade={(
+                                        grade,
+                                        category,
+                                    ) => {
+                                        if (confirmNavigation()) {
+                                            if (grade) {
+                                                let path =
+                                                    "/grade/" + grade;
+                                                if (category) {
+                                                    path +=
+                                                        "?category=" +
+                                                        encodeURIComponent(
+                                                            category,
+                                                        );
                                                 }
-                                            }}
-                                            onQuizStateChange={setIsTakingQuiz}
-                                            activeQuizId={activeQuizId}
-                                            reviewSubmissionId={
-                                                reviewSubmissionId
+                                                navigateTo(path);
+                                            } else {
+                                                navigateTo("/");
                                             }
-                                            onNavigate={navigateTo}
-                                            navigateReplace={navigateReplace}
-                                            ongoingAttempt={ongoingAttempt}
-                                            loading={loading}
-                                            currentPath={currentPath}
-                                        />
-                                    );
-                                }
-
-                                if (currentPath === "/leaderboard") {
-                                    return (
-                                        <LeaderboardView
-                                            user={user}
-                                            quizzes={quizzes}
-                                            submissions={submissions}
-                                            onNavigate={navigateTo}
-                                            initialData={prefetchedLeaderboard}
-                                        />
-                                    );
-                                }
-
-                                if (
-                                    (user.role === "admin" ||
-                                        currentPath === "/trang" ||
-                                        currentPath === "/teacher") &&
-                                    activeTab !== "student-dashboard"
-                                ) {
-                                    return (
-                                        <AdminDashboard
-                                            quizzes={quizzes}
-                                            submissions={submissions}
-                                            onAddQuiz={handleAddQuiz}
-                                            onDeleteQuiz={handleDeleteQuiz}
-                                            activeTab={activeTab}
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <StudentDashboard
-                                        user={user}
-                                        quizzes={filteredQuizzes}
-                                        submissions={submissions}
-                                        onAddSubmission={handleAddSubmission}
-                                        activeTab={activeTab}
-                                        selectedGrade={selectedGrade}
-                                        onSelectGrade={(grade, category) => {
-                                            if (confirmNavigation()) {
-                                                if (grade) {
-                                                    let path =
-                                                        "/grade/" + grade;
-                                                    if (category) {
-                                                        path +=
-                                                            "?category=" +
-                                                            encodeURIComponent(
-                                                                category,
-                                                            );
-                                                    }
-                                                    navigateTo(path);
-                                                } else {
-                                                    navigateTo("/");
-                                                }
-                                            }
+                                        }
+                                    }}
+                                    onQuizStateChange={setIsTakingQuiz}
+                                    activeQuizId={activeQuizId}
+                                    reviewSubmissionId={
+                                        reviewSubmissionId
+                                    }
+                                    onNavigate={navigateTo}
+                                    navigateReplace={navigateReplace}
+                                    ongoingAttempt={ongoingAttempt}
+                                    loading={loading}
+                                    currentPath={currentPath}
+                                />
+                            ) : (
+                                <AnimatePresence mode="wait" custom={tabDirection}>
+                                    <motion.div
+                                        key={currentTabInfo.key}
+                                        custom={tabDirection}
+                                        variants={tabVariants}
+                                        initial="enter"
+                                        animate="center"
+                                        exit="exit"
+                                        transition={{
+                                            type: "tween",
+                                            ease: [0.25, 1, 0.5, 1],
+                                            duration: isMobileScreen ? 0.22 : 0.15,
                                         }}
-                                        onQuizStateChange={setIsTakingQuiz}
-                                        activeQuizId={activeQuizId}
-                                        reviewSubmissionId={reviewSubmissionId}
-                                        onNavigate={navigateTo}
-                                        navigateReplace={navigateReplace}
-                                        ongoingAttempt={ongoingAttempt}
-                                        loading={loading}
-                                        currentPath={currentPath}
-                                    />
-                                );
-                            })()}
+                                        className="w-full flex-1 flex flex-col"
+                                    >
+                                        {(() => {
+                                            if (
+                                                currentPath === "/settings" ||
+                                                currentPath === "/profile" ||
+                                                currentPath === "/security" ||
+                                                currentPath === "/appearance" ||
+                                                currentPath === "/theme" ||
+                                                currentPath === "/history" ||
+                                                currentPath === "/notifications" ||
+                                                currentPath === "/noti"
+                                            ) {
+                                                return (
+                                                    <SettingsView
+                                                        user={user}
+                                                        onUpdateUser={(updatedUser) =>
+                                                            setUser(updatedUser)
+                                                        }
+                                                        onLogout={handleLogout}
+                                                        theme={theme}
+                                                        onThemeChange={(newTheme) =>
+                                                            setTheme(newTheme)
+                                                        }
+                                                        submissions={submissions}
+                                                        quizzes={quizzes}
+                                                        initialTab={
+                                                            currentPath ===
+                                                                "/notifications" ||
+                                                            currentPath === "/noti"
+                                                                ? "notifications"
+                                                                : currentPath === "/history"
+                                                                  ? "history"
+                                                                  : currentPath ===
+                                                                          "/appearance" ||
+                                                                      currentPath ===
+                                                                          "/theme"
+                                                                    ? "appearance"
+                                                                    : currentPath ===
+                                                                        "/security"
+                                                                      ? "security"
+                                                                      : "profile"
+                                                        }
+                                                        onTabChange={(tab) => {
+                                                            const targetPath =
+                                                                tab === "notifications"
+                                                                    ? "/notifications"
+                                                                    : tab === "history"
+                                                                      ? "/history"
+                                                                      : tab === "appearance"
+                                                                        ? "/appearance"
+                                                                        : tab === "security"
+                                                                          ? "/security"
+                                                                          : "/settings";
+                                                            window.history.pushState(
+                                                                null,
+                                                                "",
+                                                                targetPath,
+                                                            );
+                                                            setCurrentPath(targetPath);
+                                                        }}
+                                                        onNavigate={navigateTo}
+                                                    />
+                                                );
+                                            }
+
+                                            if (
+                                                routeInfo.route === "schedule" ||
+                                                currentPath === "/schedule" ||
+                                                currentPath === "/lich"
+                                            ) {
+                                                return (
+                                                    <ScheduleView
+                                                        user={user}
+                                                        onNavigate={navigateTo}
+                                                        onOpenContactModal={() =>
+                                                            setGlobalContactModalOpen(true)
+                                                        }
+                                                        onOpenBugModal={() =>
+                                                            setGlobalBugModalOpen(true)
+                                                        }
+                                                    />
+                                                );
+                                            }
+
+                                            if (
+                                                routeInfo.route === "leaderboard" ||
+                                                currentPath === "/leaderboard"
+                                            ) {
+                                                return (
+                                                    <LeaderboardView
+                                                        user={user}
+                                                        quizzes={quizzes}
+                                                        submissions={submissions}
+                                                        onNavigate={navigateTo}
+                                                        initialData={prefetchedLeaderboard}
+                                                    />
+                                                );
+                                            }
+
+                                            if (
+                                                (user.role === "admin" ||
+                                                    currentPath === "/trang" ||
+                                                    currentPath === "/teacher") &&
+                                                activeTab !== "student-dashboard"
+                                            ) {
+                                                return (
+                                                    <AdminDashboard
+                                                        quizzes={quizzes}
+                                                        submissions={submissions}
+                                                        onAddQuiz={handleAddQuiz}
+                                                        onDeleteQuiz={handleDeleteQuiz}
+                                                        activeTab={activeTab}
+                                                    />
+                                                );
+                                            }
+
+                                            return (
+                                                <StudentDashboard
+                                                    user={user}
+                                                    quizzes={filteredQuizzes}
+                                                    submissions={submissions}
+                                                    onAddSubmission={handleAddSubmission}
+                                                    activeTab={activeTab}
+                                                    selectedGrade={selectedGrade}
+                                                    onSelectGrade={(grade, category) => {
+                                                        if (confirmNavigation()) {
+                                                            if (grade) {
+                                                                let path =
+                                                                    "/grade/" + grade;
+                                                                if (category) {
+                                                                    path +=
+                                                                        "?category=" +
+                                                                        encodeURIComponent(
+                                                                            category,
+                                                                        );
+                                                                }
+                                                                navigateTo(path);
+                                                            } else {
+                                                                navigateTo("/");
+                                                            }
+                                                        }
+                                                    }}
+                                                    onQuizStateChange={setIsTakingQuiz}
+                                                    activeQuizId={activeQuizId}
+                                                    reviewSubmissionId={reviewSubmissionId}
+                                                    onNavigate={navigateTo}
+                                                    navigateReplace={navigateReplace}
+                                                    ongoingAttempt={ongoingAttempt}
+                                                    loading={loading}
+                                                    currentPath={currentPath}
+                                                />
+                                            );
+                                        })()}
+                                    </motion.div>
+                                </AnimatePresence>
+                            )}
                         </div>
                     )}
                 </div>

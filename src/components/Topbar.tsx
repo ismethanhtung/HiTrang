@@ -717,21 +717,25 @@ export default function Topbar({
                 <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
                     {/* 1. Trang chủ */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={onNavigateHome}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             isHomeActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Trang chủ"
                     >
-                        <div className="h-[22px] flex items-center justify-center">
+                        <motion.div
+                            animate={{ scale: isHomeActive ? 1.08 : 1, y: isHomeActive ? -1 : 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center"
+                        >
                             <NavHouseIcon
                                 active={isHomeActive}
                                 className="w-[21px] h-[21px]"
                             />
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isHomeActive ? "font-bold" : "font-medium"}`}
                         >
@@ -741,7 +745,7 @@ export default function Topbar({
 
                     {/* 2. Đề thi / Khối lớp */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => {
                             if (user.grade) {
                                 onSelectGrade(user.grade);
@@ -749,19 +753,23 @@ export default function Topbar({
                                 setShowGradeModal(true);
                             }
                         }}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             isGradeActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Đề thi"
                     >
-                        <div className="h-[22px] flex items-center justify-center">
+                        <motion.div
+                            animate={{ scale: isGradeActive ? 1.08 : 1, y: isGradeActive ? -1 : 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center"
+                        >
                             <NavDocumentIcon
                                 active={isGradeActive}
                                 className="w-[21px] h-[21px]"
                             />
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isGradeActive ? "font-bold" : "font-medium"}`}
                         >
@@ -771,21 +779,25 @@ export default function Topbar({
 
                     {/* 3. Lịch học */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={onNavigateSchedule}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             isScheduleActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Lịch học"
                     >
-                        <div className="h-[22px] flex items-center justify-center">
+                        <motion.div
+                            animate={{ scale: isScheduleActive ? 1.08 : 1, y: isScheduleActive ? -1 : 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center"
+                        >
                             <NavCalendarIcon
                                 active={isScheduleActive}
                                 className="w-[21px] h-[21px]"
                             />
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isScheduleActive ? "font-bold" : "font-medium"}`}
                         >
@@ -795,21 +807,25 @@ export default function Topbar({
 
                     {/* 4. Bảng xếp hạng (BXH) */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={onNavigateLeaderboard}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             isLeaderboardActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Bảng xếp hạng"
                     >
-                        <div className="h-[22px] flex items-center justify-center">
+                        <motion.div
+                            animate={{ scale: isLeaderboardActive ? 1.08 : 1, y: isLeaderboardActive ? -1 : 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center"
+                        >
                             <NavRankingIcon
                                 active={isLeaderboardActive}
                                 className="w-[21px] h-[21px]"
                             />
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isLeaderboardActive ? "font-bold" : "font-medium"}`}
                         >
@@ -819,16 +835,20 @@ export default function Topbar({
 
                     {/* 5. Thông báo */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => onNavigateSettings("notifications")}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             isNotiActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Thông báo"
                     >
-                        <div className="h-[22px] flex items-center justify-center relative">
+                        <motion.div
+                            animate={{ scale: isNotiActive ? 1.08 : 1, y: isNotiActive ? -1 : 0 }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center relative"
+                        >
                             <NavBellIcon
                                 active={isNotiActive}
                                 className="w-[21px] h-[21px]"
@@ -840,7 +860,7 @@ export default function Topbar({
                                         : unreadNotiCount}
                                 </span>
                             )}
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isNotiActive ? "font-bold" : "font-medium"}`}
                         >
@@ -850,16 +870,23 @@ export default function Topbar({
 
                     {/* 6. Tài khoản / Cá nhân */}
                     <motion.button
-                        whileTap={{ scale: 0.92 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={() => setShowMobileMenu(true)}
-                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 ${
+                        className={`flex-1 flex flex-col items-center justify-center h-full cursor-pointer transition-colors py-0.5 relative ${
                             showMobileMenu || isSettingsActive
                                 ? "text-brand-600 dark:text-brand-300"
                                 : "text-text-secondary/70 dark:text-text-secondary/60 hover:text-text-primary"
                         }`}
                         title="Cá nhân"
                     >
-                        <div className="h-[22px] flex items-center justify-center">
+                        <motion.div
+                            animate={{
+                                scale: showMobileMenu || isSettingsActive ? 1.08 : 1,
+                                y: showMobileMenu || isSettingsActive ? -1 : 0,
+                            }}
+                            transition={{ type: "spring", stiffness: 450, damping: 25 }}
+                            className="h-[22px] flex items-center justify-center"
+                        >
                             {user.avatarUrl ? (
                                 <div
                                     className={`w-[23px] h-[23px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
@@ -886,7 +913,7 @@ export default function Topbar({
                                     <UserIcon className="w-3 h-3 text-current" />
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${showMobileMenu || isSettingsActive ? "font-bold" : "font-medium"}`}
                         >
