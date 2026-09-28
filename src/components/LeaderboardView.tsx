@@ -156,6 +156,112 @@ const LeaderboardAvatar: React.FC<{
     );
 };
 
+const MonthCountdown: React.FC<{
+    targetMonth: string;
+    isCurrent: boolean;
+    monthLabel?: string;
+}> = ({ targetMonth, isCurrent, monthLabel }) => {
+    const [timeLeft, setTimeLeft] = useState<{
+        days: number;
+        hours: number;
+        minutes: number;
+        seconds: number;
+        isEnded: boolean;
+    }>(() => calculateTimeLeft());
+
+    function calculateTimeLeft() {
+        if (!isCurrent) {
+            return { days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: true };
+        }
+        const now = new Date();
+        const parts = targetMonth.split("-");
+        const year = parseInt(parts[0], 10) || now.getFullYear();
+        const month = parseInt(parts[1], 10) || now.getMonth() + 1;
+        // End of that month is the first second of next month
+        const endOfMonth = new Date(year, month, 1, 0, 0, 0);
+        const diff = endOfMonth.getTime() - now.getTime();
+
+        if (diff <= 0) {
+            return { days: 0, hours: 0, minutes: 0, seconds: 0, isEnded: true };
+        }
+
+        return {
+            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((diff / 1000 / 60) % 60),
+            seconds: Math.floor((diff / 1000) % 60),
+            isEnded: false,
+        };
+    }
+
+    useEffect(() => {
+        if (!isCurrent) return;
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [targetMonth, isCurrent]);
+
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    if (!isCurrent || timeLeft.isEnded) {
+        return (
+            <div className="py-2.5 px-3 rounded-lg border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 text-center space-y-1">
+                <div className="flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-400 font-bold text-xs">
+                    <Lock className="w-3.5 h-3.5 text-amber-500" />
+                    <span>BXH {monthLabel || "tháng này"} đã đóng</span>
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                    Xếp hạng và danh hiệu đã được khóa cố định.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-2">
+            <div className="grid grid-cols-4 gap-1.5 text-center">
+                <div className="py-2 px-1 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/70 flex flex-col items-center justify-center shadow-3xs">
+                    <span className="font-mono text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                        {timeLeft.days}
+                    </span>
+                    <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Ngày
+                    </span>
+                </div>
+                <div className="py-2 px-1 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/70 flex flex-col items-center justify-center shadow-3xs">
+                    <span className="font-mono text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                        {pad(timeLeft.hours)}
+                    </span>
+                    <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Giờ
+                    </span>
+                </div>
+                <div className="py-2 px-1 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/70 flex flex-col items-center justify-center shadow-3xs">
+                    <span className="font-mono text-base font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                        {pad(timeLeft.minutes)}
+                    </span>
+                    <span className="text-[8px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Phút
+                    </span>
+                </div>
+                <div className="py-2 px-1 rounded-lg bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 flex flex-col items-center justify-center shadow-3xs">
+                    <span className="font-mono text-base font-black text-amber-700 dark:text-amber-300 tracking-tight">
+                        {pad(timeLeft.seconds)}
+                    </span>
+                    <span className="text-[8px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        Giây
+                    </span>
+                </div>
+            </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center font-medium leading-tight">
+                Đóng bảng và vinh danh cuối tháng {targetMonth.split("-")[1]}/
+                {targetMonth.split("-")[0]}
+            </p>
+        </div>
+    );
+};
+
 export default function LeaderboardView({
     user,
     quizzes,
@@ -374,15 +480,15 @@ export default function LeaderboardView({
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8 pb-32 animate-in fade-in duration-300 overflow-x-hidden">
             {/* 1. Header Vinh Danh & Bộ Lọc Tháng / Khối */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-100 dark:border-slate-800">
-                <div className="space-y-1 text-left">
-                    <div className="flex items-center gap-2.5 flex-wrap">
+                <div className="space-y-1.5 text-left">
+                    <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
                     </div>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
                         Điểm số được tính từ các đề thi được tạo trong tháng.
-                        Cuối tháng sẽ chốt danh hiệu và khóa xếp hạng.
+                        Khóa xếp hạng và cuối tháng.
                     </p>
                 </div>
 
@@ -425,8 +531,36 @@ export default function LeaderboardView({
 
             {/* 3. Bố Cục Grid Ba Cột (Vinh Danh Bên Trái | Bảng Xếp Hạng Ở Giữa | Góc Học Tập Bên Phải) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                {/* CỘT TRÁI (Col-span 3): Lịch sử vinh danh (Hall of Fame) */}
+                {/* CỘT TRÁI (Col-span 3): Đếm ngược & Lịch sử vinh danh (Hall of Fame) */}
                 <div className="hidden lg:block lg:col-span-3 space-y-6">
+                    {/* A. MỤC ĐẾM NGƯỢC ĐÓNG BXH THÁNG */}
+                    <div className="bg-transparent rounded-none py-2 space-y-3 relative">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+                            <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Thời gian còn lại</span>
+                            </h3>
+                            {isViewingCurrentMonth ? (
+                                <span className="text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                                    Đang mở
+                                </span>
+                            ) : (
+                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90 flex items-center gap-1">
+                                    <Lock className="w-2.5 h-2.5" />
+                                    Đã khóa
+                                </span>
+                            )}
+                        </div>
+
+                        <MonthCountdown
+                            targetMonth={selectedMonth}
+                            isCurrent={isViewingCurrentMonth}
+                            monthLabel={selectedHistoryItem.monthLabel}
+                        />
+                    </div>
+
+                    {/* B. MỤC LỊCH SỬ VINH DANH */}
                     <div className="bg-transparent dark:border-slate-850 rounded-none py-2 space-y-4 relative">
                         {/* Golden backdrop blur effect */}
                         <div className="absolute -top-12 -left-12 w-24 h-24 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
@@ -443,7 +577,7 @@ export default function LeaderboardView({
 
                         <div className="space-y-3">
                             <p className="text-[10px] text-slate-455 dark:text-slate-400 font-semibold leading-relaxed">
-                                Học sinh hạng nhất trước kia:
+                                Bảng xếp hạng trước kia:
                             </p>
                             {historyMonths.length > 0 ? (
                                 <div className="space-y-2">
@@ -459,7 +593,7 @@ export default function LeaderboardView({
                                                         hItem.month,
                                                     )
                                                 }
-                                                className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer group relative ${
+                                                className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer group relative ${
                                                     isSelected
                                                         ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-sm ring-1 ring-amber-500/30"
                                                         : "border-slate-100 dark:border-slate-800/80 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900/40"
@@ -526,8 +660,6 @@ export default function LeaderboardView({
                                                                 đ
                                                             </p>
                                                         </div>
-                                                        {/* Trophy Icon */}
-                                                        <Award className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
                                                     </div>
                                                 ) : (
                                                     <div className="py-2 text-center text-[10px] text-slate-400 italic">
@@ -1103,8 +1235,8 @@ export default function LeaderboardView({
                                             className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
                                         />
                                         <span>
-                                            Làm các đề thi được tạo trong tháng
-                                            này để tăng thứ hạng:
+                                            Làm các đề thi trong tháng này để
+                                            tăng thứ hạng:
                                         </span>
                                     </p>
                                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
