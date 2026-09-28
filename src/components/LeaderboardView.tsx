@@ -18,7 +18,13 @@ import {
     History,
     User as UserIcon,
 } from "lucide-react";
-import { User, Quiz, Submission, OverallLeaderboardEntry, LeaderboardMonthHistory } from "../types";
+import {
+    User,
+    Quiz,
+    Submission,
+    OverallLeaderboardEntry,
+    LeaderboardMonthHistory,
+} from "../types";
 import {
     getOverallLeaderboard,
     getLeaderboardHistory,
@@ -180,7 +186,9 @@ export default function LeaderboardView({
 
     // Selected Month state (defaults to current month)
     const [selectedMonth, setSelectedMonth] = useState<string>(currentMonthKey);
-    const [historyMonths, setHistoryMonths] = useState<LeaderboardMonthHistory[]>([]);
+    const [historyMonths, setHistoryMonths] = useState<
+        LeaderboardMonthHistory[]
+    >([]);
     const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
     const [overallData, setOverallData] = useState<OverallLeaderboardEntry[]>(
@@ -213,7 +221,9 @@ export default function LeaderboardView({
 
     // Filter untaken quizzes created in the active selected month
     const monthQuizzes = gradeQuizzes.filter(
-        (q) => (q.createdAt && q.createdAt.slice(0, 7) === selectedMonth) || (!q.createdAt && isViewingCurrentMonth),
+        (q) =>
+            (q.createdAt && q.createdAt.slice(0, 7) === selectedMonth) ||
+            (!q.createdAt && isViewingCurrentMonth),
     );
     const totalQuizzesForGrade = monthQuizzes.length || 1;
 
@@ -239,7 +249,10 @@ export default function LeaderboardView({
     };
 
     // Fetch Monthly Leaderboard for the active grade & selected month
-    const fetchOverallRankings = async (showSilence = false, targetMonth = selectedMonth) => {
+    const fetchOverallRankings = async (
+        showSilence = false,
+        targetMonth = selectedMonth,
+    ) => {
         const silent = showSilence || overallData.length > 0;
         if (!silent) setLoading(true);
         setError(null);
@@ -278,11 +291,15 @@ export default function LeaderboardView({
     };
 
     // Active selected history item metadata
-    const selectedHistoryItem = historyMonths.find((h) => h.month === selectedMonth) || {
+    const selectedHistoryItem = historyMonths.find(
+        (h) => h.month === selectedMonth,
+    ) || {
         month: selectedMonth,
         monthLabel: (() => {
             const parts = selectedMonth.split("-");
-            return parts.length === 2 ? `Tháng ${parts[1]}/${parts[0]}` : selectedMonth;
+            return parts.length === 2
+                ? `Tháng ${parts[1]}/${parts[0]}`
+                : selectedMonth;
         })(),
         isCurrent: isViewingCurrentMonth,
         isLocked: selectedMonth < currentMonthKey,
@@ -362,47 +379,14 @@ export default function LeaderboardView({
                         <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                             <span>Bảng Xếp Hạng Học Tập</span>
                         </h1>
-                        {/* Month Badge */}
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-700 dark:text-amber-400 text-xs font-black">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{selectedHistoryItem.monthLabel}</span>
-                            {selectedHistoryItem.isCurrent ? (
-                                <span className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ml-1">
-                                    Hiện tại
-                                </span>
-                            ) : (
-                                <span className="text-[10px] bg-slate-500 text-white px-1.5 py-0.2 rounded font-bold uppercase tracking-wider ml-1 flex items-center gap-0.5">
-                                    <Lock className="w-2.5 h-2.5" /> Đã khóa
-                                </span>
-                            )}
-                        </div>
                     </div>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
-                        Điểm số được tính từ các đề thi được tạo trong tháng. Cuối tháng sẽ chốt danh hiệu và khóa xếp hạng.
+                        Điểm số được tính từ các đề thi được tạo trong tháng.
+                        Cuối tháng sẽ chốt danh hiệu và khóa xếp hạng.
                     </p>
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                    {/* SELECT MONTH */}
-                    {historyMonths.length > 1 && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                                Chọn tháng:
-                            </span>
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 cursor-pointer"
-                            >
-                                {historyMonths.map((h) => (
-                                    <option key={h.month} value={h.month}>
-                                        {h.monthLabel} {h.isCurrent ? "(Hiện tại)" : "(Đã khóa)"}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
                     {/* SELECT GRADE (Cho Admin) */}
                     {user.role === "admin" && (
                         <div className="flex items-center gap-2">
@@ -464,12 +448,17 @@ export default function LeaderboardView({
                             {historyMonths.length > 0 ? (
                                 <div className="space-y-2">
                                     {historyMonths.map((hItem) => {
-                                        const isSelected = selectedMonth === hItem.month;
+                                        const isSelected =
+                                            selectedMonth === hItem.month;
                                         const champ = hItem.champion;
                                         return (
                                             <div
                                                 key={hItem.month}
-                                                onClick={() => setSelectedMonth(hItem.month)}
+                                                onClick={() =>
+                                                    setSelectedMonth(
+                                                        hItem.month,
+                                                    )
+                                                }
                                                 className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer group relative ${
                                                     isSelected
                                                         ? "border-amber-500/50 bg-amber-500/10 dark:bg-amber-500/15 shadow-sm ring-1 ring-amber-500/30"
@@ -487,7 +476,8 @@ export default function LeaderboardView({
                                                             </span>
                                                         ) : (
                                                             <span className="text-[8px] bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.2 rounded font-bold flex items-center gap-0.5">
-                                                                <Lock className="w-2 h-2" /> Đã khóa
+                                                                <Lock className="w-2 h-2" />{" "}
+                                                                Đã khóa
                                                             </span>
                                                         )}
                                                     </div>
@@ -506,19 +496,34 @@ export default function LeaderboardView({
                                                                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 max-w-none pointer-events-none z-10 object-contain drop-shadow-2xs"
                                                             />
                                                             <LeaderboardAvatar
-                                                                avatarUrl={champ.studentAvatarUrl}
-                                                                name={champ.studentName}
+                                                                avatarUrl={
+                                                                    champ.studentAvatarUrl
+                                                                }
+                                                                name={
+                                                                    champ.studentName
+                                                                }
                                                                 sizeClass="w-7.5 h-7.5 text-xs font-extrabold text-amber-600 dark:text-amber-400"
-                                                                useInitial={true}
+                                                                useInitial={
+                                                                    true
+                                                                }
                                                                 className="border border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/15 group-hover:scale-105 transition-transform"
                                                             />
                                                         </div>
                                                         <div className="min-w-0 flex-1">
                                                             <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-500 transition-colors">
-                                                                {champ.studentName}
+                                                                {
+                                                                    champ.studentName
+                                                                }
                                                             </h4>
                                                             <p className="text-[9px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                                                                {champ.testsCompleted} đề thi • {champ.totalPoints} đ
+                                                                {
+                                                                    champ.testsCompleted
+                                                                }{" "}
+                                                                đề thi •{" "}
+                                                                {
+                                                                    champ.totalPoints
+                                                                }{" "}
+                                                                đ
                                                             </p>
                                                         </div>
                                                         {/* Trophy Icon */}
@@ -526,7 +531,8 @@ export default function LeaderboardView({
                                                     </div>
                                                 ) : (
                                                     <div className="py-2 text-center text-[10px] text-slate-400 italic">
-                                                        Chưa ghi nhận lượt thi trong tháng này
+                                                        Chưa ghi nhận lượt thi
+                                                        trong tháng này
                                                     </div>
                                                 )}
                                             </div>
@@ -555,10 +561,12 @@ export default function LeaderboardView({
                             </div>
                             <div className="text-left space-y-0.5">
                                 <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                    Xếp hạng {selectedHistoryItem.monthLabel} đã đóng băng
+                                    Xếp hạng {selectedHistoryItem.monthLabel} đã
+                                    đóng băng
                                 </h4>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                                    Tháng thi này đã kết thúc. Thứ tự xếp hạng và danh hiệu đã được khóa lại cố định.
+                                    Tháng thi này đã kết thúc. Thứ tự xếp hạng
+                                    và danh hiệu đã được khóa lại cố định.
                                 </p>
                             </div>
                         </div>
@@ -585,7 +593,9 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-slate-300/10 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <LeaderboardAvatar
-                                            avatarUrl={podiumOrder[0].studentAvatarUrl}
+                                            avatarUrl={
+                                                podiumOrder[0].studentAvatarUrl
+                                            }
                                             name={podiumOrder[0].studentName}
                                             sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-slate-500"
                                             iconClass="w-5.5 h-5.5 text-slate-400"
@@ -602,15 +612,19 @@ export default function LeaderboardView({
                                             <span className="text-[8px] font-black text-slate-400 dark:text-slate-500 tracking-wider">
                                                 HẠNG 2
                                             </span>
-                                            {isViewingCurrentMonth && renderTrend(
-                                                podiumOrder[0].rankPosition,
-                                                podiumOrder[0].previousRankPosition,
-                                            )}
+                                            {isViewingCurrentMonth &&
+                                                renderTrend(
+                                                    podiumOrder[0].rankPosition,
+                                                    podiumOrder[0]
+                                                        .previousRankPosition,
+                                                )}
                                         </div>
                                         <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[0].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">điểm</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-slate-400/80 dark:text-slate-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Kẻ về nhì...
@@ -639,7 +653,9 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-amber-400/10 dark:bg-amber-400/5 blur-xl rounded-full scale-110 group-hover:scale-125 transition-all duration-500" />
                                         <LeaderboardAvatar
-                                            avatarUrl={podiumOrder[1].studentAvatarUrl}
+                                            avatarUrl={
+                                                podiumOrder[1].studentAvatarUrl
+                                            }
                                             name={podiumOrder[1].studentName}
                                             sizeClass="w-13 h-13 sm:w-15 sm:h-15 text-base font-black text-amber-600 dark:text-amber-400"
                                             iconClass="w-6.5 h-6.5 text-amber-500"
@@ -656,15 +672,19 @@ export default function LeaderboardView({
                                             <span className="text-[8px] sm:text-[9px] font-black text-amber-600 dark:text-amber-400 tracking-wider uppercase">
                                                 Hạng nhất
                                             </span>
-                                            {isViewingCurrentMonth && renderTrend(
-                                                podiumOrder[1].rankPosition,
-                                                podiumOrder[1].previousRankPosition,
-                                            )}
+                                            {isViewingCurrentMonth &&
+                                                renderTrend(
+                                                    podiumOrder[1].rankPosition,
+                                                    podiumOrder[1]
+                                                        .previousRankPosition,
+                                                )}
                                         </div>
                                         <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-0.5">
                                             {podiumOrder[1].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">điểm</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-amber-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Bình thường thôi.
@@ -691,7 +711,9 @@ export default function LeaderboardView({
                                         </div>
                                         <div className="absolute inset-0 bg-orange-400/5 blur-md rounded-full group-hover:scale-110 transition-all" />
                                         <LeaderboardAvatar
-                                            avatarUrl={podiumOrder[2].studentAvatarUrl}
+                                            avatarUrl={
+                                                podiumOrder[2].studentAvatarUrl
+                                            }
                                             name={podiumOrder[2].studentName}
                                             sizeClass="w-11 h-11 sm:w-13 sm:h-13 text-sm text-orange-700"
                                             iconClass="w-5.5 h-5.5 text-orange-700"
@@ -708,15 +730,19 @@ export default function LeaderboardView({
                                             <span className="text-[8px] font-black text-orange-600 tracking-wider">
                                                 HẠNG 3
                                             </span>
-                                            {isViewingCurrentMonth && renderTrend(
-                                                podiumOrder[2].rankPosition,
-                                                podiumOrder[2].previousRankPosition,
-                                            )}
+                                            {isViewingCurrentMonth &&
+                                                renderTrend(
+                                                    podiumOrder[2].rankPosition,
+                                                    podiumOrder[2]
+                                                        .previousRankPosition,
+                                                )}
                                         </div>
                                         <span className="text-[11px] sm:text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
                                             {podiumOrder[2].totalPoints}{" "}
                                             <span className="sm:hidden">đ</span>
-                                            <span className="hidden sm:inline">điểm</span>
+                                            <span className="hidden sm:inline">
+                                                điểm
+                                            </span>
                                         </span>
                                         <span className="text-[10px] sm:text-[11px] font-brand text-orange-500/80 select-none truncate px-1 max-w-full sm:absolute sm:-bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:whitespace-nowrap">
                                             Cũng được!
@@ -734,7 +760,8 @@ export default function LeaderboardView({
                         <div className="py-24 flex flex-col items-center justify-center gap-3">
                             <RefreshCw className="w-6 h-6 text-[#4B726B] animate-spin" />
                             <span className="text-xs text-slate-455 font-semibold">
-                                Đang tải danh sách {selectedHistoryItem.monthLabel}...
+                                Đang tải danh sách{" "}
+                                {selectedHistoryItem.monthLabel}...
                             </span>
                         </div>
                     )}
@@ -752,7 +779,8 @@ export default function LeaderboardView({
                                 </div>
                                 <div className="flex items-center gap-2 sm:gap-12 shrink-0">
                                     <span className="hidden sm:inline">
-                                        Số đề tháng {selectedMonth.split("-")[1] || ""}
+                                        Số đề tháng{" "}
+                                        {selectedMonth.split("-")[1] || ""}
                                     </span>
                                     <span className="w-14 sm:w-20 text-right">
                                         Tổng điểm
@@ -763,7 +791,8 @@ export default function LeaderboardView({
                             <div className="flex flex-col max-h-[720px] overflow-y-auto pr-1">
                                 <AnimatePresence>
                                     {filteredOverall.map((entry) => {
-                                        const isMe = entry.studentId === user.id;
+                                        const isMe =
+                                            entry.studentId === user.id;
                                         const rank = entry.rankPosition;
                                         const isTop3 = rank <= 3;
 
@@ -825,8 +854,12 @@ export default function LeaderboardView({
                                                                 />
                                                             )}
                                                             <LeaderboardAvatar
-                                                                avatarUrl={entry.studentAvatarUrl}
-                                                                name={entry.studentName}
+                                                                avatarUrl={
+                                                                    entry.studentAvatarUrl
+                                                                }
+                                                                name={
+                                                                    entry.studentName
+                                                                }
                                                                 sizeClass="w-7.5 h-7.5 sm:w-8 sm:h-8 text-xs"
                                                                 iconClass={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${rank === 1 ? "text-amber-500" : "text-slate-400"}`}
                                                                 className={
@@ -845,7 +878,9 @@ export default function LeaderboardView({
                                                                 }`}
                                                             >
                                                                 <span className="truncate">
-                                                                    {entry.studentName}
+                                                                    {
+                                                                        entry.studentName
+                                                                    }
                                                                 </span>
                                                                 {isMe && (
                                                                     <span className="text-[8px] bg-[#4B726B] text-white px-1.5 py-0.2 rounded-md font-bold uppercase tracking-wider font-sans shrink-0">
@@ -854,7 +889,10 @@ export default function LeaderboardView({
                                                                 )}
                                                             </p>
                                                             <p className="sm:hidden text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate mt-0.5">
-                                                                {entry.testsCompleted} đề thi
+                                                                {
+                                                                    entry.testsCompleted
+                                                                }{" "}
+                                                                đề thi
                                                             </p>
                                                         </div>
                                                     </div>
@@ -862,7 +900,8 @@ export default function LeaderboardView({
 
                                                 <div className="relative z-10 flex items-center gap-2 sm:gap-12 shrink-0 text-xs">
                                                     <span className="hidden sm:inline text-slate-450 dark:text-slate-400 font-medium">
-                                                        {entry.testsCompleted} đề thi
+                                                        {entry.testsCompleted}{" "}
+                                                        đề thi
                                                     </span>
                                                     <span
                                                         className={`w-14 sm:w-20 text-right font-bold text-xs sm:text-sm ${
@@ -892,7 +931,8 @@ export default function LeaderboardView({
                                 className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                             />
                             <span>
-                                Chưa có dữ liệu bảng xếp hạng cho {selectedHistoryItem.monthLabel}.
+                                Chưa có dữ liệu bảng xếp hạng cho{" "}
+                                {selectedHistoryItem.monthLabel}.
                             </span>
                         </div>
                     )}
@@ -915,14 +955,18 @@ export default function LeaderboardView({
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-slate-500">
-                                            Thứ hạng {isViewingCurrentMonth ? "hiện tại" : "chốt tháng"}
+                                            Thứ hạng{" "}
+                                            {isViewingCurrentMonth
+                                                ? "hiện tại"
+                                                : "chốt tháng"}
                                         </p>
                                         <p className="text-xl font-black text-amber-500 dark:text-slate-100 mt-0.5 flex items-center gap-1.5">
                                             #{myOverallStats.rankPosition}
-                                            {isViewingCurrentMonth && renderTrend(
-                                                myOverallStats.rankPosition,
-                                                myOverallStats.previousRankPosition,
-                                            )}
+                                            {isViewingCurrentMonth &&
+                                                renderTrend(
+                                                    myOverallStats.rankPosition,
+                                                    myOverallStats.previousRankPosition,
+                                                )}
                                         </p>
                                     </div>
                                     <div className="text-right">
@@ -938,18 +982,32 @@ export default function LeaderboardView({
                                 <div className="p-3 bg-[#4B726B]/5 border-l-2 border-[#4B726B] rounded-none space-y-1 relative">
                                     {isViewingCurrentMonth ? (
                                         nextUserAbove ? (
-                                            Number((nextUserAbove.totalPoints - myOverallStats.totalPoints).toFixed(1)) > 0 ? (
+                                            Number(
+                                                (
+                                                    nextUserAbove.totalPoints -
+                                                    myOverallStats.totalPoints
+                                                ).toFixed(1),
+                                            ) > 0 ? (
                                                 <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
                                                     Bạn cần tích lũy thêm{" "}
                                                     <strong className="text-[#4B726B]">
-                                                        {Number((nextUserAbove.totalPoints - myOverallStats.totalPoints).toFixed(1))}{" "}
+                                                        {Number(
+                                                            (
+                                                                nextUserAbove.totalPoints -
+                                                                myOverallStats.totalPoints
+                                                            ).toFixed(1),
+                                                        )}{" "}
                                                         điểm
                                                     </strong>{" "}
                                                     để vượt qua học sinh{" "}
                                                     <strong className="text-slate-700 dark:text-slate-300">
-                                                        {nextUserAbove.studentName}
+                                                        {
+                                                            nextUserAbove.studentName
+                                                        }
                                                     </strong>{" "}
-                                                    (Hạng #{nextUserAbove.rankPosition})
+                                                    (Hạng #
+                                                    {nextUserAbove.rankPosition}
+                                                    )
                                                 </p>
                                             ) : (
                                                 <p className="text-[10px] text-slate-500 leading-relaxed font-medium flex items-center gap-1.5">
@@ -961,24 +1019,46 @@ export default function LeaderboardView({
                                                     <span>
                                                         Bạn đang đồng hạng với{" "}
                                                         <strong className="text-slate-700 dark:text-slate-300">
-                                                            {nextUserAbove.studentName}
+                                                            {
+                                                                nextUserAbove.studentName
+                                                            }
                                                         </strong>{" "}
-                                                        (Hạng #{nextUserAbove.rankPosition}). Hãy làm thêm bài test tháng này để bứt phá!
+                                                        (Hạng #
+                                                        {
+                                                            nextUserAbove.rankPosition
+                                                        }
+                                                        ). Hãy làm thêm bài test
+                                                        tháng này để bứt phá!
                                                     </span>
                                                 </p>
                                             )
                                         ) : (
                                             <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-relaxed font-black">
-                                                👑 Bạn đang dẫn đầu Khối {activeGrade} trong {selectedHistoryItem.monthLabel}! Hãy tiếp tục duy trì nhé!
+                                                👑 Bạn đang dẫn đầu Khối{" "}
+                                                {activeGrade} trong{" "}
+                                                {selectedHistoryItem.monthLabel}
+                                                ! Hãy tiếp tục duy trì nhé!
                                             </p>
                                         )
                                     ) : (
                                         <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                                            🏁 Bạn đã hoàn thành {selectedHistoryItem.monthLabel} ở vị trí <strong>#{myOverallStats.rankPosition}</strong> với <strong>{myOverallStats.totalPoints}</strong> điểm.
+                                            🏁 Bạn đã hoàn thành{" "}
+                                            {selectedHistoryItem.monthLabel} ở
+                                            vị trí{" "}
+                                            <strong>
+                                                #{myOverallStats.rankPosition}
+                                            </strong>{" "}
+                                            với{" "}
+                                            <strong>
+                                                {myOverallStats.totalPoints}
+                                            </strong>{" "}
+                                            điểm.
                                         </p>
                                     )}
                                     <span className="block font-brand text-amber-500 text-[12px] text-right mt-1 select-none">
-                                        {isViewingCurrentMonth ? "Cố gắng lên nhé!" : "Kết quả đã lưu danh!"}
+                                        {isViewingCurrentMonth
+                                            ? "Cố gắng lên nhé!"
+                                            : "Kết quả đã lưu danh!"}
                                     </span>
                                 </div>
                             </div>
@@ -990,7 +1070,8 @@ export default function LeaderboardView({
                                     className="w-6 h-6 object-contain opacity-40 dark:opacity-60 select-none"
                                 />
                                 <p className="text-xs text-slate-400 italic">
-                                    Bạn chưa có bài thi nào trong {selectedHistoryItem.monthLabel}.
+                                    Bạn chưa có bài thi nào trong{" "}
+                                    {selectedHistoryItem.monthLabel}.
                                 </p>
                             </div>
                         )}
@@ -1000,10 +1081,15 @@ export default function LeaderboardView({
                     <div className="bg-transparent max-lg:bg-slate-50/70 dark:max-lg:bg-slate-900/50 max-lg:p-4 max-lg:rounded-lg max-lg:border max-lg:border-slate-200/60 dark:max-lg:border-slate-800 rounded-none py-6 space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                             <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                                Đề thi {isViewingCurrentMonth ? "tháng này" : selectedHistoryItem.monthLabel}
+                                Đề thi{" "}
+                                {isViewingCurrentMonth
+                                    ? "tháng này"
+                                    : selectedHistoryItem.monthLabel}
                             </h3>
                             <span className="text-[9px] bg-[#4B726B]/10 text-[#4B726B] dark:text-brand-300 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider scale-90">
-                                {isViewingCurrentMonth ? "Cộng điểm BXH" : "Đã qua"}
+                                {isViewingCurrentMonth
+                                    ? "Cộng điểm BXH"
+                                    : "Đã qua"}
                             </span>
                         </div>
 
@@ -1017,38 +1103,50 @@ export default function LeaderboardView({
                                             className="w-3.5 h-3.5 object-contain select-none flex-shrink-0"
                                         />
                                         <span>
-                                            Làm các đề thi được tạo trong tháng này để tăng thứ hạng:
+                                            Làm các đề thi được tạo trong tháng
+                                            này để tăng thứ hạng:
                                         </span>
                                     </p>
                                     <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                                        {untakenQuizzes.slice(0, 5).map((quiz) => (
-                                            <div
-                                                key={quiz.id}
-                                                onClick={() => onNavigate(`/quiz/${quiz.id}`)}
-                                                className="py-3 bg-transparent hover:bg-[#4B726B]/5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 flex items-center justify-between transition-all duration-200 cursor-pointer group"
-                                            >
-                                                <div className="space-y-1 min-w-0 pr-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 py-0.2 rounded">
-                                                            {quiz.subject}
-                                                        </span>
+                                        {untakenQuizzes
+                                            .slice(0, 5)
+                                            .map((quiz) => (
+                                                <div
+                                                    key={quiz.id}
+                                                    onClick={() =>
+                                                        onNavigate(
+                                                            `/quiz/${quiz.id}`,
+                                                        )
+                                                    }
+                                                    className="py-3 bg-transparent hover:bg-[#4B726B]/5 border-b border-slate-100 dark:border-slate-800 last:border-b-0 flex items-center justify-between transition-all duration-200 cursor-pointer group"
+                                                >
+                                                    <div className="space-y-1 min-w-0 pr-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500 py-0.2 rounded">
+                                                                {quiz.subject}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200 truncate group-hover:text-[#4B726B] transition-colors">
+                                                            {quiz.title}
+                                                        </h4>
+                                                        <p className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
+                                                            <Clock className="w-3 h-3 text-slate-350" />
+                                                            <span>
+                                                                {quiz.duration}{" "}
+                                                                phút •{" "}
+                                                                {quiz.questions
+                                                                    ?.length ||
+                                                                    0}{" "}
+                                                                câu
+                                                            </span>
+                                                        </p>
                                                     </div>
-                                                    <h4 className="text-xs font-bold text-slate-750 dark:text-slate-200 truncate group-hover:text-[#4B726B] transition-colors">
-                                                        {quiz.title}
-                                                    </h4>
-                                                    <p className="text-[9px] text-slate-400 font-medium flex items-center gap-1">
-                                                        <Clock className="w-3 h-3 text-slate-350" />
-                                                        <span>
-                                                            {quiz.duration} phút • {quiz.questions?.length || 0} câu
-                                                        </span>
-                                                    </p>
+                                                    <span className="text-[10px] text-slate-400 group-hover:text-[#4B726B] font-bold flex items-center gap-0.5 shrink-0 transition-colors">
+                                                        Làm bài{" "}
+                                                        <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                                                    </span>
                                                 </div>
-                                                <span className="text-[10px] text-slate-400 group-hover:text-[#4B726B] font-bold flex items-center gap-0.5 shrink-0 transition-colors">
-                                                    Làm bài{" "}
-                                                    <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                                                </span>
-                                            </div>
-                                        ))}
+                                            ))}
                                     </div>
                                 </div>
                             ) : (
@@ -1059,10 +1157,12 @@ export default function LeaderboardView({
                                         className="w-12 h-12 object-contain mx-auto select-none"
                                     />
                                     <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                        Tuyệt vời! Bạn đã hoàn thành tất cả đề thi tháng này.
+                                        Tuyệt vời! Bạn đã hoàn thành tất cả đề
+                                        thi tháng này.
                                     </p>
                                     <p className="text-[10px] text-slate-455 dark:text-slate-500">
-                                        Hãy chờ các đề thi mới tiếp theo của Khối {activeGrade}.
+                                        Hãy chờ các đề thi mới tiếp theo của
+                                        Khối {activeGrade}.
                                     </p>
                                 </div>
                             )
@@ -1073,10 +1173,13 @@ export default function LeaderboardView({
                                     {selectedHistoryItem.monthLabel} đã kết thúc
                                 </p>
                                 <p className="text-[10px] leading-relaxed text-slate-500">
-                                    Làm các bài thi cũ sẽ không được cộng điểm vào BXH tháng này để đảm bảo tính công bằng.
+                                    Làm các bài thi cũ sẽ không được cộng điểm
+                                    vào BXH tháng này để đảm bảo tính công bằng.
                                 </p>
                                 <button
-                                    onClick={() => setSelectedMonth(currentMonthKey)}
+                                    onClick={() =>
+                                        setSelectedMonth(currentMonthKey)
+                                    }
                                     className="mt-2 px-3 py-1.5 bg-[#4B726B] text-white text-xs font-bold rounded-lg hover:bg-[#3D5E58] transition-colors"
                                 >
                                     Xem BXH tháng hiện tại
