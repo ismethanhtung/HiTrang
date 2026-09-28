@@ -231,9 +231,9 @@ export default function Topbar({
     };
 
     const navButtonClass = (isActive: boolean) =>
-        `px-2 py-0.5 rounded-lg text-[12.5px] transition-colors duration-150 cursor-pointer flex items-center gap-0.5 whitespace-nowrap flex-shrink-0 ${
+        `relative pb-1 pt-1 px-2.5 rounded-lg text-[12.5px] transition-colors duration-150 cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 outline-none ${
             isActive
-                ? "text-brand-700 dark:text-brand-300 font-black underline decoration-brand-500 dark:decoration-brand-300 decoration-2 underline-offset-[5px] opacity-100"
+                ? "text-brand-700 dark:text-brand-300 font-black"
                 : "text-text-secondary/65 dark:text-text-secondary/55 font-bold hover:text-text-primary hover:bg-brand-50/50 dark:hover:bg-brand-500/10"
         }`;
 
@@ -256,9 +256,7 @@ export default function Topbar({
         <>
             {/* STICKY TOPBAR HEADER */}
             <header
-                className={`${
-                    isHomeActive ? "block" : "hidden md:block"
-                } sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-transform duration-300 ease-in-out ${
+                className={`sticky top-0 z-50 w-full bg-bg-card/95 backdrop-blur-md border-b border-border-primary transition-transform duration-300 ease-in-out ${
                     isHeaderHidden
                         ? "-translate-y-full md:translate-y-0"
                         : "translate-y-0"
@@ -285,116 +283,154 @@ export default function Topbar({
                         {/* NAV LINKS - CLASS/GRADE SELECTION (DESKTOP ONLY) */}
                         {user && (
                             <nav className="hidden md:flex items-center lg:gap-1.5 gap-0.5">
-                                {grades.map((grade) => (
-                                    <div
-                                        key={grade.id}
-                                        className="relative py-2"
-                                        onMouseEnter={() =>
-                                            setHoveredGradeId(grade.id)
-                                        }
-                                        onMouseLeave={() =>
-                                            setHoveredGradeId(null)
-                                        }
-                                    >
-                                        <button
-                                            onClick={() => {
-                                                onSelectGrade(grade.id, null);
-                                            }}
-                                            className={navButtonClass(
-                                                selectedGrade === grade.id,
-                                            )}
+                                {grades.map((grade) => {
+                                    const isGradeSelected =
+                                        selectedGrade === grade.id;
+                                    return (
+                                        <div
+                                            key={grade.id}
+                                            className="relative py-2"
+                                            onMouseEnter={() =>
+                                                setHoveredGradeId(grade.id)
+                                            }
+                                            onMouseLeave={() =>
+                                                setHoveredGradeId(null)
+                                            }
                                         >
-                                            <span>{grade.label}</span>
-                                            <ChevronDown
-                                                className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
-                                                    hoveredGradeId === grade.id
-                                                        ? "rotate-180"
-                                                        : ""
-                                                }`}
-                                            />
-                                        </button>
-
-                                        {/* HOVER DROPDOWN MENU */}
-                                        {hoveredGradeId === grade.id && (
-                                            <div className="absolute top-full left-0 pt-2 z-50">
-                                                <div className="w-44 bg-bg-card border border-border-primary rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
-                                                    <button
-                                                        onClick={() => {
-                                                            onSelectGrade(
-                                                                grade.id,
-                                                                null,
-                                                            );
-                                                            setHoveredGradeId(
-                                                                null,
-                                                            );
+                                            <button
+                                                onClick={() => {
+                                                    onSelectGrade(
+                                                        grade.id,
+                                                        null,
+                                                    );
+                                                }}
+                                                className={navButtonClass(
+                                                    isGradeSelected,
+                                                )}
+                                            >
+                                                <span>{grade.label}</span>
+                                                <ChevronDown
+                                                    className={`w-3 h-3 text-text-tertiary transition-transform duration-200 ${
+                                                        hoveredGradeId ===
+                                                        grade.id
+                                                            ? "rotate-180"
+                                                            : ""
+                                                    }`}
+                                                />
+                                                {isGradeSelected && (
+                                                    <motion.div
+                                                        layoutId="topbarNavUnderline"
+                                                        className="absolute -bottom-0.5 inset-x-2 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                                        transition={{
+                                                            type: "spring",
+                                                            stiffness: 400,
+                                                            damping: 32,
                                                         }}
-                                                        className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                            !currentCategory
-                                                                ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
-                                                                : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
-                                                        }`}
-                                                    >
-                                                        <span>Tất cả</span>
-                                                        {!currentCategory && (
-                                                            <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
-                                                        )}
-                                                    </button>
+                                                    />
+                                                )}
+                                            </button>
 
-                                                    {(
-                                                        gradeCategories[
-                                                            grade.id
-                                                        ] || []
-                                                    ).map((category) => (
+                                            {/* HOVER DROPDOWN MENU */}
+                                            {hoveredGradeId === grade.id && (
+                                                <div className="absolute top-full left-0 pt-2 z-50">
+                                                    <div className="w-44 bg-bg-card border border-border-primary rounded-lg shadow-xl py-2 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                                                         <button
-                                                            key={category}
                                                             onClick={() => {
                                                                 onSelectGrade(
                                                                     grade.id,
-                                                                    category,
+                                                                    null,
                                                                 );
                                                                 setHoveredGradeId(
                                                                     null,
                                                                 );
                                                             }}
                                                             className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
-                                                                currentCategory ===
-                                                                category
+                                                                !currentCategory
                                                                     ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
                                                                     : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
                                                             }`}
                                                         >
-                                                            <span>
-                                                                {category}
-                                                            </span>
-                                                            {currentCategory ===
-                                                                category && (
+                                                            <span>Tất cả</span>
+                                                            {!currentCategory && (
                                                                 <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
                                                             )}
                                                         </button>
-                                                    ))}
+
+                                                        {(
+                                                            gradeCategories[
+                                                                grade.id
+                                                            ] || []
+                                                        ).map((category) => (
+                                                            <button
+                                                                key={category}
+                                                                onClick={() => {
+                                                                    onSelectGrade(
+                                                                        grade.id,
+                                                                        category,
+                                                                    );
+                                                                    setHoveredGradeId(
+                                                                        null,
+                                                                    );
+                                                                }}
+                                                                className={`w-full text-left px-4 py-2 text-[12px] font-bold hover:bg-brand-50/50 dark:hover:bg-brand-500/10 transition-colors cursor-pointer flex items-center justify-between ${
+                                                                    currentCategory ===
+                                                                    category
+                                                                        ? "text-brand-700 dark:text-brand-300 font-black bg-brand-50/30 dark:bg-brand-500/5"
+                                                                        : "text-text-secondary/70 dark:text-text-secondary/60 font-semibold"
+                                                                }`}
+                                                            >
+                                                                <span>
+                                                                    {category}
+                                                                </span>
+                                                                {currentCategory ===
+                                                                    category && (
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-300" />
+                                                                )}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                            )}
+                                        </div>
+                                    );
+                                })}
                                 <button
                                     onClick={onNavigateSchedule}
-                                    className={navButtonClass(
-                                        currentPath === "/lich" ||
-                                            currentPath === "/schedule",
-                                    )}
+                                    className={navButtonClass(isScheduleActive)}
                                 >
                                     <span>Lịch học</span>
+                                    {isScheduleActive && (
+                                        <motion.div
+                                            layoutId="topbarNavUnderline"
+                                            className="absolute -bottom-0.5 inset-x-2 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 32,
+                                            }}
+                                        />
+                                    )}
                                 </button>
 
                                 <button
                                     onClick={onNavigateLeaderboard}
                                     className={navButtonClass(
-                                        currentPath === "/leaderboard",
+                                        isLeaderboardActive,
                                     )}
                                 >
                                     <Crown className="w-3.5 h-3.5 text-amber-500" />
                                     <span>BXH</span>
+                                    {isLeaderboardActive && (
+                                        <motion.div
+                                            layoutId="topbarNavUnderline"
+                                            className="absolute -bottom-0.5 inset-x-2 h-[2.5px] bg-brand-500 dark:bg-brand-400 rounded-full"
+                                            transition={{
+                                                type: "spring",
+                                                stiffness: 400,
+                                                damping: 32,
+                                            }}
+                                        />
+                                    )}
                                 </button>
                             </nav>
                         )}
@@ -517,7 +553,7 @@ export default function Topbar({
 
                                 <div
                                     key="user-profile-dropdown"
-                                    className="relative"
+                                    className="relative hidden md:block"
                                     ref={dropdownRef}
                                 >
                                     <button
@@ -678,7 +714,7 @@ export default function Topbar({
 
             {/* MOBILE BOTTOM NAVIGATION BAR (ZING MP3 COMPACT STYLE) */}
             {user && !isResultReview && (
-                <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[50px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border-primary/80 bg-bg-card/95 backdrop-blur-md flex items-center justify-around h-[52px] pb-[env(safe-area-inset-bottom,0px)] px-1 transition-colors shadow-[0_-4px_16px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_16px_rgba(0,0,0,0.2)]">
                     {/* 1. Trang chủ */}
                     <motion.button
                         whileTap={{ scale: 0.92 }}
@@ -690,8 +726,11 @@ export default function Topbar({
                         }`}
                         title="Trang chủ"
                     >
-                        <div className="h-[20px] flex items-center justify-center">
-                            <NavHouseIcon className="w-[17px] h-[17px]" />
+                        <div className="h-[22px] flex items-center justify-center">
+                            <NavHouseIcon
+                                active={isHomeActive}
+                                className="w-[21px] h-[21px]"
+                            />
                         </div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isHomeActive ? "font-bold" : "font-medium"}`}
@@ -717,8 +756,11 @@ export default function Topbar({
                         }`}
                         title="Đề thi"
                     >
-                        <div className="h-[20px] flex items-center justify-center">
-                            <NavDocumentIcon className="w-[17px] h-[17px]" />
+                        <div className="h-[22px] flex items-center justify-center">
+                            <NavDocumentIcon
+                                active={isGradeActive}
+                                className="w-[21px] h-[21px]"
+                            />
                         </div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isGradeActive ? "font-bold" : "font-medium"}`}
@@ -738,8 +780,11 @@ export default function Topbar({
                         }`}
                         title="Lịch học"
                     >
-                        <div className="h-[20px] flex items-center justify-center">
-                            <NavCalendarIcon className="w-[17px] h-[17px]" />
+                        <div className="h-[22px] flex items-center justify-center">
+                            <NavCalendarIcon
+                                active={isScheduleActive}
+                                className="w-[21px] h-[21px]"
+                            />
                         </div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isScheduleActive ? "font-bold" : "font-medium"}`}
@@ -759,8 +804,11 @@ export default function Topbar({
                         }`}
                         title="Bảng xếp hạng"
                     >
-                        <div className="h-[20px] flex items-center justify-center">
-                            <NavRankingIcon className="w-[17px] h-[17px]" />
+                        <div className="h-[22px] flex items-center justify-center">
+                            <NavRankingIcon
+                                active={isLeaderboardActive}
+                                className="w-[21px] h-[21px]"
+                            />
                         </div>
                         <span
                             className={`text-[9px] leading-tight mt-0.5 tracking-tight ${isLeaderboardActive ? "font-bold" : "font-medium"}`}
@@ -780,8 +828,11 @@ export default function Topbar({
                         }`}
                         title="Thông báo"
                     >
-                        <div className="h-[20px] flex items-center justify-center relative">
-                            <NavBellIcon className="w-[18px] h-[18px]" />
+                        <div className="h-[22px] flex items-center justify-center relative">
+                            <NavBellIcon
+                                active={isNotiActive}
+                                className="w-[21px] h-[21px]"
+                            />
                             {unreadNotiCount > 0 && (
                                 <span className="absolute -top-1 -right-1.5 min-w-[13px] h-3 bg-rose-500 text-white text-[8px] font-black rounded-full flex items-center justify-center px-0.5 shadow-xs">
                                     {unreadNotiCount > 99
@@ -808,10 +859,10 @@ export default function Topbar({
                         }`}
                         title="Cá nhân"
                     >
-                        <div className="h-[20px] flex items-center justify-center">
+                        <div className="h-[22px] flex items-center justify-center">
                             {user.avatarUrl ? (
                                 <div
-                                    className={`w-[22px] h-[22px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
+                                    className={`w-[23px] h-[23px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
                                         showMobileMenu || isSettingsActive
                                             ? "ring-1.5 ring-brand-500 ring-offset-1 dark:ring-offset-slate-900"
                                             : "border border-border-primary"
@@ -826,13 +877,13 @@ export default function Topbar({
                                 </div>
                             ) : (
                                 <div
-                                    className={`w-[22px] h-[22px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
+                                    className={`w-[23px] h-[23px] rounded-full overflow-hidden flex items-center justify-center transition-all ${
                                         showMobileMenu || isSettingsActive
                                             ? "bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 ring-1.5 ring-brand-500"
                                             : "border border-border-primary text-text-secondary"
                                     }`}
                                 >
-                                    <UserIcon className="w-[11px] h-[11px] text-current" />
+                                    <UserIcon className="w-3 h-3 text-current" />
                                 </div>
                             )}
                         </div>

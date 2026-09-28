@@ -32,6 +32,7 @@ import {
 } from "../lib/supabaseService";
 import { matchesSearch } from "../lib/searchUtils";
 import { motion, AnimatePresence } from "motion/react";
+import { NewBadgeIcon } from "./NavIcons";
 
 // Cute custom SVG sticker-style indicators for Crown (No bounce, clean illustration look)
 const CuteCrown = () => (
@@ -432,8 +433,11 @@ export default function LeaderboardView({
     const renderTrend = (current: number, previous: number | null) => {
         if (previous === null) {
             return (
-                <span className="text-[8px] font-black text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border border-sky-200/50 dark:border-sky-800/40 px-1 py-0.5 rounded uppercase tracking-wider scale-90 inline-flex items-center justify-center">
-                    Mới
+                <span
+                    className="inline-flex items-center justify-center"
+                    title="Thành viên mới vào bảng xếp hạng"
+                >
+                    <NewBadgeIcon className="w-6.5 h-3.5" />
                 </span>
             );
         }

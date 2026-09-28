@@ -28,6 +28,7 @@ import {
     Eye,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { NewBadgeIcon } from "./NavIcons";
 
 interface AdminNotificationsTabProps {
     userProfiles: User[];
@@ -865,9 +866,7 @@ export default function AdminNotificationsTab({
                                             {title ||
                                                 "Tiêu đề thông báo mẫu..."}
                                         </h4>
-                                        <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider px-1.5 py-0.5 bg-brand-100/80 dark:bg-brand-900/50 rounded-md shrink-0">
-                                            MỚI
-                                        </span>
+                                        <NewBadgeIcon className="w-6 h-3 shrink-0" />
                                     </div>
 
                                     <p className="text-[11px] text-text-secondary leading-relaxed line-clamp-3">
