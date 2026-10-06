@@ -15,6 +15,7 @@ import Footer from "./components/Footer";
 const AdminPanel = React.lazy(() => import("./components/AdminPanel"));
 const GoogleCallback = React.lazy(() => import("./components/GoogleCallback"));
 const ResetPasswordView = React.lazy(() => import("./components/ResetPasswordView"));
+const PdfViewerPage = React.lazy(() => import("./components/PdfViewerPage"));
 import {
     getCurrentUser,
     signOutUser,
@@ -117,6 +118,8 @@ export default function App() {
             return { route: "schedule" };
         if (cleanPath === "/reset-password")
             return { route: "reset-password" };
+        if (cleanPath === "/pdf")
+            return { route: "pdf" };
 
         const gradeMatch = cleanPath.match(/^\/grade\/([a-zA-Z0-9_-]+)$/);
         if (gradeMatch) return { route: "grade", gradeId: gradeMatch[1] };
@@ -164,6 +167,9 @@ export default function App() {
         takingOrReviewing: boolean,
     ) => {
         if (takingOrReviewing) return { key: "quiz", index: -1 };
+        if (route === "pdf" || path === "/pdf") {
+            return { key: "pdf", index: -1 };
+        }
         if (
             route === "admin" ||
             path.startsWith("/admin") ||
@@ -358,6 +364,9 @@ export default function App() {
             }
             case "leaderboard":
                 pageTitle = "Bảng xếp hạng";
+                break;
+            case "pdf":
+                pageTitle = "Xem tài liệu PDF";
                 break;
             case "schedule":
                 pageTitle = "Lịch học & Sự kiện";
@@ -779,7 +788,8 @@ export default function App() {
             className={`${isTakingOrReviewing ? "h-[100dvh] overflow-hidden" : "min-h-screen pb-16 md:pb-0"} ${!user ? "bg-[#FAF6EE] dark:bg-bg-base" : "bg-[#F9F8F6] dark:bg-bg-base"} text-[#222B38] dark:text-text-primary font-sans antialiased flex flex-col selection:bg-brand-200`}
         >
             {/* TOPBAR NAVIGATION HEADER */}
-            {!isTakingQuiz && (user ? true : routeInfo.route === "schedule") && (
+            {!isTakingQuiz &&
+                (user ? true : routeInfo.route === "schedule" || routeInfo.route === "pdf") && (
                 <Topbar
                     user={user}
                     selectedGrade={selectedGrade}
@@ -1027,6 +1037,10 @@ export default function App() {
                             onNavigate={navigateTo}
                             initialData={prefetchedLeaderboard}
                         />
+                    ) : routeInfo.route === "pdf" ? (
+                        <React.Suspense fallback={<div className="min-h-screen" />}>
+                            <PdfViewerPage onNavigate={navigateTo} />
+                        </React.Suspense>
                     ) : routeInfo.route === "reset-password" ? (
                         <React.Suspense fallback={<div className="min-h-screen" />}>
                             <ResetPasswordView
@@ -1211,6 +1225,23 @@ export default function App() {
                                             }
 
                                             if (
+                                                routeInfo.route === "pdf" ||
+                                                currentPath === "/pdf"
+                                            ) {
+                                                return (
+                                                    <React.Suspense
+                                                        fallback={
+                                                            <div className="min-h-[60vh] flex items-center justify-center text-slate-400 font-sans" />
+                                                        }
+                                                    >
+                                                        <PdfViewerPage
+                                                            onNavigate={navigateTo}
+                                                        />
+                                                    </React.Suspense>
+                                                );
+                                            }
+
+                                            if (
                                                 (user.role === "admin" ||
                                                     currentPath === "/trang" ||
                                                     currentPath === "/teacher") &&
@@ -1275,7 +1306,8 @@ export default function App() {
                     !currentPath.startsWith("/admin") &&
                     currentPath !== "/trang" &&
                     currentPath !== "/teacher" &&
-                    routeInfo.route !== "reset-password" && (
+                    routeInfo.route !== "reset-password" &&
+                    routeInfo.route !== "pdf" && (
                         <Footer
                             onSelectGrade={(grade, category) => {
                                 setActiveTab("student-dashboard");

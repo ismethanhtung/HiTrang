@@ -295,6 +295,13 @@ export default function Footer({
                                 </button>
 
                                 <button
+                                    onClick={() => onNavigate("/pdf")}
+                                    className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
+                                >
+                                    Xem tài liệu PDF
+                                </button>
+
+                                <button
                                     onClick={onOpenContactModal}
                                     className="hover:text-brand-500 dark:hover:text-brand-300 transition-colors hover:underline cursor-pointer text-left"
                                 >
