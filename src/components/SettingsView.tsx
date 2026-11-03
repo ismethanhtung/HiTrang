@@ -98,21 +98,25 @@ interface SettingsViewProps {
     submissions: Submission[];
     quizzes: Quiz[];
     initialTab?:
-        | "profile"
-        | "security"
-        | "appearance"
-        | "history"
-        | "notifications";
+        "profile" | "security" | "appearance" | "history" | "notifications";
     onTabChange?: (
         tab:
-            | "profile"
-            | "security"
-            | "appearance"
-            | "history"
-            | "notifications",
+            "profile" | "security" | "appearance" | "history" | "notifications",
     ) => void;
     onNavigate?: (path: string) => void;
 }
+
+type MobileNotifFilter = "all" | "unread" | "new_quiz" | "reminder" | "system";
+
+const MOBILE_NOTIF_FILTERS: { id: MobileNotifFilter; label: string }[] = [
+    { id: "all", label: "Tất cả" },
+    { id: "unread", label: "Chưa đọc" },
+    { id: "new_quiz", label: "Bài mới" },
+    { id: "reminder", label: "Nhắc nhở" },
+    { id: "system", label: "Hệ thống" },
+];
+
+const MOBILE_NOTIF_PAGE_SIZE = 6;
 
 export default function SettingsView({
     user,
@@ -240,6 +244,11 @@ export default function SettingsView({
     const [loadingNotifs, setLoadingNotifs] = useState(false);
     const [markingAllNotifs, setMarkingAllNotifs] = useState(false);
     const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+    const [mobileNotifFilter, setMobileNotifFilter] =
+        useState<MobileNotifFilter>("all");
+    const [mobileVisibleCount, setMobileVisibleCount] = useState(
+        MOBILE_NOTIF_PAGE_SIZE,
+    );
 
     const fetchNotifs = async () => {
         setLoadingNotifs(true);
@@ -321,6 +330,136 @@ export default function SettingsView({
         if (diffDay === 1) return "Hôm qua";
         if (diffDay < 30) return `${diffDay} ngày trước`;
         return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+    };
+
+    const renderNotifIcon = (type: AppNotification["type"]) => {
+        const iconClass = "w-4 h-4";
+        switch (type) {
+            case "new_quiz":
+                return <BookOpen className={iconClass} />;
+            case "teacher_message":
+                return <Mail className={iconClass} />;
+            case "reminder":
+                return <Clock className={iconClass} />;
+            default:
+                return <Bell className={iconClass} />;
+        }
+    };
+
+    const formatNotifMobileTime = (dateStr: string) => {
+        const d = safeParseDate(dateStr);
+        if (isNaN(d.getTime())) return "";
+
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+
+        if (d.toDateString() === now.toDateString()) {
+            return d.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
+        if (d.toDateString() === yesterday.toDateString()) {
+            return "Hôm qua";
+        }
+        if (d.getFullYear() === now.getFullYear()) {
+            return `${d.getDate()}/${d.getMonth() + 1}`;
+        }
+        return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+    };
+
+    const mobileNotifGroups = React.useMemo(() => {
+        const filtered = notifications.filter((notif) => {
+            if (mobileNotifFilter === "unread") return !notif.isRead;
+            if (mobileNotifFilter === "new_quiz") {
+                return notif.type === "new_quiz";
+            }
+            if (mobileNotifFilter === "reminder") {
+                return notif.type === "reminder";
+            }
+            if (mobileNotifFilter === "system") {
+                return (
+                    notif.type === "system" || notif.type === "teacher_message"
+                );
+            }
+            return true;
+        });
+
+        const today: AppNotification[] = [];
+        const earlier: AppNotification[] = [];
+        const now = new Date();
+        const visible = filtered.slice(0, mobileVisibleCount);
+
+        visible.forEach((notif) => {
+            const d = safeParseDate(notif.createdAt);
+            if (
+                !isNaN(d.getTime()) &&
+                d.toDateString() === now.toDateString()
+            ) {
+                today.push(notif);
+            } else {
+                earlier.push(notif);
+            }
+        });
+
+        return {
+            today,
+            earlier,
+            total: filtered.length,
+            hasMore: filtered.length > visible.length,
+        };
+    }, [notifications, mobileNotifFilter, mobileVisibleCount]);
+
+    const handleMobileNotifBack = () => {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
+        if (onNavigate) onNavigate("/");
+    };
+
+    const renderMobileNotifItem = (notif: AppNotification) => {
+        const isUnread = !notif.isRead;
+
+        return (
+            <button
+                key={notif.id}
+                type="button"
+                onClick={() => handleReadNotification(notif)}
+                className="flex w-full items-start gap-3.5 border-b border-slate-100/80 py-5 text-left transition-colors last:border-b-0 active:bg-slate-50/60 dark:border-slate-800/60 dark:active:bg-slate-800/30"
+            >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FBF3EE] text-[#4B3A32] dark:bg-slate-800 dark:text-slate-200">
+                    {renderNotifIcon(notif.type)}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                    <span className="flex items-start justify-between gap-3">
+                        <span className="flex min-w-0 items-start gap-1.5">
+                            <span
+                                className={`min-w-0 text-[15px] leading-snug ${
+                                    isUnread
+                                        ? "font-bold text-slate-900 dark:text-white"
+                                        : "font-semibold text-slate-800 dark:text-slate-200"
+                                }`}
+                            >
+                                {notif.title}
+                            </span>
+                            {isUnread && (
+                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                            )}
+                        </span>
+                        <span className="shrink-0 pt-0.5 text-[12px] font-medium text-slate-400 dark:text-slate-500">
+                            {formatNotifMobileTime(notif.createdAt)}
+                        </span>
+                    </span>
+
+                    <span className="mt-1.5 line-clamp-2 block text-[13px] leading-[1.6] text-slate-500 dark:text-slate-400">
+                        {notif.message}
+                    </span>
+                </span>
+            </button>
+        );
     };
 
     // Email Linking states
@@ -750,11 +889,7 @@ export default function SettingsView({
 
     const handleTabClick = (
         tab:
-            | "profile"
-            | "security"
-            | "appearance"
-            | "history"
-            | "notifications",
+            "profile" | "security" | "appearance" | "history" | "notifications",
     ) => {
         setActiveSettingsTab(tab);
         if (onTabChange) {
@@ -1142,8 +1277,7 @@ export default function SettingsView({
                                             false,
                                         ];
                                         const studentTf = (chosen as (
-                                            | boolean
-                                            | null
+                                            boolean | null
                                         )[]) || [null, null, null, null];
 
                                         let matchCount = 0;
@@ -1563,7 +1697,11 @@ export default function SettingsView({
     return (
         <div className="flex-1 bg-white dark:bg-bg-card text-slate-800 dark:text-slate-100 transition-colors duration-200 overflow-y-auto select-none">
             {/* Title Header with Tabs */}
-            <div className="max-w-4xl mx-auto pt-6 sm:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 dark:border-slate-800/80">
+            <div
+                className={`max-w-4xl mx-auto pt-6 sm:pt-8 pb-4 sm:pb-6 px-4 sm:px-6 dark:border-slate-800/80 ${
+                    activeSettingsTab === "notifications" ? "max-sm:hidden" : ""
+                }`}
+            >
                 <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                     {activeSettingsTab === "profile"
                         ? "Hồ sơ cá nhân"
@@ -2853,8 +2991,160 @@ export default function SettingsView({
                     )}
                 </div>
             ) : (
-                /* Notifications tab content */
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 space-y-4">
+                <>
+                    {/* Mobile notifications */}
+                    <div className="sm:hidden pb-28">
+                        <div className="sticky top-0 z-30 bg-bg-card/95 backdrop-blur-md">
+                            <div className="flex items-center justify-between gap-3 px-4 pt-2 pb-3">
+                                <div className="flex min-w-0 items-center gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={handleMobileNotifBack}
+                                        aria-label="Quay lại"
+                                        className="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-700 transition-colors active:bg-slate-100 dark:text-slate-200 dark:active:bg-slate-800"
+                                    >
+                                        <ChevronLeft
+                                            className="h-6 w-6"
+                                            strokeWidth={2.2}
+                                        />
+                                    </button>
+                                    <h1 className="truncate text-[20px] font-bold tracking-tight text-slate-900 dark:text-white">
+                                        Thông báo
+                                    </h1>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={handleMarkAllNotifs}
+                                    disabled={
+                                        unreadNotifCount === 0 ||
+                                        markingAllNotifs
+                                    }
+                                    aria-label="Đánh dấu tất cả đã đọc"
+                                    title="Đánh dấu tất cả đã đọc"
+                                    className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-2xs transition-colors active:bg-slate-50 disabled:opacity-30 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
+                                >
+                                    {markingAllNotifs ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <CheckCheck className="h-5 w-5" />
+                                    )}
+                                </button>
+                            </div>
+
+                            <div className="no-scrollbar flex gap-2.5 overflow-x-auto px-4 pb-3">
+                                {MOBILE_NOTIF_FILTERS.map((filter) => {
+                                    const isActive =
+                                        mobileNotifFilter === filter.id;
+                                    return (
+                                        <button
+                                            key={filter.id}
+                                            type="button"
+                                            onClick={() => {
+                                                setMobileNotifFilter(filter.id);
+                                                setMobileVisibleCount(
+                                                    MOBILE_NOTIF_PAGE_SIZE,
+                                                );
+                                            }}
+                                            className={`shrink-0 rounded-xl border px-3.5 py-1.5 text-[13px] transition-colors ${
+                                                isActive
+                                                    ? "border-transparent bg-[#F8EFEA] font-semibold text-slate-900 dark:bg-slate-800 dark:text-white"
+                                                    : "border-slate-200 bg-white font-medium text-slate-700 active:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-300"
+                                            }`}
+                                        >
+                                            {filter.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {loadingNotifs && notifications.length === 0 ? (
+                            <div className="flex items-center justify-center gap-2 px-4 py-16 text-[13px] text-slate-400 dark:text-slate-500">
+                                <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+                                <span>Đang tải thông báo...</span>
+                            </div>
+                        ) : mobileNotifGroups.total === 0 ? (
+                            <div className="flex flex-col items-center px-6 py-16 text-center">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FBF3EE] dark:bg-slate-800">
+                                    <Bell className="h-7 w-7 text-slate-500 dark:text-slate-300" />
+                                </div>
+                                <p className="mt-4 text-[14px] font-semibold text-slate-700 dark:text-slate-200">
+                                    {mobileNotifFilter === "unread"
+                                        ? "Bạn đã đọc hết thông báo"
+                                        : "Chưa có thông báo nào"}
+                                </p>
+                                <p className="mt-1 max-w-[260px] text-[12.5px] leading-relaxed text-slate-400 dark:text-slate-500">
+                                    Khi có cập nhật mới, thông báo sẽ xuất hiện
+                                    tại đây.
+                                </p>
+                                {mobileNotifFilter !== "all" && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setMobileNotifFilter("all");
+                                            setMobileVisibleCount(
+                                                MOBILE_NOTIF_PAGE_SIZE,
+                                            );
+                                        }}
+                                        className="mt-4 min-h-10 rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-semibold text-slate-700 shadow-2xs transition-colors active:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200"
+                                    >
+                                        Xem tất cả
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="px-4">
+                                {mobileNotifGroups.today.length > 0 && (
+                                    <div>
+                                        <h2 className="mb-0.5 mt-5 text-[15px] font-semibold text-slate-800 dark:text-slate-200">
+                                            Hôm nay
+                                        </h2>
+                                        <div>
+                                            {mobileNotifGroups.today.map(
+                                                renderMobileNotifItem,
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {mobileNotifGroups.earlier.length > 0 && (
+                                    <div>
+                                        <h2 className="mb-0.5 mt-5 text-[15px] font-semibold text-slate-800 dark:text-slate-200">
+                                            Trước đó
+                                        </h2>
+                                        <div>
+                                            {mobileNotifGroups.earlier.map(
+                                                renderMobileNotifItem,
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {mobileNotifGroups.hasMore && (
+                                    <div className="flex justify-center pt-4 pb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setMobileVisibleCount(
+                                                    (count) =>
+                                                        count +
+                                                        MOBILE_NOTIF_PAGE_SIZE,
+                                                )
+                                            }
+                                            className="flex min-h-10 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-5 text-[13px] font-semibold text-slate-600 shadow-2xs transition-colors active:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300"
+                                        >
+                                            <span>Xem thêm</span>
+                                            <ChevronDown className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop notifications */}
+                    <div className="hidden sm:block max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 space-y-4">
                     {/* Action Bar */}
                     <div className="flex items-center justify-between gap-3 pt-2 pb-1 border-b border-slate-200/60 dark:border-slate-800/80">
                         {/* Tab Switcher: Tất cả & Chưa đọc (Minimal Full-width Underline Bar Style) */}
@@ -3008,7 +3298,8 @@ export default function SettingsView({
                             );
                         })()
                     )}
-                </div>
+                    </div>
+                </>
             )}
 
             {/* 2FA SETUP MODAL */}
