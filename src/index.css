@@ -73,10 +73,6 @@
   --color-border-primary: var(--border-primary);
   --color-border-secondary: var(--border-secondary);
 
-  /* Adaptive Slate Overrides for seamless Dark Mode */
-  --color-slate-800: var(--border-secondary);
-  --color-slate-850: var(--border-primary);
-  --color-slate-700: var(--border-secondary);
 }
 
 /* Global Color System Overrides for both Light & Dark modes */

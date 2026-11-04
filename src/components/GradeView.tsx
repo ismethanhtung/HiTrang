@@ -419,7 +419,7 @@ export default function GradeView({
                                         </div>
 
                                         {/* Title */}
-                                        <h3 className="text-[13px] sm:text-sm font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
+                                        <h3 className="text-[13px] sm:text-sm font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
                                             {quiz.title}
                                         </h3>
 

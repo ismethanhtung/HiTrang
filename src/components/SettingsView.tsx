@@ -800,13 +800,13 @@ export default function SettingsView({
         const day = d.getDate();
         const month = d.getMonth() + 1;
         const year = d.getFullYear();
-        return `Expires ${day}/${month}/${year}`;
+        return `Hết hạn ${day}/${month}/${year}`;
     };
 
     const formatPasswordAge = (dateStr?: string | null) => {
-        if (!dateStr) return "Never changed since account creation.";
+        if (!dateStr) return "Chưa đổi kể từ khi tạo tài khoản.";
         const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return "Never changed since account creation.";
+        if (isNaN(d.getTime())) return "Chưa đổi kể từ khi tạo tài khoản.";
         const now = new Date();
         const diffMs = Math.max(0, now.getTime() - d.getTime());
         const diffSec = Math.floor(diffMs / 1000);
@@ -816,16 +816,15 @@ export default function SettingsView({
         const diffMonth = Math.floor(diffDay / 30);
         const diffYear = Math.floor(diffDay / 365);
 
-        if (diffMin < 2) return "Last changed just now.";
-        if (diffMin < 60) return `Last changed ${diffMin} minutes ago.`;
-        if (diffHour < 24)
-            return `Last changed ${diffHour} ${diffHour === 1 ? "hour" : "hours"} ago.`;
-        if (diffDay === 1) return "Last changed yesterday.";
-        if (diffDay < 30) return `Last changed ${diffDay} days ago.`;
-        if (diffMonth === 1) return "Last changed 1 month ago.";
-        if (diffMonth < 12) return `Last changed ${diffMonth} months ago.`;
-        if (diffYear === 1) return "Last changed 1 year ago.";
-        return `Last changed ${diffYear} years ago.`;
+        if (diffMin < 2) return "Vừa đổi cách đây ít phút.";
+        if (diffMin < 60) return `Đã đổi ${diffMin} phút trước.`;
+        if (diffHour < 24) return `Đã đổi ${diffHour} giờ trước.`;
+        if (diffDay === 1) return "Đã đổi hôm qua.";
+        if (diffDay < 30) return `Đã đổi ${diffDay} ngày trước.`;
+        if (diffMonth === 1) return "Đã đổi 1 tháng trước.";
+        if (diffMonth < 12) return `Đã đổi ${diffMonth} tháng trước.`;
+        if (diffYear === 1) return "Đã đổi 1 năm trước.";
+        return `Đã đổi ${diffYear} năm trước.`;
     };
 
     React.useEffect(() => {
@@ -2087,12 +2086,16 @@ export default function SettingsView({
                 </div>
             ) : activeSettingsTab === "security" ? (
                 /* Security Settings Grid */
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 max-sm:space-y-3.5 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-28 sm:pb-20 max-sm:space-y-3 sm:divide-y sm:divide-slate-100 sm:dark:divide-slate-800/80">
                     {/* Password Row */}
-                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                Mật khẩu (Password)
+                                Mật khẩu
+                                <span className="hidden sm:inline">
+                                    {" "}
+                                    (Password)
+                                </span>
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550">
                                 {isGoogleUser
@@ -2109,7 +2112,7 @@ export default function SettingsView({
                                     type="password"
                                     readOnly
                                     value="•••••••••••••"
-                                    className="w-full sm:max-w-xs px-3.5 py-2.5 sm:py-2 bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-550 select-none outline-none tracking-widest cursor-default"
+                                    className="w-full sm:max-w-xs px-3.5 py-2.5 sm:py-2 bg-slate-50/60 dark:bg-slate-800/30 border border-slate-200/80 dark:border-slate-700/80 rounded-xl text-xs font-semibold text-slate-400 dark:text-slate-550 select-none outline-none tracking-widest cursor-default max-sm:hidden"
                                 />
                                 <button
                                     type="button"
@@ -2140,7 +2143,7 @@ export default function SettingsView({
                     </div>
 
                     {/* Recovery Email Row */}
-                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <span>Email khôi phục</span>
@@ -2218,10 +2221,13 @@ export default function SettingsView({
                     </div>
 
                     {/* Google Authenticator & 2-Step Row */}
-                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                <span>Two-factor Authenticator</span>
+                                <span className="sm:hidden">Xác thực 2 bước</span>
+                                <span className="hidden sm:inline">
+                                    Two-factor Authenticator
+                                </span>
                             </h4>
                             <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
                                 Dùng ứng dụng Google Authenticator để tự khôi
@@ -2333,11 +2339,15 @@ export default function SettingsView({
                     </div>
 
                     {/* Active Sessions Section */}
-                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 py-4 sm:py-6 space-y-4">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 py-4 sm:py-6 space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                             <div className="space-y-0.5">
                                 <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                                    Phiên hoạt động (Active sessions)
+                                    Phiên hoạt động
+                                    <span className="hidden sm:inline">
+                                        {" "}
+                                        (Active sessions)
+                                    </span>
                                 </h4>
                                 <p className="text-xs text-slate-400 dark:text-slate-500">
                                     Hiện có {sessions.length}{" "}
@@ -2381,7 +2391,7 @@ export default function SettingsView({
                                     return (
                                         <div
                                             key={sess.id}
-                                            className="py-3.5 sm:py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-4 transition-colors"
+                                            className="py-3.5 sm:py-4 flex items-start justify-between gap-2.5 sm:gap-4 transition-colors"
                                         >
                                             <div className="flex items-start gap-3 sm:gap-3.5 min-w-0">
                                                 {/* Device icon box */}
@@ -2424,8 +2434,17 @@ export default function SettingsView({
                                                             ? `${sess.location} · `
                                                             : ""}
                                                         {sess.ipAddress ||
-                                                            "127.0.0.1"}{" "}
-                                                        · Lần cuối{" "}
+                                                            "127.0.0.1"}
+                                                        <span className="hidden sm:inline">
+                                                            {" "}
+                                                            · Lần cuối{" "}
+                                                            {formatLastSeen(
+                                                                sess.lastSeen,
+                                                            )}
+                                                        </span>
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-400 dark:text-slate-550 font-normal sm:hidden">
+                                                        Lần cuối{" "}
                                                         {formatLastSeen(
                                                             sess.lastSeen,
                                                         )}
@@ -2435,16 +2454,16 @@ export default function SettingsView({
 
                                             {/* Right side: Expires & Log out button */}
                                             {sess.isCurrent ? (
-                                                <div className="text-left sm:text-right shrink-0 pt-0 sm:pt-0.5 pl-12 sm:pl-0">
-                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
+                                                <div className="text-left sm:text-right shrink-0 pt-0 sm:pt-0.5">
+                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal max-sm:hidden">
                                                         {formatExpires(
                                                             sess.expiresAt,
                                                         )}
                                                     </span>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1.5 shrink-0 pt-0 sm:pt-0.5 pl-12 sm:pl-0">
-                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal">
+                                                <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-start gap-1.5 shrink-0 pt-0.5 sm:pt-0.5">
+                                                    <span className="text-[11px] text-slate-400 dark:text-slate-550 font-normal max-sm:hidden">
                                                         {formatExpires(
                                                             sess.expiresAt,
                                                         )}
@@ -2457,7 +2476,7 @@ export default function SettingsView({
                                                             )
                                                         }
                                                         disabled={isRevoking}
-                                                        className="px-2.5 py-1 text-rose-600 sm:text-slate-600 dark:text-rose-400 sm:dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:underline dark:hover:bg-rose-950/30 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                                                        className="px-2.5 py-1 text-rose-600 sm:text-slate-600 dark:text-rose-400 sm:dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:underline dark:hover:bg-rose-950/30 rounded-lg text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 whitespace-nowrap"
                                                     >
                                                         {isRevoking && (
                                                             <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
@@ -2474,10 +2493,13 @@ export default function SettingsView({
                     </div>
 
                     {/* DANGER ZONE SECTION */}
-                    <div className="max-sm:bg-rose-50/40 max-sm:dark:bg-rose-950/10 max-sm:border max-sm:border-rose-200/70 max-sm:dark:border-rose-900/40 max-sm:rounded-2xl max-sm:p-4">
-                        <div className="pt-2 sm:pt-8 pb-2">
+                    <div className="max-sm:bg-rose-50/40 max-sm:dark:bg-rose-950/10 max-sm:border max-sm:border-rose-200/70 max-sm:dark:border-rose-900/40 max-sm:rounded-2xl max-sm:p-3.5">
+                        <div className="pt-2 sm:pt-8 pb-2 max-sm:pt-2.5">
                             <h3 className="text-[10px] font-bold tracking-widest text-rose-500 uppercase select-none">
-                                DANGER ZONE
+                                <span className="sm:hidden">Vùng nguy hiểm</span>
+                                <span className="hidden sm:inline">
+                                    DANGER ZONE
+                                </span>
                             </h3>
                         </div>
 

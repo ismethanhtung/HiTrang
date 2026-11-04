@@ -329,7 +329,7 @@ export default function AdminScheduleTab() {
                         </button>
 
                         <div className="space-y-1 text-left">
-                            <h3 className="text-sm font-black text-slate-850">
+                            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
                                 Cập nhật lịch học ô
                             </h3>
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">

@@ -713,10 +713,10 @@ export default function AdminQuizzesTab({
             {editingQuiz && (
                 <div className="fixed inset-0 bg-slate-955/20 backdrop-blur-xs flex items-center justify-center p-4 z-[9999] animate-in fade-in duration-200">
                     <div
-                        className={`bg-bg-card rounded-2xl w-full shadow-xl overflow-hidden border-0 flex flex-col max-h-[90vh] transition-all duration-300 ${
+                        className={`bg-bg-card rounded-2xl w-full shadow-2xl overflow-hidden border border-border-primary/60 flex flex-col transition-all duration-300 ${
                             editModalTab === "questions"
-                                ? "max-w-5xl"
-                                : "max-w-lg"
+                                ? "max-w-[96vw] xl:max-w-7xl h-[92vh]"
+                                : "max-w-lg max-h-[90vh]"
                         }`}
                     >
                         {/* Modal Header */}
@@ -858,370 +858,410 @@ export default function AdminQuizzesTab({
                                     </div>
                                 </div>
 
-                                {/* Right Side: Question Detail and Editor */}
+                                {/* Right Side: Question Detail and Editor + Preview */}
                                 {editQuestions.length > 0 &&
                                 editCurrentQuestionIdx <
                                     editQuestions.length ? (
-                                    <div className="flex-1 flex flex-col overflow-hidden bg-white">
-                                        <div className="flex-1 overflow-y-auto p-6 space-y-5 text-left">
-                                            {/* Preview header */}
-                                            <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-100 p-3 rounded-lg border-0 text-xs">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-slate-700">
-                                                        Câu hỏi{" "}
-                                                        {editCurrentQuestionIdx +
-                                                            1}{" "}
-                                                        / {editQuestions.length}
-                                                    </span>
-                                                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                                                        (
-                                                        {editQuestions[
-                                                            editCurrentQuestionIdx
-                                                        ].type ||
-                                                            "single_choice"}
-                                                        )
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                                            Loại câu:
+                                    <div className="flex-1 flex flex-col overflow-hidden bg-bg-card">
+                                        {/* Split view: Left = Form Edit, Right = Live Preview */}
+                                        <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border-primary/60">
+                                            {/* LEFT COLUMN: Editor Form */}
+                                            <div className="flex-1 overflow-y-auto p-5 space-y-4 text-left">
+                                                {/* Header bar: Info & question type */}
+                                                <div className="flex flex-wrap items-center justify-between gap-2.5 bg-slate-100/80 dark:bg-slate-800/60 p-3 rounded-xl border border-border-primary/40 text-xs">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-text-primary">
+                                                            Câu hỏi {editCurrentQuestionIdx + 1} / {editQuestions.length}
                                                         </span>
-                                                        <select
-                                                            value={
-                                                                editQuestions[
-                                                                    editCurrentQuestionIdx
-                                                                ].type ||
-                                                                "single_choice"
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleUpdateQuestionType(
-                                                                    editCurrentQuestionIdx,
-                                                                    e.target
-                                                                        .value as QuestionType,
-                                                                )
-                                                            }
-                                                            className="px-2.5 py-1 bg-slate-100 border-0 rounded-lg text-[11px] font-bold focus:outline-none cursor-pointer"
-                                                        >
-                                                            <option value="single_choice">
-                                                                Trắc nghiệm
-                                                            </option>
-                                                            <option value="true_false">
-                                                                Đúng / Sai
-                                                            </option>
-                                                            <option value="short_answer">
-                                                                Điền đáp án
-                                                            </option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                                            Phần:
+                                                        <span className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">
+                                                            ({editQuestions[editCurrentQuestionIdx].type || "single_choice"})
                                                         </span>
-                                                        <input
-                                                            type="text"
-                                                            value={
-                                                                editQuestions[
-                                                                    editCurrentQuestionIdx
-                                                                ]
-                                                                    .sectionTitle ||
-                                                                ""
-                                                            }
-                                                            onChange={(e) =>
-                                                                handleUpdateSectionTitle(
-                                                                    editCurrentQuestionIdx,
-                                                                    e.target
-                                                                        .value,
-                                                                )
-                                                            }
-                                                            placeholder="Phần I..."
-                                                            className="w-16 px-2 py-0.5 bg-slate-100 border-0 rounded-lg text-[11px] text-center font-bold focus:outline-none"
-                                                        />
                                                     </div>
-
-                                                    {editScoringMode ===
-                                                        "SECTION_BASED" && (
+                                                    <div className="flex items-center gap-2.5">
                                                         <div className="flex items-center gap-1">
-                                                            <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                                                Điểm:
+                                                            <span className="text-[10px] font-bold text-text-muted uppercase">
+                                                                Loại:
                                                             </span>
-                                                            <input
-                                                                type="number"
-                                                                step="0.1"
+                                                            <select
                                                                 value={
-                                                                    editQuestions[
-                                                                        editCurrentQuestionIdx
-                                                                    ].points ||
-                                                                    0
+                                                                    editQuestions[editCurrentQuestionIdx].type || "single_choice"
                                                                 }
                                                                 onChange={(e) =>
-                                                                    handleUpdateQuestionPoints(
+                                                                    handleUpdateQuestionType(
                                                                         editCurrentQuestionIdx,
-                                                                        Number(
-                                                                            e
-                                                                                .target
-                                                                                .value,
-                                                                        ),
+                                                                        e.target.value as QuestionType,
                                                                     )
                                                                 }
-                                                                className="w-12 px-2 py-0.5 bg-slate-100 border-0 rounded-lg text-[11px] text-center font-bold focus:outline-none"
+                                                                className="px-2 py-1 bg-bg-card border border-border-primary/60 rounded-lg text-[11px] font-bold text-text-primary focus:outline-none cursor-pointer"
+                                                            >
+                                                                <option value="single_choice">
+                                                                    Trắc nghiệm
+                                                                </option>
+                                                                <option value="true_false">
+                                                                    Đúng / Sai
+                                                                </option>
+                                                                <option value="short_answer">
+                                                                    Điền đáp án
+                                                                </option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-1">
+                                                            <span className="text-[10px] font-bold text-text-muted uppercase">
+                                                                Phần:
+                                                            </span>
+                                                            <input
+                                                                type="text"
+                                                                value={
+                                                                    editQuestions[editCurrentQuestionIdx].sectionTitle || ""
+                                                                }
+                                                                onChange={(e) =>
+                                                                    handleUpdateSectionTitle(
+                                                                        editCurrentQuestionIdx,
+                                                                        e.target.value,
+                                                                    )
+                                                                }
+                                                                placeholder="Phần I..."
+                                                                className="w-16 px-2 py-0.5 bg-bg-card border border-border-primary/60 rounded-lg text-[11px] text-center font-bold text-text-primary focus:outline-none"
                                                             />
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </div>
 
-                                            {/* Preview HTML */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
-                                                        Xem trước câu hỏi (Hiển
-                                                        thị thực tế)
-                                                    </span>
-                                                    <button
-                                                        onClick={() =>
-                                                            setEditExpandedHtmlQuestions(
-                                                                (prev) => ({
-                                                                    ...prev,
-                                                                    [editQuestions[
-                                                                        editCurrentQuestionIdx
-                                                                    ].id]:
-                                                                        !prev[
-                                                                            editQuestions[
-                                                                                editCurrentQuestionIdx
-                                                                            ].id
-                                                                        ],
-                                                                }),
-                                                            )
-                                                        }
-                                                        className="text-[10px] text-blue-500 font-bold hover:underline cursor-pointer"
-                                                    >
-                                                        {editExpandedHtmlQuestions[
-                                                            editQuestions[
-                                                                editCurrentQuestionIdx
-                                                            ].id
-                                                        ]
-                                                            ? "Thu nhỏ code HTML"
-                                                            : "Chỉnh sửa HTML trực tiếp"}
-                                                    </button>
+                                                        {editScoringMode === "SECTION_BASED" && (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-[10px] font-bold text-text-muted uppercase">
+                                                                    Điểm:
+                                                                </span>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.1"
+                                                                    value={
+                                                                        editQuestions[editCurrentQuestionIdx].points || 0
+                                                                    }
+                                                                    onChange={(e) =>
+                                                                        handleUpdateQuestionPoints(
+                                                                            editCurrentQuestionIdx,
+                                                                            Number(e.target.value),
+                                                                        )
+                                                                    }
+                                                                    className="w-12 px-2 py-0.5 bg-bg-card border border-border-primary/60 rounded-lg text-[11px] text-center font-bold text-text-primary focus:outline-none"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
-                                                <div
-                                                    className="p-4 border-0 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-800 dark:text-slate-100 overflow-x-auto leading-relaxed select-none [&_img]:mx-auto [&_img]:block [&_img]:my-3"
-                                                    style={{
-                                                        fontSize: `${editFontSize}px`,
-                                                    }}
-                                                    dangerouslySetInnerHTML={{
-                                                        __html: renderMathHtml(
-                                                            editQuestions[
-                                                                editCurrentQuestionIdx
-                                                            ].type ===
-                                                                "true_false"
-                                                                ? cleanTrueFalseQuestionText(
-                                                                      editQuestions[
-                                                                          editCurrentQuestionIdx
-                                                                      ].text,
-                                                                  )
-                                                                : editQuestions[
-                                                                      editCurrentQuestionIdx
-                                                                  ].text,
-                                                        ),
-                                                    }}
-                                                />
-                                            </div>
-
-                                            {/* HTML text editor */}
-                                            {editExpandedHtmlQuestions[
-                                                editQuestions[
-                                                    editCurrentQuestionIdx
-                                                ].id
-                                            ] && (
-                                                <div className="space-y-1.5 animate-in fade-in duration-150">
-                                                    <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                        Mã nguồn HTML câu hỏi:
-                                                    </span>
+                                                {/* Question Text / HTML source editor */}
+                                                <div className="space-y-1.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
+                                                            Nội dung câu hỏi (HTML / KaTeX):
+                                                        </span>
+                                                        <span className="text-[10px] text-text-muted">
+                                                            Hỗ trợ công thức $...$ hoặc $$...$$
+                                                        </span>
+                                                    </div>
                                                     <textarea
-                                                        rows={4}
-                                                        value={
-                                                            editQuestions[
-                                                                editCurrentQuestionIdx
-                                                            ].text
-                                                        }
+                                                        rows={5}
+                                                        value={editQuestions[editCurrentQuestionIdx].text}
                                                         onChange={(e) =>
                                                             handleUpdateQuestionText(
                                                                 editCurrentQuestionIdx,
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="w-full p-3 font-mono text-[11px] bg-slate-900 text-slate-100 border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                                                        placeholder="Nhập nội dung câu hỏi hoặc mã HTML/LaTeX..."
+                                                        className="w-full p-3 font-mono text-xs leading-relaxed bg-slate-50/70 dark:bg-slate-900/60 text-text-primary border border-border-primary/60 rounded-xl resize-y focus:outline-none focus:ring-1 focus:ring-brand-500/30"
                                                     />
                                                 </div>
-                                            )}
 
-                                            {/* Type 1 & 2: Single Choice and True/False Options Edit */}
-                                            {(editQuestions[
-                                                editCurrentQuestionIdx
-                                            ].type === "single_choice" ||
-                                                !editQuestions[
-                                                    editCurrentQuestionIdx
-                                                ].type ||
-                                                editQuestions[
-                                                    editCurrentQuestionIdx
-                                                ].type === "true_false") && (
-                                                <div className="space-y-3.5 border-t border-gray-100 pt-4">
-                                                    <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                        Các phương án lựa chọn
-                                                        và đáp án đúng:
-                                                    </span>
-                                                    <div className="space-y-3">
-                                                        {(
-                                                            editQuestions[
-                                                                editCurrentQuestionIdx
-                                                            ].options || []
-                                                        ).map((opt, oIdx) => {
-                                                            const isCorrect =
-                                                                editQuestions[
-                                                                    editCurrentQuestionIdx
-                                                                ].type ===
-                                                                "true_false"
-                                                                    ? editQuestions[
-                                                                          editCurrentQuestionIdx
-                                                                      ]
-                                                                          .correctAnswers?.[
-                                                                          oIdx
-                                                                      ] === true
-                                                                    : editQuestions[
-                                                                          editCurrentQuestionIdx
-                                                                      ]
-                                                                          .correctAnswerIndex ===
-                                                                      oIdx;
+                                                {/* Options Editor: Single Choice and True/False */}
+                                                {(editQuestions[editCurrentQuestionIdx].type === "single_choice" ||
+                                                    !editQuestions[editCurrentQuestionIdx].type ||
+                                                    editQuestions[editCurrentQuestionIdx].type === "true_false") && (
+                                                    <div className="space-y-2.5 border-t border-border-primary/50 pt-3.5">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
+                                                                Các phương án & đáp án đúng:
+                                                            </span>
+                                                            <span className="text-[10px] text-text-muted">
+                                                                {editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                                    ? "Bấm Đ/S để đổi trạng thái"
+                                                                    : "Bấm nút chữ cái để chọn đáp án đúng"}
+                                                            </span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {(editQuestions[editCurrentQuestionIdx].options || []).map(
+                                                                (opt, oIdx) => {
+                                                                    const isCorrect =
+                                                                        editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                                            ? editQuestions[editCurrentQuestionIdx].correctAnswers?.[oIdx] === true
+                                                                            : editQuestions[editCurrentQuestionIdx].correctAnswerIndex === oIdx;
 
-                                                            return (
-                                                                <div
-                                                                    key={oIdx}
-                                                                    className="flex items-start gap-3 bg-slate-100 dark:bg-slate-850 p-2.5 rounded-lg border-0"
-                                                                >
-                                                                    {/* Mark Correct Trigger */}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            if (
-                                                                                editQuestions[
-                                                                                    editCurrentQuestionIdx
-                                                                                ]
-                                                                                    .type ===
-                                                                                "true_false"
-                                                                            ) {
-                                                                                handleToggleTF(
-                                                                                    editCurrentQuestionIdx,
-                                                                                    oIdx,
-                                                                                    !isCorrect,
-                                                                                );
-                                                                            } else {
-                                                                                handleUpdateCorrectAnswer(
-                                                                                    editCurrentQuestionIdx,
-                                                                                    oIdx,
-                                                                                );
-                                                                            }
-                                                                        }}
-                                                                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all border-0 flex-shrink-0 cursor-pointer ${
-                                                                            isCorrect
-                                                                                ? "bg-emerald-500 text-white shadow-2xs"
-                                                                                : "bg-slate-200 text-slate-500 hover:bg-slate-350"
-                                                                        }`}
-                                                                    >
-                                                                        {editQuestions[
-                                                                            editCurrentQuestionIdx
-                                                                        ]
-                                                                            .type ===
-                                                                        "true_false"
-                                                                            ? isCorrect
-                                                                                ? "Đ"
-                                                                                : "S"
-                                                                            : String.fromCharCode(
-                                                                                  65 +
-                                                                                      oIdx,
-                                                                              )}
-                                                                    </button>
+                                                                    return (
+                                                                        <div
+                                                                            key={oIdx}
+                                                                            className="flex items-start gap-2 bg-slate-50/80 dark:bg-slate-900/40 p-2 rounded-xl border border-border-primary/50"
+                                                                        >
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    if (editQuestions[editCurrentQuestionIdx].type === "true_false") {
+                                                                                        handleToggleTF(
+                                                                                            editCurrentQuestionIdx,
+                                                                                            oIdx,
+                                                                                            !isCorrect,
+                                                                                        );
+                                                                                    } else {
+                                                                                        handleUpdateCorrectAnswer(
+                                                                                            editCurrentQuestionIdx,
+                                                                                            oIdx,
+                                                                                        );
+                                                                                    }
+                                                                                }}
+                                                                                className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all border-0 flex-shrink-0 cursor-pointer shadow-xs ${
+                                                                                    isCorrect
+                                                                                        ? "bg-emerald-500 text-white"
+                                                                                        : "bg-slate-200 dark:bg-slate-800 text-text-muted hover:bg-slate-300 dark:hover:bg-slate-700"
+                                                                                }`}
+                                                                                title={
+                                                                                    editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                                                        ? isCorrect
+                                                                                            ? "Đang là: Đúng (bấm để đổi)"
+                                                                                            : "Đang là: Sai (bấm để đổi)"
+                                                                                        : "Chọn làm đáp án đúng"
+                                                                                }
+                                                                            >
+                                                                                {editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                                                    ? isCorrect
+                                                                                        ? "Đ"
+                                                                                        : "S"
+                                                                                    : String.fromCharCode(65 + oIdx)}
+                                                                            </button>
 
-                                                                    {/* Text area for option */}
-                                                                    <textarea
-                                                                        rows={1}
-                                                                        value={
-                                                                            opt
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            handleUpdateOption(
-                                                                                editCurrentQuestionIdx,
-                                                                                oIdx,
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        className="flex-1 px-3 py-1 bg-white dark:bg-slate-800 border-0 rounded-lg text-xs focus:outline-none resize-none"
-                                                                    />
-                                                                </div>
-                                                            );
-                                                        })}
+                                                                            <textarea
+                                                                                rows={2}
+                                                                                value={opt}
+                                                                                onChange={(e) =>
+                                                                                    handleUpdateOption(
+                                                                                        editCurrentQuestionIdx,
+                                                                                        oIdx,
+                                                                                        e.target.value,
+                                                                                    )
+                                                                                }
+                                                                                placeholder={`Nội dung phương án ${String.fromCharCode(65 + oIdx)}...`}
+                                                                                className="flex-1 px-2.5 py-1.5 bg-bg-card border border-border-primary/60 rounded-lg text-xs text-text-primary focus:outline-none resize-y"
+                                                                            />
+                                                                        </div>
+                                                                    );
+                                                                },
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {/* Type 3: Short Answer Edit */}
-                                            {editQuestions[
-                                                editCurrentQuestionIdx
-                                            ].type === "short_answer" && (
-                                                <div className="space-y-2 border-t border-gray-100 pt-4">
-                                                    <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                        Đáp án đúng (Kết quả số
-                                                        / chuỗi ngắn):
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={
-                                                            editQuestions[
-                                                                editCurrentQuestionIdx
-                                                            ].shortAnswerKey ||
-                                                            ""
-                                                        }
+                                                {/* Short Answer Editor */}
+                                                {editQuestions[editCurrentQuestionIdx].type === "short_answer" && (
+                                                    <div className="space-y-2 border-t border-border-primary/50 pt-3.5">
+                                                        <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
+                                                            Đáp án đúng (Kết quả số / chuỗi ngắn):
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={editQuestions[editCurrentQuestionIdx].shortAnswerKey || ""}
+                                                            onChange={(e) =>
+                                                                handleUpdateShortAnswer(
+                                                                    editCurrentQuestionIdx,
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            placeholder="Nhập kết quả số học hoặc ký tự viết liền không dấu..."
+                                                            className="w-full px-3.5 py-2.5 bg-bg-card border border-border-primary/60 rounded-xl text-xs font-semibold text-text-primary focus:outline-none"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* Question Explanation - Rộng rãi và tiện dụng */}
+                                                <div className="space-y-1.5 border-t border-border-primary/50 pt-3.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
+                                                            Lời giải chi tiết (Giải thích đáp án):
+                                                        </span>
+                                                        <span className="text-[10px] text-text-muted">
+                                                            Kéo giãn góc dưới để phóng to ô
+                                                        </span>
+                                                    </div>
+                                                    <textarea
+                                                        rows={7}
+                                                        value={editQuestions[editCurrentQuestionIdx].explanation || ""}
                                                         onChange={(e) =>
-                                                            handleUpdateShortAnswer(
+                                                            handleUpdateExplanation(
                                                                 editCurrentQuestionIdx,
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        placeholder="Nhập kết quả số học hoặc ký tự viết liền không dấu..."
-                                                        className="w-full max-w-sm px-3.5 py-2 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none"
+                                                        placeholder="VD: Áp dụng công thức tính đạo hàm y' = ... từ đó tìm nghiệm x = 2... Hỗ trợ công thức toán học $...$ hoặc $$...$$"
+                                                        className="w-full min-h-[140px] p-3.5 bg-slate-50/70 dark:bg-slate-900/60 border border-border-primary/60 rounded-xl text-xs font-medium text-text-primary focus:outline-none focus:ring-1 focus:ring-brand-500/30 resize-y leading-relaxed font-mono"
                                                     />
                                                 </div>
-                                            )}
+                                            </div>
 
-                                            {/* Question Explanation */}
-                                            <div className="space-y-1.5 border-t border-gray-100 pt-4">
-                                                <span className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">
-                                                    Lời giải chi tiết (Giải
-                                                    thích đáp án):
-                                                </span>
-                                                <textarea
-                                                    rows={3}
-                                                    value={
-                                                        editQuestions[
-                                                            editCurrentQuestionIdx
-                                                        ].explanation || ""
-                                                    }
-                                                    onChange={(e) =>
-                                                        handleUpdateExplanation(
-                                                            editCurrentQuestionIdx,
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    placeholder="VD: Áp dụng công thức tính đạo hàm y' = ... từ đó tìm nghiệm x = 2..."
-                                                    className="w-full p-3 bg-slate-100 border-0 rounded-lg text-xs font-semibold focus:outline-none resize-none"
-                                                />
+                                            {/* RIGHT COLUMN: Live Preview (Trực quan giống học sinh nhìn thấy) */}
+                                            <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/40 dark:bg-slate-950/40 text-left">
+                                                <div className="flex items-center justify-between pb-2 border-b border-border-primary/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                                        <span className="text-[11px] font-bold text-text-primary uppercase tracking-wider">
+                                                            Xem trước trực tiếp (Live Preview)
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[10px] text-text-muted bg-bg-card px-2 py-0.5 rounded-md border border-border-primary/50">
+                                                        Giao diện học sinh xem
+                                                    </span>
+                                                </div>
+
+                                                {/* Question Render Card */}
+                                                <div className="bg-bg-card p-4 rounded-xl border border-border-primary/60 shadow-xs space-y-3">
+                                                    <div className="text-[11px] font-bold text-brand-600 dark:text-brand-400">
+                                                        {editQuestions[editCurrentQuestionIdx].sectionTitle ? (
+                                                            <span>[{editQuestions[editCurrentQuestionIdx].sectionTitle}] </span>
+                                                        ) : null}
+                                                        Câu {editCurrentQuestionIdx + 1}:
+                                                    </div>
+
+                                                    <div
+                                                        className="text-text-primary overflow-x-auto leading-relaxed select-none [&_img]:mx-auto [&_img]:block [&_img]:my-3 prose dark:prose-invert max-w-none text-xs sm:text-sm"
+                                                        style={{ fontSize: `${editFontSize}px` }}
+                                                        dangerouslySetInnerHTML={{
+                                                            __html: renderMathHtml(
+                                                                editQuestions[editCurrentQuestionIdx].type === "true_false"
+                                                                    ? cleanTrueFalseQuestionText(editQuestions[editCurrentQuestionIdx].text)
+                                                                    : editQuestions[editCurrentQuestionIdx].text || "<em>(Chưa có nội dung câu hỏi)</em>",
+                                                            ),
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* Options Preview */}
+                                                {(editQuestions[editCurrentQuestionIdx].type === "single_choice" ||
+                                                    !editQuestions[editCurrentQuestionIdx].type) && (
+                                                    <div className="space-y-2">
+                                                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
+                                                            Lựa chọn trắc nghiệm:
+                                                        </span>
+                                                        <div className="grid grid-cols-1 gap-2">
+                                                            {(editQuestions[editCurrentQuestionIdx].options || []).map((opt, oIdx) => {
+                                                                const isCorrect = editQuestions[editCurrentQuestionIdx].correctAnswerIndex === oIdx;
+                                                                return (
+                                                                    <div
+                                                                        key={oIdx}
+                                                                        className={`p-3 rounded-xl border flex items-start gap-3 transition-all ${
+                                                                            isCorrect
+                                                                                ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-800 dark:text-emerald-200"
+                                                                                : "bg-bg-card border-border-primary/60 text-text-primary"
+                                                                        }`}
+                                                                    >
+                                                                        <span
+                                                                            className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                                                                isCorrect
+                                                                                    ? "bg-emerald-500 text-white shadow-xs"
+                                                                                    : "bg-slate-100 dark:bg-slate-800 text-text-muted"
+                                                                            }`}
+                                                                        >
+                                                                            {String.fromCharCode(65 + oIdx)}
+                                                                        </span>
+                                                                        <div
+                                                                            className="flex-1 text-xs sm:text-sm overflow-x-auto select-none pt-0.5"
+                                                                            dangerouslySetInnerHTML={{
+                                                                                __html: renderMathHtml(opt || "<em>(Phương án trống)</em>"),
+                                                                            }}
+                                                                        />
+                                                                        {isCorrect && (
+                                                                            <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded flex-shrink-0">
+                                                                                Đáp án đúng
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* True/False Preview */}
+                                                {editQuestions[editCurrentQuestionIdx].type === "true_false" && (
+                                                    <div className="space-y-2">
+                                                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
+                                                            Các ý Đúng / Sai:
+                                                        </span>
+                                                        <div className="divide-y divide-border-primary/40 bg-bg-card rounded-xl border border-border-primary/60 overflow-hidden">
+                                                            {(editQuestions[editCurrentQuestionIdx].options || []).map((opt, oIdx) => {
+                                                                const isCorrect = editQuestions[editCurrentQuestionIdx].correctAnswers?.[oIdx] === true;
+                                                                return (
+                                                                    <div key={oIdx} className="p-3 flex items-start justify-between gap-3">
+                                                                        <div className="flex items-start gap-2.5 flex-1">
+                                                                            <span className="font-bold text-xs text-text-muted flex-shrink-0">
+                                                                                {String.fromCharCode(97 + oIdx)})
+                                                                            </span>
+                                                                            <div
+                                                                                className="text-xs sm:text-sm text-text-primary overflow-x-auto select-none"
+                                                                                dangerouslySetInnerHTML={{
+                                                                                    __html: renderMathHtml(opt || "<em>(Ý trống)</em>"),
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                                            <span
+                                                                                className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                                                                                    isCorrect
+                                                                                        ? "bg-emerald-500 text-white"
+                                                                                        : "bg-slate-100 dark:bg-slate-800 text-text-muted"
+                                                                                }`}
+                                                                            >
+                                                                                {isCorrect ? "Đúng" : "Sai"}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Short Answer Preview */}
+                                                {editQuestions[editCurrentQuestionIdx].type === "short_answer" && (
+                                                    <div className="bg-bg-card p-3.5 rounded-xl border border-border-primary/60 space-y-2">
+                                                        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
+                                                            Đáp án mẫu chấp nhận:
+                                                        </span>
+                                                        <div className="inline-block px-3 py-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-mono font-bold text-sm rounded-lg border border-emerald-500/30">
+                                                            {editQuestions[editCurrentQuestionIdx].shortAnswerKey || "Chưa nhập đáp án"}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Explanation Live Preview Card */}
+                                                <div className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-300/60 dark:border-amber-700/40 rounded-xl p-4 space-y-2">
+                                                    <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                                                        <BookOpen className="w-4 h-4 flex-shrink-0" />
+                                                        <span className="text-xs font-bold uppercase tracking-wider">
+                                                            Xem trước lời giải chi tiết
+                                                        </span>
+                                                    </div>
+                                                    {editQuestions[editCurrentQuestionIdx].explanation ? (
+                                                        <div
+                                                            className="text-xs sm:text-sm text-text-primary leading-relaxed overflow-x-auto select-none [&_img]:mx-auto [&_img]:block [&_img]:my-2 prose dark:prose-invert max-w-none"
+                                                            dangerouslySetInnerHTML={{
+                                                                __html: renderMathHtml(
+                                                                    editQuestions[editCurrentQuestionIdx].explanation || "",
+                                                                ),
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <p className="text-xs text-text-muted italic">
+                                                            Chưa có lời giải chi tiết cho câu hỏi này. Hãy nhập ở ô bên trái để xem trước.
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1229,38 +1269,22 @@ export default function AdminQuizzesTab({
                                         <div className="px-6 py-4.5 border-t border-border-primary/60 bg-slate-50/30 flex items-center justify-between flex-shrink-0">
                                             <div className="flex items-center gap-1.5">
                                                 <button
-                                                    disabled={
-                                                        editCurrentQuestionIdx ===
-                                                        0
-                                                    }
-                                                    onClick={() =>
-                                                        setEditCurrentQuestionIdx(
-                                                            (prev) => prev - 1,
-                                                        )
-                                                    }
-                                                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border-0 rounded-lg text-xs font-semibold text-slate-600 disabled:opacity-40 cursor-pointer"
+                                                    disabled={editCurrentQuestionIdx === 0}
+                                                    onClick={() => setEditCurrentQuestionIdx((prev) => prev - 1)}
+                                                    className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-0 rounded-lg text-xs font-semibold text-text-primary disabled:opacity-40 cursor-pointer"
                                                 >
                                                     Câu trước
                                                 </button>
                                                 <button
-                                                    disabled={
-                                                        editCurrentQuestionIdx ===
-                                                        editQuestions.length - 1
-                                                    }
-                                                    onClick={() =>
-                                                        setEditCurrentQuestionIdx(
-                                                            (prev) => prev + 1,
-                                                        )
-                                                    }
-                                                    className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 border-0 rounded-lg text-xs font-semibold text-slate-600 disabled:opacity-40 cursor-pointer"
+                                                    disabled={editCurrentQuestionIdx === editQuestions.length - 1}
+                                                    onClick={() => setEditCurrentQuestionIdx((prev) => prev + 1)}
+                                                    className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-0 rounded-lg text-xs font-semibold text-text-primary disabled:opacity-40 cursor-pointer"
                                                 >
                                                     Câu sau
                                                 </button>
                                             </div>
                                             <button
-                                                onClick={() =>
-                                                    setEditModalTab("settings")
-                                                }
+                                                onClick={() => setEditModalTab("settings")}
                                                 className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
                                             >
                                                 Tiếp tục cấu hình đề thi ➜

@@ -3588,7 +3588,7 @@ export default function StudentDashboard({
 
                                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pt-2">
                                                     <div className="space-y-1 sm:space-y-1.5 flex-1">
-                                                        <h4 className="text-sm sm:text-base font-black text-slate-850 dark:text-slate-100 leading-snug">
+                                                        <h4 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 leading-snug">
                                                             Chương trình ôn
                                                             luyện Toán chất
                                                             lượng cao Cô Trang
@@ -3833,7 +3833,7 @@ export default function StudentDashboard({
                                                                                 {/* Left info */}
                                                                                 <div className="space-y-1.5 flex-1 w-full">
                                                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                                                        <h4 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug">
+                                                                                        <h4 className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug">
                                                                                             {
                                                                                                 quiz.title
                                                                                             }
@@ -3956,7 +3956,7 @@ export default function StudentDashboard({
                                                                                     </div>
 
                                                                                     {/* Title */}
-                                                                                    <h3 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
+                                                                                    <h3 className="text-[13px] font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug line-clamp-2">
                                                                                         {
                                                                                             quiz.title
                                                                                         }
