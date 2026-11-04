@@ -2522,7 +2522,7 @@ export default function SettingsView({
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8 space-y-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 max-sm:grid-cols-2 max-sm:gap-2">
                                 {fontOptions.map((f) => {
                                     const isSelected = selectedFont === f.id;
                                     return (
@@ -2533,23 +2533,23 @@ export default function SettingsView({
                                                 handleSelectFont(f.id)
                                             }
                                             style={{ fontFamily: f.cssVal }}
-                                            className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative cursor-pointer ${
+                                            className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative cursor-pointer max-sm:p-3 max-sm:rounded-xl ${
                                                 isSelected
                                                     ? "border-brand-600 bg-brand-50/30 dark:bg-brand-950/20 shadow-xs ring-1 ring-brand-600"
                                                     : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
                                             }`}
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 max-sm:text-xs max-sm:leading-snug">
                                                     {f.name}
                                                 </span>
                                                 {isSelected && (
-                                                    <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs">
-                                                        <Check className="w-3 h-3 stroke-[2.5]" />
+                                                    <span className="w-5 h-5 shrink-0 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs max-sm:h-4 max-sm:w-4">
+                                                        <Check className="w-3 h-3 stroke-[2.5] max-sm:h-2.5 max-sm:w-2.5" />
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-normal">
+                                            <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-normal max-sm:hidden">
                                                 {f.desc}
                                             </p>
                                         </button>
@@ -2560,49 +2560,50 @@ export default function SettingsView({
                     </div>
 
                     {/* Dark Mode / Theme Row */}
-                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-4 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
+                    <div className="max-sm:bg-white max-sm:dark:bg-slate-850/40 max-sm:border max-sm:border-slate-200/70 max-sm:dark:border-slate-800/80 max-sm:rounded-2xl max-sm:p-3.5 grid grid-cols-12 gap-4 sm:gap-6 py-4 sm:py-6">
                         <div className="col-span-12 md:col-span-4 space-y-1">
                             <div className="flex items-center gap-2">
-                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                    <Sun className="w-4 h-4 text-amber-500" />
+                                <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 max-sm:text-[13px]">
+                                    <Sun className="w-4 h-4 text-amber-500 max-sm:h-3.5 max-sm:w-3.5" />
                                     <span>Theme - Đang phát triển</span>
                                 </h4>
                             </div>
-                            <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed">
+                            <p className="text-xs text-slate-400 dark:text-slate-550 leading-relaxed max-sm:hidden">
                                 Tùy chọn giao diện Sáng (Flat Sage-White), Tối
                                 (Midnight Steel Navy) hoặc tự động.
                             </p>
                         </div>
                         <div className="col-span-12 md:col-span-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 max-sm:grid-cols-3 max-sm:gap-2">
                                 {/* Light Mode card */}
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("light")}
-                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer max-sm:min-h-[62px] max-sm:justify-center max-sm:p-2.5 max-sm:rounded-xl ${
                                         theme === "light"
                                             ? "border-amber-500/80 bg-white dark:bg-slate-800 shadow-xs ring-2 ring-amber-500/20"
                                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
                                     }`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Sun className="w-4 h-4 text-amber-500" />
-                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                                Giao diện Sáng
+                                    <div className="flex items-center justify-between max-sm:gap-1.5">
+                                        <div className="flex items-center gap-2 max-sm:gap-1.5">
+                                            <Sun className="w-4 h-4 text-amber-500 max-sm:h-3.5 max-sm:w-3.5" />
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-sm:text-[11px]">
+                                                <span className="sm:hidden">Sáng</span>
+                                                <span className="hidden sm:inline">Giao diện Sáng</span>
                                             </span>
                                         </div>
                                         {theme === "light" && (
-                                            <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            <span className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs max-sm:absolute max-sm:right-2 max-sm:top-2 max-sm:h-4 max-sm:w-4">
+                                                <Check className="w-3 h-3 stroke-[2.5] max-sm:h-2.5 max-sm:w-2.5" />
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal">
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal max-sm:hidden">
                                         Flat Sage-White thanh lịch, sáng sủa và
                                         tập trung.
                                     </p>
-                                    <div className="mt-3 flex items-center justify-between">
+                                    <div className="mt-3 flex items-center justify-between max-sm:hidden">
                                         <span
                                             className={`text-[10px] font-bold ${
                                                 theme === "light"
@@ -2621,30 +2622,31 @@ export default function SettingsView({
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("dark")}
-                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer max-sm:min-h-[62px] max-sm:justify-center max-sm:p-2.5 max-sm:rounded-xl ${
                                         theme === "dark"
                                             ? "border-indigo-400 bg-[#233448] shadow-xs ring-2 ring-indigo-500/30 text-white"
                                             : "border-slate-700/80 bg-[#233448]/90 text-white hover:border-indigo-400"
                                     }`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Moon className="w-4 h-4 text-indigo-300" />
-                                            <span className="text-xs font-bold text-white">
-                                                Giao diện Tối
+                                    <div className="flex items-center justify-between max-sm:gap-1.5">
+                                        <div className="flex items-center gap-2 max-sm:gap-1.5">
+                                            <Moon className="w-4 h-4 text-indigo-300 max-sm:h-3.5 max-sm:w-3.5" />
+                                            <span className="text-xs font-bold text-white max-sm:text-[11px]">
+                                                <span className="sm:hidden">Tối</span>
+                                                <span className="hidden sm:inline">Giao diện Tối</span>
                                             </span>
                                         </div>
                                         {theme === "dark" && (
-                                            <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs shadow-xs max-sm:absolute max-sm:right-2 max-sm:top-2 max-sm:h-4 max-sm:w-4">
+                                                <Check className="w-3 h-3 stroke-[2.5] max-sm:h-2.5 max-sm:w-2.5" />
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-slate-300 mt-2 font-normal">
+                                    <p className="text-[11px] text-slate-300 mt-2 font-normal max-sm:hidden">
                                         Midnight Steel Navy dịu mắt ban đêm
                                         (Đang phát triển).
                                     </p>
-                                    <div className="mt-3 flex items-center justify-between">
+                                    <div className="mt-3 flex items-center justify-between max-sm:hidden">
                                         <span
                                             className={`text-[10px] font-bold ${
                                                 theme === "dark"
@@ -2663,29 +2665,30 @@ export default function SettingsView({
                                 <button
                                     type="button"
                                     onClick={() => handleSelectTheme("system")}
-                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer ${
+                                    className={`p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all relative flex flex-col justify-between min-h-[105px] sm:min-h-[120px] cursor-pointer max-sm:min-h-[62px] max-sm:justify-center max-sm:p-2.5 max-sm:rounded-xl ${
                                         theme === "system"
                                             ? "border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 shadow-xs ring-2 ring-brand-500/20"
                                             : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700"
                                     }`}
                                 >
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Monitor className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                                Theo thiết bị
+                                    <div className="flex items-center justify-between max-sm:gap-1.5">
+                                        <div className="flex items-center gap-2 max-sm:gap-1.5">
+                                            <Monitor className="w-4 h-4 text-slate-600 dark:text-slate-300 max-sm:h-3.5 max-sm:w-3.5" />
+                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-sm:text-[11px]">
+                                                <span className="sm:hidden">Thiết bị</span>
+                                                <span className="hidden sm:inline">Theo thiết bị</span>
                                             </span>
                                         </div>
                                         {theme === "system" && (
-                                            <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                            <span className="w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs shadow-xs max-sm:absolute max-sm:right-2 max-sm:top-2 max-sm:h-4 max-sm:w-4">
+                                                <Check className="w-3 h-3 stroke-[2.5] max-sm:h-2.5 max-sm:w-2.5" />
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal">
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-normal max-sm:hidden">
                                         Tự động đồng bộ theo hệ điều hành.
                                     </p>
-                                    <div className="mt-3 flex items-center justify-between">
+                                    <div className="mt-3 flex items-center justify-between max-sm:hidden">
                                         <span
                                             className={`text-[10px] font-bold ${
                                                 theme === "system"
