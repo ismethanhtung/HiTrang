@@ -487,12 +487,11 @@ export default function LeaderboardView({
                 <div className="space-y-1.5 text-left">
                     <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-base sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                            <span>Bảng Xếp Hạng Học Tập</span>
+                            <span>Bảng Xếp Hạng</span>
                         </h1>
                     </div>
                     <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium">
                         Điểm số được tính từ các đề thi được tạo trong tháng.
-                        Khóa xếp hạng và cuối tháng.
                     </p>
                 </div>
 

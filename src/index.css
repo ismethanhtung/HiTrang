@@ -24,18 +24,18 @@
 }
 
 .dark {
-  --bg-base: #1D2A3B;        /* Softened Midnight Steel Navy base background */
-  --bg-surface: #26384F;     /* Soft Steel Navy surface background */
-  --bg-card: #233448;        /* Refined Steel Navy card background */
+  --bg-base: #182230;        /* Deep Midnight Navy base background */
+  --bg-surface: #1E2B3E;     /* Midnight Navy surface background */
+  --bg-card: #27374D;        /* Crisp Deep Steel Navy card background */
   --text-primary: #F8FAFC;   /* Crisp soft white primary text */
   --text-secondary: #CBD5E1; /* Soft slate secondary text */
   --text-tertiary: #94A3B8;  /* Steel Blue tertiary text */
-  --border-primary: #334863;  /* Soft steel border outline */
-  --border-secondary: #466082;/* Steel Blue divider border */
+  --border-primary: #3B4F69;  /* Clearly visible steel navy border */
+  --border-secondary: #526D82;/* Distinct dividing line for dark mode */
 
   /* Dark Mode Brand System (Navy Steel & Ice Blue) */
-  --brand-50: #293B52;
-  --brand-100: #334966;
+  --brand-50: #243447;
+  --brand-100: #2F4259;
   --brand-200: #3E577A;      /* Steel Blue */
   --brand-300: #93C5FD;      /* Soft Ice Blue active accent */
   --brand-400: #BFDBFE;      /* Ice Blue highlight text */
@@ -72,6 +72,11 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-border-primary: var(--border-primary);
   --color-border-secondary: var(--border-secondary);
+
+  /* Adaptive Slate Overrides for seamless Dark Mode */
+  --color-slate-800: var(--border-secondary);
+  --color-slate-850: var(--border-primary);
+  --color-slate-700: var(--border-secondary);
 }
 
 /* Global Color System Overrides for both Light & Dark modes */
@@ -83,16 +88,24 @@ body {
 
 .bg-white {
   background-color: var(--bg-card) !important;
-  border: 1px solid var(--border-primary);
+  border-color: var(--border-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.01);
 }
 
 .bg-slate-50, .bg-gray-50, .bg-zinc-50, [class*="bg-[#fafafa]"], [class*="bg-[#fcfbfa]"] {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-surface) !important;
 }
 
-.bg-slate-50\/50, .bg-slate-50\/30 {
-  background-color: var(--bg-surface);
+.bg-slate-50\/50, .bg-slate-50\/30, .bg-slate-50\/20, .bg-slate-50\/10, .bg-slate-50\/70, .bg-slate-50\/75 {
+  background-color: var(--bg-surface) !important;
+}
+
+/* Base slate backgrounds for neutral UI elements */
+.bg-slate-100 {
+  background-color: var(--brand-50);
+}
+.bg-slate-200 {
+  background-color: var(--brand-100);
 }
 
 /* Text colors */
@@ -117,7 +130,7 @@ body {
 }
 
 /* Borders */
-.border-slate-100, .border-slate-200, .border-gray-100, .border-gray-200, .border-slate-200\/60, .border-slate-100\/85 {
+.border-slate-100, .border-slate-150, .border-slate-200, .border-slate-300, .border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200\/60, .border-slate-200\/80, .border-slate-100\/85 {
   border-color: var(--border-primary);
 }
 
@@ -128,29 +141,36 @@ textarea {
   color: var(--text-primary);
 }
 
+select option {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
 /* Hover states */
 .hover\:bg-slate-50:hover, .hover\:bg-gray-50:hover, .hover\:bg-slate-100:hover, .hover\:bg-slate-50\/60:hover {
   background-color: var(--bg-surface) !important;
   opacity: 0.9;
 }
 
-/* Green badge overrides to match Rose Accent */
-.bg-emerald-50 {
-  background-color: var(--bg-surface) !important;
-  color: var(--color-brand-500) !important;
-  border: 1px solid var(--border-primary) !important;
-}
-
-.text-emerald-700, .text-emerald-600 {
-  color: var(--color-brand-600) !important;
-}
-
 /* Specific Dark Mode overrides */
 .dark {
   .bg-white {
     background-color: var(--bg-card) !important;
-    border: 1px solid var(--border-primary) !important;
+    border-color: var(--border-primary) !important;
     box-shadow: none !important;
+  }
+
+  .bg-slate-50, .bg-gray-50, .bg-zinc-50 {
+    background-color: var(--bg-surface) !important;
+  }
+
+  .bg-slate-100, .bg-slate-100\/80, .bg-slate-100\/70, .bg-slate-100\/50 {
+    background-color: var(--brand-50) !important;
+    color: var(--text-primary);
+  }
+
+  .bg-slate-200, .bg-slate-200\/60, .bg-slate-200\/40 {
+    background-color: var(--brand-100) !important;
   }
 
   .bg-slate-900, .bg-slate-950, .bg-slate-850 {
@@ -161,12 +181,74 @@ textarea {
     background-color: var(--bg-surface);
   }
   
-  .bg-black\/50, .bg-slate-900\/50 {
-    background-color: rgba(0, 0, 0, 0.7) !important;
+  .bg-black\/50, .bg-slate-900\/50, .bg-slate-900\/60, .bg-slate-900\/40 {
+    background-color: rgba(10, 16, 26, 0.75) !important;
   }
   
   .hover\:bg-slate-50:hover, .hover\:bg-gray-50:hover, .hover\:bg-slate-100:hover, .hover\:bg-slate-50\/60:hover {
-    background-color: rgba(255, 255, 255, 0.05) !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+  }
+
+  .hover\:bg-slate-200:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Borders in dark mode */
+  .border-slate-100, .border-slate-150, .border-slate-200, .border-slate-300,
+  .border-gray-100, .border-gray-200, .border-gray-300,
+  .border-slate-700, .border-slate-800, .border-slate-850 {
+    border-color: var(--border-primary) !important;
+  }
+
+  /* Opacity variants of slate borders in dark mode: ensure clear visibility */
+  [class*="border-slate-800\/"], [class*="border-slate-700\/"], [class*="border-slate-200\/"] {
+    border-color: var(--border-primary) !important;
+  }
+
+  /* Opacity variants of divide borders in dark mode */
+  [class*="divide-slate-800"] > :not(:last-child), [class*="divide-slate-700"] > :not(:last-child) {
+    border-color: var(--border-primary) !important;
+  }
+
+  /* Form controls in dark mode */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+  select,
+  textarea {
+    color: var(--text-primary) !important;
+    border-color: var(--border-primary) !important;
+  }
+
+  select option {
+    background-color: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* KaTeX mathematical formulas visibility in dark mode */
+  .katex, .katex-display, .katex-html {
+    color: var(--text-primary) !important;
+  }
+  .katex svg {
+    fill: var(--text-primary) !important;
+    stroke: var(--text-primary) !important;
+  }
+  .katex svg path {
+    fill: var(--text-primary) !important;
+  }
+
+  /* Custom scrollbars in dark mode */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-secondary);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-tertiary);
   }
 
   /* Recharts custom overrides */

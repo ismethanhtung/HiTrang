@@ -787,10 +787,7 @@ export default function StudentDashboard({
 
                         // Compute per-question status
                         const qStatuses: (
-                            | "correct"
-                            | "wrong"
-                            | "partial"
-                            | "unanswered"
+                            "correct" | "wrong" | "partial" | "unanswered"
                         )[] = quiz.questions.map((q) => {
                             const chosen = reviewSubmission.answers[q.id];
                             if (
@@ -811,8 +808,7 @@ export default function StudentDashboard({
                                     false,
                                 ];
                                 const studentTf = (chosen as (
-                                    | boolean
-                                    | null
+                                    boolean | null
                                 )[]) || [null, null, null, null];
                                 const matchCount = q.options.filter(
                                     (_, i) => studentTf[i] === correctTf[i],
@@ -864,8 +860,7 @@ export default function StudentDashboard({
                                 false,
                             ];
                             const studentTf = (chosen as (
-                                | boolean
-                                | null
+                                boolean | null
                             )[]) || [null, null, null, null];
                             tfStatusList = q.options.map((opt, i) => ({
                                 text: opt,
@@ -1152,8 +1147,7 @@ export default function StudentDashboard({
                                                             ];
                                                         const studentTf =
                                                             (chosen as (
-                                                                | boolean
-                                                                | null
+                                                                boolean | null
                                                             )[]) || [
                                                                 null,
                                                                 null,
@@ -2072,7 +2066,7 @@ export default function StudentDashboard({
                                                                             )}
                                                                         </span>
                                                                         {/* Avatar */}
-                                                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200/40 dark:border-slate-700/40">
+                                                                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 select-none overflow-hidden bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700">
                                                                             {entry.studentAvatarUrl ? (
                                                                                 <img
                                                                                     src={
@@ -2882,8 +2876,7 @@ export default function StudentDashboard({
                                             ) {
                                                 const tfAnswers =
                                                     (selectedAnswers[qId] as (
-                                                        | boolean
-                                                        | null
+                                                        boolean | null
                                                     )[]) || [
                                                         null,
                                                         null,
@@ -3595,7 +3588,7 @@ export default function StudentDashboard({
 
                                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pt-2">
                                                     <div className="space-y-1 sm:space-y-1.5 flex-1">
-                                                        <h4 className="text-sm sm:text-base font-black text-slate-800 leading-snug">
+                                                        <h4 className="text-sm sm:text-base font-black text-slate-850 dark:text-slate-100 leading-snug">
                                                             Chương trình ôn
                                                             luyện Toán chất
                                                             lượng cao Cô Trang
@@ -3613,7 +3606,7 @@ export default function StudentDashboard({
                                                         onClick={
                                                             handleResumeOngoing
                                                         }
-                                                        className="w-full sm:w-auto px-6 py-2.5 bg-[#3B6D85] hover:bg-[#2C5A71] text-white text-xs font-black rounded-lg transition-all shadow-sm shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
+                                                        className="w-full sm:w-auto px-6 py-2.5 bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500 text-white text-xs font-black rounded-lg transition-all shadow-sm shrink-0 flex items-center justify-center gap-1.5 cursor-pointer"
                                                     >
                                                         <span>
                                                             {ongoingAttempt
@@ -3639,9 +3632,9 @@ export default function StudentDashboard({
                                                             đề thi
                                                         </span>
                                                     </div>
-                                                    <div className="w-full bg-slate-200/60 h-1.5 rounded-full overflow-hidden">
+                                                    <div className="w-full bg-slate-200/60 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                                                         <div
-                                                            className="bg-[#3B6D85] h-full transition-all duration-500"
+                                                            className="bg-brand-500 dark:bg-brand-400 h-full transition-all duration-500"
                                                             style={{
                                                                 width: `${completionRate}%`,
                                                             }}
@@ -3669,7 +3662,7 @@ export default function StudentDashboard({
                                                                   )
                                                                 : undefined
                                                         }
-                                                        className="text-xs font-bold text-[#3B6D85] hover:underline cursor-pointer"
+                                                        className="text-xs font-bold text-brand-600 dark:text-brand-300 hover:underline cursor-pointer"
                                                     >
                                                         Xem tất cả đề thi
                                                     </button>
@@ -3840,7 +3833,7 @@ export default function StudentDashboard({
                                                                                 {/* Left info */}
                                                                                 <div className="space-y-1.5 flex-1 w-full">
                                                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                                                        <h4 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-[#3B6D85] dark:group-hover:text-brand-300 transition-colors leading-snug">
+                                                                                        <h4 className="text-[13px] font-extrabold text-slate-850 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-300 transition-colors leading-snug">
                                                                                             {
                                                                                                 quiz.title
                                                                                             }
@@ -3917,7 +3910,7 @@ export default function StudentDashboard({
                                                                                                 quiz,
                                                                                             )
                                                                                         }
-                                                                                        className="px-4 py-1.5 bg-[#3B6D85] hover:bg-slate-700 dark:hover:bg-[#2C5A71] text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
+                                                                                        className="px-4 py-1.5 bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500 text-white text-[11px] font-black rounded-lg transition-all cursor-pointer shadow-sm active:scale-97 flex items-center gap-0.5 shrink-0"
                                                                                     >
                                                                                         <span>
                                                                                             Làm
@@ -4035,8 +4028,8 @@ export default function StudentDashboard({
                                                                                         }
                                                                                         className={`px-3.5 py-1.5 ${
                                                                                             isOngoing
-                                                                                                ? "bg-[#18323E] hover:bg-[#10222B] dark:bg-slate-800 dark:hover:bg-slate-900 text-white shadow-md shadow-blue-500/10"
-                                                                                                : "bg-[#3B6D85] hover:bg-[#2C5A71] text-white"
+                                                                                                ? "bg-slate-900 hover:bg-slate-800 dark:bg-brand-500 dark:hover:bg-brand-600 text-white shadow-md shadow-brand-500/10"
+                                                                                                : "bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500 text-white"
                                                                                         } rounded-lg text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
                                                                                     >
                                                                                         <span>
@@ -4453,7 +4446,8 @@ export default function StudentDashboard({
                                                                             usableHeight /
                                                                                 2
                                                                         }
-                                                                        stroke="#E2E8F0"
+                                                                        stroke="currentColor"
+                                                                        className="text-slate-200 dark:text-border-primary"
                                                                         strokeWidth="0.8"
                                                                         strokeDasharray="3,3"
                                                                     />
@@ -4473,7 +4467,8 @@ export default function StudentDashboard({
                                                                             paddingTop +
                                                                             usableHeight
                                                                         }
-                                                                        stroke="#CBD5E1"
+                                                                        stroke="currentColor"
+                                                                        className="text-slate-300 dark:text-border-primary"
                                                                         strokeWidth="1"
                                                                     />
 
@@ -4988,36 +4983,36 @@ export default function StudentDashboard({
                                                 {/* Flat layout matching the welcome header section stats */}
                                                 <div className="grid grid-cols-2 gap-y-6 gap-x-4 pt-2">
                                                     <div className="space-y-1">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                                                             Tổng số đề thi
                                                         </span>
-                                                        <span className="text-xl font-black text-slate-800 block">
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-100 block">
                                                             {
                                                                 gradeQuizzes.length
                                                             }
                                                         </span>
                                                     </div>
-                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60 dark:border-slate-800">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                                                             Lượt làm
                                                         </span>
-                                                        <span className="text-xl font-black text-slate-800 block">
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-100 block">
                                                             {completedCount}
                                                         </span>
                                                     </div>
-                                                    <div className="space-y-1 border-t border-slate-200/60 pt-4">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                    <div className="space-y-1 border-t border-slate-200/60 dark:border-slate-800 pt-4">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                                                             Điểm trung bình
                                                         </span>
-                                                        <span className="text-xl font-black text-slate-800 block">
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-100 block">
                                                             {averageScore}
                                                         </span>
                                                     </div>
-                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60 border-t border-slate-200/60 pt-4">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                    <div className="space-y-1 pl-4 border-l border-slate-200/60 dark:border-slate-800 border-t border-slate-200/60 dark:border-slate-800 pt-4">
+                                                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                                                             Điểm cao nhất
                                                         </span>
-                                                        <span className="text-xl font-black text-slate-800 block">
+                                                        <span className="text-xl font-black text-slate-800 dark:text-slate-100 block">
                                                             {highestScore}/10
                                                         </span>
                                                     </div>

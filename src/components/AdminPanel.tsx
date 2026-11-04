@@ -292,7 +292,7 @@ export default function AdminPanel({
     };
 
     return (
-        <div className="flex h-[calc(100vh-61px)] w-full overflow-hidden bg-[#FDFDFD]">
+        <div className="flex h-[calc(100vh-61px)] w-full overflow-hidden bg-bg-base">
             {/* LEFT SIDEBAR */}
             <aside className="w-64 bg-bg-card border-r border-border-primary flex flex-col justify-between h-full select-none shrink-0">
                 <div className="flex flex-col min-h-0">
@@ -334,8 +334,8 @@ export default function AdminPanel({
                                     onClick={() => handleTabClick("plans")}
                                     className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                         activeTab === "plans"
-                                            ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                            : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                            ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                            : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                     }`}
                                 >
                                     <UserIcon className="w-4 h-4 shrink-0" />
@@ -354,8 +354,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "notifications"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Bell className="w-4 h-4 shrink-0" />
@@ -395,8 +395,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "create-quiz"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Plus className="w-4 h-4 shrink-0" />
@@ -415,8 +415,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "quizzes"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <BookOpen className="w-4 h-4 shrink-0" />
@@ -437,8 +437,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "submissions"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <FileCheck className="w-4 h-4 shrink-0" />
@@ -458,8 +458,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "schedule"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Calendar className="w-4 h-4 shrink-0" />
@@ -474,8 +474,8 @@ export default function AdminPanel({
                                 ]) && (
                                     <div className="w-full flex items-center justify-between pr-4 py-2 hover:bg-slate-50/50 transition-all cursor-default">
                                         <div className="flex items-center gap-3 pl-[24px]">
-                                            <Shield className="w-4 h-4 text-[#70757A] shrink-0" />
-                                            <span className="text-xs font-semibold text-[#70757A]">
+                                            <Shield className="w-4 h-4 text-text-secondary shrink-0" />
+                                            <span className="text-xs font-semibold text-text-secondary">
                                                 Chống chuyển trang
                                             </span>
                                         </div>
@@ -488,7 +488,7 @@ export default function AdminPanel({
                                             }
                                             className={`w-7 h-4 rounded-full p-0.5 transition-colors cursor-pointer relative flex-shrink-0 ${
                                                 antiCheatEnabled
-                                                    ? "bg-[#1B72E8]"
+                                                    ? "bg-brand-500"
                                                     : "bg-slate-200"
                                             }`}
                                         >
@@ -532,8 +532,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "stats-quizzes"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <BarChart3 className="w-4 h-4 shrink-0" />
@@ -552,8 +552,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "stats-students"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <UserCheck className="w-4 h-4 shrink-0" />
@@ -592,8 +592,8 @@ export default function AdminPanel({
                                         onClick={() => handleTabClick("bugs")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "bugs"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Bug className="w-4 h-4 shrink-0" />
@@ -613,8 +613,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "api-monitor"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Activity className="w-4 h-4 shrink-0" />
@@ -637,8 +637,8 @@ export default function AdminPanel({
                                         }
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "backups"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Database className="w-4 h-4 shrink-0" />
@@ -664,8 +664,8 @@ export default function AdminPanel({
                                         onClick={() => handleTabClick("system")}
                                         className={`w-full flex items-center gap-3 py-2.5 text-xs transition-all cursor-pointer ${
                                             activeTab === "system"
-                                                ? "pl-5 pr-6 bg-[#EBF3FF]/60 text-[#1B72E8] border-l-4 border-[#1B72E8] font-bold"
-                                                : "pl-[24px] pr-6 text-[#70757A] hover:text-slate-800 hover:bg-slate-50/50 font-medium"
+                                                ? "pl-5 pr-6 bg-brand-50 text-brand-600 dark:text-brand-300 border-l-4 border-brand-500 font-bold"
+                                                : "pl-[24px] pr-6 text-text-secondary hover:text-text-primary hover:bg-brand-50/50 font-medium"
                                         }`}
                                     >
                                         <Server className="w-4 h-4 shrink-0" />

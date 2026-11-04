@@ -97,7 +97,7 @@ export default function Sidebar({
             {/* Search Bar - styled exactly like reference */}
             <div className="px-4 mb-4">
                 <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-black dark:text-slate-500 pointer-events-none">
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-text-tertiary pointer-events-none">
                         <Search className="w-3.5 h-3.5" />
                     </span>
                     <input

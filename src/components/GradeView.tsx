@@ -474,8 +474,8 @@ export default function GradeView({
                                             onClick={() => onStartQuiz(quiz)}
                                             className={`px-3.5 py-1.5 sm:px-4 sm:py-1.5 ${
                                                 isOngoing
-                                                    ? "bg-[#18323E] hover:bg-[#10222B] dark:bg-slate-800 dark:hover:bg-slate-900 text-white shadow-md shadow-blue-500/10"
-                                                    : "bg-[#3B6D85] hover:bg-[#2C5A71] text-white"
+                                                    ? "bg-slate-900 hover:bg-slate-800 dark:bg-brand-500 dark:hover:bg-brand-600 text-white shadow-md shadow-brand-500/10"
+                                                    : "bg-brand-500 hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-500 text-white"
                                             } rounded-lg sm:rounded-md text-[11px] font-extrabold flex items-center gap-1 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex-shrink-0`}
                                         >
                                             <span>
